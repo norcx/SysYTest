@@ -1,0 +1,46 @@
+// test14_deep_recursion.sy - 深度递归测试（栈压力）
+int depth = 0;
+int max_depth = 0;
+
+int deep_call(int n) {
+    depth = depth + 1;
+    if (depth > max_depth) {
+        max_depth = depth;
+    }
+    
+    int result;
+    if (n <= 0) {
+        result = 0;
+    } else {
+        result = n + deep_call(n - 1);
+    }
+    
+    depth = depth - 1;
+    return result;
+}
+
+int ackermann_limited(int m, int n, int limit) {
+    // 限制版Ackermann函数，避免栈溢出
+    if (limit <= 0) return -1;
+    if (m == 0) return n + 1;
+    if (n == 0) return ackermann_limited(m - 1, 1, limit - 1);
+    return ackermann_limited(m - 1, ackermann_limited(m, n - 1, limit - 1), limit - 1);
+}
+
+int main() {
+    // 测试深度递归求和
+    printf("deep_call(100)=%d\n", deep_call(100));  // 5050
+    printf("max_depth=%d\n", max_depth);  // 101
+    
+    // 重置
+    max_depth = 0;
+    printf("deep_call(50)=%d\n", deep_call(50));  // 1275
+    printf("max_depth=%d\n", max_depth);  // 51
+    
+    // Ackermann函数（小参数）
+    printf("ack(1,1)=%d\n", ackermann_limited(1, 1, 100));  // 3
+    printf("ack(2,2)=%d\n", ackermann_limited(2, 2, 100));  // 7
+    printf("ack(3,2)=%d\n", ackermann_limited(3, 2, 500));  // 29
+    
+    return 0;
+}

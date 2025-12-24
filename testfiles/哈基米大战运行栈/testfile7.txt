@@ -1,0 +1,77 @@
+// hack_outgoing_args.sy
+// 攻击目标：RegisterAllocator 中 adjustStackOffsets 的 protectedArea = 16 硬编码
+// 预期行为：如果编译器有 bug，Arg 5 和 Arg 6 的值会传递错误，导致输出 Error。
+
+int g_fails = 0;
+
+void assert(int expected, int actual) {
+    if (expected != actual) {
+        printf("Fail! Expected: ");
+        printf("%d", expected);
+        printf(", Actual: ");
+        printf("%d", actual);
+        printf("\n");
+        g_fails = g_fails + 1;
+    }
+}
+
+// 接收 8 个参数
+// MIPS 约定：a1-a4 在寄存器，a5-a8 在栈上 (偏移 16, 20, 24, 28)
+int check_args(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8) {
+    // 检查栈上传递的参数是否正确
+    if (a5 != 555) {
+        printf("Error: Arg5 mismatch! Read: ");
+        printf("%d", a5);
+        printf("\n");
+        g_fails = g_fails + 1;
+    }
+    if (a6 != 666) {
+        printf("Error: Arg6 mismatch! Read: ");
+        printf("%d", a6);
+        printf("\n");
+        g_fails = g_fails + 1;
+    }
+    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
+}
+
+int attack_func() {
+    // 1. 定义大量局部变量，使用 getint() 强制活跃
+    // 这会迫使 RegisterAllocator 使用 $s 寄存器，从而导致栈帧膨胀 (stackDelta > 0)
+    int s0 = getint(); int s1 = getint(); int s2 = getint(); int s3 = getint();
+    int s4 = getint(); int s5 = getint(); int s6 = getint(); int s7 = getint();
+    
+    // 2. 调用带多参数的函数
+    // MipsBuilder 生成代码时：
+    // sw 555, 16($sp)  <-- Arg 5
+    // sw 666, 20($sp)  <-- Arg 6
+    //
+    // 如果 Allocator 认为 protectedArea = 16：
+    // 16 >= 16 -> True -> 修改为 16 + delta (错误！)
+    // 20 >= 16 -> True -> 修改为 20 + delta (错误！)
+    //
+    // 正确逻辑应该是：protectedArea = 32 (8*4)，所以 16 和 20 都不应该动。
+    int res = check_args(1, 2, 3, 4, 555, 666, 7, 8);
+    
+    // 3. 保持局部变量活跃
+    int locals = s0 + s1 + s2 + s3 + s4 + s5 + s6 + s7;
+    
+    return res + locals;
+}
+
+int main() {
+    printf("Please input 8 ones (1 1 1 1 1 1 1 1):\n");
+    
+    // 输入全 1，locals = 8
+    // check_args = 1+2+3+4+555+666+7+8 = 1246
+    // total = 1254
+    int res = attack_func();
+    
+    assert(1254, res);
+    
+    if (g_fails == 0) {
+        printf("Congratulations! Bug fixed.\n");
+    } else {
+        printf("Bug detected! Outgoing arguments offset incorrect.\n");
+    }
+    return g_fails;
+}

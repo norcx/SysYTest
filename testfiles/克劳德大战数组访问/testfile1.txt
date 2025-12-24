@@ -1,0 +1,35 @@
+// test1 - 大局部数组 + 深递归，测试栈空间
+int g_count = 0;
+
+int recursive_with_local_array(int depth, int val) {
+    int local_arr[50];
+    int i;
+    g_count = g_count + 1;
+    
+    for (i = 0; i < 50; i = i + 1) {
+        local_arr[i] = depth * 100 + i;
+    }
+    
+    if (depth <= 0) {
+        return local_arr[val % 50];
+    }
+    
+    int result = recursive_with_local_array(depth - 1, val + local_arr[depth % 50]);
+    
+    // 验证local_arr没有被破坏
+    for (i = 0; i < 50; i = i + 1) {
+        if (local_arr[i] != depth * 100 + i) {
+            printf("CORRUPTED at depth %d, index %d\n", depth, i);
+            return -1;
+        }
+    }
+    
+    return result + local_arr[0];
+}
+
+int main() {
+    int result = recursive_with_local_array(30, 7);
+    printf("Result: %d\n", result);
+    printf("Call count: %d\n", g_count);
+    return 0;
+}

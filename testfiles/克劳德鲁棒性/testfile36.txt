@@ -1,0 +1,53 @@
+// test36_nested_function_calls.sy - 嵌套函数调用
+int add(int a, int b) {
+    return a + b;
+}
+
+int mul(int a, int b) {
+    return a * b;
+}
+
+int sub(int a, int b) {
+    return a - b;
+}
+
+int div_func(int a, int b) {
+    return a / b;
+}
+
+int compute(int a, int b, int c, int d) {
+    return add(mul(a, b), sub(c, d));
+}
+
+int main() {
+    // 简单嵌套
+    printf("add(mul(2,3), 4) = %d\n", add(mul(2, 3), 4));  // 6+4=10
+    printf("mul(add(2,3), sub(10,4)) = %d\n", mul(add(2, 3), sub(10, 4)));  // 5*6=30
+    
+    // 深度嵌套
+    printf("add(add(add(1,2),3),4) = %d\n", add(add(add(1, 2), 3), 4));  // 10
+    printf("mul(mul(mul(2,2),2),2) = %d\n", mul(mul(mul(2, 2), 2), 2));  // 16
+    
+    // 混合嵌套
+    printf("compute(2,3,10,4) = %d\n", compute(2, 3, 10, 4));  // 6+6=12
+    
+    // 嵌套作为数组下标
+    int arr[20] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+    printf("arr[add(2,3)] = %d\n", arr[add(2, 3)]);  // arr[5]=5
+    printf("arr[mul(2,add(1,2))] = %d\n", arr[mul(2, add(1, 2))]);  // arr[6]=6
+    
+    // 嵌套在条件中
+    if (add(1, 2) > sub(5, 3)) {
+        printf("3 > 2: correct\n");
+    }
+    
+    // 嵌套在for中
+    int i;
+    int sum = 0;
+    for (i = 0; i < add(2, 3); i = i + 1) {
+        sum = sum + mul(i, 2);
+    }
+    printf("sum = %d\n", sum);  // 0+2+4+6+8=20
+    
+    return 0;
+}

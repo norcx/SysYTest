@@ -1,0 +1,40 @@
+// test_force_bug.sy
+
+int g_fails = 0;
+
+void assert(int expected, int actual) {
+    if (expected != actual) {
+        printf("Fail! Expected: ");
+        printf("%d", expected);
+        printf(", Actual: ");
+        printf("%d", actual);
+        printf("\n");
+        g_fails = g_fails + 1;
+    }
+}
+
+// 这是一个空函数，仅为了破坏叶子函数属性，强制 caller 保存 $ra
+void dummy() {
+    return;
+}
+
+// 8个参数
+int stack_arg_test(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8) {
+    // 【关键点】调用函数，强制 stack_arg_test 变为非叶子函数
+    // 这会导致编译器生成 addiu $sp, $sp, -size 和 sw $ra
+    dummy();
+
+    // 在栈帧改变后，读取栈参数 a5-a8
+    // 如果编译器生成的指令仍然是 lw $t0, 16($sp)，那就是错的（读到了自己的栈帧）
+    // 正确应该是 lw $t0, 16+stackSize($sp)
+    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
+}
+
+int main() {
+    // 1+2+3+4+5+6+7+8 = 36
+    int res = stack_arg_test(1, 2, 3, 4, 5, 6, 7, 8);
+    
+    assert(36, res);
+    
+    return g_fails;
+}

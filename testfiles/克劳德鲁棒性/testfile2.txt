@@ -1,0 +1,28 @@
+// test2_nested_static.sy - 测试多层嵌套的static变量，同名覆盖
+int counter() {
+    static int cnt = 0;
+    cnt = cnt + 1;
+    return cnt;
+}
+
+int main() {
+    int i, j;
+    for (i = 0; i < 3; i = i + 1) {
+        static int x = 1;
+        printf("L1 x=%d cnt=%d\n", x, counter());
+        x = x + 10;
+        
+        for (j = 0; j < 2; j = j + 1) {
+            static int x = 100;  // 与外层x同名但不同
+            printf("  L2 x=%d cnt=%d\n", x, counter());
+            x = x + 100;
+            
+            if (j == 0) {
+                static int x = 1000;  // 第三层同名static
+                printf("    L3 x=%d cnt=%d\n", x, counter());
+                x = x + 1000;
+            }
+        }
+    }
+    return 0;
+}

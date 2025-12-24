@@ -1,0 +1,45 @@
+// test9_static_in_different_blocks.sy - static变量在不同基本块中的定义
+int func_a() {
+    int x = getint();
+    if (x > 0) {
+        static int s = 10;
+        s = s + 1;
+        printf("func_a positive: s=%d\n", s);
+        return s;
+    } else {
+        static int s = 100;  // 不同块的同名static
+        s = s + 10;
+        printf("func_a non-positive: s=%d\n", s);
+        return s;
+    }
+    return 0;
+}
+
+int func_b(int n) {
+    int i;
+    int sum = 0;
+    for (i = 0; i < n; i = i + 1) {
+        if (i % 2 == 0) {
+            static int even_cnt = 0;
+            even_cnt = even_cnt + 1;
+            sum = sum + even_cnt;
+        } else {
+            static int odd_cnt = 0;
+            odd_cnt = odd_cnt + 1;
+            sum = sum + odd_cnt * 10;
+        }
+    }
+    return sum;
+}
+
+int main() {
+    printf("Call 1: %d\n", func_a());  // 输入正数
+    printf("Call 2: %d\n", func_a());  // 输入负数
+    printf("Call 3: %d\n", func_a());  // 输入正数
+    printf("Call 4: %d\n", func_a());  // 输入负数
+    
+    printf("func_b(6)=%d\n", func_b(6));  // even: 1,2,3 odd: 10,20,30 = 6+60=66
+    printf("func_b(4)=%d\n", func_b(4));  // even: 4,5 odd: 40,50 = 9+90=99 (累积)
+    
+    return 0;
+}

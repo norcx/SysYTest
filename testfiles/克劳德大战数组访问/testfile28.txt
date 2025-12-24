@@ -1,0 +1,54 @@
+// test28 - 递归中创建和传递局部数组
+int g_call_count = 0;
+
+int recursive_array_process(int depth, int prev_sum) {
+    int local_arr[20];
+    int i;
+    int sum = 0;
+    
+    g_call_count = g_call_count + 1;
+    
+    // 初始化局部数组
+    for (i = 0; i < 20; i = i + 1) {
+        local_arr[i] = depth * 100 + i;
+    }
+    
+    // 计算当前层的和
+    for (i = 0; i < 20; i = i + 1) {
+        sum = sum + local_arr[i];
+    }
+    
+    if (depth <= 0) {
+        return sum + prev_sum;
+    }
+    
+    // 递归调用
+    int result = recursive_array_process(depth - 1, sum + prev_sum);
+    
+    // 验证局部数组没有被破坏
+    for (i = 0; i < 20; i = i + 1) {
+        if (local_arr[i] != depth * 100 + i) {
+            printf("CORRUPTED at depth %d, index %d: expected %d, got %d\n", 
+                   depth, i, depth * 100 + i, local_arr[i]);
+            return -1;
+        }
+    }
+    
+    return result;
+}
+
+int main() {
+    int result;
+    
+    g_call_count = 0;
+    result = recursive_array_process(20, 0);
+    printf("Result (depth 20): %d\n", result);
+    printf("Call count: %d\n", g_call_count);
+    
+    g_call_count = 0;
+    result = recursive_array_process(50, 0);
+    printf("Result (depth 50): %d\n", result);
+    printf("Call count: %d\n", g_call_count);
+    
+    return 0;
+}

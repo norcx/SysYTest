@@ -1,0 +1,63 @@
+/* 
+   SysY 编译器测试用例：带备忘录的卡特兰数计算
+   考察点：
+   1. 递归调用与 $ra 保护
+   2. 跨函数活跃变量在图着色中的寄存器分配（$s 寄存器与 Spill）
+   3. 全局数组与静态变量的访问
+   4. for 循环控制流
+   5. 复杂的表达式计算
+*/
+
+// 全局变量定义
+int f[20];
+
+// 计算函数
+int h(int n) {
+    // static 变量测试：记录函数进入次数
+    static int call_count = 0;
+    call_count = call_count + 1;
+
+    // 备忘录查找
+    if (f[n] != 0) {
+        return f[n];
+    }
+
+    // 边界情况
+    if (n < 2) {
+        f[n] = 1;
+        return 1;
+    }
+
+    int sum = 0;
+    int i;
+    // 只支持 for 循环
+    for (i = 1; i <= n; i = i + 1) {
+        // 显式拆分变量以增加寄存器压力
+        int left = h(i - 1);
+        int right = h(n - i);
+        sum = sum + left * right;
+    }
+
+    f[n] = sum;
+    return sum;
+}
+
+// 主函数在最后
+int main() {
+    int n;
+    n = getint();
+
+    // && 和 || 在表达式最外层
+    if (n < 0 || n >= 20) {
+        return 0;
+    }
+
+    int result;
+    result = h(n);
+    
+    // printf 为单独语句
+    printf("Input n: %d\n", n);
+    printf("Catalan Result: %d\n", result);
+
+    return 0;
+}

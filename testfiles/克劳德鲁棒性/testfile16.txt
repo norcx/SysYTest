@@ -1,0 +1,32 @@
+// test16_comparison_chain.sy - 比较运算符链式测试
+int main() {
+    int a = 1, b = 2, c = 3, d = 2;
+    
+    
+    // 比较结果用于计算
+    // int sum = (a < b) + (b < c) + (c > d) + (a == a) + (b != c);
+    int sum;
+    if (a<b) sum = 1;
+    else sum = 0;
+    for (;b<c;){sum=sum+1;break;}
+    if (c>d) sum = sum+1;
+    if (a==a) sum = sum+1;
+    for(;b!=c;){sum=sum+1;break;}
+    printf("sum of comparisons: %d\n", sum);  // 1+1+1+1+1 = 5
+    
+    // 边界值测试
+    int zero = 0;
+    int neg = -5;
+    int pos = 5;
+    
+    // 复杂条件
+    if (a < b && b < c && c > d) {
+        printf("Chain comparison OK\n");
+    }
+    
+    if (a <= b && b <= c || c <= d) {
+        printf("Mixed chain OK\n");
+    }
+    
+    return 0;
+}

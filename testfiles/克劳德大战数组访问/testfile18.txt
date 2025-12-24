@@ -1,0 +1,58 @@
+// test18 - 递归快速排序（经典算法，测试数组+递归）
+int arr[100];
+
+void swap(int a[], int i, int j) {
+    int temp = a[i];
+    a[i] = a[j];
+    a[j] = temp;
+}
+
+int partition(int a[], int low, int high) {
+    int pivot = a[high];
+    int i = low - 1;
+    int j;
+    
+    for (j = low; j < high; j = j + 1) {
+        if (a[j] <= pivot) {
+            i = i + 1;
+            swap(a, i, j);
+        }
+    }
+    swap(a, i + 1, high);
+    return i + 1;
+}
+
+void quicksort(int a[], int low, int high) {
+    int pi;
+    if (low < high) {
+        pi = partition(a, low, high);
+        quicksort(a, low, pi - 1);
+        quicksort(a, pi + 1, high);
+    }
+}
+
+int main() {
+    int n;
+    int i;
+    
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        arr[i] = getint();
+    }
+    
+    printf("Before: ");
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+    
+    quicksort(arr, 0, n - 1);
+    
+    printf("After: ");
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+    
+    return 0;
+}

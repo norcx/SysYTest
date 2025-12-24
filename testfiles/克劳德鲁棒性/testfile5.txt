@@ -1,0 +1,33 @@
+// test5_control_flow_extreme.sy - 极端控制流测试：嵌套for+if+continue+break
+int main() {
+    int i, j, k;
+    int sum = 0;
+    int flag = 0;
+    
+    // 三层嵌套循环，各种continue/break组合
+    for (i = 0; i < 5; i = i + 1) {
+        if (i == 0) continue;  // 跳过i=0
+        
+        for (j = 0; j < 5; j = j + 1) {
+            if (j == 0) continue;  // 跳过j=0
+            if (j == 4) break;     // j=4时跳出内层
+            
+            for (k = 0; k < 5; k = k + 1) {
+                if (k % 2 == 0) continue;  // 只处理奇数k
+                sum = sum + i * 100 + j * 10 + k;
+                
+                if (sum > 1000) {
+                    flag = 1;
+                    break;  // 跳出最内层
+                }
+            }
+            
+            if (flag) break;  // 跳出中层
+        }
+        
+        if (flag) break;  // 跳出外层
+    }
+    
+    printf("sum=%d flag=%d i=%d j=%d k=%d\n", sum, flag, i, j, k);
+    return 0;
+}

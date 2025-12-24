@@ -1,0 +1,28 @@
+// test1_mega_params.sy - 测试超多参数函数调用（20+参数）以及参数为复杂表达式
+int g = 100;
+
+int mega_sum(int p1, int p2, int p3, int p4, int p5, int p6, int p7, int p8,
+             int p9, int p10, int p11, int p12, int p13, int p14, int p15, int p16,
+             int p17, int p18, int p19, int p20, int p21, int p22, int p23, int p24) {
+    return p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10 + p11 + p12 +
+           p13 + p14 + p15 + p16 + p17 + p18 + p19 + p20 + p21 + p22 + p23 + p24;
+}
+
+int compute(int x) {
+    g = g + x;
+    return x * 2;
+}
+
+int main() {
+    int a = 1, b = 2;
+    int t1 = compute(1);
+    int t2 = compute(2);
+    int t3 = compute(3);
+    // 参数为复杂表达式，包含函数调用
+    int res = mega_sum(a, b, a + b, a * b, a - b, b - a, a % b + 1, b % a + 2,
+                       t1, t2, t3, compute(4),
+                       10 + 3, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24);
+    printf("Sum = %d\n", res);
+    printf("g = %d\n", g);          // 预期: 100+1+2+3+4 = 110
+    return 0;
+}

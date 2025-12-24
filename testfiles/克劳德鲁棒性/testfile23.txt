@@ -1,0 +1,97 @@
+// test23_array_as_param_stress.sy - 数组参数压力测试
+int g_arr[20];
+
+void init_array(int arr[], int n, int start) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        arr[i] = start + i;
+    }
+}
+
+int sum_range(int arr[], int start, int end) {
+    int i;
+    int s = 0;
+    for (i = start; i < end; i = i + 1) {
+        s = s + arr[i];
+    }
+    return s;
+}
+
+void reverse_array(int arr[], int n) {
+    int i;
+    int j;
+    int tmp;
+    i = 0;
+    j = n - 1;
+    for (i = 0; i < j; i = i + 1) {
+        tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+        j = j - 1;
+    }
+}
+
+void copy_array(int src[], int dst[], int n) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        dst[i] = src[i];
+    }
+}
+
+int find_max(int arr[], int n) {
+    int i;
+    int max_val;
+    max_val = arr[0];
+    for (i = 1; i < n; i = i + 1) {
+        if (arr[i] > max_val) {
+            max_val = arr[i];
+        }
+    }
+    return max_val;
+}
+
+int find_min(int arr[], int n) {
+    int i;
+    int min_val;
+    min_val = arr[0];
+    for (i = 1; i < n; i = i + 1) {
+        if (arr[i] < min_val) {
+            min_val = arr[i];
+        }
+    }
+    return min_val;
+}
+
+void print_arr(int arr[], int n) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int local_arr[20];
+    int copy_arr[20];
+    
+    init_array(g_arr, 10, 1);
+    printf("Global array: ");
+    print_arr(g_arr, 10);
+    
+    init_array(local_arr, 10, 100);
+    printf("Local array: ");
+    print_arr(local_arr, 10);
+    
+    printf("Sum g_arr[0..5): %d\n", sum_range(g_arr, 0, 5));      // 1+2+3+4+5=15
+    printf("Sum local[2..7): %d\n", sum_range(local_arr, 2, 7));  // 102+103+104+105+106=520
+    
+    printf("Max g_arr: %d\n", find_max(g_arr, 10));      // 10
+    printf("Min local: %d\n", find_min(local_arr, 10));  // 100
+    
+    copy_array(g_arr, copy_arr, 10);
+    reverse_array(copy_arr, 10);
+    printf("Reversed copy: ");
+    print_arr(copy_arr, 10);  // 10 9 8 7 6 5 4 3 2 1
+    
+    return 0;
+}

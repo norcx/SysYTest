@@ -1,0 +1,58 @@
+// test38_empty_blocks.sy - 空语句块和边界情况
+int main() {
+    int i, j;
+    int count = 0;
+    
+    // 空if块
+    if (1) {
+    }
+    printf("After empty if: count=%d\n", count);
+    
+    // 空else块
+    if (0) {
+        count = 999;
+    } else {
+    }
+    printf("After empty else: count=%d\n", count);
+    
+    // 空for循环体
+    for (i = 0; i < 10; i = i + 1) {
+    }
+    printf("After empty for: i=%d\n", i);  // 10
+    
+    // 嵌套空块
+    for (i = 0; i < 5; i = i + 1) {
+        if (i % 2 == 0) {
+        } else {
+            count = count + 1;
+        }
+    }
+    printf("After nested: count=%d\n", count);  // 2 (i=1,3)
+    
+    // 只有continue的循环
+    count = 0;
+    for (i = 0; i < 10; i = i + 1) {
+        if (i < 5) {
+            continue;
+        }
+        count = count + 1;
+    }
+    printf("After continue loop: count=%d\n", count);  // 5
+    
+    // 只有break的循环
+    for (i = 0; i < 100; i = i + 1) {
+        break;
+    }
+    printf("After break loop: i=%d\n", i);  // 0
+    
+    // 立即返回的条件
+    if (1) {
+        if (1) {
+            if (1) {
+                printf("Deep nesting OK\n");
+            }
+        }
+    }
+    
+    return 0;
+}

@@ -1,0 +1,69 @@
+// test22 - 数组在条件分支中的不同使用
+int g_arr[30];
+
+int process_positive(int arr[], int n) {
+    int local_pos[20];
+    int i;
+    int count = 0;
+    
+    for (i = 0; i < n; i = i + 1) {
+        if (arr[i] > 0) {
+            local_pos[count] = arr[i];
+            count = count + 1;
+        }
+    }
+    
+    int sum = 0;
+    for (i = 0; i < count; i = i + 1) {
+        sum = sum + local_pos[i];
+    }
+    return sum;
+}
+
+int process_negative(int arr[], int n) {
+    int local_neg[20];
+    int i;
+    int count = 0;
+    
+    for (i = 0; i < n; i = i + 1) {
+        if (arr[i] < 0) {
+            local_neg[count] = arr[i];
+            count = count + 1;
+        }
+    }
+    
+    int sum = 0;
+    for (i = 0; i < count; i = i + 1) {
+        sum = sum + local_neg[i];
+    }
+    return sum;
+}
+
+int main() {
+    int data[20] = {5, -3, 8, -1, 0, 12, -7, 3, -9, 6, -2, 15, -4, 1, -8, 10, -6, 7, -5, 4};
+    int i;
+    
+    // 复制到全局数组
+    for (i = 0; i < 20; i = i + 1) {
+        g_arr[i] = data[i];
+    }
+    
+    printf("Positive sum: %d\n", process_positive(data, 20));
+    printf("Negative sum: %d\n", process_negative(data, 20));
+    
+    printf("Global positive sum: %d\n", process_positive(g_arr, 20));
+    printf("Global negative sum: %d\n", process_negative(g_arr, 20));
+    
+    // 条件分支中选择不同数组
+    int choice = getint();
+    int result;
+    if (choice > 0) {
+        result = process_positive(data, 20);
+        printf("Chose positive: %d\n", result);
+    } else {
+        result = process_negative(data, 20);
+        printf("Chose negative: %d\n", result);
+    }
+    
+    return 0;
+}

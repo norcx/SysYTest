@@ -1,0 +1,68 @@
+// test27 - 数组与函数返回值交互
+int g_arr[20];
+
+int get_and_modify(int arr[], int idx) {
+    int old_val = arr[idx];
+    arr[idx] = arr[idx] * 2;
+    return old_val;
+}
+
+int sum_and_clear(int arr[], int n) {
+    int i;
+    int sum = 0;
+    for (i = 0; i < n; i = i + 1) {
+        sum = sum + arr[i];
+        arr[i] = 0;
+    }
+    return sum;
+}
+
+int find_max_idx(int arr[], int n) {
+    int i;
+    int max_idx = 0;
+    for (i = 1; i < n; i = i + 1) {
+        if (arr[i] > arr[max_idx]) {
+            max_idx = i;
+        }
+    }
+    return max_idx;
+}
+
+int main() {
+    int local_arr[10] = {5, 3, 8, 1, 9, 2, 7, 4, 6, 0};
+    int i;
+    
+    // 初始化全局数组
+    for (i = 0; i < 20; i = i + 1) {
+        g_arr[i] = i * 5;
+    }
+    
+    // 测试get_and_modify
+    printf("Before modify: local_arr[2] = %d\n", local_arr[2]);
+    int old = get_and_modify(local_arr, 2);
+    printf("Old value: %d, New value: %d\n", old, local_arr[2]);
+    
+    // 测试find_max_idx
+    int max_idx = find_max_idx(local_arr, 10);
+    printf("Max index: %d, Max value: %d\n", max_idx, local_arr[max_idx]);
+    
+    // 使用返回值作为数组下标
+    int idx = find_max_idx(g_arr, 20);
+    printf("Global max at index %d: %d\n", idx, g_arr[idx]);
+    
+    // 链式调用
+    printf("g_arr[find_max_idx] before: %d\n", g_arr[find_max_idx(g_arr, 20)]);
+    int result = get_and_modify(g_arr, find_max_idx(g_arr, 20));
+    printf("Result: %d\n", result);
+    
+    // 测试sum_and_clear
+    int sum = sum_and_clear(local_arr, 10);
+    printf("Sum: %d\n", sum);
+    printf("After clear: ");
+    for (i = 0; i < 10; i = i + 1) {
+        printf("%d ", local_arr[i]);
+    }
+    printf("\n");
+    
+    return 0;
+}

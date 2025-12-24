@@ -1,0 +1,90 @@
+// test22_nested_if_short_circuit.sy - 嵌套if中的短路求值
+int call_count = 0;
+
+int side_effect(int val) {
+    call_count = call_count + 1;
+    printf("side_effect called with %d, count=%d\n", val, call_count);
+    return val;
+}
+
+int main() {
+    int a, b, c;
+    
+    // 测试1: && 左边为假，右边不执行
+    call_count = 0;
+    a = 0;
+    if (a && side_effect(1)) {
+        printf("Branch 1 taken\n");
+    } else {
+        printf("Branch 1 not taken\n");
+    }
+    printf("call_count=%d\n", call_count);  // 0
+    
+    // 测试2: && 左边为真，右边执行
+    call_count = 0;
+    a = 1;
+    if (a && side_effect(1)) {
+        printf("Branch 2 taken\n");
+    } else {
+        printf("Branch 2 not taken\n");
+    }
+    printf("call_count=%d\n", call_count);  // 1
+    
+    // 测试3: || 左边为真，右边不执行
+    call_count = 0;
+    a = 1;
+    if (a || side_effect(1)) {
+        printf("Branch 3 taken\n");
+    } else {
+        printf("Branch 3 not taken\n");
+    }
+    printf("call_count=%d\n", call_count);  // 0
+    
+    // 测试4: || 左边为假，右边执行
+    call_count = 0;
+    a = 0;
+    if (a || side_effect(1)) {
+        printf("Branch 4 taken\n");
+    } else {
+        printf("Branch 4 not taken\n");
+    }
+    printf("call_count=%d\n", call_count);  // 1
+    
+    // 测试5: 复杂链式 a && b && c
+    call_count = 0;
+    if (side_effect(1) && side_effect(1) && side_effect(0)) {
+        printf("Branch 5 taken\n");
+    } else {
+        printf("Branch 5 not taken\n");
+    }
+    printf("call_count=%d\n", call_count);  // 3
+    
+    // 测试6: 链式短路 a && b && c，第一个为假
+    call_count = 0;
+    if (side_effect(0) && side_effect(1) && side_effect(1)) {
+        printf("Branch 6 taken\n");
+    } else {
+        printf("Branch 6 not taken\n");
+    }
+    printf("call_count=%d\n", call_count);  // 1
+    
+    // 测试7: a || b || c
+    call_count = 0;
+    if (side_effect(0) || side_effect(0) || side_effect(1)) {
+        printf("Branch 7 taken\n");
+    } else {
+        printf("Branch 7 not taken\n");
+    }
+    printf("call_count=%d\n", call_count);  // 3
+    
+    // 测试8: a || b || c，第一个为真
+    call_count = 0;
+    if (side_effect(1) || side_effect(1) || side_effect(1)) {
+        printf("Branch 8 taken\n");
+    } else {
+        printf("Branch 8 not taken\n");
+    }
+    printf("call_count=%d\n", call_count);  // 1
+    
+    return 0;
+}

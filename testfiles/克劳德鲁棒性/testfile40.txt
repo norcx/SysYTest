@@ -1,0 +1,90 @@
+// test40_multiple_return_paths.sy - 多返回路径测试
+int classify(int x) {
+    if (x < 0) {
+        return -1;
+    }
+    if (x == 0) {
+        return 0;
+    }
+    if (x < 10) {
+        return 1;
+    }
+    if (x < 100) {
+        return 2;
+    }
+    if (x < 1000) {
+        return 3;
+    }
+    return 4;
+}
+
+int nested_return(int a, int b, int c) {
+    if (a > 0) {
+        if (b > 0) {
+            if (c > 0) {
+                return 1;
+            } else {
+                return 2;
+            }
+        } else {
+            if (c > 0) {
+                return 3;
+            } else {
+                return 4;
+            }
+        }
+    } else {
+        if (b > 0) {
+            if (c > 0) {
+                return 5;
+            } else {
+                return 6;
+            }
+        } else {
+            if (c > 0) {
+                return 7;
+            } else {
+                return 8;
+            }
+        }
+    }
+    return 0;
+}
+
+int loop_with_return(int arr[], int n, int target) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        if (arr[i] == target) {
+            return i;
+        }
+        if (arr[i] > target) {
+            return -1;
+        }
+    }
+    return -2;
+}
+
+int main() {
+    printf("classify(-5)=%d\n", classify(-5));    // -1
+    printf("classify(0)=%d\n", classify(0));      // 0
+    printf("classify(5)=%d\n", classify(5));      // 1
+    printf("classify(50)=%d\n", classify(50));    // 2
+    printf("classify(500)=%d\n", classify(500));  // 3
+    printf("classify(5000)=%d\n", classify(5000)); // 4
+    
+    printf("nested(1,1,1)=%d\n", nested_return(1, 1, 1));    // 1
+    printf("nested(1,1,-1)=%d\n", nested_return(1, 1, -1));  // 2
+    printf("nested(1,-1,1)=%d\n", nested_return(1, -1, 1));  // 3
+    printf("nested(1,-1,-1)=%d\n", nested_return(1, -1, -1)); // 4
+    printf("nested(-1,1,1)=%d\n", nested_return(-1, 1, 1));  // 5
+    printf("nested(-1,1,-1)=%d\n", nested_return(-1, 1, -1)); // 6
+    printf("nested(-1,-1,1)=%d\n", nested_return(-1, -1, 1)); // 7
+    printf("nested(-1,-1,-1)=%d\n", nested_return(-1, -1, -1)); // 8
+    
+    int sorted_arr[10] = {1, 3, 5, 7, 9, 11, 13, 15, 17, 19};
+    printf("find 7: %d\n", loop_with_return(sorted_arr, 10, 7));   // 3
+    printf("find 6: %d\n", loop_with_return(sorted_arr, 10, 6));   // -1
+    printf("find 20: %d\n", loop_with_return(sorted_arr, 10, 20)); // -2
+    
+    return 0;
+}

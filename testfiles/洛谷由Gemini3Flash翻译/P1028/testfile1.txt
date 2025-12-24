@@ -1,0 +1,64 @@
+/* 
+   SysY 编译器测试用例：数的分裂（带备忘录递归）
+   考察点：
+   1. 递归中的寄存器保存与恢复（$s 系列寄存器的图着色压力）
+   2. 全局数组的初始化与多重访问
+   3. for 循环实现 memset 逻辑
+   4. 函数调用的返回值正确传递
+*/
+
+// 全局变量定义
+int ans[1000];
+
+// 求解函数
+int qwerty(int x) {
+    // 基础情况
+    if (x == 1) {
+        return 1;
+    }
+
+    // 查表，避免重复计算
+    if (ans[x] != -1) {
+        return ans[x];
+    }
+
+    int tmp = 1;
+    int i;
+    int limit = x / 2;
+
+    // SysY 只支持 for 循环
+    for (i = 1; i <= limit; i = i + 1) {
+        // 递归调用：此处会产生极大的寄存器压力
+        // 变量 tmp, i, x, limit 在调用 qwerty(i) 前后均活跃
+        tmp = tmp + qwerty(i);
+    }
+
+    // 存储结果并返回
+    ans[x] = tmp;
+    return tmp;
+}
+
+int main() {
+    int n;
+    n = getint();
+
+    // 检查输入边界
+    if (n < 1 || n >= 1000) {
+        return 0;
+    }
+
+    // SysY 不支持 memset，必须手动循环初始化
+    int i;
+    for (i = 0; i < 1000; i = i + 1) {
+        ans[i] = -1;
+    }
+
+    // 计算结果
+    int result;
+    result = qwerty(n);
+
+    // printf 必须是单独一条语句
+    printf("%d", result);
+
+    return 0;
+}

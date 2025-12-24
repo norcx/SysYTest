@@ -1,0 +1,79 @@
+// test7 - 递归中传递数组参数
+int g_call_count = 0;
+
+void recursive_fill(int arr[], int start, int end, int val) {
+    g_call_count = g_call_count + 1;
+    if (start >= end) {
+        return;
+    }
+    
+    int mid = (start + end) / 2;
+    arr[mid] = val;
+    
+    recursive_fill(arr, start, mid, val - 1);
+    recursive_fill(arr, mid + 1, end, val + 1);
+}
+
+int recursive_sum(int arr[], int start, int end) {
+    if (start >= end) {
+        return 0;
+    }
+    if (start + 1 == end) {
+        return arr[start];
+    }
+    
+    int mid = (start + end) / 2;
+    return recursive_sum(arr, start, mid) + recursive_sum(arr, mid, end);
+}
+
+int recursive_max(int arr[], int start, int end) {
+    if (start + 1 == end) {
+        return arr[start];
+    }
+    
+    int mid = (start + end) / 2;
+    int left_max = recursive_max(arr, start, mid);
+    int right_max = recursive_max(arr, mid, end);
+    
+    if (left_max > right_max) {
+        return left_max;
+    }
+    return right_max;
+}
+
+int main() {
+    int arr[64];
+    int i;
+    
+    // 初始化
+    for (i = 0; i < 64; i = i + 1) {
+        arr[i] = 0;
+    }
+    
+    // 递归填充
+    recursive_fill(arr, 0, 64, 100);
+    printf("Fill call count: %d\n", g_call_count);
+    
+    // 打印部分结果
+    printf("arr[0..7]: ");
+    for (i = 0; i < 8; i = i + 1) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+    
+    printf("arr[31] = %d\n", arr[31]);
+    printf("arr[32] = %d\n", arr[32]);
+    
+    // 递归求和
+    printf("Recursive sum: %d\n", recursive_sum(arr, 0, 64));
+    
+    // 重新初始化为递增序列
+    for (i = 0; i < 64; i = i + 1) {
+        arr[i] = i * 3 + 1;
+    }
+    
+    // 递归求最大值
+    printf("Recursive max: %d\n", recursive_max(arr, 0, 64));  // 63*3+1 = 190
+    
+    return 0;
+}

@@ -1,0 +1,74 @@
+// test12 - 多个函数各自有局部数组，互相调用
+int func_a(int x) {
+    int arr_a[20];
+    int i;
+    int sum = 0;
+    
+    for (i = 0; i < 20; i = i + 1) {
+        arr_a[i] = x + i;
+    }
+    
+    for (i = 0; i < 20; i = i + 1) {
+        sum = sum + arr_a[i];
+    }
+    
+    return sum;
+}
+
+int func_b(int x) {
+    int arr_b[30];
+    int i;
+    int sum = 0;
+    
+    for (i = 0; i < 30; i = i + 1) {
+        arr_b[i] = x * 2 + i;
+    }
+    
+    // 调用func_a
+    sum = func_a(x);
+    
+    // 验证arr_b没被破坏
+    for (i = 0; i < 30; i = i + 1) {
+        if (arr_b[i] != x * 2 + i) {
+            printf("arr_b corrupted at %d\n", i);
+            return -1;
+        }
+        sum = sum + arr_b[i];
+    }
+    
+    return sum;
+}
+
+int func_c(int x) {
+    int arr_c[25];
+    int i;
+    int sum = 0;
+    
+    for (i = 0; i < 25; i = i + 1) {
+        arr_c[i] = x * 3 + i;
+    }
+    
+    // 调用func_b
+    sum = func_b(x);
+    
+    // 验证arr_c没被破坏
+    for (i = 0; i < 25; i = i + 1) {
+        if (arr_c[i] != x * 3 + i) {
+            printf("arr_c corrupted at %d\n", i);
+            return -1;
+        }
+        sum = sum + arr_c[i];
+    }
+    
+    return sum;
+}
+
+int main() {
+    printf("func_a(10) = %d\n", func_a(10));
+    printf("func_b(10) = %d\n", func_b(10));
+    printf("func_c(10) = %d\n", func_c(10));
+    
+    printf("func_c(100) = %d\n", func_c(100));
+    
+    return 0;
+}

@@ -1,0 +1,31 @@
+// test11_register_pressure.sy - 寄存器压力测试（大量局部变量跨函数调用存活）
+int dummy() {
+    return 0;
+}
+
+int main() {
+    // 定义40个局部变量
+    int v01=1;  int v02=2;  int v03=3;  int v04=4;  int v05=5;
+    int v06=6;  int v07=7;  int v08=8;  int v09=9;  int v10=10;
+    int v11=11; int v12=12; int v13=13; int v14=14; int v15=15;
+    int v16=16; int v17=17; int v18=18; int v19=19; int v20=20;
+    int v21=21; int v22=22; int v23=23; int v24=24; int v25=25;
+    int v26=26; int v27=27; int v28=28; int v29=29; int v30=30;
+    int v31=31; int v32=32; int v33=33; int v34=34; int v35=35;
+    int v36=36; int v37=37; int v38=38; int v39=39; int v40=40;
+    
+    // 函数调用，所有变量必须跨调用存活
+    int trash = dummy();
+    trash = getint();
+    
+    // 使用所有变量
+    int sum1 = v01+v02+v03+v04+v05+v06+v07+v08+v09+v10;  // 55
+    int sum2 = v11+v12+v13+v14+v15+v16+v17+v18+v19+v20;  // 155
+    int sum3 = v21+v22+v23+v24+v25+v26+v27+v28+v29+v30;  // 255
+    int sum4 = v31+v32+v33+v34+v35+v36+v37+v38+v39+v40;  // 355
+    
+    printf("sum1=%d sum2=%d sum3=%d sum4=%d\n", sum1, sum2, sum3, sum4);
+    printf("total=%d\n", sum1 + sum2 + sum3 + sum4);  // 820
+    
+    return 0;
+}

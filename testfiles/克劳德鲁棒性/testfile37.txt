@@ -1,0 +1,59 @@
+// test37_global_local_shadow.sy - 全局变量和局部变量同名遮蔽
+int x = 100;
+int y = 200;
+int arr[5] = {1, 2, 3, 4, 5};
+
+int get_global_x() {
+    return x;
+}
+
+void set_global_x(int val) {
+    x = val;
+}
+
+int test_shadow() {
+    int x = 10;  // 遮蔽全局x
+    printf("Local x = %d\n", x);  // 10
+    printf("Global x via func = %d\n", get_global_x());  // 100
+    
+    x = x + 5;
+    printf("Local x after +5 = %d\n", x);  // 15
+    printf("Global x via func = %d\n", get_global_x());  // 仍然100
+    
+    set_global_x(999);
+    printf("Local x = %d\n", x);  // 仍然15
+    printf("Global x via func = %d\n", get_global_x());  // 999
+    
+    return x;
+}
+
+int test_array_shadow() {
+    int arr[3] = {100, 200, 300};  // 遮蔽全局arr
+    int i;
+    int sum = 0;
+    for (i = 0; i < 3; i = i + 1) {
+        sum = sum + arr[i];
+    }
+    return sum;  // 600
+}
+
+int main() {
+    printf("Initial global x = %d\n", x);  // 100
+    printf("Initial global y = %d\n", y);  // 200
+    
+    int result;
+    result = test_shadow();
+    printf("test_shadow returned %d\n", result);  // 15
+    printf("Global x after test_shadow = %d\n", x);  // 999
+    
+    // 在main中也遮蔽
+    int y = 50;  // 遮蔽全局y
+    printf("Local y in main = %d\n", y);  // 50
+    
+    printf("test_array_shadow = %d\n", test_array_shadow());  // 600
+    
+    // 全局arr应该不变
+    printf("Global arr[0] = %d\n", arr[0]);  // 1
+    
+    return 0;
+}

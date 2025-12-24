@@ -1,0 +1,39 @@
+// test29 - const数组
+const int SIZE = 10;
+const int g_const_arr[10] = {11, 22, 33, 44, 55, 66, 77, 88, 99, 110};
+
+int sum_const(int n) {
+    int i;
+    int sum = 0;
+    for (i = 0; i < n; i = i + 1) {
+        sum = sum + g_const_arr[i];
+    }
+    return sum;
+}
+
+int main() {
+    int i;
+    
+    printf("Const array contents:\n");
+    for (i = 0; i < SIZE; i = i + 1) {
+        printf("g_const_arr[%d] = %d\n", i, g_const_arr[i]);
+    }
+    
+    printf("Sum of first 5: %d\n", sum_const(5));
+    printf("Sum of all: %d\n", sum_const(SIZE));
+    
+    // 使用const数组元素作为表达式
+    int result = g_const_arr[0] + g_const_arr[SIZE - 1];
+    printf("First + Last = %d\n", result);
+    
+    // 使用const数组元素作为数组下标
+    int local_arr[120];
+    for (i = 0; i < 120; i = i + 1) {
+        local_arr[i] = i;
+    }
+    
+    printf("local_arr[g_const_arr[0]] = %d\n", local_arr[g_const_arr[0]]);  // local_arr[11] = 11
+    printf("local_arr[g_const_arr[4]] = %d\n", local_arr[g_const_arr[4]]);  // local_arr[55] = 55
+    
+    return 0;
+}

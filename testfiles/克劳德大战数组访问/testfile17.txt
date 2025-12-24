@@ -1,0 +1,60 @@
+// test17 - 数组参数与普通参数混合，参数顺序测试
+int g_arr[50];
+
+int mixed_params_1(int a, int arr[], int b, int c) {
+    int i;
+    int sum = a + b + c;
+    for (i = 0; i < 10; i = i + 1) {
+        sum = sum + arr[i];
+    }
+    return sum;
+}
+
+int mixed_params_2(int arr1[], int a, int arr2[], int b) {
+    int i;
+    int sum = a + b;
+    for (i = 0; i < 10; i = i + 1) {
+        sum = sum + arr1[i] + arr2[i];
+    }
+    return sum;
+}
+
+int mixed_params_3(int a, int b, int c, int d, int arr[], int e, int f) {
+    int i;
+    int sum = a + b + c + d + e + f;
+    for (i = 0; i < 10; i = i + 1) {
+        sum = sum + arr[i];
+    }
+    return sum;
+}
+
+void modify_with_params(int arr[], int start, int count, int value) {
+    int i;
+    for (i = 0; i < count; i = i + 1) {
+        arr[start + i] = value + i;
+    }
+}
+
+int main() {
+    int local_arr1[20] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+    int local_arr2[20] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000};
+    int i;
+    
+    // 初始化全局数组
+    for (i = 0; i < 50; i = i + 1) {
+        g_arr[i] = i * 10;
+    }
+    
+    printf("mixed_params_1: %d\n", mixed_params_1(100, local_arr1, 200, 300));
+    printf("mixed_params_1 with global: %d\n", mixed_params_1(100, g_arr, 200, 300));
+    
+    printf("mixed_params_2: %d\n", mixed_params_2(local_arr1, 50, local_arr2, 60));
+    
+    printf("mixed_params_3: %d\n", mixed_params_3(1, 2, 3, 4, local_arr1, 5, 6));
+    
+    // 修改测试
+    modify_with_params(g_arr, 10, 5, 9000);
+    printf("After modify: g_arr[10]=%d, g_arr[14]=%d\n", g_arr[10], g_arr[14]);
+    
+    return 0;
+}

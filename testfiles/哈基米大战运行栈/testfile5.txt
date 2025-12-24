@@ -1,0 +1,63 @@
+// hack_local_array.sy
+// 目标：检测栈上局部数组的偏移量是否被正确修正
+
+int g_fails = 0;
+
+void assert(int expected, int actual) {
+    if (expected != actual) {
+        printf("Fail! Expected: ");
+        printf("%d", expected);
+        printf(", Actual: ");
+        printf("%d", actual);
+        printf("\n");
+        g_fails = g_fails + 1;
+    } else {
+        printf("Success.\n");
+    }
+}
+
+// 只是为了占用寄存器和产生调用
+int use_regs(int a, int b, int c, int d, int e, int f, int g, int h) {
+    return a+b+c+d+e+f+g+h;
+}
+
+int array_test() {
+    // 1. 定义一个局部数组
+    // MipsBuilder 会给它分配栈空间，比如在 16($sp) - 56($sp)
+    int arr[10]; 
+    int i;
+    
+    // 初始化数组
+    for (i = 0; i < 10; i = i + 1) {
+        arr[i] = i;
+    }
+    
+    // 2. 制造巨大的寄存器压力，迫使使用 $s0-$s7
+    // 这会导致 RegisterAllocator 插入保存 $s 的代码，使栈帧变大
+    // 假设 stackDelta = 32
+    int s0=100; int s1=101; int s2=102; int s3=103;
+    int s4=104; int s5=105; int s6=106; int s7=107;
+    
+    // 干扰调用，确保寄存器被保存
+    int dummy = use_regs(s0, s1, s2, s3, s4, s5, s6, s7);
+    
+    // 3. 读取数组
+    // 如果数组访问指令的偏移量没有修正，它可能会读到:
+    // - 新插入的 $s 寄存器保存值
+    // - 或者 Outgoing Args 区域的垃圾值
+    int sum = 0;
+    for (i = 0; i < 10; i = i + 1) {
+        sum = sum + arr[i];
+    }
+    
+    // sum 应该是 0+1+...+9 = 45
+    // dummy 应该是 100+..+107 = 828
+    return sum + dummy; // 45 + 828 = 873
+}
+
+int main() {
+    // 预期: 873
+    int res = array_test();
+    assert(873, res);
+    return g_fails;
+}

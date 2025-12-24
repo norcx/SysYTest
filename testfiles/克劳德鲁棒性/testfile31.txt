@@ -1,0 +1,72 @@
+// test31_mixed_and_or.sy - 混合&&和||的条件测试
+int g = 0;
+
+int inc() {
+    g = g + 1;
+    return g;
+}
+
+int check_positive(int x) {
+    g = g + 10;
+    if (x > 0) {
+        return 1;
+    }
+    return 0;
+}
+
+int main() {
+    int a, b, c, d;
+    
+    // 测试 a && b || c 的求值顺序
+    // 如果 a && b 为真，c不求值
+    g = 0;
+    a = 1;
+    b = 1;
+    if (a && b || inc()) {
+        printf("Test1 taken\n");
+    }
+    printf("Test1 g=%d\n", g);  // 0，因为a&&b为真，inc()不执行
+    
+    // 如果 a && b 为假，c求值
+    g = 0;
+    a = 1;
+    b = 0;
+    if (a && b || inc()) {
+        printf("Test2 taken\n");
+    }
+    printf("Test2 g=%d\n", g);  // 1，因为a&&b为假，inc()执行
+    
+    // 测试 a || b && c 的求值顺序
+    // 如果 a 为真，b && c 不求值
+    g = 0;
+    a = 1;
+    if (a || check_positive(5) && check_positive(3)) {
+        printf("Test3 taken\n");
+    }
+    printf("Test3 g=%d\n", g);  // 0
+    
+    // 如果 a 为假，b && c 求值
+    g = 0;
+    a = 0;
+    if (a || check_positive(5) && check_positive(3)) {
+        printf("Test4 taken\n");
+    }
+    printf("Test4 g=%d\n", g);  // 20
+    
+    // 复杂: a && b || c && d
+    g = 0;
+    if (check_positive(1) && check_positive(-1) || check_positive(2) && check_positive(3)) {
+        printf("Test5 taken\n");
+    }
+    printf("Test5 g=%d\n", g);  // 第一个&&失败后，执行第二个&&，共40
+    
+    // 在for中测试
+    g = 0;
+    int i;
+    for (i = 0; i < 5 && inc() < 10 || i > 100; i = i + 1) {
+        printf("Loop i=%d g=%d\n", i, g);
+    }
+    printf("Final g=%d\n", g);
+    
+    return 0;
+}

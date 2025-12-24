@@ -1,0 +1,30 @@
+// test12_gcd_lcm.sy - GCD和LCM计算（递归+多参数）
+int gcd(int a, int b) {
+    if (b == 0) return a;
+    return gcd(b, a % b);
+}
+
+int lcm(int a, int b) {
+    return a / gcd(a, b) * b;
+}
+
+int gcd3(int a, int b, int c) {
+    return gcd(gcd(a, b), c);
+}
+
+int lcm3(int a, int b, int c) {
+    return lcm(lcm(a, b), c);
+}
+
+int main() {
+    int a = getint();
+    int b = getint();
+    int c = getint();
+    
+    printf("gcd(%d,%d)=%d\n", a, b, gcd(a, b));
+    printf("lcm(%d,%d)=%d\n", a, b, lcm(a, b));
+    printf("gcd3(%d,%d,%d)=%d\n", a, b, c, gcd3(a, b, c));
+    printf("lcm3(%d,%d,%d)=%d\n", a, b, c, lcm3(a, b, c));
+    
+    return 0;
+}

@@ -1,0 +1,23 @@
+const int globa = 1;
+int global_arr[1000];
+
+void process_arr(int a[]) {
+    int i = 0;
+    for (;i < 1000; i = i + 1) {
+        global_arr[i] = 1000;
+        a[i] = a[i] / 21;
+        global_arr[i] = global_arr[i] * 21;
+        i = i + 1;
+        if (i % 111 == 0) {
+            printf("%d\n", a[i/2]);
+        }
+        i = i - 1;
+    }
+    return;
+}
+
+int main() {
+    printf("23373270\n");
+    process_arr(global_arr);
+    return 0;
+}

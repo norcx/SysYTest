@@ -1,0 +1,50 @@
+// test10 - 深度递归 + 每层都有局部数组
+int g_max_depth = 0;
+
+int deep_recursion(int n, int acc) {
+    int local_data[10];
+    int i;
+    
+    if (n > g_max_depth) {
+        g_max_depth = n;
+    }
+    
+    // 每层都使用局部数组
+    for (i = 0; i < 10; i = i + 1) {
+        local_data[i] = n * 10 + i;
+    }
+    
+    if (n <= 0) {
+        return acc + local_data[5];
+    }
+    
+    // 递归前使用局部数组
+    int partial = local_data[0] + local_data[9];
+    
+    int result = deep_recursion(n - 1, acc + partial);
+    
+    // 递归后验证局部数组
+    if (local_data[0] != n * 10) {
+        printf("ERROR at depth %d\n", n);
+    }
+    if (local_data[9] != n * 10 + 9) {
+        printf("ERROR at depth %d\n", n);
+    }
+    
+    return result;
+}
+
+int main() {
+    int result;
+    
+    result = deep_recursion(50, 0);
+    printf("Result: %d\n", result);
+    printf("Max depth reached: %d\n", g_max_depth);
+    
+    g_max_depth = 0;
+    result = deep_recursion(100, 0);
+    printf("Result: %d\n", result);
+    printf("Max depth reached: %d\n", g_max_depth);
+    
+    return 0;
+}

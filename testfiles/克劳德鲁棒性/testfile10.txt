@@ -1,0 +1,54 @@
+// test10_quicksort.sy - 快速排序测试（数组参数+递归）
+int arr[20];
+
+void swap(int a[], int i, int j) {
+    int tmp = a[i];
+    a[i] = a[j];
+    a[j] = tmp;
+}
+
+int partition(int a[], int low, int high) {
+    int pivot = a[high];
+    int i = low - 1;
+    int j;
+    for (j = low; j < high; j = j + 1) {
+        if (a[j] <= pivot) {
+            i = i + 1;
+            swap(a, i, j);
+        }
+    }
+    swap(a, i + 1, high);
+    return i + 1;
+}
+
+void quicksort(int a[], int low, int high) {
+    if (low < high) {
+        int pi = partition(a, low, high);
+        quicksort(a, low, pi - 1);
+        quicksort(a, pi + 1, high);
+    }
+}
+
+int main() {
+    int n = getint();
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        arr[i] = getint();
+    }
+    
+    printf("Before: ");
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+    
+    quicksort(arr, 0, n - 1);
+    
+    printf("After: ");
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+    
+    return 0;
+}

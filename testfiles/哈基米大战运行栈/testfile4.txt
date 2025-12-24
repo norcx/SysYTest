@@ -1,0 +1,51 @@
+// test_nuclear_spill.sy
+// 目的：强制击穿寄存器分配器，触发栈参数的 Spill
+
+int g_fails = 0;
+
+void assert(int expected, int actual) {
+    if (expected != actual) {
+        printf("Fail! Expected: ");
+        printf("%d", expected);
+        printf(", Actual: ");
+        printf("%d", actual);
+        printf("\n");
+        g_fails = g_fails + 1;
+    }
+}
+
+void dummy() {}
+
+// 8个参数 + 10个运行时局部变量
+int nuclear_test(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8) {
+    // 使用 getint() 阻止常量折叠/重新计算
+    // 这些变量的值必须存储在寄存器或栈中跨越 dummy()
+    int x1 = getint(); int x2 = getint(); int x3 = getint(); int x4 = getint();
+    int x5 = getint(); 
+    
+    // 此时活跃变量：8个参数 + 5个局部 = 13个
+    // MIPS 只有 8 个 $s 寄存器
+    // 必然有 5 个变量被 Spill！
+    // 只要运气够好（或者够差），a5-a8 中就会有被 Spill 的。
+    
+    dummy(); 
+    
+    // 使用所有变量
+    int sum_args = a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
+    int sum_locals = x1 + x2 + x3 + x4 + x5;
+    
+    return sum_args + sum_locals;
+}
+
+int main() {
+    // 输入 1 1 1 1 1 (对应 x1-x5)
+    // 参数 1 2 3 4 5 6 7 8
+    // 预期结果: 36 + 5 = 41
+    printf("Please input 5 ones (1 1 1 1 1):\n");
+    
+    int res = nuclear_test(1, 2, 3, 4, 5, 6, 7, 8);
+    
+    assert(41, res);
+    
+    return g_fails;
+}

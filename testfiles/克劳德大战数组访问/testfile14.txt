@@ -1,0 +1,65 @@
+// test14 - 数组作为参数，同时有多个数组参数
+int copy_array(int src[], int dst[], int n) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        dst[i] = src[i];
+    }
+    return n;
+}
+
+int add_arrays(int a[], int b[], int result[], int n) {
+    int i;
+    int sum = 0;
+    for (i = 0; i < n; i = i + 1) {
+        result[i] = a[i] + b[i];
+        sum = sum + result[i];
+    }
+    return sum;
+}
+
+int dot_product(int a[], int b[], int n) {
+    int i;
+    int sum = 0;
+    for (i = 0; i < n; i = i + 1) {
+        sum = sum + a[i] * b[i];
+    }
+    return sum;
+}
+
+void swap_arrays(int a[], int b[], int n) {
+    int i;
+    int temp;
+    for (i = 0; i < n; i = i + 1) {
+        temp = a[i];
+        a[i] = b[i];
+        b[i] = temp;
+    }
+}
+
+int main() {
+    int arr1[20] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+    int arr2[20] = {20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+    int arr3[20];
+    int result[20];
+    int i;
+    
+    // 复制测试
+    copy_array(arr1, arr3, 20);
+    printf("Copied arr3[0]=%d, arr3[19]=%d\n", arr3[0], arr3[19]);
+    
+    // 加法测试
+    int sum = add_arrays(arr1, arr2, result, 20);
+    printf("Sum of additions: %d\n", sum);  // 每个位置都是21，共20个，总和420
+    printf("result[0]=%d, result[10]=%d, result[19]=%d\n", result[0], result[10], result[19]);
+    
+    // 点积测试
+    int dp = dot_product(arr1, arr2, 10);
+    printf("Dot product (first 10): %d\n", dp);
+    
+    // 交换测试
+    printf("Before swap: arr1[0]=%d, arr2[0]=%d\n", arr1[0], arr2[0]);
+    swap_arrays(arr1, arr2, 20);
+    printf("After swap: arr1[0]=%d, arr2[0]=%d\n", arr1[0], arr2[0]);
+    
+    return 0;
+}

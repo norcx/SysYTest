@@ -1,0 +1,14 @@
+// test5_pressure.sy
+int main() {
+    int a1=1; int a2=2; int a3=3; int a4=4; int a5=5; int a6=6; int a7=7; int a8=8;
+    int b1=9; int b2=10; int b3=11; int b4=12; int b5=13; int b6=14; int b7=15; int b8=16;
+    int c1=17; int c2=18; int c3=19; int c4=20; int c5=21; int c6=22; int c7=23; int c8=24;
+    int d1=25; int d2=26; int d3=27; int d4=28; int d5=29; int d6=30; int d7=31; int d8=32;
+    
+    // 调用一个函数，让所有寄存器在此时必须活着（Live across call）
+    int trash = getint(); 
+    
+    int res = a1+a2+a3+a4+a5+a6+a7+a8+b1+b2+b3+b4+b5+b6+b7+b8+c1+c2+c3+c4+c5+c6+c7+c8+d1+d2+d3+d4+d5+d6+d7+d8;
+    printf("%d\n", res);
+    return 0;
+}

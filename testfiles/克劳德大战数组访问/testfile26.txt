@@ -1,0 +1,62 @@
+// test26 - 局部数组在不同作用域
+int main() {
+    int outer_arr[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    int i;
+    int sum = 0;
+    
+    printf("Outer array: ");
+    for (i = 0; i < 10; i = i + 1) {
+        printf("%d ", outer_arr[i]);
+    }
+    printf("\n");
+    
+    for (i = 0; i < 3; i = i + 1) {
+        int inner_arr[5] = {100, 200, 300, 400, 500};
+        int j;
+        
+        // 修改内层数组
+        inner_arr[i] = inner_arr[i] + i * 1000;
+        
+        printf("Inner array (iter %d): ", i);
+        for (j = 0; j < 5; j = j + 1) {
+            printf("%d ", inner_arr[j]);
+            sum = sum + inner_arr[j];
+        }
+        printf("\n");
+        
+        // 外层数组应该不变
+        if (outer_arr[i] != i + 1) {
+            printf("ERROR: outer_arr corrupted!\n");
+        }
+    }
+    
+    printf("Sum of all inner arrays: %d\n", sum);
+    
+    // 嵌套作用域
+    if (1) {
+        int scope1_arr[3] = {11, 22, 33};
+        printf("Scope1: %d %d %d\n", scope1_arr[0], scope1_arr[1], scope1_arr[2]);
+        
+        if (1) {
+            int scope2_arr[3] = {111, 222, 333};
+            printf("Scope2: %d %d %d\n", scope2_arr[0], scope2_arr[1], scope2_arr[2]);
+            
+            // 验证scope1_arr
+            if (scope1_arr[0] != 11) {
+                printf("ERROR: scope1_arr corrupted in scope2!\n");
+            }
+        }
+        
+        // scope2_arr已经离开作用域，scope1_arr应该还在
+        printf("Back to Scope1: %d %d %d\n", scope1_arr[0], scope1_arr[1], scope1_arr[2]);
+    }
+    
+    // 验证outer_arr
+    printf("Final outer array: ");
+    for (i = 0; i < 10; i = i + 1) {
+        printf("%d ", outer_arr[i]);
+    }
+    printf("\n");
+    
+    return 0;
+}

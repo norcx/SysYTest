@@ -1,0 +1,58 @@
+// test28_static_same_name_diff_func.sy - 不同函数中同名static变量
+int func_a() {
+    static int x = 10;
+    x = x + 1;
+    return x;
+}
+
+int func_b() {
+    static int x = 100;
+    x = x + 10;
+    return x;
+}
+
+int func_c() {
+    static int x = 1000;
+    x = x + 100;
+    return x;
+}
+
+int nested_static(int depth) {
+    static int x = 0;
+    x = x + 1;
+    if (depth > 0) {
+        static int x = 0;  // 不同作用域的x
+        x = x + 10;
+        printf("Inner x=%d at depth %d\n", x, depth);
+        return nested_static(depth - 1);
+    }
+    return x;
+}
+
+int main() {
+    int i;
+    
+    printf("func_a calls:\n");
+    for (i = 0; i < 5; i = i + 1) {
+        printf("  %d\n", func_a());  // 11, 12, 13, 14, 15
+    }
+    
+    printf("func_b calls:\n");
+    for (i = 0; i < 5; i = i + 1) {
+        printf("  %d\n", func_b());  // 110, 120, 130, 140, 150
+    }
+    
+    printf("func_c calls:\n");
+    for (i = 0; i < 5; i = i + 1) {
+        printf("  %d\n", func_c());  // 1100, 1200, 1300, 1400, 1500
+    }
+    
+    printf("Mixed calls:\n");
+    printf("a=%d b=%d c=%d\n", func_a(), func_b(), func_c());  // 16, 160, 1600
+    printf("a=%d b=%d c=%d\n", func_a(), func_b(), func_c());  // 17, 170, 1700
+    
+    printf("nested_static(3)=%d\n", nested_static(3));
+    printf("nested_static(2)=%d\n", nested_static(2));
+    
+    return 0;
+}

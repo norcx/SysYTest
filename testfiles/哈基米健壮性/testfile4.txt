@@ -1,0 +1,24 @@
+// test4_short.sy
+int g = 0;
+int side_effect() {
+    g = g + 1;
+    return 1;
+}
+
+int main() {
+    // 1 || ... 短路，side_effect 不运行
+    if (1 == 1 || side_effect()) {
+        printf("Logic 1 OK, g = %d\n", g);
+    }
+    // 0 && ... 短路，side_effect 不运行
+    if (0 == 1 && side_effect()) {
+        printf("Error\n");
+    } else {
+        printf("Logic 2 OK, g = %d\n", g);
+    }
+    // 1 && ... 不短路，side_effect 运行
+    if (1 == 1 && side_effect()) {
+        printf("Logic 3 OK, g = %d\n", g);
+    }
+    return 0;
+}

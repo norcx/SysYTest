@@ -1,0 +1,49 @@
+// test9 - 数组边界访问测试
+int g_arr[10];
+
+void test_boundary(int arr[], int size) {
+    // 访问第一个和最后一个元素
+    arr[0] = 111;
+    arr[size - 1] = 999;
+    
+    printf("First: %d, Last: %d\n", arr[0], arr[size - 1]);
+}
+
+int main() {
+    int local_arr[100];
+    int i;
+    
+    // 初始化
+    for (i = 0; i < 100; i = i + 1) {
+        local_arr[i] = i;
+    }
+    for (i = 0; i < 10; i = i + 1) {
+        g_arr[i] = i * 100;
+    }
+    
+    // 测试边界
+    printf("local_arr[0] = %d\n", local_arr[0]);
+    printf("local_arr[99] = %d\n", local_arr[99]);
+    printf("g_arr[0] = %d\n", g_arr[0]);
+    printf("g_arr[9] = %d\n", g_arr[9]);
+    
+    // 通过函数测试
+    test_boundary(local_arr, 100);
+    test_boundary(g_arr, 10);
+    
+    // 验证修改
+    printf("After function:\n");
+    printf("local_arr[0] = %d\n", local_arr[0]);
+    printf("local_arr[99] = %d\n", local_arr[99]);
+    printf("g_arr[0] = %d\n", g_arr[0]);
+    printf("g_arr[9] = %d\n", g_arr[9]);
+    
+    // 连续访问边界附近
+    printf("Near boundary: ");
+    for (i = 95; i < 100; i = i + 1) {
+        printf("%d ", local_arr[i]);
+    }
+    printf("\n");
+    
+    return 0;
+}

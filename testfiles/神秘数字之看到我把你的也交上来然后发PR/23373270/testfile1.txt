@@ -1,0 +1,53 @@
+const int aaa = 1, bbbb[5] = {1,2,3,4,5};
+int big_calc_func(int n) {
+    int i = 0;
+    int res = 0;
+    for (;;) {
+        if (i >= 200000) break;
+        res = res + i * n;
+        i = i + 1;
+        continue;
+    }
+    for(i=i;;) if (i !=0) break;
+    for (;;i=i) break;
+    return res;
+}
+
+void nothing() {
+return;}
+
+int main() {
+    printf("23373270\n");
+
+    int xx = 3, yy;
+    for (xx = 0, yy = -1; xx < 8 && yy < 0; xx = xx + 1) {
+        printf("%d %d %d\n", xx, yy*xx/yy*yy/yy*yy/yy*yy/yy, yy+xx/yy);
+    }
+
+    int x = 10;
+    static int y = 20, yyyy;
+    static int yyyyy = 1;
+    if ((x * x * 123 - y * 567 + 999) > 10000 && big_calc_func(x)) {
+        nothing();
+    } else {
+
+    }
+
+    int i = -0;
+    int a = +1;
+    int annrrr[5];
+    int arrayy[2] = {0, 1};
+
+    int hasPrint = 1;
+    for (;i < 10000;) {
+        if (a > 0 || big_calc_func(i)) {
+            if (!!hasPrint)
+                printf("23373270\n");
+            hasPrint = 0;
+        }
+        i = i + 1;
+    }
+    if (hasPrint == 0)i = i;
+
+    return 0;
+}

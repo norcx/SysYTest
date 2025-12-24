@@ -1,0 +1,66 @@
+// test3 - 数组作为参数传递，多层嵌套调用
+int g_arr[100];
+
+void fill_array(int arr[], int n, int start) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        arr[i] = start + i * 2;
+    }
+}
+
+int sum_array(int arr[], int n) {
+    int i;
+    int sum = 0;
+    for (i = 0; i < n; i = i + 1) {
+        sum = sum + arr[i];
+    }
+    return sum;
+}
+
+void modify_and_sum(int arr[], int n, int delta) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        arr[i] = arr[i] + delta;
+    }
+    printf("Sum after modify: %d\n", sum_array(arr, n));
+}
+
+void nested_array_ops(int arr[], int n) {
+    int local_copy[50];
+    int i;
+    
+    // 复制到局部数组
+    for (i = 0; i < n; i = i + 1) {
+        local_copy[i] = arr[i];
+    }
+    
+    // 修改局部数组
+    fill_array(local_copy, n, 1000);
+    
+    // 传递局部数组给其他函数
+    modify_and_sum(local_copy, n, 5);
+    
+    // 原数组应该不变
+    printf("Original sum: %d\n", sum_array(arr, n));
+}
+
+int main() {
+    int local_arr[50];
+    int i;
+    
+    // 测试全局数组
+    fill_array(g_arr, 50, 0);
+    printf("Global array sum: %d\n", sum_array(g_arr, 50));
+    
+    // 测试局部数组
+    fill_array(local_arr, 50, 100);
+    printf("Local array sum: %d\n", sum_array(local_arr, 50));
+    
+    // 嵌套操作
+    nested_array_ops(local_arr, 30);
+    
+    // 验证local_arr未被nested_array_ops内部的local_copy修改
+    printf("Local array sum after nested: %d\n", sum_array(local_arr, 50));
+    
+    return 0;
+}

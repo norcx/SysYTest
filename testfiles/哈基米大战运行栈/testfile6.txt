@@ -1,0 +1,57 @@
+// verify_stack_layout.sy
+// 强制触发 $s 保存 (栈帧膨胀) + 局部数组访问
+
+int g_fails = 0;
+
+void assert(int expected, int actual) {
+    if (expected != actual) {
+        printf("Fail! Expected: ");
+        printf("%d", expected);
+        printf(", Actual: ");
+        printf("%d", actual);
+        printf("\n");
+        g_fails = g_fails + 1;
+    }
+}
+
+// 接收8个参数，迫使 caller 准备 outgoing area
+int sum8(int a, int b, int c, int d, int e, int f, int g, int h) {
+    return a+b+c+d+e+f+g+h;
+}
+
+int complex_test() {
+    int arr[10];
+    int i;
+    
+    // 1. 初始化数组
+    for (i = 0; i < 10; i = i + 1) {
+        arr[i] = i;
+    }
+    
+    // 2. 使用 getint() 强制分配寄存器，阻止常量折叠
+    // 这些变量跨越 sum8 调用，必须保存到 $s 或 Spill
+    int s0 = getint(); int s1 = getint(); int s2 = getint(); int s3 = getint();
+    int s4 = getint(); int s5 = getint(); int s6 = getint(); int s7 = getint();
+    
+    // 3. 调用函数，触发保存
+    int dummy = sum8(s0, s1, s2, s3, s4, s5, s6, s7);
+    
+    // 4. 再次访问数组
+    // 如果栈布局逻辑有错，这里的 arr[i] 可能会读到保存的 $s 寄存器数据
+    int arr_sum = 0;
+    for (i = 0; i < 10; i = i + 1) {
+        arr_sum = arr_sum + arr[i];
+    }
+    
+    // s_sum = 8 (输入全1) -> dummy = 8
+    // arr_sum = 45
+    return dummy + arr_sum; 
+}
+
+int main() {
+    printf("Input 8 ones (1 1 1 1 1 1 1 1):\n");
+    // 预期结果: 8 + 45 = 53
+    int res = complex_test();
+    assert(53, res);
+    return g_fails;
+}

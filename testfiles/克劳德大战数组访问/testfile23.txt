@@ -1,0 +1,36 @@
+// test23 - 极深递归（200层）测试栈
+int g_depth = 0;
+
+int very_deep(int n) {
+    int local_var = n * 2;
+    g_depth = g_depth + 1;
+    
+    if (n <= 0) {
+        return local_var;
+    }
+    
+    int result = very_deep(n - 1) + local_var;
+    
+    // 验证local_var
+    if (local_var != n * 2) {
+        printf("CORRUPTED at n=%d\n", n);
+    }
+    
+    return result;
+}
+
+int main() {
+    int result;
+    
+    g_depth = 0;
+    result = very_deep(200);
+    printf("very_deep(200) = %d\n", result);
+    printf("Max depth: %d\n", g_depth);
+    
+    g_depth = 0;
+    result = very_deep(150);
+    printf("very_deep(150) = %d\n", result);
+    printf("Max depth: %d\n", g_depth);
+    
+    return 0;
+}

@@ -1,0 +1,42 @@
+// test18_unary_ops.sy - 一元运算符测试（负号、逻辑非）
+int main() {
+    int a = 5;
+    int b = -5;
+    int c = 0;
+    
+    // 负号测试
+    printf("-a = %d\n", -a);        // -5
+    printf("-b = %d\n", -b);        // 5
+    printf("-(-a) = %d\n", -(-a));  // 5
+    printf("--a = %d\n", - -a);     // 5 (两个负号)
+    printf("---a = %d\n", - - -a);  // -5
+    
+    // 负号与运算
+    printf("a + -b = %d\n", a + -b);    // 10
+    printf("a - -b = %d\n", a - -b);    // 0
+    printf("a * -b = %d\n", a * -b);    // 25
+    printf("-a * -b = %d\n", -a * -b);  // -25
+    
+    // 逻辑非测试
+    printf("!0 = %d\n", !c);        // 1
+    printf("!5 = %d\n", !a);        // 0
+    printf("!-5 = %d\n", !b);       // 0
+    printf("!!5 = %d\n", !!a);      // 1
+    printf("!!!5 = %d\n", !!!a);    // 0
+    printf("!!!!5 = %d\n", !!!!a);  // 1
+    
+    // 混合
+    printf("!(-a) = %d\n", !(-a));  // 0
+    printf("-(!a) = %d\n", -(!a));  // 0
+    printf("!(!a) = %d\n", !(!a));  // 1
+    
+    // 在条件中使用
+    if (!c) {
+        printf("!0 is true\n");
+    }
+    if (!!a) {
+        printf("!!5 is true\n");
+    }
+    
+    return 0;
+}

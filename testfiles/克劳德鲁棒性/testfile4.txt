@@ -1,0 +1,46 @@
+// test4_array_init_complex.sy - 复杂数组初始化测试
+const int N = 2 + 3;
+const int M = N * 2;
+int g_simple[5] = {1, 2, 3, 4, 5};
+int g_expr[N] = {1 + 1, 2 * 2, 3 - 1, 10 / 2, 15 % 7};  // {2, 4, 2, 5, 1}
+int g_partial[M] = {100, 200};  // 部分初始化，其余为0
+
+int get_val(int x) {
+    return x * 10;
+}
+
+int main() {
+    int i;
+    // 局部数组用表达式初始化
+    int local_expr[5] = {N, N + 1, N * 2, N - 1, N % 3};  // {5, 6, 10, 4, 2}
+    
+    // 打印全局数组
+    printf("g_simple: ");
+    for (i = 0; i < 5; i = i + 1) {
+        printf("%d ", g_simple[i]);
+    }
+    printf("\n");
+    
+    printf("g_expr: ");
+    for (i = 0; i < N; i = i + 1) {
+        printf("%d ", g_expr[i]);
+    }
+    printf("\n");
+    
+    printf("g_partial: ");
+    for (i = 0; i < M; i = i + 1) {
+        printf("%d ", g_partial[i]);
+    }
+    printf("\n");
+    
+    printf("local_expr: ");
+    for (i = 0; i < 5; i = i + 1) {
+        printf("%d ", local_expr[i]);
+    }
+    printf("\n");
+    
+    // 数组元素作为函数参数
+    printf("func call: %d %d %d\n", get_val(g_simple[0]), get_val(local_expr[2]), get_val(g_expr[1]));
+    
+    return 0;
+}

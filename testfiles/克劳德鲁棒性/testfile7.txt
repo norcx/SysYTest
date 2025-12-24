@@ -1,0 +1,39 @@
+// test7_fibonacci_dp.sy - 斐波那契数列（数组DP）+ 递归对比
+int fib_arr[25];
+
+int fib_recursive(int n) {
+    if (n <= 1) return n;
+    return fib_recursive(n - 1) + fib_recursive(n - 2);
+}
+
+void fib_dp(int arr[], int n) {
+    int i;
+    arr[0] = 0;
+    arr[1] = 1;
+    for (i = 2; i <= n; i = i + 1) {
+        arr[i] = arr[i - 1] + arr[i - 2];
+    }
+}
+
+int main() {
+    int i;
+    fib_dp(fib_arr, 20);
+    
+    printf("DP: ");
+    for (i = 0; i <= 20; i = i + 1) {
+        printf("%d ", fib_arr[i]);
+    }
+    printf("\n");
+    
+    // 验证前10个
+    printf("Recursive check: ");
+    for (i = 0; i <= 10; i = i + 1) {
+        int r = fib_recursive(i);
+        if (r != fib_arr[i]) {
+            printf("MISMATCH at %d! ", i);
+        }
+    }
+    printf("OK\n");
+    
+    return 0;
+}

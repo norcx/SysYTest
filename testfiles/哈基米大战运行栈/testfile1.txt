@@ -1,0 +1,58 @@
+// test_stack_spill.sy
+// 预期输出: 30036
+
+int g_fails = 0;
+
+void putint(int x) {
+    printf("%d", x);
+}
+
+void assert(int expected, int actual) {
+    if (expected != actual) {
+        printf("Fail! Expected: ");
+        putint(expected);
+        printf(", Actual: ");
+        putint(actual);
+        printf("\n"); // \n
+        g_fails = g_fails + 1;
+    } else {
+        printf("Success! Result: ");
+        putint(actual);
+        printf("\n");
+    }
+}
+
+// 这个函数有 8 个参数，后 4 个 (a5, a6, a7, a8) 在栈上传递
+int stack_spill_test(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8) {
+    // 1. 定义大量局部变量，占用物理寄存器，迫使分配器进行 Spill
+    int t1 = 100;  int t2 = 200;  int t3 = 300;  int t4 = 400;
+    int t5 = 500;  int t6 = 600;  int t7 = 700;  int t8 = 800;
+    int t9 = 900;  int t10 = 1000; int t11 = 1100; int t12 = 1200;
+    int t13 = 1300; int t14 = 1400; int t15 = 1500; int t16 = 1600;
+    int t17 = 1700; int t18 = 1800; int t19 = 1900; int t20 = 2000;
+    int t21 = 2100; int t22 = 2200; int t23 = 2300; int t24 = 2400;
+
+    // 局部变量总和 = 30000
+    int local_sum = t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + 
+                    t9 + t10 + t11 + t12 + t13 + t14 + t15 + t16 +
+                    t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24;
+
+    // 2. 在这里使用栈参数 (a5-a8)
+    // 由于 t1-t24 在此处仍然活跃（参与 local_sum 计算），寄存器压力巨大。
+    // 分配器很有可能选择将 a5-a8 中的某些溢出，需要重新从栈加载。
+    // 如果偏移量计算错误，这里读到的将是 tX 的值，而不是 aX 的值。
+    
+    // 参数总和: 1+2+3+4+5+6+7+8 = 36
+    int arg_sum = a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
+
+    return local_sum + arg_sum;
+}
+
+int main() {
+    // 预期结果: 30000 + 36 = 30036
+    int res = stack_spill_test(1, 2, 3, 4, 5, 6, 7, 8);
+    
+    assert(30036, res);
+    
+    return g_fails;
+}

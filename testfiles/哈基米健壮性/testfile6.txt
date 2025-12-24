@@ -1,0 +1,15 @@
+// test6_control.sy
+int main() {
+    int i, j;
+    int sum = 0;
+    for (i = 0; i < 10; i = i + 1) {
+        if (i % 2 == 0) continue;
+        for (j = 0; j < 10; j = j + 1) {
+            if (j == 5) break;
+            sum = sum + j;
+        }
+        if (sum > 20) break;
+    }
+    printf("%d\n", sum); // 预期：30
+    return 0;
+}

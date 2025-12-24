@@ -1,0 +1,49 @@
+// test24 - 数组部分初始化
+int g_partial[20] = {1, 2, 3};  // 后面应该是0
+
+int main() {
+    int local_partial[15] = {100, 200};  // 后面应该是0
+    int i;
+    
+    printf("Global partial init:\n");
+    for (i = 0; i < 20; i = i + 1) {
+        printf("g_partial[%d] = %d\n", i, g_partial[i]);
+    }
+    
+    printf("\nLocal partial init:\n");
+    for (i = 0; i < 15; i = i + 1) {
+        printf("local_partial[%d] = %d\n", i, local_partial[i]);
+    }
+    
+    // 验证
+    int errors = 0;
+    if (g_partial[0] != 1) {
+        errors = errors + 1;
+    }
+    if (g_partial[2] != 3) {
+        errors = errors + 1;
+    }
+    if (g_partial[3] != 0) {
+        errors = errors + 1;
+    }
+    if (g_partial[19] != 0) {
+        errors = errors + 1;
+    }
+    
+    if (local_partial[0] != 100) {
+        errors = errors + 1;
+    }
+    if (local_partial[1] != 200) {
+        errors = errors + 1;
+    }
+    if (local_partial[2] != 0) {
+        errors = errors + 1;
+    }
+    if (local_partial[14] != 0) {
+        errors = errors + 1;
+    }
+    
+    printf("\nErrors found: %d\n", errors);
+    
+    return 0;
+}

@@ -1,0 +1,54 @@
+// test2 - 多个局部数组同时存在，测试栈帧布局
+int global_arr[10] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
+
+int func_with_multiple_arrays(int x) {
+    int arr1[20];
+    int arr2[30];
+    int arr3[25];
+    int i;
+    int sum = 0;
+    
+    // 初始化三个数组
+    for (i = 0; i < 20; i = i + 1) {
+        arr1[i] = x + i;
+    }
+    for (i = 0; i < 30; i = i + 1) {
+        arr2[i] = x * 2 + i;
+    }
+    for (i = 0; i < 25; i = i + 1) {
+        arr3[i] = x * 3 + i;
+    }
+    
+    // 交叉访问
+    for (i = 0; i < 10; i = i + 1) {
+        sum = sum + arr1[i] + arr2[i * 2] + arr3[i * 2];
+        sum = sum + global_arr[i];
+    }
+    
+    // 修改并验证
+    arr1[5] = 9999;
+    arr2[15] = 8888;
+    arr3[20] = 7777;
+    
+    if (arr1[5] != 9999) {
+        printf("arr1 error\n");
+    }
+    if (arr2[15] != 8888) {
+        printf("arr2 error\n");
+    }
+    if (arr3[20] != 7777) {
+        printf("arr3 error\n");
+    }
+    
+    return sum;
+}
+
+int main() {
+    int result = func_with_multiple_arrays(10);
+    printf("Result: %d\n", result);
+    
+    result = func_with_multiple_arrays(100);
+    printf("Result: %d\n", result);
+    
+    return 0;
+}

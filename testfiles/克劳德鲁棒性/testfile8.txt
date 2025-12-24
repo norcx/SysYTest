@@ -1,0 +1,40 @@
+// test8_expression_stress.sy - 复杂表达式压力测试
+int main() {
+    int a = 3, b = 5, c = 7, d = 11, e = 13;
+    int r1, r2, r3, r4, r5;
+    
+    // 测试运算符优先级
+    r1 = a + b * c - d / e;           // 3 + 35 - 0 = 38
+    r2 = a * b + c * d - e;           // 15 + 77 - 13 = 79
+    r3 = (a + b) * (c - d) / (e % a); // 8 * (-4) / 1 = -32
+    r4 = a + b + c + d + e;           // 39
+    r5 = a * b * c * d * e;           // 15015
+    
+    printf("r1=%d r2=%d r3=%d r4=%d r5=%d\n", r1, r2, r3, r4, r5);
+    
+    // 测试取模和除法的边界
+    int m1 = 17 % 5;    // 2
+    int m2 = -17 % 5;   // -2 (C语言规则)
+    int m3 = 17 % -5;   // 2
+    int d1 = 17 / 5;    // 3
+    int d2 = -17 / 5;   // -3
+    int d3 = 17 / -5;   // -3
+    
+    printf("mod: %d %d %d\n", m1, m2, m3);
+    printf("div: %d %d %d\n", d1, d2, d3);
+    
+    // 测试逻辑非
+    int n1 = !0;        // 1
+    int n2 = !1;        // 0
+    int n3 = !100;      // 0
+    int n4 = !(-1);     // 0
+    int n5 = !!5;       // 1
+    
+    printf("not: %d %d %d %d %d\n", n1, n2, n3, n4, n5);
+    
+    // 复杂嵌套表达式
+    int complex = ((a + b) * c - d) / e + (a * (b + c) - d * e) % (a + b);
+    printf("complex=%d\n", complex);  // ((8)*7-11)/13 + (3*12-143)%8 = 3 + (-7) = -4
+    
+    return 0;
+}

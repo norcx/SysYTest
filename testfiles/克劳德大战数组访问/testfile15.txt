@@ -1,0 +1,41 @@
+// test15 - 局部数组在循环中反复使用
+int process_batch(int data[], int n, int batch_id) {
+    int local_buffer[50];
+    int i;
+    int sum = 0;
+    
+    // 每次调用都重新初始化局部数组
+    for (i = 0; i < 50; i = i + 1) {
+        local_buffer[i] = batch_id * 1000 + i;
+    }
+    
+    // 处理数据
+    for (i = 0; i < n; i = i + 1) {
+        local_buffer[i % 50] = local_buffer[i % 50] + data[i];
+        sum = sum + local_buffer[i % 50];
+    }
+    
+    return sum;
+}
+
+int main() {
+    int data[100];
+    int i;
+    int total = 0;
+    
+    // 初始化数据
+    for (i = 0; i < 100; i = i + 1) {
+        data[i] = i * 2 + 1;
+    }
+    
+    // 多次调用，每次都会创建新的局部数组
+    for (i = 0; i < 10; i = i + 1) {
+        int result = process_batch(data, 30, i);
+        printf("Batch %d result: %d\n", i, result);
+        total = total + result;
+    }
+    
+    printf("Total: %d\n", total);
+    
+    return 0;
+}

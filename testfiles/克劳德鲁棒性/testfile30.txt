@@ -1,0 +1,46 @@
+// test30_expression_in_array_index.sy - 数组下标为复杂表达式
+const int BASE = 2;
+const int OFFSET = 3;
+int g_arr[20] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190};
+
+int get_index(int x) {
+    return x * 2;
+}
+
+int main() {
+    int local_arr[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    int i, j;
+    
+    // 常量表达式作为下标
+    printf("g_arr[BASE]=%d\n", g_arr[BASE]);              // 20
+    printf("g_arr[BASE+OFFSET]=%d\n", g_arr[BASE + OFFSET]); // 50
+    printf("g_arr[BASE*OFFSET]=%d\n", g_arr[BASE * OFFSET]); // 60
+    
+    // 变量表达式作为下标
+    i = 3;
+    j = 2;
+    printf("g_arr[i]=%d\n", g_arr[i]);           // 30
+    printf("g_arr[i+j]=%d\n", g_arr[i + j]);     // 50
+    printf("g_arr[i*j]=%d\n", g_arr[i * j]);     // 60
+    printf("g_arr[i*j+1]=%d\n", g_arr[i * j + 1]); // 70
+    
+    // 函数调用作为下标
+    printf("g_arr[get_index(3)]=%d\n", g_arr[get_index(3)]);  // g_arr[6]=60
+    printf("g_arr[get_index(i)]=%d\n", g_arr[get_index(i)]);  // g_arr[6]=60
+    
+    // 数组元素作为下标
+    printf("g_arr[local_arr[0]]=%d\n", g_arr[local_arr[0]]);  // g_arr[1]=10
+    printf("g_arr[local_arr[4]]=%d\n", g_arr[local_arr[4]]);  // g_arr[5]=50
+    
+    // 复杂嵌套
+    printf("g_arr[local_arr[i-1]+j]=%d\n", g_arr[local_arr[i - 1] + j]);  // g_arr[3+2]=50
+    
+    // 赋值时使用复杂下标
+    local_arr[i + j] = 999;
+    printf("local_arr[5]=%d\n", local_arr[5]);  // 999
+    
+    local_arr[get_index(1)] = 888;
+    printf("local_arr[2]=%d\n", local_arr[2]);  // 888
+    
+    return 0;
+}

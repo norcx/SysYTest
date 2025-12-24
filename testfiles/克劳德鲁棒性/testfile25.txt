@@ -1,0 +1,89 @@
+// test25_complex_return.sy - 复杂返回值测试
+int g = 0;
+
+int modify_and_return(int x) {
+    g = g + x;
+    return g;
+}
+
+int conditional_return(int x) {
+    if (x > 0) {
+        return x * 2;
+    }
+    if (x < 0) {
+        return x * -2;
+    }
+    return 0;
+}
+
+int loop_return(int n) {
+    int i;
+    int sum = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        sum = sum + i;
+        if (sum > 100) {
+            return sum;
+        }
+    }
+    return sum;
+}
+
+int nested_return(int a, int b) {
+    if (a > 0) {
+        if (b > 0) {
+            return a + b;
+        } else {
+            return a - b;
+        }
+    } else {
+        if (b > 0) {
+            return b - a;
+        } else {
+            return 0 - a - b;
+        }
+    }
+    return 0;
+}
+
+int early_return_in_loop(int arr[], int n, int target) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        if (arr[i] == target) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int main() {
+    int arr[10] = {5, 3, 8, 1, 9, 2, 7, 4, 6, 0};
+    
+    int result[3];
+    result[0] = modify_and_return(10);
+    result[1] = modify_and_return(20);
+    result[2] = modify_and_return(30);
+    printf("modify_and_return: %d %d %d\n", 
+           result[0], result[1], result[2]);
+    // g: 10, 30, 60 -> 输出 10 30 60
+
+    result[0] = conditional_return(5);
+    result[1] = conditional_return(-3);
+    result[2] = conditional_return(0);    
+    printf("conditional_return: %d %d %d\n",
+           result[0], result[1], result[2]);
+    // 10, 6, 0
+    
+    printf("loop_return(10): %d\n", loop_return(10));   // 55
+    printf("loop_return(20): %d\n", loop_return(20));   // 105 (1+2+...+14=105>100)
+    
+    printf("nested_return(3,4): %d\n", nested_return(3, 4));    // 7
+    printf("nested_return(3,-4): %d\n", nested_return(3, -4));  // 7
+    printf("nested_return(-3,4): %d\n", nested_return(-3, 4));  // 7
+    printf("nested_return(-3,-4): %d\n", nested_return(-3, -4)); // 7
+    
+    printf("find 8: %d\n", early_return_in_loop(arr, 10, 8));  // 2
+    printf("find 0: %d\n", early_return_in_loop(arr, 10, 0));  // 9
+    printf("find 99: %d\n", early_return_in_loop(arr, 10, 99)); // -1
+    
+    return 0;
+}

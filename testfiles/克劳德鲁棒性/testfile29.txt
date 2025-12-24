@@ -1,0 +1,49 @@
+// test29_binary_search.sy - 二分查找（递归+迭代）
+int arr[20] = {2, 5, 8, 12, 16, 23, 38, 45, 56, 72, 81, 90, 95, 100, 110, 120, 130, 140, 150, 160};
+
+int binary_search_recursive(int a[], int left, int right, int target) {
+    int mid;
+    if (left > right) {
+        return -1;
+    }
+    mid = left + (right - left) / 2;
+    if (a[mid] == target) {
+        return mid;
+    }
+    if (a[mid] > target) {
+        return binary_search_recursive(a, left, mid - 1, target);
+    }
+    return binary_search_recursive(a, mid + 1, right, target);
+}
+
+int binary_search_iterative(int a[], int n, int target) {
+    int left, right, mid;
+    left = 0;
+    right = n - 1;
+    for (left = 0; left <= right; ) {
+        mid = left + (right - left) / 2;
+        if (a[mid] == target) {
+            return mid;
+        }
+        if (a[mid] > target) {
+            right = mid - 1;
+        } else {
+            left = mid + 1;
+        }
+    }
+    return -1;
+}
+
+int main() {
+    int targets[10] = {2, 23, 100, 160, 1, 50, 95, 5, 150, 200};
+    int i;
+    int result_r, result_i;
+    
+    for (i = 0; i < 10; i = i + 1) {
+        result_r = binary_search_recursive(arr, 0, 19, targets[i]);
+        result_i = binary_search_iterative(arr, 20, targets[i]);
+        printf("Search %d: recursive=%d, iterative=%d\n", targets[i], result_r, result_i);
+    }
+    
+    return 0;
+}

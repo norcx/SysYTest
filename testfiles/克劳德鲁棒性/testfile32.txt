@@ -1,0 +1,26 @@
+// test32_hanoi.sy - 汉诺塔（经典递归）
+int move_count = 0;
+
+void hanoi(int n, int from, int to, int aux) {
+    if (n == 1) {
+        move_count = move_count + 1;
+        printf("Move disk 1 from %d to %d\n", from, to);
+        return;
+    }
+    hanoi(n - 1, from, aux, to);
+    move_count = move_count + 1;
+    printf("Move disk %d from %d to %d\n", n, from, to);
+    hanoi(n - 1, aux, to, from);
+    return;
+}
+
+int main() {
+    int n;
+    n = getint();
+    
+    printf("Hanoi with %d disks:\n", n);
+    hanoi(n, 1, 3, 2);
+    printf("Total moves: %d\n", move_count);  // 2^n - 1
+    
+    return 0;
+}

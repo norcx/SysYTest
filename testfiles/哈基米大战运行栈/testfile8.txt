@@ -1,0 +1,54 @@
+// 超高压测试：强制栈参数溢出
+// 关键：使用数组让所有变量在整个函数中保持活跃
+
+int arr[30];
+
+int extreme_test(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8) {
+    // 把参数存入全局数组，保持它们活跃
+    arr[0] = a1;
+    arr[1] = a2;
+    arr[2] = a3;
+    arr[3] = a4;
+    arr[4] = a5;
+    arr[5] = a6;
+    arr[6] = a7;
+    arr[7] = a8;
+
+    // 大量局部变量
+    int v1 = getint(), v2 = getint(), v3 = getint(), v4 = getint(), v5 = getint();
+    int v6 = getint(), v7 = getint(), v8 = getint(), v9 = getint(), v10 = getint();
+    int v11 = getint(), v12 = getint(), v13 = getint(), v14 = getint(), v15 = getint();
+
+    // 存入数组
+    arr[8] = v1;
+    arr[9] = v2;
+    arr[10] = v3;
+    arr[11] = v4;
+    arr[12] = v5;
+    arr[13] = v6;
+    arr[14] = v7;
+    arr[15] = v8;
+    arr[16] = v9;
+    arr[17] = v10;
+    arr[18] = v11;
+    arr[19] = v12;
+    arr[20] = v13;
+    arr[21] = v14;
+    arr[22] = v15;
+
+    // 再次使用所有参数和局部变量，强制它们同时活跃
+    int sum = a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 +
+              v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8 + v9 + v10 +
+              v11 + v12 + v13 + v14 + v15;
+
+    return sum;
+}
+
+int main() {
+    // 参数和: 1+2+3+4+5+6+7+8 = 36
+    // 局部变量和: 1+2+...+15 = 120
+    // 总和: 36 + 120 = 156
+    int res = extreme_test(1, 2, 3, 4, 5, 6, 7, 8);
+    printf("%d\n", res);
+    return 0;
+}

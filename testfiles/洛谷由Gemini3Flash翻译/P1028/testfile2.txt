@@ -1,0 +1,60 @@
+/* 
+   SysY 编译器测试用例：半数集问题（递归+备忘录）
+   考察点：
+   1. 递归调用时活跃变量（cnt, i, n, limit）的跨函数保护。
+   2. 全局数组的读取与写入（Memoization）。
+   3. 复杂的控制流：递归嵌套在 for 循环内部。
+   4. 表达式逻辑：&& 和 || 的最外层使用。
+*/
+
+// 全局变量定义
+int n;
+int a[1005];
+
+// 求解函数
+int func(int n) {
+    // 边界条件：到 1 了就代表到头了
+    if (n == 1) {
+        return 1;
+    }
+
+    // 备忘录：不是 0 就代表之前算过（SysY全局变量默认初始化为0）
+    if (a[n] != 0) {
+        return a[n];
+    }
+
+    int cnt;
+    cnt = 1;
+
+    int i;
+    int limit;
+    limit = n / 2;
+
+    // 枚举每个数
+    for (i = 1; i <= limit; i = i + 1) {
+        // 加上下一个数为 i 的可能数
+        // 这里的递归调用对图着色寄存器分配是极大的考验
+        cnt = cnt + func(i);
+    }
+
+    // 存入备忘录并返回
+    a[n] = cnt;
+    return cnt;
+}
+
+int main() {
+    n = getint();
+
+    // 逻辑运算测试：&& 和 || 必须在最外层
+    if (n < 1 || n > 1000) {
+        return 0;
+    }
+
+    int res;
+    res = func(n);
+
+    // printf 为单独语句
+    printf("%d", res);
+
+    return 0;
+}

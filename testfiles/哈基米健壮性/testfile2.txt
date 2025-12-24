@@ -1,0 +1,15 @@
+// test2_static.sy
+int main() {
+    int i;
+    for (i = 0; i < 3; i = i + 1) {
+        static int x = 10;
+        printf("Outer static x: %d\n", x);
+        x = x + 1;
+        if (i > 0) {
+            static int x = 100; // 这里的 x 与外层不同
+            printf("Inner static x: %d\n", x);
+            x = x + 1;
+        }
+    }
+    return 0;
+}

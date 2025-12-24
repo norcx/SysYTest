@@ -1,0 +1,63 @@
+// test20_global_array_modify.sy - 全局数组在多函数间修改
+int g_arr[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+int g_sum = 0;
+
+void double_array() {
+    int i;
+    for (i = 0; i < 10; i = i + 1) {
+        g_arr[i] = g_arr[i] * 2;
+    }
+}
+
+void add_to_array(int val) {
+    int i;
+    for (i = 0; i < 10; i = i + 1) {
+        g_arr[i] = g_arr[i] + val;
+    }
+}
+
+int sum_array() {
+    int i;
+    int s = 0;
+    for (i = 0; i < 10; i = i + 1) {
+        s = s + g_arr[i];
+    }
+    return s;
+}
+
+void compute_and_store() {
+    g_sum = sum_array();
+}
+
+void print_state() {
+    int i;
+    printf("Array: ");
+    for (i = 0; i < 10; i = i + 1) {
+        printf("%d ", g_arr[i]);
+    }
+    printf("\n");
+    printf("Sum: %d, g_sum: %d\n", sum_array(), g_sum);
+}
+
+int main() {
+    printf("Initial:\n");
+    print_state();  // 0 1 2 3 4 5 6 7 8 9, sum=45
+    
+    double_array();
+    printf("After double:\n");
+    print_state();  // 0 2 4 6 8 10 12 14 16 18, sum=90
+    
+    add_to_array(5);
+    printf("After add 5:\n");
+    print_state();  // 5 7 9 11 13 15 17 19 21 23, sum=140
+    
+    compute_and_store();
+    printf("After compute_and_store:\n");
+    print_state();  // same array, g_sum=140
+    
+    add_to_array(-10);
+    printf("After add -10:\n");
+    print_state();  // -5 -3 -1 1 3 5 7 9 11 13, sum=40, g_sum still 140
+    
+    return 0;
+}

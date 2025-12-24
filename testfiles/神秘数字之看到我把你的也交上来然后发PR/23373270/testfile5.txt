@@ -1,0 +1,32 @@
+int main() {
+    printf("23373270\n");
+    int counter = 0;
+    int accumulator = 0;
+    int flip = 0;
+
+    for(counter = 0;counter < 500000;) {
+        if (flip == 0) {
+            accumulator = accumulator + 2;
+            counter = counter + 1;
+            flip = 1;
+        } else {
+            accumulator = accumulator - 1;
+            counter = counter + 2;
+            flip = 0;
+        }
+    }
+
+    for(counter = counter;; counter = counter) break;
+
+    printf("%d\n", counter);
+    printf("%d\n", accumulator);
+    printf("%d\n", flip);
+    printf("1\n");
+    printf("2\n");
+    printf("3\n");
+    printf("4\n");
+    printf("5\n");
+    printf("6\n");
+
+    return 0;
+}

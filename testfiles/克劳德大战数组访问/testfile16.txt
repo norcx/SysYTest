@@ -1,0 +1,46 @@
+// test16 - 非常大的全局数组
+int huge_global[5000];
+
+void init_huge(int start, int count) {
+    int i;
+    for (i = 0; i < count; i = i + 1) {
+        huge_global[start + i] = (start + i) * 3 + 7;
+    }
+}
+
+int sum_range(int start, int count) {
+    int i;
+    int sum = 0;
+    for (i = 0; i < count; i = i + 1) {
+        sum = sum + huge_global[start + i];
+    }
+    return sum;
+}
+
+int main() {
+    int i;
+    
+    // 分段初始化
+    init_huge(0, 1000);
+    init_huge(1000, 1000);
+    init_huge(2000, 1000);
+    init_huge(3000, 1000);
+    init_huge(4000, 1000);
+    
+    // 验证边界
+    printf("huge_global[0] = %d\n", huge_global[0]);
+    printf("huge_global[2500] = %d\n", huge_global[2500]);
+    printf("huge_global[4999] = %d\n", huge_global[4999]);
+    
+    // 计算部分和
+    printf("Sum [0,100): %d\n", sum_range(0, 100));
+    printf("Sum [2000,2100): %d\n", sum_range(2000, 100));
+    printf("Sum [4900,5000): %d\n", sum_range(4900, 100));
+    
+    // 修改并验证
+    huge_global[0] = 99999;
+    huge_global[4999] = 88888;
+    printf("After modify: huge_global[0]=%d, huge_global[4999]=%d\n", huge_global[0], huge_global[4999]);
+    
+    return 0;
+}

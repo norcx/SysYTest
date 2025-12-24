@@ -1,0 +1,66 @@
+// test34_factorial_variants.sy - 阶乘的多种实现
+int factorial_recursive(int n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial_recursive(n - 1);
+}
+
+int factorial_iterative(int n) {
+    int result;
+    int i;
+    result = 1;
+    for (i = 2; i <= n; i = i + 1) {
+        result = result * i;
+    }
+    return result;
+}
+
+int factorial_tail(int n, int acc) {
+    if (n <= 1) {
+        return acc;
+    }
+    return factorial_tail(n - 1, n * acc);
+}
+
+int main() {
+    int i;
+    
+    printf("Recursive:\n");
+    for (i = 0; i <= 10; i = i + 1) {
+        printf("%d! = %d\n", i, factorial_recursive(i));
+    }
+    
+    printf("Iterative:\n");
+    for (i = 0; i <= 10; i = i + 1) {
+        printf("%d! = %d\n", i, factorial_iterative(i));
+    }
+    
+    printf("Tail recursive:\n");
+    for (i = 0; i <= 10; i = i + 1) {
+        printf("%d! = %d\n", i, factorial_tail(i, 1));
+    }
+    
+    // 验证三种方法结果一致
+    int all_match;
+    all_match = 1;
+    for (i = 0; i <= 10; i = i + 1) {
+        int r, it, t;
+        r = factorial_recursive(i);
+        it = factorial_iterative(i);
+        t = factorial_tail(i, 1);
+        if (r != it) {
+            all_match = 0;
+        }
+        if (r != t) {
+            all_match = 0;
+        }
+    }
+    if (all_match) {
+        printf("All methods match!\n");
+    } else {
+        printf("Mismatch found!\n");
+    }
+    
+    return 0;
+}

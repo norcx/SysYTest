@@ -1,0 +1,12 @@
+// test9_logic.sy
+int main() {
+    int a = 1, b = 2, c = 3, d = 4;
+    // 1 < 2 为真，3 > 4 为假，结果为 0
+    // 虽然不支持 (a<b && c>d)，但支持 a<b && c>d
+    if (a < b && c > d || a + b == c) {
+        printf("Complex Logic OK\n");
+    } else {
+        printf("Complex Logic Fail\n");
+    }
+    return 0;
+}

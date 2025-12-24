@@ -1,0 +1,53 @@
+// test6 - 数组下标为复杂表达式
+int g_arr[100];
+int g_idx = 5;
+
+int get_offset(int x) {
+    return x * 2 + 1;
+}
+
+int main() {
+    int local_arr[50];
+    int i, j;
+    
+    // 初始化
+    for (i = 0; i < 100; i = i + 1) {
+        g_arr[i] = i * 10;
+    }
+    for (i = 0; i < 50; i = i + 1) {
+        local_arr[i] = i * 5;
+    }
+    
+    // 复杂下标表达式
+    i = 3;
+    j = 7;
+    printf("g_arr[i + j] = %d\n", g_arr[i + j]);           // g_arr[10] = 100
+    printf("g_arr[i * j] = %d\n", g_arr[i * j]);           // g_arr[21] = 210
+    printf("g_arr[i * j + 5] = %d\n", g_arr[i * j + 5]);   // g_arr[26] = 260
+    printf("g_arr[g_idx] = %d\n", g_arr[g_idx]);           // g_arr[5] = 50
+    printf("g_arr[g_idx * 2] = %d\n", g_arr[g_idx * 2]);   // g_arr[10] = 100
+    
+    // 函数调用作为下标
+    printf("g_arr[get_offset(3)] = %d\n", g_arr[get_offset(3)]);  // g_arr[7] = 70
+    printf("g_arr[get_offset(i)] = %d\n", g_arr[get_offset(i)]);  // g_arr[7] = 70
+    
+    // 数组元素作为下标
+    local_arr[0] = 10;
+    local_arr[1] = 20;
+    printf("g_arr[local_arr[0]] = %d\n", g_arr[local_arr[0]]);  // g_arr[10] = 100
+    printf("g_arr[local_arr[1]] = %d\n", g_arr[local_arr[1]]);  // g_arr[20] = 200
+    
+    // 嵌套数组访问
+    local_arr[2] = 3;
+    local_arr[3] = local_arr[2] + 2;  // local_arr[3] = 5
+    printf("g_arr[local_arr[local_arr[2]]] = %d\n", g_arr[local_arr[local_arr[2]]]);  // g_arr[local_arr[3]] = g_arr[5] = 50
+    
+    // 赋值时使用复杂下标
+    g_arr[i + j * 2] = 12345;  // g_arr[17] = 12345
+    printf("g_arr[17] = %d\n", g_arr[17]);
+    
+    local_arr[get_offset(2)] = 6789;  // local_arr[5] = 6789
+    printf("local_arr[5] = %d\n", local_arr[5]);
+    
+    return 0;
+}

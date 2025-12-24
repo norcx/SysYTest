@@ -1,0 +1,75 @@
+// test25 - 堆排序（复杂数组操作+递归）
+int heap[100];
+int heap_size = 0;
+
+void swap(int arr[], int i, int j) {
+    int temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+}
+
+void heapify_down(int arr[], int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+    
+    if (left < n) {
+        if (arr[left] > arr[largest]) {
+            largest = left;
+        }
+    }
+    
+    if (right < n) {
+        if (arr[right] > arr[largest]) {
+            largest = right;
+        }
+    }
+    
+    if (largest != i) {
+        swap(arr, i, largest);
+        heapify_down(arr, n, largest);
+    }
+}
+
+void build_heap(int arr[], int n) {
+    int i;
+    for (i = n / 2 - 1; i >= 0; i = i - 1) {
+        heapify_down(arr, n, i);
+    }
+}
+
+void heap_sort(int arr[], int n) {
+    int i;
+    build_heap(arr, n);
+    
+    for (i = n - 1; i > 0; i = i - 1) {
+        swap(arr, 0, i);
+        heapify_down(arr, i, 0);
+    }
+}
+
+int main() {
+    int n;
+    int i;
+    
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        heap[i] = getint();
+    }
+    
+    printf("Before: ");
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d ", heap[i]);
+    }
+    printf("\n");
+    
+    heap_sort(heap, n);
+    
+    printf("After: ");
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d ", heap[i]);
+    }
+    printf("\n");
+    
+    return 0;
+}
