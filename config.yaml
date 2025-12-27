@@ -1,7 +1,7 @@
 # SysY编译器测试框架配置文件
 
 # 编译器项目路径
-compiler_project_dir: "..\\lexer"
+compiler_project_dir: "../Compiler"
 
 # Mars模拟器文件名
 mars_jar: "src/Mars.jar"
@@ -10,7 +10,7 @@ mars_jar: "src/Mars.jar"
 tools:
   jdk_home: ""       # JDK安装目录，如 "C:/Program Files/Java/jdk-17"
   gcc_path: ""       # gcc/g++可执行文件路径
-  cmake_path: "C:\\Program Files\\CMake\\bin\\cmake.exe"
+  cmake_path: "C:/Program Files/CMake/bin/cmake.exe"     # Cmake 安装路径，如 "C:/Program Files/CMake/bin/cmake.exe"
 # 超时设置 (秒)
 timeout:
   compile: 60          # 编译器编译超时
