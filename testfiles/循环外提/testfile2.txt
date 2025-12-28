@@ -1,0 +1,43 @@
+int g = 0;
+int arr[100];
+
+// 修改全局变量的函数
+int modify_global(int val) {
+    g = g + val;
+    return g;
+}
+
+// 纯计算函数，作为对照
+int pure_calc(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    int i;
+    int n = getint(); // read 10
+    int sum = 0;
+    
+    // 初始化 g
+    g = 1;
+
+    // 循环中包含修改全局变量的函数调用
+    // 陷阱：LICM 可能会认为 g 在循环内没有显式的 store，从而把 load g 提到循环外
+    // 正确：因为有 call modify_global，且它可能修改 g，所以 g 必须每次重读
+    for (i = 0; i < n; i = i + 1) {
+        int temp;
+        // 这一步修改了 g
+        modify_global(1);
+        
+        // 这一步读取 g。如果外提了，这里读到的永远是初始值
+        temp = g; 
+        
+        // 这里有一个真正的不变量计算，应该被提出来
+        sum = sum + pure_calc(10, 20) + temp;
+        
+        arr[i] = sum;
+        printf("Iter %d: g=%d, sum=%d\n", i, g, sum);
+    }
+
+    printf("Final: g=%d, sum=%d\n", g, sum);
+    return 0;
+}

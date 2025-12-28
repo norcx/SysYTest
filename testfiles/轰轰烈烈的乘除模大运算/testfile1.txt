@@ -1,0 +1,61 @@
+int result[100];
+int buffer[1024]; // 模拟 Memory 压力，避免被完全优化掉
+
+int get_val(int i) {
+    return buffer[i % 1024];
+}
+
+void work(int n, int magic_base) {
+    int i;
+    int sum = 0;
+    
+    // 初始化 buffer
+    for (i = 0; i < 1024; i = i + 1) {
+        buffer[i] = i;
+        if (i % 2 == 0) buffer[i] = -i;
+    }
+
+    // 核心测试循环
+    for (i = 0; i < 40000; i = i + 1) {
+        int x = get_val(i); // 获取一个动态值，防止被常量折叠
+        
+        // 1. 乘法优化测试
+        // 应优化为移位: x << 3
+        int m1 = x * 8; 
+        // 应优化为移位加减: (x << 4) - x 或类似的
+        int m2 = x * 15; 
+
+        // 2. 除法优化 - 2的幂次
+        // 应优化为移位+符号修正 (Cost ~4)
+        int d1 = x / 8;
+        // 负数测试
+        int d2 = (x - 1000) / 4;
+
+        // 3. 除法优化 - 常数 (Magic Number)
+        // 应该消除 div 指令 (Cost ~9 vs 15)
+        int d3 = x / 3;
+        int d4 = x / 10;
+        int d5 = x / 123; 
+
+        // 4. 取模优化
+        // 应该变为 减法 + 乘法 + 除法优化结果
+        int mod1 = x % 8;
+        int mod2 = x % 10;
+
+        // 防止死代码消除，累加结果
+        sum = sum + m1 + m2 + d1 + d2 + d3 + d4 + d5 + mod1 + mod2;
+        
+        // 嵌套一点计算消耗寄存器
+        if (i % 1000 == 0) {
+            result[i / 1000] = sum;
+            sum = 0;
+        }
+    }
+    printf("%d", sum); 
+}
+
+int main() {
+    int seed = getint();
+    work(seed, 10);
+    return 0;
+}

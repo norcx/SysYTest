@@ -1,0 +1,46 @@
+// test_integration.sy
+int arr[1024];
+
+int main() {
+    int i;
+    int seed = 1;
+    int sum = 0;
+
+    // 初始化一个混乱的数组
+    for (i = 0; i < 1024; i = i + 1) {
+        seed = seed * 1103515245 + 12345;
+        arr[i] = seed;
+    }
+
+    // 大规模遍历
+    for (i = 0; i < 100000; i = i + 1) {
+        int idx = i % 1024; // % 1024 应优化为 & 1023 (或者 负数修正的 shift)
+        int val = arr[idx];
+
+        // 复杂的计算链
+        // 1. 乘法强度削减
+        int mul_res = val * 10;          // <<3 + <<1
+        mul_res = mul_res + val * 63;    // <<6 - x
+        
+        // 2. 除法强度削减 (Magic)
+        int div_res = mul_res / 10;      
+        int rem_res = mul_res % 10;      // 应该复用上面的除法结果
+        
+        // 3. 2的幂次
+        int div_2 = val / 32;
+        int rem_2 = val % 32;
+
+        // 4. 结果聚合
+        sum = sum + div_res + rem_res + div_2 + rem_2;
+
+        // 动态更新数组，破坏单纯的循环不变量，强迫每次都算
+        arr[idx] = val + 1;
+        
+        if (i % 20000 == 0) {
+            printf("Step %d: %d\n", i, sum);
+        }
+    }
+    
+    printf("Final Sum: %d\n", sum);
+    return 0;
+}

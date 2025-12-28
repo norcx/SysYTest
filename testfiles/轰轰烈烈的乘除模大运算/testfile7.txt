@@ -1,0 +1,32 @@
+// test_debug_magic.sy
+int main() {
+    // 使用 getint 防止常量折叠，确保编译器生成 Magic Number 代码
+    int x = getint(); 
+    
+    // 测试点 1: 简单的负数整除
+    // 期望: -1
+    // 你的编译器(错误MagicNumber)可能输出: 0
+    int div_res = x / 1000;
+    
+    // 测试点 2: 简单的负数取模
+    // 期望: 0
+    // 你的编译器可能输出: -1000
+    int mod_res = x % 1000;
+    
+    printf("Input: %d\n", x);
+    printf("Div: %d\n", div_res);
+    printf("Mod: %d\n", mod_res);
+    
+    // 测试点 3: 模拟 bug 现场的具体数值
+    // 在你的报错中，Index 8 的值本应是 -998 (由 -203 计算得来)
+    // 让我们验证 -224013582390 (mod 2^32) = -688518710
+    // -688518710 / 1000 应该是 -688518
+    int difficult = -688518710;
+    int diff_div = difficult / 1000;
+    int diff_mod = difficult % 1000;
+    
+    printf("Difficult Div: %d\n", diff_div);
+    printf("Difficult Mod: %d\n", diff_mod);
+    
+    return 0;
+}

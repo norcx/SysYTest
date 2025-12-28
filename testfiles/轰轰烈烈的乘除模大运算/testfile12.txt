@@ -1,0 +1,17 @@
+int iter(int last, int seed){
+	int t1 = seed * 114514;
+	int t2 = last * 1919810;
+	int t3 = 114514 % t1 - last;
+	int t4 = (-123456) % t2 + seed;
+	int t5 = last / t4 * (-1919810%seed) / 114 * (-1020333444);
+	return t5 * t4 * (-114514) - last *(- seed);
+}
+
+int main() {
+	int result=23373270,t = 0;
+	for (t=0;t<50000;t=t+1) {
+		result = iter(result, ((-10203)*t/1020304+506)*(-708));
+		if (t % 888 == 0) printf("[%d] r=%d", t, result);
+	}
+	return 0;
+}

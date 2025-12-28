@@ -1,0 +1,36 @@
+int data[20];
+int N = 20;
+
+// 这个函数会修改传入数组的内容
+int update_array(int a[], int idx, int val) {
+    a[idx] = val;
+    return val;
+}
+
+int main() {
+    int i;
+    int k;
+    int x;
+    
+    // 初始化
+    for (i = 0; i < N; i = i + 1) {
+        data[i] = i;
+    }
+
+    // 陷阱：循环内读取 data[0]
+    // 同时调用 update_array 修改 data 数组
+    // 简单的 LICM 可能会看到循环内没有显式的 data[...] = ... 语句
+    // 只有函数调用。必须意识到函数调用可能修改数组。
+    for (k = 0; k < 10; k = k + 1) {
+        // 修改 data[0]
+        update_array(data, 0, k * 10);
+        
+        // 读取 data[0]
+        // 如果 LICM 把 x = data[0] 提到循环外，x 将永远是 0
+        x = data[0];
+        
+        printf("k=%d, data[0]=%d\n", k, x);
+    }
+    
+    return 0;
+}

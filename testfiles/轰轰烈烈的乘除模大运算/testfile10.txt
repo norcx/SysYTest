@@ -1,0 +1,48 @@
+// test_sign.sy
+int main() {
+    int i;
+    int val = -1; // -1
+    int sum_div = 0;
+    int sum_mod = 0;
+
+    // 循环 100万次
+    for (i = 0; i < 100000; i = i + 1) {
+        // 生成全范围随机数
+        val = val * 69069 + 1;
+        
+        // 1. 2的幂次除法 (覆盖 2, 4, 8, 16 ... )
+        int d1 = val / 2;
+        int d2 = val / 4;
+        int d3 = val / 8;
+        int d4 = val / 16;
+        int d5 = val / 32;
+        int d6 = val / 64;
+        
+        // 2. 负 2 的幂次 (你的后端需要把这个转成 / 2^k 然后取反)
+        int nd1 = val / -2;
+        int nd2 = val / -8;
+
+        // 3. 非 2 的幂次 (Magic Number)
+        int m1 = val / 3;
+        int m2 = val / -3;
+        int m3 = val / 10;
+        int m4 = val / -10;
+
+        // 累加 Checksum，混合加减防止抵消
+        sum_div = sum_div + d1 - d2 + d3 - d4 + d5 - d6;
+        sum_div = sum_div + nd1 - nd2;
+        sum_div = sum_div + m1 - m2 + m3 - m4;
+        
+        // 取模测试
+        sum_mod = sum_mod + (val % 2) - (val % -4) + (val % 10);
+        
+        // 每 10万次输出一次，定位错误大概范围
+        if (i % 10000 == 0) {
+            printf("Iter %d: DivSum=%d, ModSum=%d\n", i, sum_div, sum_mod);
+            // 重置 sum 防止 overflow 使得比较困难（虽然 int overflow 是确定的，但为了看清数字）
+            sum_div = 0;
+            sum_mod = 0;
+        }
+    }
+    return 0;
+}

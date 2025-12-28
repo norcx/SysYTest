@@ -1,0 +1,39 @@
+ int main() {
+    // 测试用例：针对除数为 1000 的强度削减测试
+    // 预期：编译器会将 / 1000 和 % 1000 优化为乘法(MagicNumber)和移位
+    
+    int a = getint();
+    int b = getint();
+    
+    // 1. 正数除法与取模
+    int div_a = a / 1000;
+    int mod_a = a % 1000;
+    
+    // 2. 负数除法与取模 (MagicNumber 最容易错的地方)
+    int div_b = b / 1000;
+    int mod_b = b % 1000;
+
+    printf("Test for Divisor 1000:\n");
+    
+    // 输出正数结果
+    // 预期: 1234
+    printf("1234567 / 1000 = %d\n", div_a);
+    // 预期: 567
+    printf("1234567 mod 1000 = %d\n", mod_a);
+    
+    // 输出负数结果
+    // 预期: -1234
+    printf("-1234567 / 1000 = %d\n", div_b);
+    // 预期: -567
+    printf("-1234567 mod 1000 = %d\n", mod_b);
+
+    // 自动判定
+    if (div_a == 1234 && mod_a == 567 && div_b == -1234 && mod_b == -567) {
+        printf("Result: SUCCESS\n");
+    } else {
+        printf("Result: FAILED\n");
+        printf("Debug Hint: If output is wildly wrong, check MagicNumber computation for 1000.\n");
+    }
+
+    return 0;
+}

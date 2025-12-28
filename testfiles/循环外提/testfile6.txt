@@ -1,0 +1,39 @@
+int g_val = 10;
+
+// 18个参数的函数
+int many_args(int a1, int a2, int a3, int a4, int a5, int a6, 
+              int a7, int a8, int a9, int a10, int a11, int a12,
+              int a13, int a14, int a15, int a16, int a17, int a18) {
+    return a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + 
+           a10 + a11 + a12 + a13 + a14 + a15 + a16 + a17 + a18;
+}
+
+int main() {
+    int i;
+    int N = getint(); // read 20
+    int base = 2;
+    int result = 0;
+    
+    // 循环中调用多参数函数
+    // 其中大部分参数是 循环不变量 (如 base * 2, base * 3)
+    // 只有 a18 (g_val + i) 是 循环变量
+    // 编译器应该能把前17个参数的计算提出来，或者至少不搞崩栈布局
+    for (i = 0; i < N; i = i + 1) {
+        int val;
+        // 构造复杂的参数列表
+        val = many_args(
+            base, base*2, base*3, base*4, base*5, base*6,
+            base*7, base*8, base*9, base*10, base*11, base*12,
+            base*13, base*14, base*15, base*16, base*17, 
+            g_val + i // 只有这个变
+        );
+        
+        result = result + val;
+        if (i % 5 == 0) {
+            printf("i=%d, partial_res=%d\n", i, result);
+        }
+    }
+    
+    printf("Total Result: %d\n", result);
+    return 0;
+}

@@ -1,0 +1,22 @@
+int main() {
+    int i;
+    int n = getint(); // read 5
+    int zero_val = getint(); // read 0
+    int invariant_a = 100;
+    
+    // 这里的 if 条件对于当前输入是 false (0 != 0)
+    // 所以 loop body 里的除法实际上永远不会执行
+    // 陷阱：invariant_a / zero_val 的操作数都是循环不变量
+    // 如果 LICM 强行把它提到 preheader，程序会在运行循环前直接崩溃(Floating point exception)
+    // 正确：只有当该指令所在的块支配循环的所有出口，或者除数是已知非0常数时，才能外提
+    for (i = 0; i < n; i = i + 1) {
+        if (zero_val != 0) {
+            int danger = invariant_a / zero_val;
+            printf("This should not print: %d\n", danger);
+        }
+        printf("Loop safe iter: %d\n", i);
+    }
+    
+    printf("Program survived potential division by zero.\n");
+    return 0;
+}

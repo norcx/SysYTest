@@ -1,0 +1,43 @@
+const int INF_MAX = 2147483647;
+
+void check(int val) {
+    int r1 = val / 1;
+    int r2 = val / -1;
+    int r3 = val * 0;
+    int r4 = val * 1;
+    
+    int d1 = val / 2;
+    int d2 = val / 3;
+    int d3 = val / 7;
+    int d4 = val / 31;
+    int d5 = val / -2; // 负2次幂
+    int d6 = val / -10;
+    
+    int m1 = val % 2;
+    int m2 = val % 3;
+    int m3 = val % -2;
+
+    printf("Val: %d -> %d %d %d %d | /: %d %d %d %d %d %d | mod: %d %d %d\n", 
+           val, r1, r2, r3, r4, d1, d2, d3, d4, d5, d6, m1, m2, m3);
+    return;
+}
+
+int main() {
+    // 0 和 基础值
+    check(0);
+    check(1);
+    check(-1);
+    check(10);
+    check(-10);
+
+    // 极值 (注意 SysY 字面量解析可能不支持直接写 -2147483648，通常写 -2147483647 - 1)
+    int min_val = -2147483647-1; 
+    check(INF_MAX);
+    check(min_val);
+    
+    // 临界点
+    check(INF_MAX - 1);
+    check(min_val + 1);
+
+    return 0;
+}

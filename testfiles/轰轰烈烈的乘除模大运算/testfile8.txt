@@ -1,0 +1,24 @@
+int g_data[500];
+void init_data(int arr[], int n, int seed) {
+    int i;
+    int val = seed;
+    for (i = 0; i < n; i = i + 1) {
+        arr[i] = val;
+        val = (val * 1103515245 + 12345) % 1000;  // 简单伪随机
+    }
+}
+
+int main() {
+    int i;
+    
+    // 初始化
+    init_data(g_data, 500, 42);
+    
+    printf("First 10 elements: ");
+    for (i = 0; i < 10; i = i + 1) {
+        printf("%d ", g_data[i]);
+    }
+    printf("\n");
+    
+    return 0;
+}

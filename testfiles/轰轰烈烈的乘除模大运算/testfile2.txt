@@ -1,0 +1,62 @@
+const int N = 2000;
+int input_data[2000];
+
+// 辅助函数：防止常量折叠，强制在运行时计算
+int wrap_calc(int val, int type) {
+    int res = 0;
+    // 乘法测试：2的幂，非2的幂（可以移位加减），大素数
+    if (type == 1) { res = val * 8; }       // Shift
+    if (type == 2) { res = val * 15; }      // Shift sub (x<<4 - x)
+    if (type == 3) { res = val * 7; }       // Shift sub
+    if (type == 4) { res = val * 33; }      // Shift add (x<<5 + x)
+    if (type == 5) { res = val * -6; }      // Negative const
+    if (type == 6) { res = val * 123; }     // General const
+
+    // 除法测试：Magic Number 重灾区
+    if (type == 7) { res = val / 2; }       // Shift (positive power)
+    if (type == 8) { res = val / 8; }       // Shift (positive power)
+    if (type == 9) { res = val / 3; }       // Magic Number
+    if (type == 10) { res = val / 5; }      // Magic Number
+    if (type == 11) { res = val / 7; }      // Magic Number
+    if (type == 12) { res = val / 10; }     // Magic Number
+    if (type == 13) { res = val / -2; }     // Negative power
+    if (type == 14) { res = val / -6; }     // Negative general
+    if (type == 15) { res = val / 100; }    // Large const
+    
+    // 取模测试：验证 x - (x/c)*c 逻辑
+    if (type == 16) { res = val % 2; }
+    if (type == 17) { res = val % 8; }
+    if (type == 18) { res = val % 3; }
+    if (type == 19) { res = val % 10; }
+    if (type == 20) { res = val % -5; }
+    return res;
+}
+
+int main() {
+    int i;
+    int j;
+    int checksum = 0;
+    
+    // 初始化数据 -1000 到 999
+    for (i = 0; i < N; i = i + 1) {
+        input_data[i] = i - 1000;
+    }
+
+    // 遍历所有数据和所有计算类型
+    for (i = 0; i < N; i = i + 1) {
+        int x = input_data[i];
+        int sub_sum = 0;
+        for (j = 1; j < 21; j = j + 1) {
+            int val = wrap_calc(x, j);
+            sub_sum = sub_sum + val;
+        }
+        // 为了防止输出过多IO变慢，每100个数输出一次校验和
+        checksum = checksum + sub_sum;
+        if (i % 100 == 0) {
+            printf("%d: %d\n", i, checksum);
+            checksum = 0; // 重置防止溢出太快
+        }
+    }
+    printf("Final: %d\n", checksum);
+    return 0;
+}

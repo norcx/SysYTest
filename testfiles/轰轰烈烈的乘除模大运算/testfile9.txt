@@ -1,0 +1,68 @@
+// test_precision.sy
+int divisors[8];
+const int MIN_VAL = -2147483647-1;
+const int MAX_VAL = 2147483647;
+
+void init_divisors() {
+    divisors[0] = 1000;  // 之前的 Bug 源
+    divisors[1] = 7;     // 经典的精度难点
+    divisors[2] = -7;    // 负数除法
+    divisors[3] = 10;    // 常用
+    divisors[4] = 13;    // 素数
+    divisors[5] = 12345; // 大除数
+    divisors[6] = -1000; 
+    divisors[7] = 27;    // 非2的幂
+}
+
+int main() {
+    init_divisors();
+    int i;
+    int j;
+    int k;
+    int checksum = 0;
+
+    // 1. 测试 INT_MIN 附近的 50000 个数
+    // 注意：SysY 中字面量写 -2147483648 可能会有问题，通常用 -2147483647 - 1
+    int start = MIN_VAL; 
+    for (i = 0; i < 50000; i = i + 1) {
+        int val = start + i;
+        for (j = 0; j < 8; j = j + 1) {
+            int d = divisors[j];
+            int res = val / d;
+            int rem = val % d;
+            checksum = checksum + res + rem;
+        }
+    }
+    printf("Checksum near INT_MIN: %d\n", checksum);
+
+    // 2. 测试 INT_MAX 附近的 50000 个数
+    checksum = 0;
+    start = MAX_VAL - 50000;
+    for (i = 0; i < 50000; i = i + 1) {
+        int val = start + i;
+        for (j = 0; j < 8; j = j + 1) {
+            int d = divisors[j];
+            int res = val / d;
+            int rem = val % d;
+            checksum = checksum + res + rem;
+        }
+    }
+    printf("Checksum near INT_MAX: %d\n", checksum);
+
+    // 3. 随机抽样测试 (防止中间范围有坑)
+    checksum = 0;
+    int seed = 19260817;
+    for (i = 0; i < 50000; i = i + 1) {
+        // 简单的 LCG
+        seed = seed * 1664525 + 1013904223;
+        for (j = 0; j < 8; j = j + 1) {
+            int d = divisors[j];
+            int res = seed / d;
+            int rem = seed % d;
+            checksum = checksum + res - rem;
+        }
+    }
+    printf("Checksum Random: %d\n", checksum);
+
+    return 0;
+}

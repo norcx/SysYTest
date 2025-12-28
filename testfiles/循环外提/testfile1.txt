@@ -1,0 +1,15 @@
+int a[100];
+int n;
+void func() {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        // 这里 a 的地址计算涉及 base_addr + i * 4
+        // 但如果有一个复杂的计算：
+        int x = n * 10 + 5; 
+        a[i] = x;
+    }
+}
+int main() {
+    func();
+    return 0;
+}

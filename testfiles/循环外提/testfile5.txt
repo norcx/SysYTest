@@ -1,0 +1,40 @@
+int matrix[1000]; // 模拟 10x10x10，虽然只用了部分
+int M = 10;
+int K = 10;
+
+int main() {
+    int i;
+    int j;
+    int l;
+    int steps = getint(); // read 3
+    
+    // 初始化
+    for (i = 0; i < 1000; i = i + 1) {
+        matrix[i] = 0;
+    }
+
+    // 三层嵌套循环
+    for (i = 0; i < steps; i = i + 1) {
+        // Layer 1
+        int const_l1 = i * 100; // 依赖 i，在 j 循环中是不变量
+        
+        for (j = 0; j < steps; j = j + 1) {
+            // Layer 2
+            int const_l2 = const_l1 + j * 10; // 依赖 i, j，在 l 循环中是不变量
+            int complex_invariant = (M * K) / 2; // 完全不变量，应该提到最外面
+            
+            for (l = 0; l < steps; l = l + 1) {
+                // Layer 3
+                // index 计算：i*100 + j*10 + l
+                // i*100 应在最外层算，j*10 在中层算
+                int index = const_l2 + l;
+                
+                matrix[index] = matrix[index] + 1 + complex_invariant;
+                
+                printf("i=%d j=%d l=%d val=%d\n", i, j, l, matrix[index]);
+            }
+        }
+    }
+    
+    return 0;
+}
