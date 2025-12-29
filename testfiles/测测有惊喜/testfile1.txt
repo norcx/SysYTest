@@ -5,6 +5,7 @@ int main() {
         a = b;
         b = temp;
 		// If remove PHI, pay attention to the sequence of MOVE here
+		printf("%d %d %d", a, b, temp);
     }
     return 0;
 }
