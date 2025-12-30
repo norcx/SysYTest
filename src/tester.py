@@ -11,6 +11,7 @@ from typing import Optional, Tuple, List
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 import threading
+import time
 
 from .config import get_config
 from .models import TestCase, TestResult, TestStatus
@@ -18,6 +19,15 @@ from .utils import read_file_safe, compare_outputs
 
 
 SUPPORTED_LANGUAGES = {"java", "c", "cpp"}
+
+INSTRUCTION_WEIGHTS = {
+    "Division": 15,
+    "Multiply": 5,
+    "Jump/Branch": 2,
+    "Memory": 3,
+    "Others": 1,
+}
+_CYCLE_BREAKDOWN_ORDER = ["Division", "Multiply", "Jump/Branch", "Memory", "Others"]
 
 
 @dataclass
@@ -61,6 +71,25 @@ class CompilerTester:
         
         # 线程本地存储
         self._local = threading.local()
+        # 线程 -> worker_id 映射，避免并行线程复用同一 worker 目录导致互相覆盖
+        self._worker_id_lock = threading.Lock()
+        self._thread_worker_ids = {}
+        self._next_worker_id = 0
+
+    def _get_thread_worker_id(self, max_workers: int) -> int:
+        """为当前线程分配一个稳定的 worker_id（0..max_workers-1）。"""
+        tid = threading.get_ident()
+        cached = self._thread_worker_ids.get(tid)
+        if cached is not None:
+            return cached
+        with self._worker_id_lock:
+            cached = self._thread_worker_ids.get(tid)
+            if cached is not None:
+                return cached
+            worker_id = self._next_worker_id
+            self._next_worker_id = (self._next_worker_id + 1) % max_workers
+            self._thread_worker_ids[tid] = worker_id
+            return worker_id
     
     def _load_compiler_config(self) -> CompilerConfig:
         """从编译器项目读取config.json"""
@@ -449,7 +478,47 @@ class CompilerTester:
             return False, "编译超时"
         except Exception as e:
             return False, str(e)
-    
+
+    def _read_instruction_statistics(self, worker_dir: Path) -> Tuple[Optional[int], Optional[str]]:
+        """读取 Mars 输出的 InstructionStatistics.txt 并计算加权 cycle（若存在）。"""
+        stats_path = worker_dir / "InstructionStatistics.txt"
+        if not stats_path.exists():
+            return None, None
+
+        counts = {}
+        for raw in read_file_safe(stats_path).splitlines():
+            line = raw.strip()
+            if not line:
+                continue
+            if line.startswith("Final Cycle"):
+                continue
+            if ":" not in line:
+                continue
+            prefix, count_str = line.split(":", 1)
+            name = prefix.split("(", 1)[0].strip()
+            try:
+                counts[name] = int(count_str.strip())
+            except ValueError:
+                continue
+
+        final_cycle = 0
+        for name, count in counts.items():
+            weight = INSTRUCTION_WEIGHTS.get(name)
+            if weight is None:
+                continue
+            final_cycle += count * weight
+
+        parts = []
+        for key in _CYCLE_BREAKDOWN_ORDER:
+            if key in counts:
+                parts.append(f"{key}={counts[key]}")
+        for key in counts:
+            if key not in _CYCLE_BREAKDOWN_ORDER:
+                parts.append(f"{key}={counts[key]}")
+        breakdown = ", ".join(parts) if parts else None
+
+        return int(final_cycle), breakdown
+     
     def _run_mars(self, input_file: Optional[Path], worker_dir: Path) -> Tuple[Optional[str], str]:
         """运行Mars模拟器"""
         mips_path = worker_dir / "mips.txt"
@@ -531,6 +600,14 @@ class CompilerTester:
         else:
             return self.compiler_exe.exists()
 
+    def _is_compile_only_case(self, testfile: Path) -> bool:
+        """若用例目录存在 compile_only 标记，则仅测试编译阶段（不运行 Mars / g++ 对拍）。"""
+        case_dir = testfile.parent
+        for flag in ("compile_only", "compile_only.txt", ".compile_only"):
+            if (case_dir / flag).exists():
+                return True
+        return False
+
     def test(self, testfile: Path, input_file: Optional[Path] = None, worker_id: int = 0) -> TestResult:
         """测试单个用例 (强制使用g++对拍)"""
         if not testfile.exists():
@@ -544,27 +621,58 @@ class CompilerTester:
         worker_dir = self._get_worker_dir(worker_id)
         
         # 1. 编译
+        compile_start = time.monotonic()
         success, msg = self._run_compiler(testfile, worker_dir)
+        compile_time_ms = int((time.monotonic() - compile_start) * 1000)
         if not success:
-            return TestResult(TestStatus.COMPILE_ERROR, msg)
+            return TestResult(TestStatus.COMPILE_ERROR, msg, compile_time_ms=compile_time_ms)
+
+        if self._is_compile_only_case(testfile):
+            return TestResult(TestStatus.PASSED, "compile-only", compile_time_ms=compile_time_ms)
+
+        # 清理旧的统计文件，避免误读上一次结果
+        stats_path = worker_dir / "InstructionStatistics.txt"
+        if stats_path.exists():
+            stats_path.unlink()
         
         # 2. 运行Mars
         mars_out, mars_err = self._run_mars(input_file, worker_dir)
+        cycle, cycle_breakdown = self._read_instruction_statistics(worker_dir)
         if mars_out is None:
-            return TestResult(TestStatus.RUNTIME_ERROR, f"Mars运行失败: {mars_err}")
+            return TestResult(
+                TestStatus.RUNTIME_ERROR,
+                f"Mars运行失败: {mars_err}",
+                compile_time_ms=compile_time_ms,
+                cycle=cycle,
+                cycle_breakdown=cycle_breakdown,
+            )
         
         # 3. 使用g++获取期望结果
         gcc_out, gcc_err = self._run_gcc(testfile, input_file, worker_dir)
         if gcc_out is None:
-            return TestResult(TestStatus.SKIPPED, f"g++运行失败: {gcc_err}")
+            return TestResult(
+                TestStatus.SKIPPED,
+                f"g++运行失败: {gcc_err}",
+                compile_time_ms=compile_time_ms,
+                cycle=cycle,
+                cycle_breakdown=cycle_breakdown,
+            )
         
         # 4. 比较结果
         if compare_outputs(mars_out, gcc_out):
-            return TestResult(TestStatus.PASSED)
+            return TestResult(
+                TestStatus.PASSED,
+                compile_time_ms=compile_time_ms,
+                cycle=cycle,
+                cycle_breakdown=cycle_breakdown,
+            )
         else:
             return TestResult(
                 TestStatus.FAILED, "输出不匹配",
-                actual_output=mars_out, expected_output=gcc_out
+                actual_output=mars_out, expected_output=gcc_out,
+                compile_time_ms=compile_time_ms,
+                cycle=cycle,
+                cycle_breakdown=cycle_breakdown,
             )
     
     def test_parallel(
@@ -599,11 +707,12 @@ class CompilerTester:
         lock = threading.Lock()
         
         def run_test(task: TestTask) -> Tuple[TestCase, TestResult]:
-            result = self.test(task.case.testfile, task.case.input_file, task.worker_id)
+            # worker_id 必须与线程绑定，否则并行执行时会复用同一 worker 目录，导致 testfile/mips/tmp_exe 互相覆盖
+            worker_id = self._get_thread_worker_id(max_workers)
+            result = self.test(task.case.testfile, task.case.input_file, worker_id)
             return task.case, result
         
-        # 分配 worker_id
-        tasks = [TestTask(case, i % max_workers) for i, case in enumerate(cases)]
+        tasks = [TestTask(case, 0) for case in cases]
         
         # 决定是否渐进启动
         use_ramp_up = total >= ramp_up_threshold

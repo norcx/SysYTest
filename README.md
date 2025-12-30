@@ -46,6 +46,20 @@ python main.py --project path_to_src
 
 运行时会实时打印 `PASS`/`FAIL` 结果和进度，失败时显示实际/期望输出对比。
 
+```bash
+usage: main.py [-h] [--project PROJECT] [--match MATCH] [--show-cycle]
+               [--show-time]
+
+SysY 编译器测试框架
+
+options:
+  -h, --help         show this help message and exit
+  --project PROJECT  编译器项目路径。指定后直接在命令行模式下编译并运行测试
+  --match MATCH      只运行用例名包含该子串的用例（可重复指定，如 --match dp_optimization）
+  --show-cycle       在 PASS 行显示 FinalCycle（若可用）
+  --show-time        在 PASS 行显示编译耗时（ms）
+```
+
 ## 同步更新测试用例
 
 ### 从远程仓库获取最新测试用例
