@@ -40,6 +40,13 @@ void radixSort(int bitround, int a[], int l, int r) {
     int tail[base] = {};
     int cnt[base] = {};
 
+    int i = -10086;
+    for (i = 0; i < base; i = i + 1) {
+        head[i] = 0;
+        tail[i] = 0;
+        cnt[i] = 0;
+    }
+
     if (bitround == -1 || l + 1 >= r) return;
 
     {

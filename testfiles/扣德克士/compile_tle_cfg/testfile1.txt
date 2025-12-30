@@ -40,7 +40,7 @@ int main() {
     if (x < b) { x = x + b - c; } else { x = x + c - b; }
     if (x < c) { x = x + c - a; } else { x = x + a - c; }
 
-    printf("%d\\n", x);
+    printf("%d\n", x);
     return 0;
 }
 

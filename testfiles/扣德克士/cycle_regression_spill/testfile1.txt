@@ -39,7 +39,7 @@ int main() {
         a7 = a7 + 8;
     }
 
-    printf("%d\\n", sum);
+    printf("%d\n", sum);
     return 0;
 }
 
