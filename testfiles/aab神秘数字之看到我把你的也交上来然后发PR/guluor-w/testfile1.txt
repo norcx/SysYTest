@@ -1,0 +1,13 @@
+void gui_1(int a1,int a2) {
+printf("%d",a2);  // Expected 1
+}
+
+void gui(int a1) {
+    gui_1(3, a1);
+    return;
+}
+
+int main() {
+    gui(1);
+    return 0;
+}
