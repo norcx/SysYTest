@@ -1,0 +1,6 @@
+Loop safe iter: 0
+Loop safe iter: 1
+Loop safe iter: 2
+Loop safe iter: 3
+Loop safe iter: 4
+Program survived potential division by zero.

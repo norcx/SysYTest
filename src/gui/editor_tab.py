@@ -216,10 +216,10 @@ class EditorTab(BaseTab):
     
     def refresh_libs(self, set_default: bool = False):
         """刷新测试库列表"""
-        testfiles_dir = self.test_dir / "testfiles"
-        libs = TestDiscovery.discover_test_libs(testfiles_dir)
+        testcases_dir = self.test_dir / "testcases"
+        libs = TestDiscovery.discover_test_libs(testcases_dir)
         
-        lib_names = [str(lib.relative_to(testfiles_dir)) for lib in libs]
+        lib_names = [str(lib.relative_to(testcases_dir)) for lib in libs]
         
         # 生成基于当前时间的默认目录名
         default_name = datetime.now().strftime("%Y%m%d_%H%M")
@@ -238,7 +238,7 @@ class EditorTab(BaseTab):
         if not name:
             return
         
-        new_dir = self.test_dir / "testfiles" / name
+        new_dir = self.test_dir / "testcases" / name
         if new_dir.exists():
             messagebox.showerror("错误", f"测试库 '{name}' 已存在")
             return
@@ -256,7 +256,7 @@ class EditorTab(BaseTab):
             messagebox.showwarning("提示", "请先选择测试库")
             return
         
-        lib_path = self.test_dir / "testfiles" / lib_name
+        lib_path = self.test_dir / "testcases" / lib_name
         next_num = TestDiscovery.get_next_testfile_number(lib_path)
         self.editor_num_var.set(str(next_num))
         self.editor_status_var.set(f"下一个编号: {next_num}")
@@ -279,7 +279,7 @@ class EditorTab(BaseTab):
             messagebox.showwarning("提示", "请输入源代码")
             return False
         
-        lib_path = self.test_dir / "testfiles" / lib_name
+        lib_path = self.test_dir / "testcases" / lib_name
         lib_path.mkdir(parents=True, exist_ok=True)
         
         # 保存testfile

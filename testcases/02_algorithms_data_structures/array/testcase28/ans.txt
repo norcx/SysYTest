@@ -1,0 +1,4 @@
+Result (depth 20): 423990
+Call count: 21
+Result (depth 50): 2559690
+Call count: 51

@@ -93,14 +93,14 @@ class TestDiscovery:
         return [tc for _, tc in file_cases]
     
     @staticmethod
-    def discover_test_libs(testfiles_dir: Path) -> List[Path]:
+    def discover_test_libs(testcases_dir: Path) -> List[Path]:
         """
         发现所有测试库目录（叶子目录，即直接包含 testfile*.txt 的目录）
         支持任意深度的嵌套目录结构
         """
         test_libs = []
         
-        if not testfiles_dir.exists():
+        if not testcases_dir.exists():
             return test_libs
         
         def find_test_dirs(directory: Path):
@@ -114,7 +114,7 @@ class TestDiscovery:
                     if subdir.is_dir():
                         find_test_dirs(subdir)
         
-        for item in sorted(testfiles_dir.iterdir()):
+        for item in sorted(testcases_dir.iterdir()):
             if item.is_dir():
                 find_test_dirs(item)
         

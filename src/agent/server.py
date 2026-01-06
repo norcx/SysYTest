@@ -306,7 +306,7 @@ class SysYToolServer:
         if not self.current_testfile or not self.current_testfile.exists():
             return ToolResult(False, "没有可保存的测试文件")
         
-        lib_path = self.test_dir / "testfiles" / lib_name
+        lib_path = self.test_dir / "testcases" / lib_name
         lib_path.mkdir(parents=True, exist_ok=True)
         
         # 保存 testfile

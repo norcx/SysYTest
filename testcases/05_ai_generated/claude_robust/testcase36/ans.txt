@@ -1,0 +1,9 @@
+add(mul(2,3), 4) = 10
+mul(add(2,3), sub(10,4)) = 30
+add(add(add(1,2),3),4) = 10
+mul(mul(mul(2,2),2),2) = 16
+compute(2,3,10,4) = 12
+arr[add(2,3)] = 5
+arr[mul(2,add(1,2))] = 6
+3 > 2: correct
+sum = 20

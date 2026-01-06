@@ -1,0 +1,5 @@
+Positive sum: 71
+Negative sum: -45
+Global positive sum: 71
+Global negative sum: -45
+Chose positive: 71

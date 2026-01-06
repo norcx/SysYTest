@@ -1,0 +1,15 @@
+Initial:
+Array: 0 1 2 3 4 5 6 7 8 9 
+Sum: 45, g_sum: 0
+After double:
+Array: 0 2 4 6 8 10 12 14 16 18 
+Sum: 90, g_sum: 0
+After add 5:
+Array: 5 7 9 11 13 15 17 19 21 23 
+Sum: 140, g_sum: 0
+After compute_and_store:
+Array: 5 7 9 11 13 15 17 19 21 23 
+Sum: 140, g_sum: 140
+After add -10:
+Array: -5 -3 -1 1 3 5 7 9 11 13 
+Sum: 40, g_sum: 140

@@ -1,0 +1,9 @@
+Outer array: 1 2 3 4 5 6 7 8 9 10 
+Inner array (iter 0): 100 200 300 400 500 
+Inner array (iter 1): 100 1200 300 400 500 
+Inner array (iter 2): 100 200 2300 400 500 
+Sum of all inner arrays: 7500
+Scope1: 11 22 33
+Scope2: 111 222 333
+Back to Scope1: 11 22 33
+Final outer array: 1 2 3 4 5 6 7 8 9 10 

@@ -74,11 +74,11 @@ def run_cli(
     if not success:
         return 1
 
-    testfiles_dir = test_dir / "testfiles"
-    libs = TestDiscovery.discover_test_libs(testfiles_dir)
+    testcases_dir = test_dir / "testcases"
+    libs = TestDiscovery.discover_test_libs(testcases_dir)
     cases: List = []
     for lib in libs:
-        rel = lib.relative_to(testfiles_dir)
+        rel = lib.relative_to(testcases_dir)
         for case in TestDiscovery.discover_in_dir(lib):
             case.name = f"{rel}/{case.name}"
             cases.append(case)

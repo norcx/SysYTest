@@ -1,0 +1,13 @@
+Initial global x = 100
+Initial global y = 200
+Local x = 10
+Global x via func = 100
+Local x after +5 = 15
+Global x via func = 100
+Local x = 15
+Global x via func = 999
+test_shadow returned 15
+Global x after test_shadow = 999
+Local y in main = 50
+test_array_shadow = 600
+Global arr[0] = 1

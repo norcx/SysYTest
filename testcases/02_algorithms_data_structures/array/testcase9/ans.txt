@@ -1,0 +1,12 @@
+local_arr[0] = 0
+local_arr[99] = 99
+g_arr[0] = 0
+g_arr[9] = 900
+First: 111, Last: 999
+First: 111, Last: 999
+After function:
+local_arr[0] = 111
+local_arr[99] = 999
+g_arr[0] = 111
+g_arr[9] = 999
+Near boundary: 95 96 97 98 999 

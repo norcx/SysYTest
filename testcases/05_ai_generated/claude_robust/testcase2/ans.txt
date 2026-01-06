@@ -1,0 +1,12 @@
+L1 x=1 cnt=1
+  L2 x=100 cnt=2
+    L3 x=1000 cnt=3
+  L2 x=200 cnt=4
+L1 x=11 cnt=5
+  L2 x=300 cnt=6
+    L3 x=2000 cnt=7
+  L2 x=400 cnt=8
+L1 x=21 cnt=9
+  L2 x=500 cnt=10
+    L3 x=3000 cnt=11
+  L2 x=600 cnt=12

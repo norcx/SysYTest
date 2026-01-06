@@ -1,0 +1,17 @@
+int main()
+{
+    int a,n;
+    int sn=0,tn=0,count=1;
+	a=4;
+	n=4;
+
+    for(; count <= n;)
+    {   
+        tn = tn + a;
+        sn = sn + tn; 
+        a = a * 10; 
+        count=count+1;
+    }   
+        printf("%d", sn);
+    return 0;
+}

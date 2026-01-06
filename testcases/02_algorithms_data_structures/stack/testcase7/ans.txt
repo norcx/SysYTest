@@ -1,0 +1,2 @@
+Please input 8 ones (1 1 1 1 1 1 1 1):
+Congratulations! Bug fixed.

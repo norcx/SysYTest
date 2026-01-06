@@ -1,0 +1,11 @@
+//test if
+int main(){
+    int a;
+    a = 5;
+    if(a == 10){
+        printf("%d", a);
+        return 0;
+    }
+        printf("%d", a);
+    return 0;
+}

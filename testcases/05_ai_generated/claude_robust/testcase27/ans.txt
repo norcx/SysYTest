@@ -1,0 +1,4 @@
+mega_compute result: 300
+mega_compute with expr: 300
+array_and_ints local: 795
+array_and_ints global: 5578

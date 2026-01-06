@@ -1,0 +1,10 @@
+Test1: g=0
+Test2: g=0
+Test3: g=1
+Test4: g=1
+Test5: g=1
+Test6: g=1
+Test7: g=1
+Test8: g=0
+Test9: g=3 i=3
+Test10: g=3

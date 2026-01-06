@@ -1,0 +1,16 @@
+Const array contents:
+g_const_arr[0] = 11
+g_const_arr[1] = 22
+g_const_arr[2] = 33
+g_const_arr[3] = 44
+g_const_arr[4] = 55
+g_const_arr[5] = 66
+g_const_arr[6] = 77
+g_const_arr[7] = 88
+g_const_arr[8] = 99
+g_const_arr[9] = 110
+Sum of first 5: 165
+Sum of all: 605
+First + Last = 121
+local_arr[g_const_arr[0]] = 11
+local_arr[g_const_arr[4]] = 55

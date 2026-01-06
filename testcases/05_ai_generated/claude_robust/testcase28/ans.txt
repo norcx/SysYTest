@@ -1,0 +1,28 @@
+func_a calls:
+  11
+  12
+  13
+  14
+  15
+func_b calls:
+  110
+  120
+  130
+  140
+  150
+func_c calls:
+  1100
+  1200
+  1300
+  1400
+  1500
+Mixed calls:
+a=16 b=160 c=1600
+a=17 b=170 c=1700
+Inner x=10 at depth 3
+Inner x=20 at depth 2
+Inner x=30 at depth 1
+nested_static(3)=4
+Inner x=40 at depth 2
+Inner x=50 at depth 1
+nested_static(2)=7

@@ -1,0 +1,4 @@
+int main() {
+    printf("%d", -2147483647);
+  return 0;
+}

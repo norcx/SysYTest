@@ -1,0 +1,5 @@
+Input: -1000
+Div: -1
+Mod: 0
+Difficult Div: -688518
+Difficult Mod: -710

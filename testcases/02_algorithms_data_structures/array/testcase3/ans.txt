@@ -1,0 +1,5 @@
+Global array sum: 2450
+Local array sum: 7450
+Sum after modify: 31020
+Original sum: 3870
+Local array sum after nested: 7450

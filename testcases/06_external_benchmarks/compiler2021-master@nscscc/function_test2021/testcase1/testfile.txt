@@ -1,0 +1,8 @@
+//test global var define
+int a = 3;
+int b = 5;
+
+int main(){
+        printf("%d", a + b);
+    return 0;
+}

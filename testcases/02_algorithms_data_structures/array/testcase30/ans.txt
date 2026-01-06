@@ -1,0 +1,4 @@
+First 10 elements: 42 -621 560 -79 -90 -897 -340 -203 -998 -389 
+Partition count (pivot=500): less=75, greater=25
+Recursive sum (depth 10): -3594
+Recursive sum (depth 15): -996

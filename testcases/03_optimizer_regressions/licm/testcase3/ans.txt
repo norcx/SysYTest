@@ -1,0 +1,10 @@
+k=0, data[0]=0
+k=1, data[0]=10
+k=2, data[0]=20
+k=3, data[0]=30
+k=4, data[0]=40
+k=5, data[0]=50
+k=6, data[0]=60
+k=7, data[0]=70
+k=8, data[0]=80
+k=9, data[0]=90

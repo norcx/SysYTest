@@ -1,0 +1,7 @@
+// test hexadecimal define
+int main(){
+    int a;
+    a = 15;
+        printf("%d", a);
+    return 0;
+}

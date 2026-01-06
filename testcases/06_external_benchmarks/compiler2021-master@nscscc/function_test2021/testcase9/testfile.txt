@@ -1,0 +1,7 @@
+//test const gloal var define
+const int a = 10, b = 5;
+
+int main(){
+        printf("%d", b);
+    return 0;
+}

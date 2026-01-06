@@ -1,0 +1,5 @@
+g_const_arr: 1 2 3 4 5 
+local arr: 10 11 12 13 14 15 16 
+sum of local arr: 91
+arr[SIZE-1]=14
+arr[OFFSET-SIZE]=15

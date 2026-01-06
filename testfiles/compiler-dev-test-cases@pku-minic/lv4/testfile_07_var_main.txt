@@ -1,4 +1,0 @@
-int main() {
-  int sysy = 10;
-  return sysy;
-}

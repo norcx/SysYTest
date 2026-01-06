@@ -1,0 +1,8 @@
+//test add of hex and oct
+int main(){
+    int a, b;
+    a = 15;
+    b =- 12;
+        printf("%d", a + b + 75);
+    return 0;
+}

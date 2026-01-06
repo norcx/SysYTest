@@ -1,0 +1,13 @@
+int a;
+int b;
+
+int main(){
+	b=0;
+	a=3;
+	for(;a>0;){	
+		b = b+a;
+		a = a-1;
+	}
+		printf("%d", b);
+	return 0;
+}

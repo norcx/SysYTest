@@ -1,0 +1,8 @@
+Before modify: local_arr[2] = 8
+Old value: 8, New value: 16
+Max index: 2, Max value: 16
+Global max at index 19: 95
+g_arr[find_max_idx] before: 95
+Result: 95
+Sum: 53
+After clear: 0 0 0 0 0 0 0 0 0 0 

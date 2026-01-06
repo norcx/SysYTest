@@ -1,0 +1,11 @@
+Batch 0 result: 1335
+Batch 1 result: 31335
+Batch 2 result: 61335
+Batch 3 result: 91335
+Batch 4 result: 121335
+Batch 5 result: 151335
+Batch 6 result: 181335
+Batch 7 result: 211335
+Batch 8 result: 241335
+Batch 9 result: 271335
+Total: 1363350

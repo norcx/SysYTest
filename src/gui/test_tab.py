@@ -309,12 +309,12 @@ class TestTab(BaseTab, OutputMixin):
         self.lib_listbox.delete(0, tk.END)
         self.case_listbox.delete(0, tk.END)
         
-        testfiles_dir = self.test_dir / "testfiles"
-        libs = TestDiscovery.discover_test_libs(testfiles_dir)
+        testcases_dir = self.test_dir / "testcases"
+        libs = TestDiscovery.discover_test_libs(testcases_dir)
         
         total_cases = 0
         for lib in libs:
-            rel_path = lib.relative_to(testfiles_dir)
+            rel_path = lib.relative_to(testcases_dir)
             cases = TestDiscovery.discover_in_dir(lib)
             total_cases += len(cases)
             self.lib_listbox.insert(tk.END, f"{rel_path} ({len(cases)})")
@@ -330,7 +330,7 @@ class TestTab(BaseTab, OutputMixin):
         
         self.case_listbox.delete(0, tk.END)
         lib_name = self.lib_listbox.get(selection[0]).split(' (')[0]
-        self.current_lib_path = self.test_dir / "testfiles" / lib_name
+        self.current_lib_path = self.test_dir / "testcases" / lib_name
         
         cases = TestDiscovery.discover_in_dir(self.current_lib_path)
         for case in cases:
@@ -444,8 +444,8 @@ class TestTab(BaseTab, OutputMixin):
     
     def _run_all(self):
         """运行所有测试"""
-        testfiles_dir = self.test_dir / "testfiles"
-        libs = TestDiscovery.discover_test_libs(testfiles_dir)
+        testcases_dir = self.test_dir / "testcases"
+        libs = TestDiscovery.discover_test_libs(testcases_dir)
         
         all_cases = []
         for lib in libs:

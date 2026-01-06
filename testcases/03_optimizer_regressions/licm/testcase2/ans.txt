@@ -1,0 +1,11 @@
+Iter 0: g=2, sum=32
+Iter 1: g=3, sum=65
+Iter 2: g=4, sum=99
+Iter 3: g=5, sum=134
+Iter 4: g=6, sum=170
+Iter 5: g=7, sum=207
+Iter 6: g=8, sum=245
+Iter 7: g=9, sum=284
+Iter 8: g=10, sum=324
+Iter 9: g=11, sum=365
+Final: g=11, sum=365

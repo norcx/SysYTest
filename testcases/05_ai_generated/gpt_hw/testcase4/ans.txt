@@ -1,0 +1,2 @@
+func2 says hi
+func3 use func2 is 7

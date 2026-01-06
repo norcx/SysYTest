@@ -1,0 +1,5 @@
+Outer static x: 10
+Outer static x: 11
+Inner static x: 100
+Outer static x: 12
+Inner static x: 101

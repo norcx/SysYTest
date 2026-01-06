@@ -1,0 +1,33 @@
+Accumulator test:
+Add 1, sum = 1
+Add 2, sum = 3
+Add 3, sum = 6
+Add 4, sum = 10
+Add 5, sum = 15
+Add 6, sum = 21
+Add 7, sum = 28
+Add 8, sum = 36
+Add 9, sum = 45
+Add 10, sum = 55
+
+Running average test:
+Add 10, avg = 10
+Add 20, avg = 15
+Add 30, avg = 20
+Add 40, avg = 25
+Add 50, avg = 30
+Add 60, avg = 35
+Add 70, avg = 40
+Add 80, avg = 45
+Add 90, avg = 50
+Add 100, avg = 55
+Add 110, avg = 60
+Add 120, avg = 65
+Add 130, avg = 70
+Add 140, avg = 75
+Add 150, avg = 80
+Add 160, avg = 85
+Add 170, avg = 90
+Add 180, avg = 95
+Add 190, avg = 100
+Add 200, avg = 105

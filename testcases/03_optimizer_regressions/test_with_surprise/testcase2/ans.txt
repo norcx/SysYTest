@@ -1,0 +1,24 @@
+=== Self Nest ===
+3 4 5 6 7
+=== Const Self Nest ===
+4 6 8 10
+=== Static Self Nest ===
+3 4 5 6 7 8
+=== Global Self Nest ===
+5 5 5 3 2
+=== Global Const Self Nest ===
+1 2 3
+=== Cross Nest ===
+1 3 4 4 5 6
+=== Global Local Cross ===
+1 2 1 3 0
+=== Deep Nest ===
+11
+=== Nested Assign ===
+200 1 2 3 300 100 6 7 8 9 
+=== Nested Expr ===
+14 0 8
+=== Param Nest ===
+250
+10
+=== Total: 124 ===
