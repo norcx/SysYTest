@@ -1,0 +1,2 @@
+# stdin lines must appear exactly as the program consumes them.
+# Separate every numeric literal with a newline. Delete these comments when you finalize the testcase.

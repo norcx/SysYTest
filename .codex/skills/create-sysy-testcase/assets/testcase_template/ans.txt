@@ -1,0 +1,2 @@
+# Replace this placeholder with the exact stdout produced via printf (including the trailing newline if emitted).
+# Never copy buggy compiler output; recompute it from the specification or a trusted interpreter.
