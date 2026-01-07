@@ -43,11 +43,12 @@ class TestTask:
 
 class CompilerTester:
     """编译器测试器 - 支持多线程和多语言"""
-    
-    def __init__(self, project_dir: Path, test_dir: Path):
+
+    def __init__(self, project_dir: Path, test_dir: Path, instance_name: Optional[str] = None):
         self.config = get_config()
         self.project_dir = Path(project_dir).resolve()
         self.test_dir = Path(test_dir).resolve()
+        self.instance_name = (instance_name or self.project_dir.name).strip() or "compiler"
         
         # Mars.jar 路径（优先使用配置，允许相对路径）
         mars_path = Path(self.config.mars_jar)
@@ -55,16 +56,20 @@ class CompilerTester:
             mars_path = (self.test_dir / mars_path).resolve()
         self.mars_jar = mars_path
         
-        # 编译器项目源码目录
-        self.project_src_dir = self.project_dir / "src"
-        
-        # 主工作目录
-        self.work_dir = self.test_dir / ".tmp"
-        
         # 编译器配置和可执行文件路径
         self.compiler_config = self._load_compiler_config()
+
+        # 编译器项目源码目录（兼容 zip 提交格式：Java 可能直接放在根目录）
+        self.project_src_dir = self._resolve_project_src_dir()
+
+        # 主工作目录（为多编译器实例隔离）
+        safe_instance_name = "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in self.instance_name)
+        instance_key = hashlib.md5(f"{safe_instance_name}|{self.project_dir}".encode("utf-8")).hexdigest()[:10]
+        self.work_dir = self.test_dir / ".tmp" / "compilers" / f"{safe_instance_name}_{instance_key}"
+        self.work_dir.mkdir(parents=True, exist_ok=True)
+
         self.compiler_jar = self.work_dir / "Compiler.jar"  # Java
-        self.compiler_exe = self.work_dir / "Compiler.exe"  # C/C++
+        self.compiler_exe = self.work_dir / ("Compiler.exe" if os.name == "nt" else "Compiler")  # C/C++
         
         # 线程本地存储
         self._local = threading.local()
@@ -93,6 +98,10 @@ class CompilerTester:
             self._next_worker_id = (self._next_worker_id + 1) % max_workers
             self._thread_worker_ids[tid] = worker_id
             return worker_id
+
+    def allocate_worker_id(self, max_workers: int) -> int:
+        """为当前线程分配 worker_id（用于多编译器/全局线程池场景）。"""
+        return self._get_thread_worker_id(max_workers)
     
     def _load_compiler_config(self) -> CompilerConfig:
         """从编译器项目读取config.json"""
@@ -112,6 +121,24 @@ class CompilerTester:
                 print(f"读取config.json失败: {e}，使用默认Java")
         
         return CompilerConfig()
+
+    def _resolve_project_src_dir(self) -> Path:
+        """解析源码根目录。
+
+        - Java zip 提交可能直接在项目根目录放置 Compiler.java（不再有 src/）
+        - 其他情况优先使用 src/
+        """
+        src_dir = self.project_dir / "src"
+        if self.compiler_config.language == "java":
+            if (self.project_dir / "Compiler.java").exists():
+                return self.project_dir
+            if src_dir.exists():
+                return src_dir
+            return self.project_dir
+
+        if src_dir.exists():
+            return src_dir
+        return self.project_dir
     
     def get_compiler_language(self) -> str:
         """获取编译器语言"""
@@ -194,9 +221,7 @@ class CompilerTester:
                 break
         
         if cmake_lists is not None:
-            self.work_dir.mkdir(parents=True, exist_ok=True)
-            project_key = hashlib.md5(str(self.project_dir).encode("utf-8")).hexdigest()[:8]
-            build_dir = self.work_dir / f"cmake_build_{project_key}"
+            build_dir = self.work_dir / "cmake_build"
             build_dir.mkdir(parents=True, exist_ok=True)
             cache_path = build_dir / "CMakeCache.txt"
             
@@ -379,22 +404,35 @@ class CompilerTester:
                 if build_result.returncode != 0:
                     return False, f"CMake构建失败:\n{build_result.stderr}\n{build_result.stdout}"
                 
-                exes = [
-                    p for p in build_dir.rglob("*.exe")
-                    if "CMakeFiles" not in p.parts and p.is_file()
+                candidates = [
+                    p for p in build_dir.rglob("*")
+                    if p.is_file()
+                    and "CMakeFiles" not in p.parts
+                    and p.name.lower() in ("compiler", "compiler.exe")
                 ]
-                if not exes:
+                if not candidates and os.name != "nt":
+                    candidates = [
+                        p for p in build_dir.rglob("*")
+                        if p.is_file() and "CMakeFiles" not in p.parts and os.access(p, os.X_OK)
+                    ]
+                if not candidates:
                     return False, f"CMake构建完成但未找到可执行文件: {build_dir}"
-                
-                preferred = [p for p in exes if p.name.lower() in ("compiler.exe", "compiler")]
-                if preferred:
-                    chosen = preferred[0]
-                elif len(exes) == 1:
-                    chosen = exes[0]
-                else:
-                    chosen = max(exes, key=lambda p: p.stat().st_mtime)
-                
+
+                def score(p: Path) -> Tuple[int, float]:
+                    preferred = 1 if p.name.lower() in ("compiler", "compiler.exe") else 0
+                    try:
+                        mtime = p.stat().st_mtime
+                    except OSError:
+                        mtime = 0.0
+                    return preferred, mtime
+
+                chosen = max(candidates, key=score)
                 shutil.copy2(chosen, self.compiler_exe)
+                if os.name != "nt":
+                    try:
+                        self.compiler_exe.chmod(self.compiler_exe.stat().st_mode | 0o111)
+                    except Exception:
+                        pass
                 return True, f"[{lang.upper()}] CMake构建成功 -> {chosen.name}"
             
             except subprocess.TimeoutExpired:
@@ -415,7 +453,6 @@ class CompilerTester:
         if not source_files:
             return False, f"找不到{lang.upper()}源文件"
         
-        self.work_dir.mkdir(parents=True, exist_ok=True)
         gcc = tools.get_gcc()
         
         try:
@@ -431,7 +468,12 @@ class CompilerTester:
             if result.returncode != 0:
                 return False, f"编译失败:\n{result.stderr}"
             
-            return True, f"[{lang.upper()}] 成功编译 {len(source_files)} 个文件 -> Compiler.exe"
+            if os.name != "nt":
+                try:
+                    self.compiler_exe.chmod(self.compiler_exe.stat().st_mode | 0o111)
+                except Exception:
+                    pass
+            return True, f"[{lang.upper()}] 成功编译 {len(source_files)} 个文件 -> {self.compiler_exe.name}"
         
         except subprocess.TimeoutExpired:
             return False, "编译超时"

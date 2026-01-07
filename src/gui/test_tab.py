@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from pathlib import Path
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 import threading
 import queue
 import subprocess
@@ -14,7 +14,9 @@ from .base import BaseTab, OutputMixin
 from .theme import COLORS, create_styled_listbox, create_styled_text
 from .widgets import AnimatedProgressBar, IconButton
 from ..discovery import TestDiscovery
+from ..multi_runner import compile_testers, test_multi
 from ..tester import CompilerTester
+from ..zip_compilers import ZipCompilerInstance, discover_zip_compilers, extract_zip_instance
 
 if TYPE_CHECKING:
     from .app import TestApp
@@ -30,6 +32,8 @@ class TestTab(BaseTab, OutputMixin):
         self.message_queue = queue.Queue()
         self.current_lib_path: Optional[Path] = None
         self.case_menu: Optional[tk.Menu] = None
+        self.zip_instances: List[ZipCompilerInstance] = []
+        self._stop_event = threading.Event()
     
     def build(self):
         """构建测试运行标签页"""
@@ -58,11 +62,11 @@ class TestTab(BaseTab, OutputMixin):
         config_frame = ttk.Frame(parent)
         config_frame.pack(fill=tk.X, pady=(0, 12))
         
-        # 项目路径
+        # zip 目录
         path_frame = ttk.Frame(config_frame)
         path_frame.pack(fill=tk.X)
         
-        ttk.Label(path_frame, text="编译器项目", style='Card.TLabel').pack(side=tk.LEFT)
+        ttk.Label(path_frame, text="源码 zip 目录", style='Card.TLabel').pack(side=tk.LEFT)
         
         self.project_var = tk.StringVar()
         self.project_entry = ttk.Entry(
@@ -73,8 +77,36 @@ class TestTab(BaseTab, OutputMixin):
         
         IconButton(path_frame, icon='folder', text='浏览', 
                    command=self._browse_project).pack(side=tk.LEFT, padx=(0, 4))
-        IconButton(path_frame, icon='play', text='编译', 
+        IconButton(path_frame, icon='play', text='编译选中', 
                    command=self._compile_project, style='Accent.TButton').pack(side=tk.LEFT)
+
+        # 编译器实例选择
+        inst_frame = ttk.Frame(config_frame)
+        inst_frame.pack(fill=tk.BOTH, expand=True, pady=(10, 0))
+
+        inst_header = ttk.Frame(inst_frame)
+        inst_header.pack(fill=tk.X, pady=(0, 6))
+        ttk.Label(inst_header, text="📦 编译器实例（zip）", style='Card.TLabel',
+                  font=('微软雅黑', 10, 'bold')).pack(side=tk.LEFT)
+        self.inst_count_label = ttk.Label(inst_header, text="", style='Status.TLabel')
+        self.inst_count_label.pack(side=tk.RIGHT)
+        IconButton(inst_header, icon='refresh', text='刷新实例',
+                   command=self.refresh_compilers).pack(side=tk.RIGHT, padx=(0, 8))
+
+        inst_container = ttk.Frame(inst_frame)
+        inst_container.pack(fill=tk.BOTH, expand=True)
+        self.inst_listbox = create_styled_listbox(
+            inst_container,
+            selectmode=tk.EXTENDED,
+            exportselection=False,
+            font=(self.config.gui.get_font(), self.config.gui.font_size),
+            height=4,
+        )
+        inst_scroll = ttk.Scrollbar(inst_container, orient=tk.VERTICAL, command=self.inst_listbox.yview)
+        self.inst_listbox.configure(yscrollcommand=inst_scroll.set)
+        self.inst_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        inst_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self.inst_listbox.bind('<<ListboxSelect>>', lambda e: self._update_compiler_info())
         
         # 编译器信息
         self.compiler_info = ttk.Label(
@@ -266,42 +298,69 @@ class TestTab(BaseTab, OutputMixin):
         default_path = (self.test_dir / self.config.compiler_project_dir).resolve()
         if default_path.exists():
             self.project_var.set(str(default_path))
-            self.app.project_dir = default_path
+            self.app.zip_dir = default_path
             self.app.update_project_status(default_path)
-            self._update_compiler_info()
         self.refresh_lists()
     
     def _update_compiler_info(self):
         """更新编译器信息"""
-        if self.app.project_dir:
-            tester = CompilerTester(self.app.project_dir, self.test_dir)
-            lang = tester.get_compiler_language().upper()
-            self.compiler_info.configure(text=f"🔧 检测到 {lang} 编译器")
+        valid = [i for i in self.zip_instances if i.valid]
+        selection = self.inst_listbox.curselection() if hasattr(self, "inst_listbox") else ()
+        selected = [valid[i] for i in selection if 0 <= i < len(valid)] if selection else valid
+
+        if not selected:
+            self.compiler_info.configure(text="🔧 未发现可用编译器实例（请检查 zip_dir 与压缩包内容）")
+            return
+
+        if not selection:
+            msg_prefix = f"🔧 已发现 {len(valid)} 个实例（未选择时默认全部）"
+        else:
+            msg_prefix = f"🔧 已选择 {len(selected)}/{len(valid)} 个实例"
+
+        langs = sorted({(i.language or "unknown").upper() for i in selected})
+        self.compiler_info.configure(text=f"{msg_prefix} | 语言: {', '.join(langs)}")
     
     def _browse_project(self):
-        """浏览选择项目目录"""
-        path = filedialog.askdirectory(title="选择编译器项目目录")
+        """浏览选择 zip 目录"""
+        path = filedialog.askdirectory(title="选择源码 zip 目录")
         if path:
             self.project_var.set(path)
-            self.app.project_dir = Path(path)
+            self.app.zip_dir = Path(path)
             self.app.update_project_status(Path(path))
-            self._update_compiler_info()
+            self.refresh_compilers()
     
     def _compile_project(self):
-        """编译项目"""
-        if not self.app.project_dir:
-            messagebox.showerror("错误", "请先选择项目目录")
+        """编译选中的编译器实例（zip）"""
+        zip_dir = self._get_zip_dir()
+        if not zip_dir:
+            messagebox.showerror("错误", "请先选择 zip 目录")
             return
-        
-        self.tester = CompilerTester(self.app.project_dir, self.test_dir)
-        lang = self.tester.get_compiler_language().upper()
-        self._log(f"⚙️ 正在编译 {lang} 项目...", 'info')
-        self.status_var.set(f"正在编译 {lang} 项目...")
-        
+
+        selected = self._get_selected_instances()
+        if not selected:
+            messagebox.showerror("错误", "未找到可用的编译器实例（zip）")
+            return
+
+        self._clear_output()
+        self._stop_event.clear()
+        self._log(f"⚙️ 正在编译 {len(selected)} 个编译器实例...", 'info')
+        self.status_var.set("正在编译...")
+
         def compile_task():
-            success, msg = self.tester.compile_project()
-            self.message_queue.put(('compile_done', success, msg))
-        
+            testers: List[CompilerTester] = []
+            for inst in selected:
+                try:
+                    extracted = extract_zip_instance(inst, self.test_dir / ".tmp" / "zip_sources")
+                    testers.append(CompilerTester(extracted, self.test_dir, instance_name=inst.name))
+                except Exception as e:
+                    self.message_queue.put(("compile_instance", inst.name, False, f"解包失败: {e}"))
+
+            def on_compile(tester: CompilerTester, ok: bool, msg: str):
+                self.message_queue.put(("compile_instance", tester.instance_name, ok, msg))
+
+            compile_testers(testers, max_workers=self.config.parallel.max_workers, stop_event=self._stop_event, callback=on_compile)
+            self.message_queue.put(("compile_all_done",))
+
         threading.Thread(target=compile_task, daemon=True).start()
     
     def refresh_lists(self):
@@ -321,6 +380,51 @@ class TestTab(BaseTab, OutputMixin):
         
         self.lib_count_label.configure(text=f"{len(libs)} 个库")
         self._log(f"📚 发现 {len(libs)} 个测试库，共 {total_cases} 个用例", 'info')
+        self.refresh_compilers()
+
+    def _get_zip_dir(self) -> Optional[Path]:
+        raw = (self.project_var.get() or "").strip()
+        if not raw:
+            return None
+        p = Path(raw)
+        return p if p.exists() and p.is_dir() else None
+
+    def refresh_compilers(self):
+        """刷新 zip_dir 下的编译器实例列表。"""
+        zip_dir = self._get_zip_dir()
+        self.zip_instances = discover_zip_compilers(zip_dir) if zip_dir else []
+
+        valid = [i for i in self.zip_instances if i.valid]
+        invalid = [i for i in self.zip_instances if not i.valid]
+
+        if hasattr(self, "inst_listbox"):
+            self.inst_listbox.delete(0, tk.END)
+            for inst in valid:
+                lang = (inst.language or "unknown").upper()
+                obj = (inst.object_code or "?").lower()
+                self.inst_listbox.insert(tk.END, f"{inst.name}  ({lang}, {obj})")
+
+        if hasattr(self, "inst_count_label"):
+            self.inst_count_label.configure(text=f"{len(valid)} 可用 / {len(self.zip_instances)} 总计")
+
+        if invalid:
+            for inst in invalid:
+                self._log(f"⚠️ 忽略无效实例 {inst.zip_path.name}: {inst.reason}", "warning")
+
+        self._update_compiler_info()
+
+    def _get_selected_instances(self) -> List[ZipCompilerInstance]:
+        valid = [i for i in self.zip_instances if i.valid]
+        if not valid:
+            return []
+        selection = self.inst_listbox.curselection() if hasattr(self, "inst_listbox") else ()
+        if not selection:
+            return valid
+        selected: List[ZipCompilerInstance] = []
+        for idx in selection:
+            if 0 <= idx < len(valid):
+                selected.append(valid[idx])
+        return selected
     
     def _on_lib_select(self, event):
         """选择测试库时更新用例列表"""
@@ -465,9 +569,15 @@ class TestTab(BaseTab, OutputMixin):
         if self.is_running:
             messagebox.showwarning("提示", "测试正在运行中")
             return
-        
-        if not self.app.project_dir:
-            messagebox.showerror("错误", "请先选择项目目录")
+
+        zip_dir = self._get_zip_dir()
+        if not zip_dir:
+            messagebox.showerror("错误", "请先选择 zip 目录")
+            return
+
+        selected = self._get_selected_instances()
+        if not selected:
+            messagebox.showerror("错误", "未找到可用的编译器实例（zip）")
             return
         
         self.is_running = True
@@ -475,59 +585,74 @@ class TestTab(BaseTab, OutputMixin):
         self._clear_output()
         self.progress.set(0)
         self.result_label.configure(text="")
+        self._stop_event.clear()
         
         max_workers = self.config.parallel.max_workers
         self._log(f"🚀 {title}", 'header')
         self._log(f"   并行线程: {max_workers}", 'dim')
+        self._log(f"   编译器实例: {len(selected)}", 'dim')
         
         def test_task():
-            self.tester = CompilerTester(self.app.project_dir, self.test_dir)
-            lang = self.tester.get_compiler_language().upper()
-            self.message_queue.put(('status', f"正在编译 {lang} 项目..."))
-            
-            success, msg = self.tester.compile_project()
-            if not success:
-                self.message_queue.put(('compile_failed', msg))
+            testers: List[CompilerTester] = []
+            for inst in selected:
+                try:
+                    extracted = extract_zip_instance(inst, self.test_dir / ".tmp" / "zip_sources")
+                    testers.append(CompilerTester(extracted, self.test_dir, instance_name=inst.name))
+                except Exception as e:
+                    self.message_queue.put(("compile_instance", inst.name, False, f"解包失败: {e}"))
+
+            self.message_queue.put(("status", f"正在编译 {len(testers)} 个实例..."))
+
+            compile_results = compile_testers(
+                testers,
+                max_workers=max_workers,
+                stop_event=self._stop_event,
+                callback=lambda t, ok, msg: self.message_queue.put(("compile_instance", t.instance_name, ok, msg)),
+            )
+            ok_testers = [t for t in testers if compile_results.get(t.instance_name, (False, ""))[0]]
+            if not ok_testers:
+                self.message_queue.put(("compile_failed", "所有编译器实例编译失败"))
                 return
-            
-            self.message_queue.put(('compile_done', True, msg))
-            
-            if not self.is_running:
-                self.message_queue.put(('stopped', 0, 0))
+
+            self.message_queue.put(("compile_done", True, f"编译完成: {len(ok_testers)}/{len(testers)}"))
+
+            if not self.is_running or self._stop_event.is_set():
+                self.message_queue.put(("stopped", 0, 0, len(ok_testers) * len(cases)))
                 return
-            
+
             passed, failed = 0, 0
-            
-            def on_result(case, result, progress):
+            total_tasks = len(ok_testers) * len(cases)
+
+            def on_result(tester: CompilerTester, case, result, completed, total):
                 nonlocal passed, failed
-                if not self.is_running:
+                if not self.is_running or self._stop_event.is_set():
                     return
-                
                 if result.passed:
                     passed += 1
-                    self.message_queue.put(('result', case.name, result, True))
+                    self.message_queue.put(("result", tester.instance_name, case.name, result, True))
                 else:
                     failed += 1
-                    self.message_queue.put(('result', case.name, result, False))
-                
-                self.message_queue.put(('progress', progress, f"{passed + failed}/{len(cases)}"))
-            
+                    self.message_queue.put(("result", tester.instance_name, case.name, result, False))
+                progress = completed / total * 100 if total else 100.0
+                self.message_queue.put(("progress", progress, f"{passed + failed}/{total_tasks}"))
+
             try:
-                self.tester.test_parallel(cases, max_workers, callback=on_result)
+                test_multi(ok_testers, cases, max_workers=max_workers, stop_event=self._stop_event, callback=on_result)
             except Exception as e:
-                self.message_queue.put(('error', str(e)))
+                self.message_queue.put(("error", str(e)))
                 return
-            
-            if self.is_running:
-                self.message_queue.put(('done', passed, failed))
+
+            if self.is_running and not self._stop_event.is_set():
+                self.message_queue.put(("done", passed, failed, total_tasks))
             else:
-                self.message_queue.put(('stopped', passed, failed))
+                self.message_queue.put(("stopped", passed, failed, total_tasks))
         
         threading.Thread(target=test_task, daemon=True).start()
     
     def _stop_test(self):
         """停止测试"""
         self.is_running = False
+        self._stop_event.set()
     
     # ========== 消息处理 ==========
     
@@ -546,25 +671,33 @@ class TestTab(BaseTab, OutputMixin):
                     _, success, text = msg
                     icon = '✓' if success else '✗'
                     self._log(f"{icon} {text}", 'pass' if success else 'error')
-                    self.status_var.set("编译完成，开始测试...")
+                    self.status_var.set("编译完成")
                 
                 elif msg[0] == 'compile_failed':
                     _, error_msg = msg
                     self._log(f"✗ 编译失败: {error_msg}", 'error')
                     self._finish_test(0, 0, stopped=True)
-                
+
+                elif msg[0] == "compile_instance":
+                    _, name, ok, text = msg
+                    icon = "✓" if ok else "✗"
+                    self._log(f"{icon} [{name}] {text}", "pass" if ok else "error")
+
+                elif msg[0] == "compile_all_done":
+                    self.status_var.set("编译完成")
+
                 elif msg[0] == 'progress':
                     _, progress, status = msg
                     self.progress.set(progress)
                     self.status_var.set(f"测试中... {status}")
                 
                 elif msg[0] == 'result':
-                    _, name, result, passed = msg
+                    _, inst_name, case_name, result, passed = msg
                     if passed:
-                        self._log(f"✓ {name}", 'pass')
+                        self._log(f"✓ [{inst_name}] {case_name}", 'pass')
                     else:
                         self._log_failure(
-                            name=name,
+                            name=f"[{inst_name}] {case_name}",
                             status=result.status.value,
                             message=result.message or "",
                             actual=result.actual_output,
@@ -577,24 +710,24 @@ class TestTab(BaseTab, OutputMixin):
                     self._finish_test(0, 0, stopped=True)
                 
                 elif msg[0] == 'done':
-                    _, passed, failed = msg
-                    self._finish_test(passed, failed)
+                    _, passed, failed, total = msg
+                    self._finish_test(passed, failed, total=total)
                 
                 elif msg[0] == 'stopped':
-                    _, passed, failed = msg
+                    _, passed, failed, total = msg
                     self._log("⏹ 测试已停止", 'warning')
-                    self._finish_test(passed, failed, stopped=True)
+                    self._finish_test(passed, failed, total=total, stopped=True)
                 
         except:
             pass
     
-    def _finish_test(self, passed: int, failed: int, stopped: bool = False):
+    def _finish_test(self, passed: int, failed: int, total: Optional[int] = None, stopped: bool = False):
         """完成测试"""
         self.is_running = False
         self.stop_btn.configure(state=tk.DISABLED)
         self.progress.set(100)
         
-        total = passed + failed
+        total = int(total if total is not None else (passed + failed))
         self.status_var.set("已停止" if stopped else "完成")
         
         if failed == 0 and total > 0:

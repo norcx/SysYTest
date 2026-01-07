@@ -34,7 +34,7 @@ class TestApp:
         
         # 共享状态
         self.test_dir = Path(__file__).parent.parent.parent.resolve()
-        self.project_dir: Optional[Path] = None
+        self.zip_dir: Optional[Path] = None
         
         # 标签页引用
         self.test_tab: Optional[TestTab] = None
@@ -125,7 +125,7 @@ class TestApp:
         # 左侧：项目路径
         self.project_status = ttk.Label(
             statusbar,
-            text="未选择项目",
+            text="未选择 zip 目录",
             style='Status.TLabel'
         )
         self.project_status.pack(side=tk.LEFT)
@@ -147,11 +147,11 @@ class TestApp:
         self.root.after(1000, self._update_time)
     
     def update_project_status(self, path: Optional[Path] = None):
-        """更新项目状态"""
+        """更新 zip 目录状态"""
         if path:
-            self.project_status.configure(text=f"📁 {path.name}")
+            self.project_status.configure(text=f"📦 {path.name}")
         else:
-            self.project_status.configure(text="未选择项目")
+            self.project_status.configure(text="未选择 zip 目录")
     
     def _setup(self):
         """初始化设置"""

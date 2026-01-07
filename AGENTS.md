@@ -3,6 +3,8 @@
 ## Project Structure & Module Organization
 - `main.py`: entry point (CLI or Tkinter GUI).
 - `src/`: framework code — CLI (`src/cli.py`), GUI (`src/gui/`), runner (`src/tester.py`), testcase discovery (`src/discovery.py`), config (`src/config.py`), shared models/utils.
+- `src/zip_compilers.py`: zip 编译器实例发现/安全解包（zip_dir 下的多个 zip）。
+- `src/multi_runner.py`: 多编译器实例调度（在 `parallel.max_workers` 限制下并发测试）。
 - `config.yaml`: local tool paths, timeouts, parallelism, and GUI settings.
 - `testcases/`: testcase libraries, organized by suite folders.
 - `scripts/`: contributor utilities (e.g. batch generation helpers).
@@ -15,8 +17,10 @@ Testcases are organized as nested suites; a *leaf* directory containing `testfil
 ## Build, Test, and Development Commands
 - Install deps (GUI + agent): `python3 -m pip install pyyaml httpx`
 - Run GUI: `python3 main.py`
-- Run headless CLI: `python3 main.py --project ../Compiler`
-- Filter cases: `python3 main.py --project ../Compiler --match loop --match recursion`
+- Run headless CLI (zip_dir): `python3 main.py --project zips/`
+- Run headless CLI (single zip): `python3 main.py --project zips/A.zip`
+- Filter cases: `python3 main.py --project zips/ --match loop --match recursion`
+- Select compilers: `python3 main.py --project zips/ --compiler A --compiler B.zip`
 - Performance extras: `--show-time`, `--show-cycle`
 - Optional generator: `python3 scripts/generate_sysy_cases.py --help`
 
@@ -28,7 +32,7 @@ The runner compares your compiler’s Mars output against a g++ reference; ensur
 - Do not commit build outputs or secrets; `.tmp/` and `agent_config.json` are intentionally gitignored.
 
 ## Testing Guidelines
-- “Tests” are the suites in `testcases/`; validate changes with `python3 main.py --project <compiler-path>`.
+- “Tests” are the suites in `testcases/`; validate changes with `python3 main.py --project <zip_dir|zip_file>`.
 - While iterating, use `--match <substring>` to avoid rerunning the full catalog.
 - For compile-only checks (no Mars/g++), add a `compile_only` marker file in the case directory.
 

@@ -9,7 +9,9 @@ from typing import List, Optional
 from .config import get_config
 from .discovery import TestDiscovery
 from .models import TestResult, TestStatus
+from .multi_runner import compile_testers, test_multi
 from .tester import CompilerTester
+from .zip_compilers import discover_zip_compilers, extract_zip_instance
 
 
 LOGO = r"""
@@ -52,6 +54,7 @@ def run_cli(
     show_cycle: bool = False,
     show_time: bool = False,
     match: Optional[List[str]] = None,
+    compilers: Optional[List[str]] = None,
 ) -> int:
     """命令行模式：编译并运行所有测试，日志输出到控制台"""
     config = get_config()
@@ -59,19 +62,58 @@ def run_cli(
     project_path = Path(project).resolve()
 
     print(LOGO)
-    print(_format_output("INFO", f"使用项目: {project_path}"))
+    print(_format_output("INFO", f"使用路径: {project_path}"))
 
     if not project_path.exists():
-        print(_format_output("ERROR", "项目路径不存在"))
+        print(_format_output("ERROR", "路径不存在"))
         return 1
 
-    tester = CompilerTester(project_path, test_dir)
-    lang = tester.get_compiler_language().upper()
-    print(_format_output("INFO", f"检测到编译器语言: {lang}"))
+    testers: List[CompilerTester] = []
+    selected_names: Optional[List[str]] = [c.strip() for c in (compilers or []) if c and c.strip()] or None
 
-    success, msg = tester.compile_project()
-    print(_format_output("INFO" if success else "ERROR", msg))
-    if not success:
+    # 兼容：--project <zip_dir> / <zip> / <旧工程目录>
+    if project_path.is_file() and project_path.suffix.lower() == ".zip":
+        zip_dir = project_path.parent
+        instances = discover_zip_compilers(zip_dir)
+        inst = next((i for i in instances if i.zip_path.resolve() == project_path), None)
+        if inst is None:
+            print(_format_output("ERROR", f"未能识别 zip: {project_path.name}"))
+            return 1
+        extracted = extract_zip_instance(inst, test_dir / ".tmp" / "zip_sources")
+        testers = [CompilerTester(extracted, test_dir, instance_name=inst.name)]
+    elif project_path.is_dir():
+        zips = [p for p in project_path.iterdir() if p.is_file() and p.suffix.lower() == ".zip"]
+        if zips:
+            instances = discover_zip_compilers(project_path)
+            if selected_names:
+                wanted = {w.lower() for w in selected_names}
+                instances = [i for i in instances if i.name.lower() in wanted or i.zip_path.name.lower() in wanted]
+            instances = [i for i in instances if i.valid]
+            if not instances:
+                print(_format_output("ERROR", "未找到可用的编译器 zip（或选择为空）"))
+                return 1
+            for inst in instances:
+                extracted = extract_zip_instance(inst, test_dir / ".tmp" / "zip_sources")
+                testers.append(CompilerTester(extracted, test_dir, instance_name=inst.name))
+        else:
+            testers = [CompilerTester(project_path, test_dir, instance_name=project_path.name)]
+    else:
+        print(_format_output("ERROR", "参数必须为目录或 zip 文件"))
+        return 1
+
+    for t in testers:
+        lang = t.get_compiler_language().upper()
+        print(_format_output("INFO", f"编译器实例: {t.instance_name} ({lang})"))
+
+    compile_results = compile_testers(testers, max_workers=config.parallel.max_workers)
+    ok_testers: List[CompilerTester] = []
+    for t in testers:
+        ok, msg = compile_results.get(t.instance_name, (False, "编译失败"))
+        print(_format_output("INFO" if ok else "ERROR", f"[{t.instance_name}] {msg}"))
+        if ok:
+            ok_testers.append(t)
+
+    if not ok_testers:
         return 1
 
     testcases_dir = test_dir / "testcases"
@@ -97,30 +139,37 @@ def run_cli(
     
     print(_format_output("INFO", f"发现 {len(libs)} 个测试库，共 {len(cases)} 个用例"))
     print(_format_output("INFO", f"并行线程: {config.parallel.max_workers}"))
+    print(_format_output("INFO", f"编译器实例: {len(ok_testers)} 个"))
     
     passed = 0
     failed = 0
-    total = len(cases)
+    total = len(cases) * len(ok_testers)
+    per_compiler = {t.instance_name: [0, 0] for t in ok_testers}  # passed, failed
     
-    def on_result(case, result, progress):
+    def on_result(tester: CompilerTester, case, result, completed, total_tasks):
         nonlocal passed, failed
         if result.passed:
             passed += 1
+            per_compiler[tester.instance_name][0] += 1
             extra_parts = []
             if show_time and result.compile_time_ms is not None:
                 extra_parts.append(f"compile={result.compile_time_ms}ms")
             if show_cycle and result.cycle is not None:
                 extra_parts.append(f"cycle={result.cycle}")
             suffix = f" ({', '.join(extra_parts)})" if extra_parts else ""
-            print(_format_output("PASS", case.name + suffix), flush=True)
+            print(_format_output("PASS", f"[{tester.instance_name}] {case.name}{suffix}"), flush=True)
         else:
             failed += 1
-            _print_failure_detail(case.name, result)
+            per_compiler[tester.instance_name][1] += 1
+            _print_failure_detail(f"[{tester.instance_name}] {case.name}", result)
+        progress = completed / total_tasks * 100 if total_tasks else 100.0
         print(_format_output("INFO", f"进度: {passed + failed}/{total} ({progress:.1f}%)"), flush=True)
     
-    tester.test_parallel(cases, max_workers=config.parallel.max_workers, callback=on_result)
+    test_multi(ok_testers, cases, max_workers=config.parallel.max_workers, callback=on_result)
     
     print(_format_output("INFO", f"完成: {passed} 通过, {failed} 失败, 共 {total}"))
+    for name, (p, f) in per_compiler.items():
+        print(_format_output("INFO", f"  - {name}: {p} 通过, {f} 失败"), flush=True)
     return 0 if failed == 0 else 1
 
 
@@ -130,7 +179,12 @@ def main(argv=None):
     parser.add_argument(
         "--project",
         type=str,
-        help="编译器项目路径。指定后直接在命令行模式下编译并运行测试"
+        help="zip 目录 / 单个 zip / （兼容）编译器项目目录。指定后在命令行模式下编译并运行测试"
+    )
+    parser.add_argument(
+        "--compiler",
+        action="append",
+        help="只选择指定的编译器实例（zip 文件名去扩展名，或完整 zip 文件名；可重复指定）",
     )
     parser.add_argument(
         "--match",
@@ -155,6 +209,7 @@ def main(argv=None):
             show_cycle=args.show_cycle,
             show_time=args.show_time,
             match=args.match,
+            compilers=args.compiler,
         )
         sys.exit(exit_code)
 

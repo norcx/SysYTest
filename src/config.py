@@ -105,7 +105,7 @@ class GuiConfig:
 @dataclass
 class Config:
     """全局配置"""
-    compiler_project_dir: str = "../Compiler"
+    compiler_project_dir: str = "zips/"
     mars_jar: str = "MARS2025+.jar"
     c_header: str = ""
     instruction_weights: dict = field(default_factory=lambda: {
@@ -179,7 +179,7 @@ class Config:
         )
         
         return cls(
-            compiler_project_dir=data.get('compiler_project_dir', '../Compiler'),
+            compiler_project_dir=data.get('compiler_project_dir', 'zips/'),
             mars_jar=data.get('mars_jar', 'Mars.jar'),
             c_header=data.get('c_header', cls._default_c_header()),
             instruction_weights=data.get('instruction_weights', {
@@ -199,7 +199,7 @@ class Config:
     def _create_default(cls) -> 'Config':
         """创建默认配置"""
         return cls(
-            compiler_project_dir='../Compiler',
+            compiler_project_dir='zips/',
             mars_jar='Mars.jar',
             c_header=cls._default_c_header(),
             instruction_weights={

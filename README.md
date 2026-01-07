@@ -21,11 +21,10 @@ python3 -m pip install pyyaml httpx
 
 ```
 YourCodesFolder/
-├── Compiler/              # 你的编译器项目
-│   └── src/
-│       ├── Compiler.java  # 或 .c/.cpp
-│       └── config.json    # 编译器配置
 └── SysYTest/              # 本测试框架
+    ├── zips/              # 你的编译器源码 zip（可多个）
+    │   ├── A.zip
+    │   └── B.zip
     ├── config.yaml
     ├── main.py
     ├── src/               # 框架代码（CLI/GUI/Runner/Discovery）
@@ -45,7 +44,13 @@ python3 main.py
 指定 `--project` 参数可以在命令行环境下直接编译+测试，适合 CI/CD 或无 GUI 环境：
 
 ```bash
-python3 main.py --project path_to_compiler_project
+python3 main.py --project zips/
+```
+
+如需只测试部分 zip，可多次指定 `--compiler`（zip 文件名去扩展名，或完整 zip 文件名）：
+
+```bash
+python3 main.py --project zips/ --compiler A --compiler B.zip
 ```
 
 运行时会实时打印 `PASS`/`FAIL` 结果和进度，失败时显示实际/期望输出对比。
@@ -137,8 +142,8 @@ git push origin main
 编辑 `config.yaml` 配置测试框架：
 
 ```yaml
-# 编译器项目路径（相对于本框架目录）
-compiler_project_dir: "../Compiler"
+# zip_dir：编译器源码压缩包目录（相对于本框架目录）
+compiler_project_dir: "zips/"
 
 # 工具路径（留空使用环境变量）
 tools:
@@ -153,7 +158,7 @@ parallel:
 
 ### 编译器配置
 
-在你的编译器项目 `src/config.json` 中配置：
+在你的 zip 包**顶层**放置 `config.json`：
 
 ```json
 {
@@ -164,12 +169,21 @@ parallel:
 
 支持的语言：`java`、`c`、`cpp`
 
+### 编译器源码 zip 格式
+
+- zip 包顶层必须包含 `config.json`
+- `java`：入口为 `Compiler.java` 的 `main` 方法；提交时请将 `Compiler.java` 放在 zip 顶层（不要再嵌套一层 `src/` 目录）
+- `cpp`：若使用 CMake，zip 顶层包含 `CMakeLists.txt`，且需 `project(Compiler)` 以确保输出可执行文件名为 `Compiler`；不要提交构建产物/临时文件
+- `c/cpp`：若不使用 CMake，默认按 C++17 用 `g++` 编译 zip 中的 `.c/.cpp/.h`
+- macOS 压缩可能带 `__MACOSX/`、`.DS_Store` 等额外文件，请删除后再提交
+
 ## 使用指南
 
 ### 🧪 测试运行
 
-1. 启动程序后，在「测试运行」标签页选择编译器项目目录
-2. 点击「编译」编译你的编译器
+1. 启动程序后，在「测试运行」标签页选择 `zip_dir`（如 `zips/`）
+2. 在「编译器实例（zip）」列表中多选需要测试的编译器（不选则默认全部）
+3. 点击「编译选中」编译所选编译器实例
 3. 在左侧选择测试库，右侧会显示该库的测试用例
 4. 点击「运行全部」运行所有测试，或选择特定用例运行
 
@@ -297,7 +311,13 @@ testcases/
 在命令行中可使用 `--match` 过滤（可多次指定）：
 
 ```bash
-python3 main.py --project ../Compiler --match loop --match recursion
+python3 main.py --project zips/ --match loop --match recursion
+```
+
+如需只测试部分编译器 zip，可多次指定 `--compiler`：
+
+```bash
+python3 main.py --project zips/ --compiler A --compiler B.zip
 ```
 
 ### Q: Mars 运行超时
