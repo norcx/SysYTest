@@ -1,0 +1,104 @@
+/* Description:
+ *   Graph DFS/BFS traversal order with adjacency matrix.
+ *   Then remove all edges incident to `op` and traverse again while skipping `op`.
+ */
+
+const int MAXN = 110;
+
+int g[MAXN * MAXN];
+int vis[MAXN];
+int q[MAXN];
+int n;
+int m;
+
+void write_int(int x) {
+    printf("%d ", x);
+    return;
+}
+
+void clear_vis() {
+    int i;
+    for (i = 0; i < MAXN; i = i + 1) {
+        vis[i] = 0;
+    }
+    return;
+}
+
+void dfs(int s) {
+    int i;
+    vis[s] = 1;
+    write_int(s);
+    for (i = 0; i < n; i = i + 1) {
+        if (g[s * MAXN + i] != 0 && vis[i] == 0) {
+            dfs(i);
+        }
+    }
+    return;
+}
+
+void bfs(int s) {
+    int he;
+    int re;
+    int u;
+    int i;
+
+    he = 0;
+    re = 0;
+    q[0] = s;
+    vis[s] = 1;
+
+    for (he = 0; he <= re; he = he + 1) {
+        u = q[he];
+        write_int(u);
+        for (i = 0; i < n; i = i + 1) {
+            if (g[u * MAXN + i] != 0 && vis[i] == 0) {
+                re = re + 1;
+                q[re] = i;
+                vis[i] = 1;
+            }
+        }
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int u;
+    int v;
+    int op;
+
+    n = getint();
+    m = getint();
+
+    for (i = 0; i < m; i = i + 1) {
+        u = getint();
+        v = getint();
+        g[u * MAXN + v] = 1;
+        g[v * MAXN + u] = 1;
+    }
+
+    dfs(0);
+    printf("\n");
+
+    clear_vis();
+    bfs(0);
+    printf("\n");
+
+    clear_vis();
+    op = getint();
+    for (i = 0; i < n; i = i + 1) {
+        g[op * MAXN + i] = 0;
+        g[i * MAXN + op] = 0;
+    }
+
+    vis[op] = 1;
+    dfs(0);
+    printf("\n");
+
+    clear_vis();
+    vis[op] = 1;
+    bfs(0);
+    printf("\n");
+
+    return 0;
+}

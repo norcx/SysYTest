@@ -1,0 +1,38 @@
+/* Description:
+ *   Translated from `codes/2023fa/contest/C2/C.c`.
+ *   Original logic reads characters until EOF and transforms:
+ *     - digits '0'..'9' -> '0' + '9' - c
+ *     - letters 'a'..'z' -> 'a' + 'z' - c
+ *     - spaces preserved
+ *
+ *   Strict SysY input supports only `getint()`, so this testcase reads:
+ *     - first line: n
+ *     - next n lines: ASCII codes of characters
+ *
+ *   Output prints the transformed ASCII code as an integer per line.
+ */
+
+int main() {
+    const int ASCII_0 = 48;
+    const int ASCII_9 = 57;
+    const int ASCII_A = 97;
+    const int ASCII_Z = 122;
+    const int ASCII_SPACE = 32;
+
+    int n;
+    int i;
+    int c;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        c = getint();
+        if (c >= ASCII_0 && c <= ASCII_9) {
+            printf("%d\n", ASCII_0 + ASCII_9 - c);
+        } else if (c >= ASCII_A && c <= ASCII_Z) {
+            printf("%d\n", ASCII_A + ASCII_Z - c);
+        } else if (c == ASCII_SPACE) {
+            printf("%d\n", ASCII_SPACE);
+        }
+    }
+    return 0;
+}

@@ -1,0 +1,120 @@
+/* Description:
+ * Normalize timestamps by carrying minutes->hours->days and rolling over
+ * dates across months (including leap years), then print as
+ * YYYY.MM.DD HH:MM with leading zeros.
+ */
+
+int is_leap(int year) {
+    if (year % 400 == 0) {
+        return 1;
+    }
+    if (year % 4 == 0 && year % 100 != 0) {
+        return 1;
+    }
+    return 0;
+}
+
+int days_in_month(int year, int month) {
+    if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12) {
+        return 31;
+    }
+    if (month == 4 || month == 6 || month == 9 || month == 11) {
+        return 30;
+    }
+    if (month == 2) {
+        if (is_leap(year) == 1) {
+            return 29;
+        }
+        return 28;
+    }
+    return 31;
+}
+
+void print2(int x) {
+    if (x < 10) {
+        printf("0");
+    }
+    printf("%d", x);
+    return;
+}
+
+void print_year(int y) {
+    if (y < 10000) {
+        if (y < 1000) {
+            printf("0");
+        }
+        if (y < 100) {
+            printf("0");
+        }
+        if (y < 10) {
+            printf("0");
+        }
+    }
+    printf("%d", y);
+    return;
+}
+
+int main() {
+    int n;
+    int year;
+    int month;
+    int date;
+    int hour;
+    int minute;
+    int carry;
+    int dim;
+
+    n = getint();
+    for (; n > 0; n = n - 1) {
+        year = getint();
+        month = getint();
+        date = getint();
+        hour = getint();
+        minute = getint();
+
+        carry = minute / 60;
+        hour = hour + carry;
+        minute = minute - carry * 60;
+
+        carry = hour / 24;
+        date = date + carry;
+        hour = hour - carry * 24;
+
+        for (; month > 12;) {
+            month = month - 12;
+            year = year + 1;
+        }
+
+        for (; date > 31;) {
+            dim = days_in_month(year, month);
+            date = date - dim;
+            month = month + 1;
+            if (month > 12) {
+                month = month - 12;
+                year = year + 1;
+            }
+        }
+
+        dim = days_in_month(year, month);
+        if (date > dim) {
+            date = date - dim;
+            month = month + 1;
+            if (month > 12) {
+                month = month - 12;
+                year = year + 1;
+            }
+        }
+
+        print_year(year);
+        printf(".");
+        print2(month);
+        printf(".");
+        print2(date);
+        printf(" ");
+        print2(hour);
+        printf(":");
+        print2(minute);
+        printf("\n");
+    }
+    return 0;
+}

@@ -1,0 +1,41 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C5/G.c (Tower of Hanoi).
+ *
+ * Input (one integer per line):
+ *   from
+ *   aux
+ *   to
+ *   n
+ *
+ * Output:
+ *   For each move, print 3 lines: disk, from, to.
+ */
+
+void move(int n, int from, int aux, int to) {
+    if (n == 1) {
+        printf("%d\n", 1);
+        printf("%d\n", from);
+        printf("%d\n", to);
+    } else {
+        move(n - 1, from, to, aux);
+        printf("%d\n", n);
+        printf("%d\n", from);
+        printf("%d\n", to);
+        move(n - 1, aux, from, to);
+    }
+}
+
+int main() {
+    int from;
+    int aux;
+    int to;
+    int n;
+    from = getint();
+    aux = getint();
+    to = getint();
+    n = getint();
+    if (n > 0) {
+        move(n, from, aux, to);
+    }
+    return 0;
+}

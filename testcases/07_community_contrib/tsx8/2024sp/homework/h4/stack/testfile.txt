@@ -1,0 +1,35 @@
+const int MAXS = 110;
+int s[MAXS];
+int p = 0;
+
+void write_int(int x) {
+    printf("%d ", x);
+    return;
+}
+
+void write_error() {
+    printf("error ");
+    return;
+}
+
+int main() {
+    int t;
+    for (t = getint(); t != -1; t = getint()) {
+        if (t == 1) {
+            if (p == 101) {
+                write_error();
+            } else {
+                s[p] = getint();
+                p = p + 1;
+            }
+        } else if (t == 0) {
+            if (p == 0) {
+                write_error();
+            } else {
+                p = p - 1;
+                write_int(s[p]);
+            }
+        }
+    }
+    return 0;
+}

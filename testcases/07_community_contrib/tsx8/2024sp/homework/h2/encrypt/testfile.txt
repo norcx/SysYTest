@@ -1,0 +1,57 @@
+/* Description:
+ *   Encrypt mapping testcase (ASCII-as-int I/O).
+ */
+int src[110];
+int key[110];
+int cnt[300];
+
+int main() {
+  int n_src;
+  int n_plain;
+  int len;
+  int i;
+  int j;
+  int c;
+
+  n_src = getint();
+  len = n_src;
+  for (i = 0; i < n_src; i = i + 1) {
+    src[i] = getint();
+  }
+
+  for (i = 0; i < 300; i = i + 1) {
+    cnt[i] = 0;
+  }
+
+  j = -1;
+  for (i = 0; i < len; i = i + 1) {
+    c = src[i];
+    if (cnt[c] == 0) {
+      cnt[c] = 1;
+      j = j + 1;
+      key[j] = c;
+    }
+  }
+
+  for (c = 122; c >= 97; c = c - 1) {
+    if (cnt[c] == 0) {
+      j = j + 1;
+      key[j] = c;
+    }
+  }
+
+  for (i = 0; i < 26; i = i + 1) {
+    printf("%d\n", key[i]);
+  }
+
+  n_plain = getint();
+  for (i = 0; i < n_plain; i = i + 1) {
+    c = getint();
+    if (c >= 97 && c <= 122) {
+      printf("%d\n", key[c - 97]);
+    } else {
+      printf("%d\n", c);
+    }
+  }
+  return 0;
+}

@@ -1,0 +1,165 @@
+/* Converted from C book-library code to strict SysY:
+ * - Strings mapped to integers.
+ * - "Substring" search mapped to decimal digit substring on book_name.
+ */
+const int MAXN = 64;
+
+int book_name[MAXN];
+int book_author[MAXN];
+int book_press[MAXN];
+int book_date[MAXN];
+int nxt[MAXN];
+int node_cnt;
+
+int abs_int(int x) {
+    if (x < 0) return -x;
+    return x;
+}
+
+int digits_len(int x) {
+    int t;
+    int c;
+    t = abs_int(x);
+    if (t == 0) return 1;
+    c = 0;
+    for (; t > 0; t = t / 10) c = c + 1;
+    return c;
+}
+
+int pow10_int(int k) {
+    int i;
+    int p;
+    p = 1;
+    i = 0;
+    for (; i < k; i = i + 1) p = p * 10;
+    return p;
+}
+
+int contains_digits(int a, int b) {
+    int ta;
+    int tb;
+    int lenb;
+    int p;
+    ta = abs_int(a);
+    tb = abs_int(b);
+    lenb = digits_len(tb);
+    p = pow10_int(lenb);
+    for (;;) {
+        if (ta % p == tb) return 1;
+        if (ta < p) break;
+        ta = ta / 10;
+    }
+    return 0;
+}
+
+int new_node(int name, int author, int press, int date) {
+    node_cnt = node_cnt + 1;
+    book_name[node_cnt] = name;
+    book_author[node_cnt] = author;
+    book_press[node_cnt] = press;
+    book_date[node_cnt] = date;
+    nxt[node_cnt] = 0;
+    return node_cnt;
+}
+
+void init_list() {
+    node_cnt = 0;
+    nxt[0] = 0;
+}
+
+void insert_book(int name, int author, int press, int date) {
+    int p;
+    int nn;
+    p = 0;
+    for (; nxt[p] != 0 && name > book_name[nxt[p]]; p = nxt[p]) {
+    }
+    nn = new_node(name, author, press, date);
+    nxt[nn] = nxt[p];
+    nxt[p] = nn;
+}
+
+void print_book_idx(int idx) {
+    printf("%d\n", book_name[idx]);
+    printf("%d\n", book_author[idx]);
+    printf("%d\n", book_press[idx]);
+    printf("%d\n", book_date[idx]);
+}
+
+void print_matches(int key) {
+    int cur;
+    cur = nxt[0];
+    for (; cur != 0; cur = nxt[cur]) {
+        if (contains_digits(book_name[cur], key) == 1) {
+            print_book_idx(cur);
+        }
+    }
+}
+
+void delete_matches(int key) {
+    int prev;
+    int cur;
+    prev = 0;
+    cur = nxt[0];
+    for (; cur != 0;) {
+        if (contains_digits(book_name[cur], key) == 1) {
+            nxt[prev] = nxt[cur];
+            cur = nxt[cur];
+        } else {
+            prev = cur;
+            cur = nxt[cur];
+        }
+    }
+}
+
+void print_list() {
+    int cur;
+    cur = nxt[0];
+    for (; cur != 0; cur = nxt[cur]) {
+        print_book_idx(cur);
+    }
+}
+
+int main() {
+    int n;
+    int i;
+    int op;
+    int name;
+    int author;
+    int press;
+    int date;
+    int key;
+
+    init_list();
+
+    n = getint();
+    i = 0;
+    for (; i < n; i = i + 1) {
+        name = getint();
+        author = getint();
+        press = getint();
+        date = getint();
+        insert_book(name, author, press, date);
+    }
+
+    for (;;) {
+        op = getint();
+        if (op == 0) break;
+        if (op == 1) {
+            name = getint();
+            author = getint();
+            press = getint();
+            date = getint();
+            insert_book(name, author, press, date);
+        } else if (op == 2) {
+            key = getint();
+            print_matches(key);
+        } else if (op == 3) {
+            key = getint();
+            delete_matches(key);
+        } else {
+        }
+    }
+
+    print_list();
+    return 0;
+}

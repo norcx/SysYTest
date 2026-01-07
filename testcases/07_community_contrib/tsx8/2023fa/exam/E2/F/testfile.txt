@@ -1,0 +1,56 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E2/F.c` to Strict SysY.
+ *   Reads n, m, then (n+1) integers p[i]. Let m := m+1.
+ *   Keeps the largest m values and replaces each >= 6 by 6 in the total sum.
+ */
+
+int highest[25];
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int j;
+    int k;
+    int p;
+    int sum;
+
+    n = getint();
+    m = getint();
+    m = m + 1;
+
+    sum = 0;
+    for (i = 0; i <= n; i = i + 1) {
+        p = getint();
+        sum = sum + p;
+
+        j = 1;
+        for (j = 1; j <= m; j = j + 1) {
+            if (highest[j] <= p) {
+                break;
+            }
+        }
+        if (j > m) {
+            continue;
+        }
+
+        for (; j <= m; j = j + 1) {
+            k = highest[j];
+            highest[j] = p;
+            p = k;
+        }
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        if (highest[i] == 0) {
+            continue;
+        }
+        if (highest[i] < 6) {
+            continue;
+        }
+        sum = sum - highest[i] + 6;
+    }
+
+    printf("%d\n", sum);
+    return 0;
+}

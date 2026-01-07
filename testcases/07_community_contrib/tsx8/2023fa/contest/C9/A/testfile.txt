@@ -1,0 +1,24 @@
+/* Description:
+ * Converted from codes/2023fa/contest/C9/A.c.
+ *
+ * Original program prints a selected quote (n=1..3) and a fixed pledge
+ * sentence. Strict SysY forbids strings/char, so this version prints integer
+ * checksums (sum of ASCII codes) for:
+ *   1) the selected quote
+ *   2) the pledge sentence
+ *
+ * Output format:
+ *   <quote_checksum>\n
+ *   <pledge_checksum>\n
+ */
+
+const int PLEDGE_SUM = 3243;
+int QUOTE_SUM[4] = {0, 5078, 4510, 4713};
+
+int main() {
+    int n = getint();
+    if (n < 1) n = 0;
+    if (n > 3) n = 0;
+    printf("%d\n%d\n", QUOTE_SUM[n], PLEDGE_SUM);
+    return 0;
+}

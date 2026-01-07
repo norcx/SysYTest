@@ -1,0 +1,50 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E6/E.c`.
+ *
+ *   Original behavior:
+ *     Read a line string s, let n = ceil(sqrt(len(s))), then output s[i + j*n]
+ *     for i=0..n-1 and j=0..n-1. Out-of-range reads yield '\0' due to global
+ *     zero initialization.
+ *
+ *   SysY-friendly I/O:
+ *     Input:
+ *       L
+ *       a0
+ *       a1
+ *       ...
+ *       a(L-1)
+ *     where ai are ASCII codes of the original string characters.
+ *
+ *     Output:
+ *       n*n integers (one per line), where missing cells output 0.
+ */
+
+int main() {
+    int L;
+    int s[100010];
+    int i;
+    int j;
+    int n;
+    int idx;
+
+    L = getint();
+    for (i = 0; i < L; i = i + 1) {
+        s[i] = getint();
+    }
+
+    n = 0;
+    for (; n * n < L; n = n + 1) {
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+        for (j = 0; j < n; j = j + 1) {
+            idx = i + j * n;
+            if (idx < L) {
+                printf("%d\n", s[idx]);
+            } else {
+                printf("%d\n", 0);
+            }
+        }
+    }
+    return 0;
+}

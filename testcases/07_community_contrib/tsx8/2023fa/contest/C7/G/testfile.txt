@@ -1,0 +1,43 @@
+/* Description:
+ *   Converted from: codes/2023fa/contest/C7/G.c
+ *   Computes extended gcd and prints a Bezout identity:
+ *     d = a*(x) + b*(y)
+ *   Input format: a then b (one integer per line).
+ */
+
+int gx;
+int gy;
+
+int exgcd(int a, int b) {
+    if (b == 0) {
+        gx = 1;
+        gy = 0;
+        return a;
+    }
+
+    {
+        int d;
+        int x1;
+        int y1;
+
+        d = exgcd(b, a % b);
+        x1 = gx;
+        y1 = gy;
+        gx = y1;
+        gy = x1 - (a / b) * y1;
+        return d;
+    }
+    return 0;
+}
+
+int main() {
+    int a;
+    int b;
+    int d;
+
+    a = getint();
+    b = getint();
+    d = exgcd(a, b);
+    printf("%d = %d*(%d) + %d*(%d)\n", d, a, gx, b, gy);
+    return 0;
+}

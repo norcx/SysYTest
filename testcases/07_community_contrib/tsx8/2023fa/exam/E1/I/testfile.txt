@@ -1,0 +1,48 @@
+/* Description:
+ *   Convert `codes/2023fa/exam/E1/I.c` to Strict SysY.
+ *   Solves x ≡ y1 (mod x1), x ≡ y2 (mod x2), x ≡ y3 (mod x3).
+ */
+int main() {
+  int x1;
+  int y1;
+  int x2;
+  int y2;
+  int x3;
+  int y3;
+  int k1;
+  int k2;
+  int k3;
+  int j;
+  int m;
+  int term1;
+  int term2;
+  int term3;
+  int ans;
+
+  x1 = getint();
+  y1 = getint();
+  x2 = getint();
+  y2 = getint();
+  x3 = getint();
+  y3 = getint();
+
+  j = x1 * x2;
+  for (k3 = 1; (x3 * k3 + 1) % j != 0; k3 = k3 + 1) {
+  }
+
+  j = x1 * x3;
+  for (k2 = 1; (x2 * k2 + 1) % j != 0; k2 = k2 + 1) {
+  }
+
+  j = x2 * x3;
+  for (k1 = 1; (x1 * k1 + 1) % j != 0; k1 = k1 + 1) {
+  }
+
+  m = x1 * x2 * x3;
+  term3 = (k3 * x3 + 1) * y3;
+  term2 = (k2 * x2 + 1) * y2;
+  term1 = (k1 * x1 + 1) * y1;
+  ans = (term3 + term2 + term1) % m;
+  printf("%d", ans);
+  return 0;
+}

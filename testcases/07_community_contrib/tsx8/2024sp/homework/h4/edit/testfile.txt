@@ -1,0 +1,190 @@
+/* Description:
+ *   A tiny text editor simulation (insert/delete/undo) translated to Strict SysY:
+ *   - Strings are encoded as integer arrays of ASCII codes.
+ *   - Output prints final length, then each character code on its own line.
+ */
+
+const int MAX_SRC = 600;
+const int MAX_OP = 128;
+const int MAX_TEXT = 200;
+
+int src[MAX_SRC];
+int src_len;
+
+int st_opt[MAX_OP];
+int st_pos[MAX_OP];
+int st_len[MAX_OP];
+int st_text[MAX_OP * MAX_TEXT];
+int p;
+
+int buf[MAX_TEXT];
+
+int read_str_to_buf() {
+    int i;
+    int l;
+    int c;
+    int use_len;
+    l = getint();
+    use_len = l;
+    if (use_len > MAX_TEXT) {
+        use_len = MAX_TEXT;
+    }
+    for (i = 0; i < l; i = i + 1) {
+        c = getint();
+        if (i < MAX_TEXT) {
+            buf[i] = c;
+        }
+    }
+    return use_len;
+}
+
+void copy_buf_to_stack(int idx, int len) {
+    int i;
+    for (i = 0; i < len; i = i + 1) {
+        st_text[idx * MAX_TEXT + i] = buf[i];
+    }
+}
+
+void insert_from_stack(int pos, int idx) {
+    int i;
+    int tlen;
+    tlen = st_len[idx];
+    if (tlen <= 0) {
+        return;
+    }
+    if (pos < 0) {
+        pos = 0;
+    }
+    if (pos > src_len) {
+        pos = src_len;
+    }
+    if (src_len + tlen > MAX_SRC) {
+        tlen = MAX_SRC - src_len;
+    }
+    for (i = src_len - 1; i >= pos; i = i - 1) {
+        src[i + tlen] = src[i];
+    }
+    for (i = 0; i < tlen; i = i + 1) {
+        src[pos + i] = st_text[idx * MAX_TEXT + i];
+    }
+    src_len = src_len + tlen;
+    return;
+}
+
+void delete_no_store(int pos, int len) {
+    int i;
+    int del_len;
+    del_len = len;
+    if (del_len <= 0) {
+        return;
+    }
+    if (pos < 0) {
+        pos = 0;
+    }
+    if (pos >= src_len) {
+        return;
+    }
+    if (pos + del_len > src_len) {
+        del_len = src_len - pos;
+    }
+    for (i = pos; i < src_len - del_len; i = i + 1) {
+        src[i] = src[i + del_len];
+    }
+    src_len = src_len - del_len;
+    return;
+}
+
+void delete_and_store(int idx, int pos, int len) {
+    int i;
+    int del_len;
+    del_len = len;
+    if (del_len <= 0) {
+        st_len[idx] = 0;
+        return;
+    }
+    if (pos < 0) {
+        pos = 0;
+    }
+    if (pos >= src_len) {
+        st_len[idx] = 0;
+        return;
+    }
+    if (pos + del_len > src_len) {
+        del_len = src_len - pos;
+    }
+    if (del_len > MAX_TEXT) {
+        del_len = MAX_TEXT;
+    }
+    for (i = 0; i < del_len; i = i + 1) {
+        st_text[idx * MAX_TEXT + i] = src[pos + i];
+    }
+    st_len[idx] = del_len;
+    for (i = pos; i < src_len - del_len; i = i + 1) {
+        src[i] = src[i + del_len];
+    }
+    src_len = src_len - del_len;
+    return;
+}
+
+int main() {
+    int i;
+    int cnt;
+    int req_len;
+    int cmd;
+
+    src_len = getint();
+    if (src_len < 0) {
+        src_len = 0;
+    }
+    if (src_len > MAX_SRC) {
+        src_len = MAX_SRC;
+    }
+    for (i = 0; i < src_len; i = i + 1) {
+        src[i] = getint();
+    }
+
+    cnt = getint();
+    for (i = 0; i < cnt; i = i + 1) {
+        st_opt[p] = getint();
+        st_pos[p] = getint();
+        st_len[p] = read_str_to_buf();
+        copy_buf_to_stack(p, st_len[p]);
+        p = p + 1;
+    }
+
+    for (;;) {
+        cmd = getint();
+        if (cmd == -1) {
+            break;
+        }
+        if (cmd == 1) {
+            st_opt[p] = 1;
+            st_pos[p] = getint();
+            st_len[p] = read_str_to_buf();
+            copy_buf_to_stack(p, st_len[p]);
+            insert_from_stack(st_pos[p], p);
+            p = p + 1;
+        } else if (cmd == 2) {
+            st_opt[p] = 2;
+            st_pos[p] = getint();
+            req_len = getint();
+            delete_and_store(p, st_pos[p], req_len);
+            p = p + 1;
+        } else if (cmd == 3) {
+            if (p > 0) {
+                p = p - 1;
+                if (st_opt[p] == 1) {
+                    delete_no_store(st_pos[p], st_len[p]);
+                } else {
+                    insert_from_stack(st_pos[p], p);
+                }
+            }
+        }
+    }
+
+    printf("%d\n", src_len);
+    for (i = 0; i < src_len; i = i + 1) {
+        printf("%d\n", src[i]);
+    }
+    return 0;
+}

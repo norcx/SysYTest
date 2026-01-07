@@ -1,0 +1,55 @@
+/* Description:
+ *   Converted from a C word-frequency counter.
+ *   Strict SysY version: reads a sequence of integer "tokens" (one per line),
+ *   counts occurrences, then outputs unique tokens in ascending order as:
+ *     token count\n
+ *   Input terminates with 0 (sentinel).
+ */
+
+const int MAXN = 1024;
+int words[MAXN];
+int cnts[MAXN];
+int n;
+
+int insert_token(int x) {
+    int i;
+    int pos;
+    int j;
+    pos = n;
+    for (i = 0; i < n; i = i + 1) {
+        if (pos == n) {
+            if (words[i] >= x) {
+                pos = i;
+            }
+        }
+    }
+    if (pos < n) {
+        if (words[pos] == x) {
+            cnts[pos] = cnts[pos] + 1;
+            return 0;
+        }
+    }
+    for (j = n; j > pos; j = j - 1) {
+        words[j] = words[j - 1];
+        cnts[j] = cnts[j - 1];
+    }
+    words[pos] = x;
+    cnts[pos] = 1;
+    n = n + 1;
+    return 0;
+}
+
+int main() {
+    int x;
+    int i;
+    n = 0;
+    for (x = getint(); x != 0; x = getint()) {
+        if (n < MAXN) {
+            insert_token(x);
+        }
+    }
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d %d\n", words[i], cnts[i]);
+    }
+    return 0;
+}

@@ -1,0 +1,131 @@
+/* Description:
+ * Browser history simulation (SysY strict).
+ * Input (one integer per line):
+ *   op=1: VISIT, then page_id, domain_id
+ *   op=2: BACK
+ *   op=3: FORWARD
+ *   op=4: QUERY, then num (if num==0 also output most frequent domain_id and its count)
+ * Output:
+ *   All visited page_id values, one per line.
+ *   If num==0: best domain_id then best count, each on its own line.
+ */
+
+const int MAXN = 200;
+
+int back_page[MAXN];
+int back_dom[MAXN];
+int front_page[MAXN];
+int front_dom[MAXN];
+int vis_page[MAXN];
+int vis_dom[MAXN];
+int btop;
+int ftop;
+int vtop;
+
+int dom_id[MAXN];
+int dom_cnt[MAXN];
+int wtop;
+int best_cnt;
+
+int count_best_domain() {
+    int k;
+    int i;
+    int d;
+    int found;
+    int maxi;
+    int maxv;
+
+    wtop = 0;
+    for (k = 0; k < vtop; k = k + 1) {
+        d = vis_dom[k];
+        found = 0;
+        for (i = 0; i < wtop; i = i + 1) {
+            if (dom_id[i] == d) {
+                dom_cnt[i] = dom_cnt[i] + 1;
+                found = 1;
+                break;
+            }
+        }
+        if (found == 0) {
+            dom_id[wtop] = d;
+            dom_cnt[wtop] = 1;
+            wtop = wtop + 1;
+        }
+    }
+
+    maxi = 0;
+    maxv = dom_cnt[0];
+    for (i = 0; i < wtop; i = i + 1) {
+        if (dom_cnt[i] > maxv) {
+            maxv = dom_cnt[i];
+            maxi = i;
+        }
+    }
+    best_cnt = maxv;
+    return dom_id[maxi];
+}
+
+int main() {
+    int t;
+    int op;
+    int page;
+    int dom;
+    int num;
+    int i;
+    int best_dom;
+
+    btop = 0;
+    ftop = 0;
+    vtop = 0;
+
+    vis_page[0] = 1;
+    vis_dom[0] = 1;
+    vtop = 1;
+
+    for (t = 0; t < 100000; t = t + 1) {
+        op = getint();
+        if (op == 1) {
+            page = getint();
+            dom = getint();
+            back_page[btop] = vis_page[vtop - 1];
+            back_dom[btop] = vis_dom[vtop - 1];
+            btop = btop + 1;
+            vis_page[vtop] = page;
+            vis_dom[vtop] = dom;
+            vtop = vtop + 1;
+            ftop = 0;
+        } else if (op == 2) {
+            if (btop != 0) {
+                front_page[ftop] = vis_page[vtop - 1];
+                front_dom[ftop] = vis_dom[vtop - 1];
+                ftop = ftop + 1;
+                vis_page[vtop] = back_page[btop - 1];
+                vis_dom[vtop] = back_dom[btop - 1];
+                vtop = vtop + 1;
+                btop = btop - 1;
+            }
+        } else if (op == 3) {
+            if (ftop != 0) {
+                back_page[btop] = vis_page[vtop - 1];
+                back_dom[btop] = vis_dom[vtop - 1];
+                btop = btop + 1;
+                vis_page[vtop] = front_page[ftop - 1];
+                vis_dom[vtop] = front_dom[ftop - 1];
+                vtop = vtop + 1;
+                ftop = ftop - 1;
+            }
+        } else if (op == 4) {
+            num = getint();
+            for (i = 0; i < vtop; i = i + 1) {
+                printf("%d\n", vis_page[i]);
+            }
+            if (num == 0) {
+                best_dom = count_best_domain();
+                printf("%d\n", best_dom);
+                printf("%d\n", best_cnt);
+            }
+            break;
+        }
+    }
+    return 0;
+}

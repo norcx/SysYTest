@@ -1,0 +1,150 @@
+/*
+  Converted from C source to Strict SysY:
+  - structs/pointers/malloc removed (use indices + flat arrays)
+  - input via getint(), output via printf("%d\\n", ...)
+*/
+
+const int MAXN = 2100;
+const int MAXSON = 32;
+
+int node_num[2100];
+int node_type[2100];
+int node_cnt[2100];
+int node_fa[2100];
+int node_son[67200];
+
+int st[2100];
+int leaves[2100];
+
+int top;
+int stop;
+int node_tot;
+
+void update_idx(int idx) {
+    int cur;
+    cur = idx;
+    for(; cur != 0; cur = node_fa[cur]) {
+        node_cnt[cur] = node_cnt[cur] + 1;
+    }
+}
+
+void bian(int p, int scnt) {
+    int i;
+    int c;
+    if(p == 0) return;
+    if(node_cnt[p] != scnt) {
+        if(node_cnt[p] == 0) {
+            printf("%d\n", node_num[p]);
+        } else {
+            int ss;
+            ss = 0;
+            for(i = 0; i < 32; i = i + 1) {
+                c = node_son[p * MAXSON + i];
+                if(c != 0) {
+                    if(node_type[c] == 0) {
+                        ss = ss + 1;
+                    }
+                }
+            }
+            for(i = 0; i < 32; i = i + 1) {
+                c = node_son[p * MAXSON + i];
+                if(c != 0) {
+                    if(node_type[c] == 1) {
+                        bian(c, scnt - ss);
+                    } else {
+                        if(node_cnt[c] == 0) printf("%d\n", node_num[c]);
+                    }
+                }
+            }
+        }
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int num;
+    int type;
+    int fa;
+    int port;
+    int q;
+
+    int root;
+    int remain;
+    int k;
+    int idx;
+    int found;
+    int parent;
+
+    node_tot = getint();
+
+    num = getint();
+    type = getint();
+    fa = getint();
+    port = getint();
+
+    root = 1;
+    top = 1;
+    stop = 0;
+    st[0] = root;
+
+    node_num[root] = num;
+    node_type[root] = type;
+    node_cnt[root] = 0;
+    node_fa[root] = 0;
+    for(i = 0; i < 32; i = i + 1) node_son[root * MAXSON + i] = 0;
+
+    remain = node_tot - 1;
+    for(k = 0; k < remain; k = k + 1) {
+        num = getint();
+        type = getint();
+        fa = getint();
+        port = getint();
+
+        idx = k + 2;
+
+        node_num[idx] = num;
+        node_type[idx] = type;
+        node_cnt[idx] = 0;
+        node_fa[idx] = 0;
+        for(i = 0; i < 32; i = i + 1) node_son[idx * MAXSON + i] = 0;
+
+        found = 0;
+        for(i = 0; i < top; i = i + 1) {
+            if(node_num[st[i]] == fa) {
+                found = 1;
+                break;
+            }
+        }
+
+        if(found == 0) {
+            st[top] = idx;
+            top = top + 1;
+            node_fa[idx] = 0;
+        } else {
+            parent = st[i];
+            node_son[parent * MAXSON + (port - 1)] = idx;
+            node_fa[idx] = parent;
+            st[top] = idx;
+            top = top + 1;
+        }
+
+        if(type == 0) {
+            leaves[stop] = idx;
+            stop = stop + 1;
+        }
+    }
+
+    for(;;) {
+        q = getint();
+
+        for(i = 0; i < stop; i = i + 1) {
+            if(node_num[leaves[i]] == q) break;
+        }
+        if(i < stop) update_idx(leaves[i]);
+        if(q == -1) break;
+    }
+
+    bian(root, stop);
+    return 0;
+}

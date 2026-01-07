@@ -1,0 +1,78 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C7/F.c` (minesweeper counting).
+ *   Input mapping:
+ *     n
+ *     m
+ *     n*m lines, each is 0/1 (1 = mine)
+ *   Output:
+ *     n*m lines, each is -1 for mine, else adjacent mine count.
+ */
+
+const int MAXN = 30;
+const int MAXM = 30;
+const int MAXSZ = (MAXN + 2) * (MAXM + 2);
+
+int ma[MAXSZ];
+int bombs[MAXN * MAXM];
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int j;
+    int k;
+    int p;
+    int x;
+    int idx;
+    int pos;
+    int i1;
+    int j1;
+    int idx2;
+    int v;
+
+    n = getint();
+    m = getint();
+
+    p = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            x = getint();
+            idx = i * (m + 2) + j;
+            if (x != 0) {
+                bombs[p] = (i - 1) * m + j;
+                p = p + 1;
+                ma[idx] = -1;
+            } else {
+                ma[idx] = 0;
+            }
+        }
+    }
+
+    for (k = 0; k < p; k = k + 1) {
+        pos = bombs[k];
+        j1 = pos % m;
+        if (j1 == 0) {
+            j1 = m;
+            i1 = pos / m;
+        } else {
+            i1 = pos / m + 1;
+        }
+
+        for (i = i1 - 1; i <= i1 + 1; i = i + 1) {
+            for (j = j1 - 1; j <= j1 + 1; j = j + 1) {
+                idx2 = i * (m + 2) + j;
+                if (ma[idx2] != -1) {
+                    ma[idx2] = ma[idx2] + 1;
+                }
+            }
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            v = ma[i * (m + 2) + j];
+            printf("%d\n", v);
+        }
+    }
+    return 0;
+}

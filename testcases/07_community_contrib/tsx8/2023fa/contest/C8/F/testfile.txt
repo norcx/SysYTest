@@ -1,0 +1,76 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C8/F.c.
+ *   Original program reads N text lines, performs M swaps of lines, then prints
+ *   the final order. Strict SysY has no strings, so this testcase encodes each
+ *   string as a sequence of integer character codes.
+ *
+ *   Input format (all integers, one per line):
+ *     n
+ *     m
+ *     (repeat i=1..n):
+ *       len_i
+ *       c_{i,1}
+ *       ...
+ *       c_{i,len_i}
+ *     (repeat k=1..m):
+ *       a_k
+ *       b_k
+ *
+ *   Output format (all integers, one per line):
+ *     For i=1..n in final order:
+ *       len
+ *       c_1..c_len
+ */
+
+const int MAXN = 32;
+const int MAXPOOL = 512;
+
+int start_pos[MAXN];
+int str_len[MAXN];
+int pool[MAXPOOL];
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int j;
+    int offset;
+
+    n = getint();
+    m = getint();
+    offset = 0;
+
+    for (i = 1; i <= n; i = i + 1) {
+        str_len[i] = getint();
+        start_pos[i] = offset;
+        for (j = 0; j < str_len[i]; j = j + 1) {
+            pool[offset] = getint();
+            offset = offset + 1;
+        }
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        int a;
+        int b;
+        int t;
+        a = getint();
+        b = getint();
+
+        t = start_pos[a];
+        start_pos[a] = start_pos[b];
+        start_pos[b] = t;
+
+        t = str_len[a];
+        str_len[a] = str_len[b];
+        str_len[b] = t;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        printf("%d\n", str_len[i]);
+        for (j = 0; j < str_len[i]; j = j + 1) {
+            printf("%d\n", pool[start_pos[i] + j]);
+        }
+    }
+
+    return 0;
+}

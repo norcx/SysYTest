@@ -1,0 +1,347 @@
+/* Description:
+ *   Huffman coding (SysY strict subset adaptation).
+ *
+ * Input (one integer per line):
+ *   Step
+ *   N
+ *   a0
+ *   a1
+ *   ...
+ *   a(N-1)
+ *
+ * Each ai is an ASCII code in [1,127]. Symbol 0 (NUL) is appended once.
+ *
+ * Output:
+ *   Step 1: for each symbol with count>0, print symbol then count (2 lines per symbol).
+ *   Step 2: print leaf symbols in preorder (1 line per leaf).
+ *   Step 3: for each symbol with code, print symbol, code_len, code_digits (3 lines).
+ *   Step>=4: print out_bytes, then each byte value, then in_size, out_size, rate_bp.
+ */
+
+const int ASCII = 128;
+const int MAXN = 256;
+const int MAXD = 128;
+
+int data[MAXN];
+int n;
+int step;
+
+int cnt[ASCII];
+
+int node_weight[2 * ASCII];
+int node_left[2 * ASCII];
+int node_right[2 * ASCII];
+int node_sym[2 * ASCII];
+int node_tot;
+int root;
+
+int pq[2 * ASCII];
+int pq_len;
+
+int path_bits[MAXD];
+int code_len[ASCII];
+int code_bits[ASCII * MAXD];
+
+void reset_all() {
+    int i;
+    for (i = 0; i < ASCII; i = i + 1) {
+        cnt[i] = 0;
+        code_len[i] = 0;
+    }
+    for (i = 0; i < ASCII * MAXD; i = i + 1) {
+        code_bits[i] = 0;
+    }
+    node_tot = 0;
+    pq_len = 0;
+    root = -1;
+    return;
+}
+
+void pq_insert_leaf(int idx) {
+    int pos;
+    int j;
+    pos = 0;
+    for (pos = 0; pos < pq_len; pos = pos + 1) {
+        j = pq[pos];
+        if (node_weight[j] > node_weight[idx]) {
+            break;
+        }
+        if (node_weight[j] == node_weight[idx]) {
+            if (node_sym[j] > node_sym[idx]) {
+                break;
+            }
+        }
+    }
+    for (j = pq_len; j > pos; j = j - 1) {
+        pq[j] = pq[j - 1];
+    }
+    pq[pos] = idx;
+    pq_len = pq_len + 1;
+    return;
+}
+
+void pq_insert_internal(int idx) {
+    int pos;
+    int j;
+    pos = 0;
+    for (pos = 0; pos < pq_len; pos = pos + 1) {
+        j = pq[pos];
+        if (node_weight[j] > node_weight[idx]) {
+            break;
+        }
+    }
+    for (j = pq_len; j > pos; j = j - 1) {
+        pq[j] = pq[j - 1];
+    }
+    pq[pos] = idx;
+    pq_len = pq_len + 1;
+    return;
+}
+
+int pq_pop_min() {
+    int ret;
+    int i;
+    ret = pq[0];
+    for (i = 1; i < pq_len; i = i + 1) {
+        pq[i - 1] = pq[i];
+    }
+    pq_len = pq_len - 1;
+    return ret;
+}
+
+int new_leaf(int sym, int w) {
+    int idx;
+    idx = node_tot;
+    node_tot = node_tot + 1;
+    node_weight[idx] = w;
+    node_left[idx] = -1;
+    node_right[idx] = -1;
+    node_sym[idx] = sym;
+    return idx;
+}
+
+int new_internal(int l, int r) {
+    int idx;
+    idx = node_tot;
+    node_tot = node_tot + 1;
+    node_weight[idx] = node_weight[l] + node_weight[r];
+    node_left[idx] = l;
+    node_right[idx] = r;
+    node_sym[idx] = -1;
+    return idx;
+}
+
+int build_tree() {
+    int i;
+    int idx;
+    int a;
+    int b;
+    int p;
+    int guard;
+
+    pq_len = 0;
+    node_tot = 0;
+
+    for (i = 0; i < ASCII; i = i + 1) {
+        if (cnt[i] > 0) {
+            idx = new_leaf(i, cnt[i]);
+            pq_insert_leaf(idx);
+        }
+    }
+
+    for (guard = 0; pq_len > 1; guard = guard + 1) {
+        a = pq_pop_min();
+        b = pq_pop_min();
+        p = new_internal(a, b);
+        pq_insert_internal(p);
+    }
+
+    if (pq_len == 1) {
+        return pq[0];
+    }
+    return -1;
+}
+
+void build_codes_dfs(int u, int depth) {
+    int i;
+    int sym;
+    if (u < 0) {
+        return;
+    }
+    if (node_left[u] == -1 && node_right[u] == -1) {
+        sym = node_sym[u];
+        code_len[sym] = depth;
+        for (i = 0; i < depth; i = i + 1) {
+            code_bits[sym * MAXD + i] = path_bits[i];
+        }
+        return;
+    }
+    if (node_left[u] != -1) {
+        path_bits[depth] = 0;
+        build_codes_dfs(node_left[u], depth + 1);
+    }
+    if (node_right[u] != -1) {
+        path_bits[depth] = 1;
+        build_codes_dfs(node_right[u], depth + 1);
+    }
+    return;
+}
+
+void print_step1() {
+    int i;
+    for (i = 0; i < ASCII; i = i + 1) {
+        if (cnt[i] > 0) {
+            printf("%d\n", i);
+            printf("%d\n", cnt[i]);
+        }
+    }
+    return;
+}
+
+void print_leaves_pre(int u) {
+    if (u < 0) {
+        return;
+    }
+    if (node_left[u] == -1 && node_right[u] == -1) {
+        printf("%d\n", node_sym[u]);
+    }
+    print_leaves_pre(node_left[u]);
+    print_leaves_pre(node_right[u]);
+    return;
+}
+
+void print_step2() {
+    print_leaves_pre(root);
+    return;
+}
+
+void print_step3() {
+    int sym;
+    int len;
+    int k;
+    int val;
+    for (sym = 0; sym < ASCII; sym = sym + 1) {
+        len = code_len[sym];
+        if (len > 0) {
+            val = 0;
+            for (k = 0; k < len; k = k + 1) {
+                val = val * 10 + code_bits[sym * MAXD + k];
+            }
+            printf("%d\n", sym);
+            printf("%d\n", len);
+            printf("%d\n", val);
+        }
+    }
+    return;
+}
+
+void do_step4() {
+    int i;
+    int sym;
+    int len;
+    int k;
+    int byte_val;
+    int bits_in_byte;
+    int out_bytes;
+    int in_size;
+    int out_size;
+    int rate_bp;
+
+    byte_val = 0;
+    bits_in_byte = 0;
+    out_bytes = 0;
+
+    for (i = 0; i < n; i = i + 1) {
+        sym = data[i];
+        len = code_len[sym];
+        for (k = 0; k < len; k = k + 1) {
+            byte_val = byte_val * 2 + code_bits[sym * MAXD + k];
+            bits_in_byte = bits_in_byte + 1;
+            if (bits_in_byte == 8) {
+                pq[out_bytes] = byte_val;
+                out_bytes = out_bytes + 1;
+                byte_val = 0;
+                bits_in_byte = 0;
+            }
+        }
+    }
+
+    sym = 0;
+    len = code_len[sym];
+    for (k = 0; k < len; k = k + 1) {
+        byte_val = byte_val * 2 + code_bits[sym * MAXD + k];
+        bits_in_byte = bits_in_byte + 1;
+        if (bits_in_byte == 8) {
+            pq[out_bytes] = byte_val;
+            out_bytes = out_bytes + 1;
+            byte_val = 0;
+            bits_in_byte = 0;
+        }
+    }
+
+    if (bits_in_byte > 0 && byte_val != 0) {
+        pq[out_bytes] = byte_val;
+        out_bytes = out_bytes + 1;
+    }
+
+    printf("%d\n", out_bytes);
+    for (i = 0; i < out_bytes; i = i + 1) {
+        printf("%d\n", pq[i]);
+    }
+
+    in_size = n;
+    out_size = out_bytes;
+    printf("%d\n", in_size);
+    printf("%d\n", out_size);
+    rate_bp = 0;
+    if (in_size > 0) {
+        rate_bp = (in_size - out_size) * 10000 / in_size;
+    }
+    printf("%d\n", rate_bp);
+    return;
+}
+
+int main() {
+    int i;
+    reset_all();
+
+    step = getint();
+    n = getint();
+    if (n > MAXN) {
+        n = MAXN;
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+        data[i] = getint();
+        if (data[i] < 1) {
+            data[i] = 1;
+        }
+        if (data[i] >= ASCII) {
+            data[i] = ASCII - 1;
+        }
+        cnt[data[i]] = cnt[data[i]] + 1;
+    }
+    cnt[0] = 1;
+
+    if (step == 1) {
+        print_step1();
+    }
+
+    root = build_tree();
+
+    if (step == 2) {
+        print_step2();
+    }
+
+    build_codes_dfs(root, 0);
+
+    if (step == 3) {
+        print_step3();
+    }
+
+    if (step >= 4) {
+        do_step4();
+    }
+
+    return 0;
+}

@@ -1,0 +1,136 @@
+/* Description:
+ *   Integer-only refactor of the original floating-point bisection geometry code.
+ *   Uses fixed-point scaling (SCALE=100) and prints scaled integers:
+ *     line1: best_x * 100
+ *     line2: best_cost * 100
+ */
+
+const int SCALE = 100;
+int X1;
+int Y1;
+int X2;
+int Y2;
+int S1;
+int S2;
+
+int isqrt(int n) {
+    int lo;
+    int hi;
+    int i;
+    int mid;
+    lo = 0;
+    hi = 46340;
+    for (i = 0; i < 16; i = i + 1) {
+        mid = (lo + hi + 1) / 2;
+        if (mid == 0) {
+            lo = mid;
+        } else {
+            if (mid <= n / mid) {
+                lo = mid;
+            } else {
+                hi = mid - 1;
+            }
+        }
+    }
+    return lo;
+}
+
+int iabs(int x) {
+    if (x < 0) return -x;
+    return x;
+}
+
+int dist(int dx, int y) {
+    int n;
+    n = dx * dx + y * y;
+    if (n < 0) n = 0;
+    return isqrt(n);
+}
+
+int cost(int x) {
+    int dx1;
+    int dx2;
+    int d1;
+    int d2;
+    dx1 = iabs(x - X1);
+    dx2 = iabs(X2 - x);
+    d1 = dist(dx1, Y1);
+    d2 = dist(dx2, Y2);
+    return S1 * d1 + S2 * d2;
+}
+
+int ratio_cmp(int x) {
+    int dx1;
+    int dx2;
+    int d1;
+    int d2;
+    int left;
+    int right;
+    dx1 = x - X1;
+    dx2 = X2 - x;
+    if (dx1 < 0) dx1 = -dx1;
+    if (dx2 < 0) dx2 = -dx2;
+    d1 = dist(dx1, Y1);
+    d2 = dist(dx2, Y2);
+    left = dx1 * S1 * d2;
+    right = dx2 * S2 * d1;
+    return left - right;
+}
+
+int main() {
+    int x1_in;
+    int y1_in;
+    int x2_in;
+    int y2_in;
+    int l;
+    int r;
+    int mid;
+    int iter;
+    int cl;
+    int cr;
+    int best_x;
+    int best_cost;
+
+    x1_in = getint();
+    y1_in = getint();
+    x2_in = getint();
+    y2_in = getint();
+    S1 = getint();
+    S2 = getint();
+
+    X1 = x1_in * SCALE;
+    Y1 = y1_in * SCALE;
+    X2 = x2_in * SCALE;
+    Y2 = y2_in * SCALE;
+
+    if (X1 > X2) {
+        mid = X1;
+        X1 = X2;
+        X2 = mid;
+    }
+
+    l = X1;
+    r = X2;
+    for (iter = 0; iter < 60; iter = iter + 1) {
+        mid = (l + r) / 2;
+        if (mid == l) mid = l + 1;
+        if (ratio_cmp(mid) > 0) {
+            r = mid;
+        } else {
+            l = mid;
+        }
+    }
+
+    cl = cost(l);
+    cr = cost(r);
+    if (cr < cl) {
+        best_x = r;
+        best_cost = cr;
+    } else {
+        best_x = l;
+        best_cost = cl;
+    }
+
+    printf("%d\n%d\n", best_x, best_cost);
+    return 0;
+}

@@ -1,0 +1,51 @@
+/* Description:
+ * Element-wise matrix add/sub.
+ * Converted from `codes/2023fa/contest/C7/B.c`.
+ *
+ * Input (newline-separated integers):
+ * - m, n, s
+ * - m*n integers: matrix A in row-major
+ * - m*n integers: matrix B in row-major
+ *
+ * Output:
+ * - If s==1: print (A[i]+B[i]) for i=0..m*n-1, one integer per line
+ * - If s==2: print (A[i]-B[i]) for i=0..m*n-1, one integer per line
+ */
+
+int a[3000];
+
+int main() {
+    int m;
+    int n;
+    int s;
+    int i;
+    int j;
+    int idx;
+    m = getint();
+    n = getint();
+    s = getint();
+
+    for (i = 0; i < m * n; i = i + 1) {
+        a[i] = getint();
+    }
+
+    if (s == 1) {
+        for (i = 0; i < m; i = i + 1) {
+            for (j = 0; j < n; j = j + 1) {
+                idx = i * n + j;
+                printf("%d\n", a[idx] + getint());
+            }
+        }
+    } else {
+        if (s == 2) {
+            for (i = 0; i < m; i = i + 1) {
+                for (j = 0; j < n; j = j + 1) {
+                    idx = i * n + j;
+                    printf("%d\n", a[idx] - getint());
+                }
+            }
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,18 @@
+/* Description:
+ *   Converted from codes/2023fa/exam/E2/C.c (multiplication table).
+ *   Strict SysY: reads n, prints each i*j on its own line; prints 0 after each row.
+ */
+
+int main() {
+    int n;
+    int i;
+    int j;
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= i; j = j + 1) {
+            printf("%d\n", i * j);
+        }
+        printf("%d\n", 0);
+    }
+    return 0;
+}

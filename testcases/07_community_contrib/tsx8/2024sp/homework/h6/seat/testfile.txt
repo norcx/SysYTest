@@ -1,0 +1,95 @@
+/* Description:
+ *   Converted from C code using structs/qsort/string IO into Strict SysY:
+ *   - name is encoded as an integer id
+ *   - input is newline-separated integers only
+ */
+
+int num[110];
+int nameId[110];
+int seat[110];
+int vis[500];
+
+void swap_record(int i, int j) {
+    int t;
+    t = num[i]; num[i] = num[j]; num[j] = t;
+    t = nameId[i]; nameId[i] = nameId[j]; nameId[j] = t;
+    t = seat[i]; seat[i] = seat[j]; seat[j] = t;
+}
+
+int main() {
+    int N;
+    int i;
+    int j;
+    int Q;
+    int k;
+    int m;
+
+    N = getint();
+
+    i = 0;
+    for (i = 0; i < 500; i = i + 1) {
+        vis[i] = 0;
+    }
+
+    for (i = 1; i <= N; i = i + 1) {
+        num[i] = getint();
+        nameId[i] = getint();
+        seat[i] = getint();
+        if (seat[i] >= 0 && seat[i] < 500) {
+            vis[seat[i]] = 1;
+        }
+    }
+
+    for (i = 1; i <= N; i = i + 1) {
+        for (j = i + 1; j <= N; j = j + 1) {
+            if (seat[i] > seat[j]) {
+                swap_record(i, j);
+            } else {
+                if (seat[i] == seat[j] && num[i] > num[j]) {
+                    swap_record(i, j);
+                }
+            }
+        }
+    }
+
+    Q = seat[N];
+    if (Q > N) Q = N;
+    k = N;
+
+    for (i = 1; i <= Q; i = i + 1) {
+        if (vis[i] == 0) {
+            if (seat[k] < i) {
+                break;
+            }
+            seat[k] = i;
+            vis[i] = 1;
+            k = k - 1;
+        }
+    }
+
+    m = seat[k];
+    if (seat[k + 1] > m) m = seat[k + 1];
+
+    for (i = 1; i <= N; i = i + 1) {
+        if (vis[seat[i]] != 0) {
+            vis[seat[i]] = 0;
+        } else {
+            m = m + 1;
+            seat[i] = m;
+            vis[seat[i]] = 0;
+        }
+    }
+
+    for (i = 1; i <= N; i = i + 1) {
+        for (j = i + 1; j <= N; j = j + 1) {
+            if (num[i] > num[j]) {
+                swap_record(i, j);
+            }
+        }
+    }
+
+    for (i = 1; i <= N; i = i + 1) {
+        printf("%d %d %d\n", num[i], nameId[i], seat[i]);
+    }
+    return 0;
+}

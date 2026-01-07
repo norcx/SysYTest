@@ -1,0 +1,83 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C8/C.c
+ *   Reads four integers a,b,c,d; prints a+b and c+d; then compares their
+ *   decimal string forms lexicographically (strcmp semantics) and prints
+ *   a relation string.
+ */
+
+int int_to_str(int x, int buf[]) {
+    int digits[16];
+    int top = 0;
+    int len = 0;
+    int i = 0;
+
+    if (x < 0) {
+        buf[len] = 45;
+        len = len + 1;
+        x = 0 - x;
+    }
+
+    if (x == 0) {
+        digits[top] = 48;
+        top = top + 1;
+    } else {
+        for (; x > 0;) {
+            int d = x - (x / 10) * 10;
+            digits[top] = d + 48;
+            top = top + 1;
+            x = x / 10;
+        }
+    }
+
+    for (i = top - 1; i >= 0; i = i - 1) {
+        buf[len] = digits[i];
+        len = len + 1;
+    }
+    buf[len] = 0;
+    return len;
+}
+
+int strcmp_int(int a[], int b[]) {
+    int i = 0;
+    for (;; i = i + 1) {
+        int ca = a[i];
+        int cb = b[i];
+        if (ca != cb) {
+            return ca - cb;
+        }
+        if (ca == 0) {
+            return 0;
+        }
+    }
+    return 0;
+}
+
+int main() {
+    int a = getint();
+    int b = getint();
+    int c = getint();
+    int d = getint();
+    int sum1 = a + b;
+    int sum2 = c + d;
+
+    int s1[32];
+    int s2[32];
+
+    printf("%d\n", sum1);
+    printf("%d\n", sum2);
+
+    int_to_str(sum1, s1);
+    int_to_str(sum2, s2);
+
+    {
+        int cmp = strcmp_int(s1, s2);
+        if (cmp < 0) {
+        printf("a+b<c+d\n");
+        } else if (cmp > 0) {
+        printf("a+b>c+d\n");
+        } else {
+        printf("a+b=c+d\n");
+        }
+    }
+    return 0;
+}

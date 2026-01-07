@@ -1,0 +1,42 @@
+/* Description:
+ * Source: codes/2023fa/exam/E4/D.c
+ * Josephus-style elimination; output the last remaining position (1..n).
+ */
+
+int q[1010];
+
+int main() {
+    int n;
+    int k;
+    int i;
+    int j;
+    int cnt;
+
+    n = getint();
+    k = getint();
+
+    for (cnt = 0, i = 0; cnt < n - 1; cnt = cnt + 1) {
+        for (j = 1; j <= k; j = j + 1) {
+            i = i + 1;
+            i = i % n;
+            for (; q[i];) {
+                i = i + 1;
+                i = i % n;
+            }
+        }
+        q[i] = 1;
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+        if (!q[i]) {
+            break;
+        }
+    }
+
+    if (i == 0) {
+        printf("%d\n", n);
+    } else {
+        printf("%d\n", i);
+    }
+    return 0;
+}

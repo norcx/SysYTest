@@ -1,0 +1,80 @@
+/*
+  Converted to Strict SysY.
+
+  Input format (one integer per line):
+    inTime
+    pCnt[1..inTime]
+    then, for each T=1..inTime, pCnt[T] integers: customer type (service time)
+*/
+
+int pCnt[105];
+int tot;
+
+int waitType[105];
+int waitInTime[105];
+int waitStartTime[105];
+
+int fr;
+int re;
+int window[6];
+int wCnt;
+
+int main() {
+    int inTime;
+    int i;
+    int T;
+
+    inTime = getint();
+    fr = 1;
+    re = 0;
+    wCnt = 3;
+
+    for (i = 1; i <= inTime; i = i + 1) {
+        pCnt[i] = getint();
+        tot = tot + pCnt[i];
+    }
+
+    for (T = 1; tot > 0; T = T + 1) {
+        if (T <= inTime) {
+            for (i = 1; i <= pCnt[T]; i = i + 1) {
+                re = re + 1;
+                waitType[re] = getint();
+                waitInTime[re] = T;
+            }
+            for (; 7 * wCnt <= re - fr + 1; ) {
+                wCnt = wCnt + 1;
+            }
+        }
+
+        if (wCnt > 5) {
+            wCnt = 5;
+        }
+
+        for (i = 1; i <= wCnt; i = i + 1) {
+            if (window[i] == 0 && fr <= re) {
+                window[i] = waitType[fr];
+                waitStartTime[fr] = T;
+                tot = tot - 1;
+                fr = fr + 1;
+            }
+        }
+
+        for (; 7 * wCnt > re - fr + 1; ) {
+            wCnt = wCnt - 1;
+        }
+        if (wCnt < 3) {
+            wCnt = 3;
+        }
+
+        for (i = 1; i <= 5; i = i + 1) {
+            if (window[i] > 0) {
+                window[i] = window[i] - 1;
+            }
+        }
+    }
+
+    for (i = 1; i <= re; i = i + 1) {
+        printf("%d : %d\n", i, waitStartTime[i] - waitInTime[i]);
+    }
+    return 0;
+}

@@ -1,0 +1,59 @@
+/* Description:
+ * Converted from `codes/2023fa/contest/C6/G.c` into Strict SysY.
+ * Input:
+ *   n, m, then m integers a[1..m] (one integer per line).
+ * Output:
+ *   For each i in [1..n], print the (concatenated) indices j where:
+ *     - a[j] != 0 and i % a[j] == 0, OR
+ *     - any decimal digit of i equals a[j].
+ *   If none, print "count out".
+ */
+
+int a[21];
+int s[21];
+int top;
+
+int check(int x, int idx) {
+    if (a[idx] != 0) {
+        if (x % a[idx] == 0) return 1;
+    }
+    for (; x > 0; x = x / 10) {
+        if (x % 10 == a[idx]) return 1;
+    }
+    return 0;
+}
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int j;
+
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= m; i = i + 1) {
+        a[i] = getint();
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        top = 0;
+        for (j = 1; j <= m; j = j + 1) {
+            if (check(i, j) == 1) {
+                s[top] = j;
+                top = top + 1;
+            }
+        }
+
+        if (top == 0) {
+            printf("count out\n");
+        } else {
+            for (j = 0; j < top; j = j + 1) {
+                printf("%d", s[j]);
+            }
+            printf("\n");
+        }
+    }
+
+    return 0;
+}

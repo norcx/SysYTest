@@ -1,0 +1,24 @@
+/* Description:
+ * Converted from `codes/2023fa/contest/C2/D.c`.
+ * Input: n testcases, each has h and m.
+ * Output: prints 0 if original would print 'N', else prints 1 (original 'E').
+ */
+
+int main() {
+    int n;
+    int h;
+    int m;
+    int i;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        h = getint();
+        m = getint();
+        if (h == 6 && m >= 10 || h == 22 && m <= 20 || h > 6 && h < 22) {
+            printf("%d\n", 0);
+        } else {
+            printf("%d\n", 1);
+        }
+    }
+    return 0;
+}

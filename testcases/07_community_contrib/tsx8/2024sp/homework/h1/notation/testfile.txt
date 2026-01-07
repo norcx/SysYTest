@@ -1,0 +1,80 @@
+/* Description:
+ *   Encodes character I/O via integers (ASCII codes).
+ *   Input: one ASCII code per line; EOF ends input.
+ *   Output: one ASCII code per line.
+ */
+
+int qu[1000];
+
+void out(int x) {
+    printf("%d\n", x);
+}
+
+void out_int_chars(int x) {
+    int digits[20];
+    int len = 0;
+    int i;
+    if (x == 0) {
+        out(48);
+        return;
+    }
+    if (x < 0) {
+        out(45);
+        x = 0 - x;
+    }
+    for (;;) {
+        if (x == 0) break;
+        digits[len] = x % 10 + 48;
+        len = len + 1;
+        x = x / 10;
+    }
+    for (i = len - 1; i >= 0; i = i - 1) out(digits[i]);
+}
+
+int main() {
+    int ch;
+    int hu = 0;
+    int tu = 0;
+    int f = -1;
+    int i;
+
+    for (;;) {
+        ch = getint();
+        if (ch == 0) break;
+        if (ch >= 48 && ch <= 57) {
+            if (tu < 1000) {
+                qu[tu] = ch;
+                tu = tu + 1;
+            }
+        } else if (ch == 46) {
+            f = tu - 1;
+        }
+    }
+
+    for (;;) {
+        if (tu <= 0) break;
+        if (qu[tu - 1] != 48) break;
+        tu = tu - 1;
+    }
+
+    for (;;) {
+        if (hu >= tu) break;
+        if (qu[hu] != 48) break;
+        hu = hu + 1;
+    }
+
+    if (hu >= tu) {
+        out(48);
+    } else {
+        out(qu[hu]);
+        if (tu > hu + 1) {
+            out(46);
+            for (i = hu + 1; i < tu; i = i + 1) out(qu[i]);
+        }
+    }
+
+    out(101);
+    if (f == -1) out(48);
+    else out_int_chars(f - hu);
+    return 0;
+}

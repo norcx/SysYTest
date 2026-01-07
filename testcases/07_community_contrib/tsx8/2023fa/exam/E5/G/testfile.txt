@@ -1,0 +1,38 @@
+// Converted from `codes/2023fa/exam/E5/G.c` to Strict SysY.
+// Prints n-bit Gray code sequence (2^n lines).
+
+int n;
+int pow2[32];
+
+void print_gray(int value) {
+    int p;
+    int b1;
+    int b2;
+    int bit;
+    for (p = n - 1; p >= 0; p = p - 1) {
+        b1 = (value / pow2[p]) % 2;
+        b2 = (value / pow2[p + 1]) % 2;
+        bit = (b1 + b2) % 2;
+        printf("%d", bit);
+    }
+    printf("\n");
+    return;
+}
+
+int main() {
+    int i;
+    int p;
+    int limit;
+
+    n = getint();
+    pow2[0] = 1;
+    for (p = 1; p <= n; p = p + 1) {
+        pow2[p] = pow2[p - 1] * 2;
+    }
+
+    limit = pow2[n];
+    for (i = 0; i <= limit - 1; i = i + 1) {
+        print_gray(i);
+    }
+    return 0;
+}

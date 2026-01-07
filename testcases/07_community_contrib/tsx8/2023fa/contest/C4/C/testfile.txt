@@ -1,0 +1,56 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C4/C.c to Strict SysY.
+ *
+ *   Input:
+ *     n
+ *     s1..sn
+ *
+ *   For each si, let p be the 1-based position where value si first appeared.
+ *   Let t = p / n, output:
+ *     E if t > 0.9
+ *     D if t > 0.6
+ *     C if t > 0.25
+ *     B if t > 0.1
+ *     A otherwise
+ */
+
+int s[1010];
+int first_pos[110];
+
+int main() {
+    int n;
+    int i;
+    int r;
+    int val;
+    int pos;
+
+    n = getint();
+
+    r = 1;
+    for (i = 1; i <= n; i = i + 1) {
+        val = getint();
+        s[i] = val;
+        if (first_pos[val] == 0) {
+            first_pos[val] = r;
+        }
+        r = r + 1;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        pos = first_pos[s[i]];
+        if (pos * 10 > 9 * n) {
+            printf("E ");
+        } else if (pos * 10 > 6 * n) {
+            printf("D ");
+        } else if (pos * 100 > 25 * n) {
+            printf("C ");
+        } else if (pos * 10 > n) {
+            printf("B ");
+        } else {
+            printf("A ");
+        }
+    }
+    printf("\n");
+
+    return 0;
+}

@@ -1,0 +1,5 @@
+   LMMR      LMMR
+  L MM R    L MM R
+ L  MM  R  L  MM  R
+L   MM   RL   MM   R
+----MM--------MM----

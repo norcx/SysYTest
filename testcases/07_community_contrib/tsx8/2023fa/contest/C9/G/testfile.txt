@@ -1,0 +1,112 @@
+/*
+ * Description:
+ *   Converted from `codes/2023fa/contest/C9/G.c`.
+ *   Original: read lines until EOF, sort by (length, lexicographic, id), print "id:len:string".
+ *
+ *   Strict SysY adaptation:
+ *   - "strings" are encoded as integer arrays of ASCII codes.
+ *   - input format:
+ *       n
+ *       len_1, c_1_1 ... c_1_len1
+ *       ...
+ *       len_n, c_n_1 ... c_n_lenn
+ *     (one integer per line)
+ *   - output format:
+ *       for each record in sorted order:
+ *         id
+ *         len
+ *         c_1 ... c_len
+ *         -1   (separator)
+ */
+
+const int MAX_N = 64;
+const int MAX_L = 16;
+
+int g_len[MAX_N];
+int g_id[MAX_N];
+int g_s[MAX_N * MAX_L];
+
+int less(int a, int b) {
+    if (g_len[a] < g_len[b]) return 1;
+    if (g_len[a] > g_len[b]) return 0;
+
+    {
+        int k;
+        for (k = 0; k < g_len[a]; k = k + 1) {
+            int ca = g_s[a * MAX_L + k];
+            int cb = g_s[b * MAX_L + k];
+            if (ca < cb) return 1;
+            if (ca > cb) return 0;
+        }
+    }
+
+    if (g_id[a] < g_id[b]) return 1;
+    return 0;
+}
+
+void swap_rec(int a, int b) {
+    int t;
+    int k;
+
+    t = g_len[a];
+    g_len[a] = g_len[b];
+    g_len[b] = t;
+
+    t = g_id[a];
+    g_id[a] = g_id[b];
+    g_id[b] = t;
+
+    for (k = 0; k < MAX_L; k = k + 1) {
+        t = g_s[a * MAX_L + k];
+        g_s[a * MAX_L + k] = g_s[b * MAX_L + k];
+        g_s[b * MAX_L + k] = t;
+    }
+    return;
+}
+
+int main() {
+    int n;
+    int i;
+    int j;
+    int k;
+
+    n = getint();
+    if (n < 0) n = 0;
+    if (n > MAX_N) n = MAX_N;
+
+    for (i = 0; i < n; i = i + 1) {
+        int L;
+        L = getint();
+        if (L < 0) L = 0;
+        if (L > MAX_L) L = MAX_L;
+
+        g_id[i] = i + 1;
+        g_len[i] = L;
+
+        for (k = 0; k < MAX_L; k = k + 1) {
+            g_s[i * MAX_L + k] = 0;
+        }
+        for (k = 0; k < L; k = k + 1) {
+            g_s[i * MAX_L + k] = getint();
+        }
+    }
+
+    for (i = 0; i < n - 1; i = i + 1) {
+        for (j = 0; j < n - 1 - i; j = j + 1) {
+            if (less(j + 1, j)) {
+                swap_rec(j, j + 1);
+            }
+        }
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d\n", g_id[i]);
+        printf("%d\n", g_len[i]);
+        for (k = 0; k < g_len[i]; k = k + 1) {
+            printf("%d\n", g_s[i * MAX_L + k]);
+        }
+        printf("%d\n", -1);
+    }
+
+    return 0;
+}

@@ -1,0 +1,97 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E7/E.c`.
+ *   Reads a partially-filled grid S and a completed grid T (9x9) and checks:
+ *     - each row in T has no duplicate number
+ *     - each column in T has no duplicate number
+ *     - each checked 3x3 block in T has no duplicate number (kept as-is)
+ *     - any non-zero clue in S must match T
+ */
+
+int main() {
+    int t;
+    int case_idx;
+    int S[100];
+    int T[100];
+    int check[10];
+    int i;
+    int j;
+    int k;
+    int flag;
+    int val;
+    int x;
+    int y;
+
+    t = getint();
+    for (case_idx = 0; case_idx < t; case_idx = case_idx + 1) {
+        flag = 0;
+
+        for (i = 1; i <= 9; i = i + 1) {
+            for (j = 1; j <= 9; j = j + 1) {
+                S[i * 10 + j] = getint();
+            }
+        }
+        for (i = 1; i <= 9; i = i + 1) {
+            for (j = 1; j <= 9; j = j + 1) {
+                T[i * 10 + j] = getint();
+            }
+        }
+
+        for (i = 1; i <= 9; i = i + 1) {
+            for (j = 0; j <= 9; j = j + 1) check[j] = 0;
+            for (j = 1; j <= 9; j = j + 1) {
+                val = T[i * 10 + j];
+                if (check[val] != 0) {
+                    flag = 1;
+                    break;
+                }
+                if (S[i * 10 + j] != 0 && S[i * 10 + j] != val) {
+                    flag = 1;
+                    break;
+                }
+                check[val] = check[val] + 1;
+            }
+            if (flag == 1) break;
+        }
+
+        if (flag == 0) {
+            for (j = 1; j <= 9; j = j + 1) {
+                for (i = 0; i <= 9; i = i + 1) check[i] = 0;
+                for (i = 1; i <= 9; i = i + 1) {
+                    val = T[i * 10 + j];
+                    if (check[val] != 0) {
+                        flag = 1;
+                        break;
+                    }
+                    check[val] = check[val] + 1;
+                }
+                if (flag == 1) break;
+            }
+        }
+
+        if (flag == 0) {
+            for (i = 1; i <= 9; i = i + 1) {
+                for (j = 0; j <= 9; j = j + 1) check[j] = 0;
+                for (j = 1; j <= 3; j = j + 1) {
+                    for (k = 1; k <= 3; k = k + 1) {
+                        x = ((i - 1) / 3) * 3 + 1 + (j - 1);
+                        y = ((i - 1) / 3) * 3 + 1 + (k - 1);
+                        val = T[x * 10 + y];
+                        if (check[val] != 0) {
+                            flag = 1;
+                            break;
+                        }
+                        check[val] = check[val] + 1;
+                    }
+                    if (flag == 1) break;
+                }
+                if (flag == 1) break;
+            }
+        }
+
+        if (flag == 0)
+            printf("Moca finish this sudoku perfectly!\n");
+        else
+            printf("Moca is so careless!\n");
+    }
+    return 0;
+}

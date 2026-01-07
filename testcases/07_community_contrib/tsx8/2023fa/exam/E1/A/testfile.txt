@@ -1,0 +1,16 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E1/A.c`.
+ *   Reads x, y; prints x / y and x % y on separate lines.
+ */
+
+int main() {
+    int x = getint();
+    int y = getint();
+
+    int q = x / y;
+    int r = x % y;
+
+    printf("%d\n", q);
+    printf("%d\n", r);
+    return 0;
+}

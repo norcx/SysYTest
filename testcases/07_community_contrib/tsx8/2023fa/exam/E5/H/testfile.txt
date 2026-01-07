@@ -1,0 +1,40 @@
+/* Description:
+ *   generated_from_codes/2023fa/exam/E5/H
+ *
+ * Source: codes/2023fa/exam/E5/H.c
+ * Notes:
+ * - Strict SysY: only `int`/`void`, `getint()` input, `printf("%d")` output.
+ */
+
+int f(int x) {
+    if (x <= 0) return 0;
+    if (x == 1 || x == 2) return 1;
+    if (x == 3) return 2;
+    if (x % 2) return 2 * f((x + 1) / 2) - 1;
+    return f(x / 2) + f(x / 2 + 1) - 1;
+}
+
+int main() {
+    int m;
+    int n;
+    int fm;
+    int fn;
+    int a;
+    int b;
+    int c;
+
+    m = getint();
+    n = getint();
+
+    fm = f(m);
+    fn = f(n);
+
+    a = fm * fn;
+    b = m * fn + n * fm - a;
+    c = m * n - b;
+
+    printf("%d\n", a);
+    printf("%d\n", b);
+    printf("%d\n", c);
+    return 0;
+}

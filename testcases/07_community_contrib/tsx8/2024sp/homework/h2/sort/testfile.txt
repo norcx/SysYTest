@@ -1,0 +1,73 @@
+/* Description:
+ * Sort (name, phone) records by name, then print the first phone for each name.
+ * For additional records with the same name, print only phones that have not
+ * appeared earlier in that name-group, with an increasing suffix counter.
+ *
+ * String fields are encoded as integers (name_id, phone_id).
+ */
+
+const int MAXN = 110;
+int name_arr[MAXN];
+int phone_arr[MAXN];
+
+int main() {
+    int tot;
+    int i;
+    int j;
+    tot = getint();
+
+    for (i = 0; i < tot; i = i + 1) {
+        name_arr[i] = getint();
+        phone_arr[i] = getint();
+    }
+
+    for (i = 1; i < tot; i = i + 1) {
+        int tmp_name;
+        int tmp_phone;
+        int pos;
+        tmp_name = name_arr[i];
+        tmp_phone = phone_arr[i];
+        pos = i;
+        for (j = i; j > 0; j = j - 1) {
+            if (name_arr[j - 1] > tmp_name) {
+                name_arr[j] = name_arr[j - 1];
+                phone_arr[j] = phone_arr[j - 1];
+                pos = j - 1;
+            } else {
+                j = 0;
+            }
+        }
+        name_arr[pos] = tmp_name;
+        phone_arr[pos] = tmp_phone;
+    }
+
+    for (i = 0; i < tot; i = i) {
+        int ii;
+        int next_i;
+        int cnt;
+        printf("%d %d\n", name_arr[i], phone_arr[i]);
+        cnt = 0;
+        next_i = tot;
+        for (ii = i + 1; ii < tot; ii = ii + 1) {
+            if (name_arr[ii] != name_arr[i]) {
+                next_i = ii;
+                ii = tot;
+            } else {
+                int flag;
+                flag = 0;
+                for (j = i; j < ii; j = j + 1) {
+                    if (phone_arr[j] == phone_arr[ii]) {
+                        flag = 1;
+                    }
+                }
+                if (flag == 0) {
+                    cnt = cnt + 1;
+                    printf("%d %d %d\n", name_arr[ii], cnt, phone_arr[ii]);
+                }
+            }
+        }
+        i = next_i;
+    }
+
+    return 0;
+}

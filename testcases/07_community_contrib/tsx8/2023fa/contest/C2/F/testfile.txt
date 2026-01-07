@@ -1,0 +1,75 @@
+/* Description:
+ *   Translated from `codes/2023fa/contest/C2/F.c`.
+ *
+ *   Input: 9 integers (one per line), representing 3D vectors:
+ *     a = (a1, a2, a3)
+ *     b = (b1, b2, b3)
+ *     c = (c1, c2, c3)
+ *
+ *   Output (one integer per line):
+ *     1) a + b (3 lines)
+ *     2) c - b (3 lines)
+ *     3) dot(c, b)
+ *     4) cross(a, b) (3 lines)
+ *     5) a · (c × b)
+ *     6) (c·a)b - (b·a)c (3 lines)
+ */
+
+int main() {
+    int a1;
+    int a2;
+    int a3;
+    int b1;
+    int b2;
+    int b3;
+    int c1;
+    int c2;
+    int c3;
+
+    int ca;
+    int ba;
+    int dot_cb;
+    int cross1;
+    int cross2;
+    int cross3;
+    int triple;
+
+    a1 = getint();
+    a2 = getint();
+    a3 = getint();
+    b1 = getint();
+    b2 = getint();
+    b3 = getint();
+    c1 = getint();
+    c2 = getint();
+    c3 = getint();
+
+    printf("%d\n", a1 + b1);
+    printf("%d\n", a2 + b2);
+    printf("%d\n", a3 + b3);
+
+    printf("%d\n", c1 - b1);
+    printf("%d\n", c2 - b2);
+    printf("%d\n", c3 - b3);
+
+    dot_cb = c1 * b1 + c2 * b2 + c3 * b3;
+    printf("%d\n", dot_cb);
+
+    cross1 = a2 * b3 - a3 * b2;
+    cross2 = a3 * b1 - a1 * b3;
+    cross3 = a1 * b2 - a2 * b1;
+    printf("%d\n", cross1);
+    printf("%d\n", cross2);
+    printf("%d\n", cross3);
+
+    triple = a1 * c2 * b3 + a2 * c3 * b1 + a3 * c1 * b2 - a3 * c2 * b1 - a2 * c1 * b3 - a1 * c3 * b2;
+    printf("%d\n", triple);
+
+    ca = c1 * a1 + c2 * a2 + c3 * a3;
+    ba = b1 * a1 + b2 * a2 + b3 * a3;
+    printf("%d\n", ca * b1 - ba * c1);
+    printf("%d\n", ca * b2 - ba * c2);
+    printf("%d\n", ca * b3 - ba * c3);
+
+    return 0;
+}

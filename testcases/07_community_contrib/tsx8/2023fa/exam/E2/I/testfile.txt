@@ -1,0 +1,179 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E2/I.c`.
+ *
+ *   Original (C) task computes the perimeter of the smallest regular polygon
+ *   passing through 3 points on a circle, using floating-point geometry.
+ *
+ *   Strict SysY adaptation:
+ *   - int-only, fixed-point rotation (scale = 10000)
+ *   - assumes the circle center is (0,0) and the 3 points are vertices of some
+ *     regular n-gon (3 <= n <= 100) on that circle
+ *
+ *   Input (one integer per line): x1 y1 x2 y2 x3 y3
+ *   Output: perimeter * 10000 (one integer, newline)
+ */
+
+int FP_SCALE = 10000;
+
+int COS_STEP[101] = {
+    0, 0, 0, -5000, 0, 3090, 5000, 6235, 7071, 7660, 8090, 8413, 8660, 8855, 9010, 9135, 9239, 9325, 9397,
+    9458, 9511, 9556, 9595, 9629, 9659, 9686, 9709, 9730, 9749, 9766, 9781, 9795, 9808, 9819, 9830, 9839,
+    9848, 9856, 9864, 9871, 9877, 9883, 9888, 9893, 9898, 9903, 9907, 9911, 9914, 9918, 9921, 9924, 9927,
+    9930, 9932, 9935, 9937, 9939, 9941, 9943, 9945, 9947, 9949, 9950, 9952, 9953, 9955, 9956, 9957, 9959,
+    9960, 9961, 9962, 9963, 9964, 9965, 9966, 9967, 9968, 9968, 9969, 9970, 9971, 9971, 9972, 9973, 9973,
+    9974, 9975, 9975, 9976, 9976, 9977, 9977, 9978, 9978, 9979, 9979, 9979, 9980, 9980
+};
+
+int SIN_STEP[101] = {
+    0, 0, 0, 8660, 10000, 9511, 8660, 7818, 7071, 6428, 5878, 5406, 5000, 4647, 4339, 4067, 3827, 3612, 3420,
+    3247, 3090, 2948, 2817, 2698, 2588, 2487, 2393, 2306, 2225, 2150, 2079, 2013, 1951, 1893, 1837, 1786,
+    1736, 1690, 1646, 1604, 1564, 1526, 1490, 1456, 1423, 1392, 1362, 1333, 1305, 1279, 1253, 1229, 1205,
+    1183, 1161, 1140, 1120, 1100, 1081, 1063, 1045, 1028, 1012, 996, 980, 965, 951, 936, 923, 909, 896, 884,
+    872, 860, 848, 837, 826, 815, 805, 795, 785, 775, 765, 756, 747, 739, 730, 722, 713, 705, 698, 690, 682,
+    675, 668, 661, 654, 647, 641, 634, 628
+};
+
+int abs_int(int x) {
+    if (x < 0) {
+        return 0 - x;
+    }
+    return x;
+}
+
+int isqrt_int(int n) {
+    int lo;
+    int hi;
+    int ans;
+    int i;
+    int mid;
+
+    if (n <= 0) {
+        return 0;
+    }
+
+    lo = 0;
+    hi = 46340;
+    ans = 0;
+
+    for (i = 0; i < 20; i = i + 1) {
+        mid = (lo + hi) / 2;
+        if (mid == 0) {
+            ans = 0;
+            lo = 1;
+        } else if (mid <= n / mid) {
+            ans = mid;
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+        if (lo > hi) {
+            return ans;
+        }
+    }
+
+    return ans;
+}
+
+int match_point(int x, int y, int px, int py, int tol) {
+    if (abs_int(x - px) <= tol && abs_int(y - py) <= tol) {
+        return 1;
+    }
+    return 0;
+}
+
+int main() {
+    int x1;
+    int y1;
+    int x2;
+    int y2;
+    int x3;
+    int y3;
+    int x1f;
+    int y1f;
+    int x2f;
+    int y2f;
+    int x3f;
+    int y3f;
+    int tol;
+    int n;
+    int chosen_n;
+    int cosv;
+    int sinv;
+    int vx;
+    int vy;
+    int nx;
+    int ny;
+    int k;
+    int found2;
+    int found3;
+    int dx;
+    int dy;
+    int side2;
+    int side;
+    int perim;
+
+    x1 = getint();
+    y1 = getint();
+    x2 = getint();
+    y2 = getint();
+    x3 = getint();
+    y3 = getint();
+
+    x1f = x1 * FP_SCALE;
+    y1f = y1 * FP_SCALE;
+    x2f = x2 * FP_SCALE;
+    y2f = y2 * FP_SCALE;
+    x3f = x3 * FP_SCALE;
+    y3f = y3 * FP_SCALE;
+
+    tol = 2;
+    chosen_n = 0;
+
+    for (n = 3; n <= 100; n = n + 1) {
+        cosv = COS_STEP[n];
+        sinv = SIN_STEP[n];
+
+        found2 = 0;
+        found3 = 0;
+        vx = x1f;
+        vy = y1f;
+
+        for (k = 0; k < n; k = k + 1) {
+            if (found2 == 0 && match_point(vx, vy, x2f, y2f, tol) == 1) {
+                found2 = 1;
+            }
+            if (found3 == 0 && match_point(vx, vy, x3f, y3f, tol) == 1) {
+                found3 = 1;
+            }
+
+            nx = (vx * cosv - vy * sinv) / FP_SCALE;
+            ny = (vx * sinv + vy * cosv) / FP_SCALE;
+            vx = nx;
+            vy = ny;
+        }
+
+        if (found2 == 1 && found3 == 1) {
+            chosen_n = n;
+            break;
+        }
+    }
+
+    if (chosen_n == 0) {
+        printf("%d\n", -1);
+        return 0;
+    }
+
+    cosv = COS_STEP[chosen_n];
+    sinv = SIN_STEP[chosen_n];
+
+    nx = (x1f * cosv - y1f * sinv) / FP_SCALE;
+    ny = (x1f * sinv + y1f * cosv) / FP_SCALE;
+    dx = x1f - nx;
+    dy = y1f - ny;
+    side2 = dx * dx + dy * dy;
+    side = isqrt_int(side2);
+
+    perim = chosen_n * side;
+    printf("%d\n", perim);
+    return 0;
+}

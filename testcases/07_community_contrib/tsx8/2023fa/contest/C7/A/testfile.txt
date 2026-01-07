@@ -1,0 +1,22 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C7/A.c`.
+ *   Original prints a fixed poem line for each index; Strict SysY cannot print strings,
+ *   so this testcase prints an integer checksum per query: len(line)*100000 + sum(ASCII).
+ */
+
+const int lens[15] = {0, 39, 40, 45, 45, 42, 40, 43, 48, 38, 44, 49, 43, 47, 52};
+const int sums[15] = {0, 3486, 3804, 4097, 4074, 3910, 3680, 4044, 4489, 3557, 4143, 4480, 4008, 3941, 4473};
+
+int main() {
+    int t;
+    int i;
+    t = getint();
+    for (i = 0; i < t; i = i + 1) {
+        int n;
+        int v;
+        n = getint();
+        v = lens[n] * 100000 + sums[n];
+        printf("%d\n", v);
+    }
+    return 0;
+}

@@ -1,0 +1,65 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E1/J.c`.
+ *   Builds a 4D mapping table over Z_5, stored as four parallel 1D arrays.
+ *   Input: i, j, k, l (each on its own line).
+ *   Output: a, b, c, d (each on its own line).
+ */
+
+const int DIM = 8;
+const int SIZE = 4096; // 8^4
+
+int xa[4096];
+int xb[4096];
+int xc[4096];
+int xd[4096];
+
+int main() {
+    int a;
+    int b;
+    int c;
+    int d;
+    int e;
+    int f;
+    int g;
+    int h;
+    int i;
+    int j;
+    int k;
+    int l;
+    int idx;
+
+    for (a = 0; a < 5; a = a + 1) {
+        for (b = 0; b < 5; b = b + 1) {
+            for (c = 0; c < 5; c = c + 1) {
+                for (d = 0; d < 5; d = d + 1) {
+                    e = (a + c) % 5;
+                    f = (b + d) % 5;
+                    g = (a + 4 * c) % 5;
+                    h = (b + 4 * d) % 5;
+                    i = (e + f) % 5;
+                    j = (e + 4 * f) % 5;
+                    k = (g + 2 * h) % 5;
+                    l = (g + 3 * h) % 5;
+
+                    idx = ((i * DIM + j) * DIM + k) * DIM + l;
+                    xa[idx] = a;
+                    xb[idx] = b;
+                    xc[idx] = c;
+                    xd[idx] = d;
+                }
+            }
+        }
+    }
+
+    i = getint();
+    j = getint();
+    k = getint();
+    l = getint();
+
+    idx = ((i * DIM + j) * DIM + k) * DIM + l;
+    printf("%d\n", xa[idx]);
+    printf("%d\n", xb[idx]);
+    printf("%d\n", xc[idx]);
+    printf("%d\n", xd[idx]);
+    return 0;
+}

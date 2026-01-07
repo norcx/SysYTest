@@ -1,0 +1,52 @@
+/* Description:
+ *   Print all twin-prime pairs in [l, r], then print the count.
+ *
+ * Input (1 integer per line):
+ *   l
+ *   r
+ *
+ * Output:
+ *   Each twin-prime pair as "p q\n", then the total count (no trailing newline).
+ */
+
+int prime[2010];
+
+int is_prime(int x) {
+    int a;
+    if (x < 2) return 0;
+    for (a = 2; a * a <= x; a = a + 1) {
+        if (x % a == 0) return 0;
+    }
+    return 1;
+}
+
+int main() {
+    int l;
+    int r;
+    int i;
+    int p;
+    int cnt;
+
+    l = getint();
+    r = getint();
+
+    p = 0;
+    cnt = 0;
+
+    for (i = l; i <= r; i = i + 1) {
+        if (is_prime(i)) {
+            p = p + 1;
+            prime[p] = i;
+        }
+    }
+
+    for (i = 2; i <= p; i = i + 1) {
+        if (prime[i] - prime[i - 1] == 2) {
+            printf("%d %d\n", prime[i - 1], prime[i]);
+            cnt = cnt + 1;
+        }
+    }
+
+    printf("%d", cnt);
+    return 0;
+}

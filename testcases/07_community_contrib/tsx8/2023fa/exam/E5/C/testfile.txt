@@ -1,0 +1,103 @@
+/* Description:
+ *   Strict SysY integer-only refactor of a numeric routine:
+ *   find y such that y * exp(y) ~= x (Lambert W), via bisection.
+ *
+ *   Input:  x_scaled = round(x * 1000)   (one integer)
+ *   Output: y_scaled ~= floor(W(x) * 1000) (one integer)
+ */
+
+const int SCALE = 1000;
+
+int exp_frac(int frac_scaled) {
+    int sum;
+    int term;
+    int n;
+
+    sum = SCALE;
+    term = SCALE;
+
+    for (n = 1; n <= 10; n = n + 1) {
+        term = (term * frac_scaled + SCALE / 2) / SCALE;
+        term = term / n;
+        sum = sum + term;
+    }
+
+    return sum;
+}
+
+int exp_fixed_nonneg(int x_scaled) {
+    int k;
+    int frac;
+    int exp_k;
+    int exp_f;
+    int res;
+
+    if (x_scaled == 0) {
+        return SCALE;
+    }
+
+    k = x_scaled / SCALE;
+    frac = x_scaled - k * SCALE;
+
+    exp_k = SCALE;
+    if (k == 1) {
+        exp_k = 2718;
+    } else {
+        if (k == 2) {
+            exp_k = 7389;
+        }
+    }
+
+    exp_f = exp_frac(frac);
+    res = (exp_k * exp_f + SCALE / 2) / SCALE;
+    return res;
+}
+
+int exp_fixed(int x_scaled) {
+    int pos;
+    if (x_scaled < 0) {
+        pos = exp_fixed_nonneg(0 - x_scaled);
+        return (SCALE * SCALE + pos / 2) / pos;
+    }
+    return exp_fixed_nonneg(x_scaled);
+}
+
+int f_scaled(int y_scaled) {
+    int e;
+    int prod;
+    int res;
+
+    e = exp_fixed(y_scaled);
+    prod = y_scaled * e;
+    if (prod >= 0) {
+        res = (prod + SCALE / 2) / SCALE;
+    } else {
+        res = 0 - ((0 - prod + SCALE / 2) / SCALE);
+    }
+    return res;
+}
+
+int main() {
+    int x_scaled;
+    int l;
+    int r;
+    int mid;
+    int i;
+
+    x_scaled = getint();
+
+    l = 0 - SCALE;
+    r = 2 * SCALE;
+
+    for (i = 0; i < 25; i = i + 1) {
+        mid = (l + r) / 2;
+        if (f_scaled(mid) > x_scaled) {
+            r = mid;
+        } else {
+            l = mid;
+        }
+    }
+
+    printf("%d\n", l);
+    return 0;
+}

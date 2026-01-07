@@ -1,0 +1,33 @@
+/* Description:
+ *   Generated from `codes/2023fa/exam/E1/H.c`.
+ *   Input: n, then n pairs (a, b).
+ *   Output: 1 if (a,b) matches the original switch-case rules, else 0.
+ */
+
+int main() {
+    int n;
+    int i;
+    int a;
+    int b;
+    int flag;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        a = getint();
+        b = getint();
+        flag = 0;
+
+        if (a == 0) {
+            if (b >= 6 && b <= 18) flag = 1;
+        } else if (a == 1 || a == 4) {
+            if (b >= 4 && b <= 12) flag = 1;
+        } else if (a == 2 || a == 5 || a == 8) {
+            if (b == 2 || b == 3 || b == 5 || b == 6) flag = 1;
+        } else if (a == 3 || a == 6 || a == 9 || a == 12) {
+            if (b == 0) flag = 1;
+        }
+
+        printf("%d\n", flag);
+    }
+    return 0;
+}

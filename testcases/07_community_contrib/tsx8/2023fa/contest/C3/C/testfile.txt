@@ -1,0 +1,24 @@
+/*
+  Derived from `codes/2023fa/contest/C3/C.c`.
+  Task: swap the high/low 16-bit halves of each input integer.
+  Refactor notes: no bitwise/unsigned in SysY; use arithmetic with base 65536.
+*/
+
+int main() {
+    const int BASE = 65536;
+    int n;
+    int i;
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        int u;
+        int high;
+        int low;
+        int out;
+        u = getint();
+        high = u / BASE;
+        low = u - high * BASE;
+        out = low * BASE + high;
+        printf("%d\n", out);
+    }
+    return 0;
+}

@@ -1,0 +1,24 @@
+/*
+ * Description:
+ *   Converted from `codes/2023fa/contest/C1/E.c`.
+ *   Reads `n` pairs `(a, b)` and prints either an error message when `a == 0`,
+ *   or `b mod a`.
+ */
+
+int main() {
+    int n;
+    int i;
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        int a;
+        int b;
+        a = getint();
+        b = getint();
+        if (a == 0) {
+            printf("Wait. That's illegal.\n");
+        } else {
+            printf("%d mod %d = %d\n", b, a, b % a);
+        }
+    }
+    return 0;
+}

@@ -1,0 +1,87 @@
+/* Description:
+ *   Builds a printable-ASCII substitution cipher from a key sequence,
+ *   then encrypts a message (all as integer ASCII codes).
+ *
+ *   Input format (one integer per line):
+ *     K
+ *     key[0..K-1]   (ASCII codes)
+ *     M
+ *     msg[0..M-1]   (ASCII codes)
+ *
+ *   Output:
+ *     M lines, each the encrypted ASCII code.
+ */
+
+int keyLine[128];
+int keyPerm[128];
+int vis[128];
+int f[128];
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int m;
+    int cnt;
+    int op;
+    int c;
+
+    k = getint();
+    i = 0;
+    for (; i < k; i = i + 1) {
+        keyLine[i] = getint();
+    }
+
+    j = 0;
+    i = 0;
+    for (; i < k; i = i + 1) {
+        c = keyLine[i];
+        if (c >= 32 && c <= 126) {
+            if (vis[c] == 0) {
+                keyPerm[j] = c;
+                j = j + 1;
+                vis[c] = 1;
+            }
+        }
+    }
+
+    i = 32;
+    for (; i <= 126; i = i + 1) {
+        if (vis[i] == 0) {
+            keyPerm[j] = i;
+            j = j + 1;
+        }
+        vis[i] = 0;
+    }
+
+    cnt = 95;
+    i = 0;
+    for (; cnt > 1; cnt = cnt - 1) {
+        op = keyPerm[i];
+        vis[keyPerm[i]] = 1;
+
+        j = i + 1;
+        for (;;) {
+            if (j >= 95) j = 0;
+            if (vis[keyPerm[j]] == 0) op = op - 1;
+            if (op < 1) break;
+            j = j + 1;
+        }
+
+        f[keyPerm[i]] = keyPerm[j];
+        i = j;
+    }
+    f[keyPerm[i]] = keyPerm[0];
+
+    m = getint();
+    i = 0;
+    for (; i < m; i = i + 1) {
+        c = getint();
+        if (c >= 32 && c <= 126) {
+            printf("%d\n", f[c]);
+        } else {
+            printf("%d\n", c);
+        }
+    }
+    return 0;
+}

@@ -1,0 +1,88 @@
+/* Description:
+ *   Student-project allocation by priority (r) and preference rounds.
+ *   Input format (all integers, one per line):
+ *     n, m
+ *     a[1..m]  (quota per project)
+ *     For each student i=0..n-1:
+ *       id, r, ord[1..m]  (preference list)
+ *   Output:
+ *     For students sorted by ascending r, print id then assigned project (0 if none),
+ *     each as an integer on its own line.
+ */
+
+const int MAXN = 100;
+const int MAXM = 13;
+
+int ids[MAXN];
+int rnk[MAXN];
+int fin[MAXN];
+int ord[MAXN * MAXM];
+int quota[MAXM];
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int j;
+    int k;
+    int tmp;
+    int choice;
+
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= m; i = i + 1) {
+        quota[i] = getint();
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+        ids[i] = getint();
+        rnk[i] = getint();
+        fin[i] = 0;
+        for (j = 1; j <= m; j = j + 1) {
+            ord[i * MAXM + j] = getint();
+        }
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+        for (j = i + 1; j < n; j = j + 1) {
+            if (rnk[i] > rnk[j]) {
+                tmp = rnk[i];
+                rnk[i] = rnk[j];
+                rnk[j] = tmp;
+
+                tmp = ids[i];
+                ids[i] = ids[j];
+                ids[j] = tmp;
+
+                tmp = fin[i];
+                fin[i] = fin[j];
+                fin[j] = tmp;
+
+                for (k = 1; k <= m; k = k + 1) {
+                    tmp = ord[i * MAXM + k];
+                    ord[i * MAXM + k] = ord[j * MAXM + k];
+                    ord[j * MAXM + k] = tmp;
+                }
+            }
+        }
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        for (j = 0; j < n; j = j + 1) {
+            if (fin[j] == 0) {
+                choice = ord[j * MAXM + i];
+                if (quota[choice] > 0) {
+                    fin[j] = choice;
+                    quota[choice] = quota[choice] - 1;
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d\n", ids[i]);
+        printf("%d\n", fin[i]);
+    }
+    return 0;
+}

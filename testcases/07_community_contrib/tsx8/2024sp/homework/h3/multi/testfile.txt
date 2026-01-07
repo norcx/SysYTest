@@ -1,0 +1,86 @@
+/* Description:
+ *   Multiply two polynomials given as (coefficient, degree) terms.
+ *   Input format (one integer per line):
+ *     n1
+ *     co1_0
+ *     deg1_0
+ *     ...
+ *     co1_{n1-1}
+ *     deg1_{n1-1}
+ *     n2
+ *     co2_0
+ *     deg2_0
+ *     ...
+ *     co2_{n2-1}
+ *     deg2_{n2-1}
+ *   Output:
+ *     Print terms as "co deg " from highest degree to lowest degree.
+ */
+
+const int MAX_T = 20;
+const int MAX_R = 400;
+
+int n1;
+int n2;
+int co1[MAX_T];
+int deg1[MAX_T];
+int co2[MAX_T];
+int deg2[MAX_T];
+
+int lenR;
+int coR[MAX_R];
+int degR[MAX_R];
+
+void insert_term(int co, int deg) {
+    int pos;
+    int i;
+    pos = 0;
+    for (pos = 0; pos < lenR; pos = pos + 1) {
+        if (degR[pos] >= deg) {
+            break;
+        }
+    }
+    if (pos < lenR && degR[pos] == deg) {
+        coR[pos] = coR[pos] + co;
+    } else {
+        for (i = lenR; i > pos; i = i - 1) {
+            degR[i] = degR[i - 1];
+            coR[i] = coR[i - 1];
+        }
+        degR[pos] = deg;
+        coR[pos] = co;
+        lenR = lenR + 1;
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int j;
+    int co;
+    int deg;
+    n1 = getint();
+    for (i = 0; i < n1; i = i + 1) {
+        co1[i] = getint();
+        deg1[i] = getint();
+    }
+    n2 = getint();
+    for (i = 0; i < n2; i = i + 1) {
+        co2[i] = getint();
+        deg2[i] = getint();
+    }
+
+    lenR = 0;
+    for (i = 0; i < n1; i = i + 1) {
+        for (j = 0; j < n2; j = j + 1) {
+            co = co1[i] * co2[j];
+            deg = deg1[i] + deg2[j];
+            insert_term(co, deg);
+        }
+    }
+
+    for (i = lenR; i > 0; i = i - 1) {
+        printf("%d %d ", coR[i - 1], degR[i - 1]);
+    }
+    return 0;
+}

@@ -1,0 +1,33 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C1/F.c`.
+ *   Input: n followed by n integers (one per line).
+ *   Output: average of non-zero numbers; if none, print "Oh!No!".
+ */
+
+int main() {
+    int n;
+    int cnt;
+    int res;
+    int x;
+    int i;
+
+    n = getint();
+    cnt = 0;
+    res = 0;
+
+    for (i = 0; i < n; i = i + 1) {
+        x = getint();
+        if (x != 0) {
+            cnt = cnt + 1;
+            res = res + x;
+        }
+    }
+
+    if (cnt == 0) {
+        printf("Oh!No!\n");
+    } else {
+        printf("%d\n", res / cnt);
+    }
+
+    return 0;
+}

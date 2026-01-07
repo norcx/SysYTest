@@ -1,0 +1,12 @@
+int 0
+unsigned int 0
+long long 0
+unsigned long long 0
+int 15
+unsigned int 15
+long long 15
+unsigned long long 15
+int 8
+unsigned int 8
+int 2147483647
+unsigned int 2147483647

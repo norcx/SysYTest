@@ -1,0 +1,50 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C3/D.c`.
+ *
+ *   Input format (Strict SysY, 1 int per line):
+ *     n
+ *     For each case:
+ *       d0..d16  (17 digits, each 0..9)
+ *       last     (0..9, or 10 meaning 'X')
+ *
+ *   Logic: compute weighted checksum and validate the last digit.
+ */
+
+int opt[17] = {7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2};
+int res[11] = {1, 0, -1, 9, 8, 7, 6, 5, 4, 3, 2};
+
+int main() {
+    int n;
+    int i;
+    int chk;
+    int ret;
+    int last;
+    int d[17];
+
+    n = getint();
+    for (; n > 0; n = n - 1) {
+        chk = 0;
+
+        for (i = 0; i < 17; i = i + 1) {
+            d[i] = getint();
+            chk = chk + d[i] * opt[i];
+        }
+        last = getint();
+
+        ret = chk % 11;
+        if (ret == 2) {
+            if (last == 10) {
+                printf("YES\n");
+            } else {
+                printf("NO\n");
+            }
+        } else {
+            if (last == res[ret]) {
+                printf("YES\n");
+            } else {
+                printf("NO\n");
+            }
+        }
+    }
+    return 0;
+}

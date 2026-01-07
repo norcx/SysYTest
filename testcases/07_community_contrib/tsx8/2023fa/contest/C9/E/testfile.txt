@@ -1,0 +1,39 @@
+/* Description:
+ *   Derived from codes/2023fa/contest/C9/E.c
+ *   Computes digit-wise base-4 addition (no carry) over n integers.
+ */
+
+int add_base4_nocarry(int a, int b) {
+    int digits[64];
+    int top = 0;
+    int res = 0;
+    int i;
+
+    for (; a != 0 || b != 0; top = top + 1) {
+        int x = a % 4;
+        int y = b % 4;
+        digits[top] = (x + y) % 4;
+        a = a / 4;
+        b = b / 4;
+    }
+
+    for (i = top - 1; i >= 0; i = i - 1) {
+        res = res * 4 + digits[i];
+    }
+    return res;
+}
+
+int main() {
+    int n = getint();
+    int ans = getint();
+    int i;
+    int x;
+
+    for (i = 1; i < n; i = i + 1) {
+        x = getint();
+        ans = add_base4_nocarry(ans, x);
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

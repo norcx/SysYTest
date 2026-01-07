@@ -1,0 +1,102 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C5/D.c`.
+ *   Original program computed 5 floating-point values:
+ *     sqrt(|a^2 - b^2|) / max(a, b)
+ *   and printed them with 2 decimals.
+ *
+ *   Strict SysY has only `int`, so this testcase prints fixed-point values:
+ *     value_scaled = round(value * 100)
+ *   and formats them as `x.yy`.
+ */
+
+int abs_int(int x) {
+    if (x < 0) { return 0 - x; }
+    return x;
+}
+
+int sq_int(int x) {
+    int y = abs_int(x);
+    return y * y;
+}
+
+int isqrt_int(int n) {
+    int lo = 0;
+    int hi = 46340;
+    int ans = 0;
+    int iter;
+    for (iter = 0; iter < 32 && lo <= hi; iter = iter + 1) {
+        int mid = (lo + hi) / 2;
+        int sq = mid * mid;
+        if (sq <= n) {
+            ans = mid;
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return ans;
+}
+
+int e_scaled_100(int a, int b) {
+    int diff;
+    int denom;
+    if (a > b) {
+        diff = sq_int(a) - sq_int(b);
+        denom = a;
+    } else {
+        diff = sq_int(b) - sq_int(a);
+        denom = b;
+    }
+
+    int denom_abs = abs_int(denom);
+    if (denom_abs == 0) { return 0; }
+
+    int sqrt_diff = isqrt_int(diff);
+    int num = sqrt_diff * 100;
+    int scaled_abs = (num + denom_abs / 2) / denom_abs;
+    if (denom < 0) { return 0 - scaled_abs; }
+    return scaled_abs;
+}
+
+void print_fixed2(int scaled) {
+    int sign = 0;
+    if (scaled < 0) {
+        sign = 1;
+        scaled = 0 - scaled;
+    }
+
+    int int_part = scaled / 100;
+    int frac = scaled - int_part * 100;
+
+    if (sign) { printf("-"); }
+    printf("%d", int_part);
+    printf(".");
+    if (frac < 10) { printf("0"); }
+    printf("%d", frac);
+}
+
+int main() {
+    int a[8];
+    int i;
+    for (i = 0; i < 8; i = i + 1) {
+        a[i] = getint();
+    }
+
+    int v0 = e_scaled_100(a[0], a[4]);
+    int v1 = e_scaled_100(a[2], a[0]);
+    int v2 = e_scaled_100(a[6], a[5]);
+    int v3 = e_scaled_100(a[1], a[3]);
+    int v4 = e_scaled_100(a[7], a[2]);
+
+    print_fixed2(v0);
+    printf(" ");
+    print_fixed2(v1);
+    printf(" ");
+    print_fixed2(v2);
+    printf(" ");
+    print_fixed2(v3);
+    printf(" ");
+    print_fixed2(v4);
+    printf("\n");
+    return 0;
+}

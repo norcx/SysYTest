@@ -1,0 +1,214 @@
+/* Description:
+ *   Edit-distance based similarity clustering over multiple "code strings".
+ *   Input encoding (newline-separated integers only):
+ *     cnt
+ *     For each i in [0,cnt):
+ *       id_i
+ *       len_i
+ *       len_i integers: ASCII codes of the string
+ *
+ *   Output:
+ *     For each unvisited i with any similar j, print:
+ *       id_i id_j1 id_j2 ...\n
+ */
+
+const int MAX_COUNT = 10;
+const int MAX_LEN = 300;
+const int ASCII_MAX = 128;
+const int INF = 1000000000;
+
+int prog[MAX_COUNT * MAX_LEN];
+int lengthArr[MAX_COUNT];
+int idArr[MAX_COUNT];
+int freqArr[MAX_COUNT * ASCII_MAX];
+int visited[MAX_COUNT];
+int simArr[MAX_COUNT * MAX_COUNT];
+
+int f1[MAX_LEN + 1];
+int f2[MAX_LEN + 1];
+
+int max2(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+int min2(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+int abs2(int x) {
+    if (x >= 0) return x;
+    return 0 - x;
+}
+
+int bucket(int i, int j) {
+    int k;
+    int sum;
+    int diff;
+    sum = 0;
+    for (k = 0; k < ASCII_MAX; k = k + 1) {
+        diff = freqArr[i * ASCII_MAX + k] - freqArr[j * ASCII_MAX + k];
+        if (diff < 0) diff = 0 - diff;
+        sum = sum + diff;
+    }
+    return sum;
+}
+
+int dp(int baseA, int baseB, int l1, int l2, int ed) {
+    int baseS1;
+    int baseS2;
+    int n;
+    int m;
+    int i;
+    int j;
+    int c;
+    int cost;
+    int del;
+    int ins;
+    int sub;
+    int v;
+
+    if (l1 == 0) if (l2 <= ed) return 1; else return 0;
+    if (l2 == 0) if (l1 <= ed) return 1; else return 0;
+
+    baseS1 = baseB;
+    baseS2 = baseA;
+    n = l2;
+    m = l1;
+    if (l2 < l1) {
+        baseS1 = baseA;
+        baseS2 = baseB;
+        n = l1;
+        m = l2;
+    }
+
+    for (i = 0; i <= n; i = i + 1) f1[i] = i;
+
+    for (j = 1; j <= m; j = j + 1) {
+        c = prog[baseS2 + (j - 1)];
+        f2[0] = j;
+        for (i = 1; i <= n; i = i + 1) {
+            cost = 0;
+            if (prog[baseS1 + (i - 1)] != c) cost = 1;
+            del = f1[i] + 1;
+            ins = f2[i - 1] + 1;
+            sub = f1[i - 1] + cost;
+            v = min2(del, ins);
+            v = min2(v, sub);
+            f2[i] = v;
+        }
+        for (i = 0; i <= n; i = i + 1) f1[i] = f2[i];
+    }
+    if (f1[n] <= ed) return 1;
+    return 0;
+}
+
+int main() {
+    int cnt;
+    int i;
+    int j;
+    int k;
+    int len;
+    int code;
+    int baseI;
+    int baseJ;
+    int ed1;
+    int ed2;
+    int ed;
+    int th;
+    int st;
+    int e1;
+    int e2;
+    int dummy;
+    int flag;
+
+    cnt = getint();
+    if (cnt > MAX_COUNT) cnt = MAX_COUNT;
+
+    for (i = 0; i < cnt; i = i + 1) {
+        idArr[i] = getint();
+        len = getint();
+        if (len < 0) len = 0;
+        if (len > MAX_LEN) len = MAX_LEN;
+        lengthArr[i] = len;
+        baseI = i * MAX_LEN;
+
+        for (k = 0; k < ASCII_MAX; k = k + 1) freqArr[i * ASCII_MAX + k] = 0;
+
+        for (k = 0; k < len; k = k + 1) {
+            code = getint();
+            if (code < 0) code = 0;
+            if (code >= ASCII_MAX) code = code % ASCII_MAX;
+            prog[baseI + k] = code;
+            freqArr[i * ASCII_MAX + code] = freqArr[i * ASCII_MAX + code] + 1;
+        }
+    }
+
+    for (i = 0; i < cnt; i = i + 1) {
+        visited[i] = 0;
+        for (j = 0; j < cnt; j = j + 1) simArr[i * MAX_COUNT + j] = 0;
+    }
+
+    for (i = 0; i < cnt; i = i + 1) {
+        baseI = i * MAX_LEN;
+        ed1 = lengthArr[i];
+        for (j = 0; j < i; j = j + 1) {
+            baseJ = j * MAX_LEN;
+            ed2 = lengthArr[j];
+            ed = max2(ed1, ed2);
+            th = ed / 20;
+            if (abs2(ed1 - ed2) > th) {
+                /* not similar */
+            } else if (bucket(i, j) > th) {
+                /* not similar */
+            } else {
+                st = 0;
+                for (st = 0; st < ed1 && st < ed2; st = st + 1) {
+                    if (prog[baseI + st] != prog[baseJ + st]) break;
+                }
+                e1 = ed1;
+                e2 = ed2;
+                for (dummy = 0; st < e1 && st < e2; dummy = dummy + 1) {
+                    if (prog[baseI + (e1 - 1)] == prog[baseJ + (e2 - 1)]) {
+                        e1 = e1 - 1;
+                        e2 = e2 - 1;
+                    } else {
+                        break;
+                    }
+                }
+                if (dp(baseI + st, baseJ + st, e1 - st, e2 - st, th)) {
+                    simArr[i * MAX_COUNT + j] = 1;
+                    simArr[j * MAX_COUNT + i] = 1;
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < cnt; i = i + 1) {
+        if (visited[i] != 0) {
+            /* skip */
+        } else {
+            flag = 0;
+            for (j = 0; j < cnt; j = j + 1) {
+                if (i == j) {
+                    /* skip */
+                } else if (simArr[i * MAX_COUNT + j] == 0) {
+                    /* skip */
+                } else {
+                    if (flag == 0) {
+                        flag = 1;
+                        visited[i] = 1;
+                        printf("%d", idArr[i]);
+                    }
+                    visited[j] = 1;
+                    printf(" ");
+                    printf("%d", idArr[j]);
+                }
+            }
+            if (flag != 0) printf("\n");
+        }
+    }
+
+    return 0;
+}

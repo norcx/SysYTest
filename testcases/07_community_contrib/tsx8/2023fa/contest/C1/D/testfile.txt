@@ -1,0 +1,21 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C1/D.c.
+ *   Reads 6 integers a,b,c,x,y,z and prints a*x + b*y + c*z.
+ */
+
+int main() {
+    int a;
+    int b;
+    int c;
+    int x;
+    int y;
+    int z;
+    a = getint();
+    b = getint();
+    c = getint();
+    x = getint();
+    y = getint();
+    z = getint();
+    printf("%d\n", a * x + b * y + c * z);
+    return 0;
+}

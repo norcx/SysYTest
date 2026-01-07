@@ -1,0 +1,48 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C3/B.c.
+ *   Simulates setting/clearing the k-th bit of a non-negative integer,
+ *   without using bitwise operators (Strict SysY).
+ */
+
+int pow2(int k) {
+    int i;
+    int res;
+    res = 1;
+    for (i = 0; i < k; i = i + 1) {
+        res = res * 2;
+    }
+    return res;
+}
+
+int main() {
+    int n;
+    int t;
+    int k;
+    int op;
+    int p;
+    int bit;
+    int i;
+
+    n = getint();
+    t = getint();
+    for (i = 0; i < t; i = i + 1) {
+        k = getint();
+        op = getint();
+
+        p = pow2(k);
+        bit = (n / p) % 2;
+        if (op != 0) {
+            if (bit == 0) {
+                n = n + p;
+            }
+        } else {
+            if (bit != 0) {
+                n = n - p;
+            }
+        }
+
+        printf("%d\n", n);
+    }
+    printf("%d", n);
+    return 0;
+}

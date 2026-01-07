@@ -1,0 +1,66 @@
+/* Description:
+ * Parse a chemical formula consisting of elements {C,H,O,N} and optional
+ * decimal counts, then output the total molecular mass.
+ *
+ * Strict SysY input format (newline-separated integers only):
+ *   L
+ *   c0
+ *   c1
+ *   ...
+ *   c(L-1)
+ * Where each ci is the ASCII code of the i-th character in the formula.
+ */
+
+int main() {
+    const int MAXL = 256;
+    int a[256];
+    int L;
+    int len;
+    int i;
+    int sum;
+
+    L = getint();
+    if (L <= 0) {
+        printf("%d\n", 0);
+        return 0;
+    }
+
+    for (i = 0; i < L; i = i + 1) {
+        int v;
+        v = getint();
+        if (i < MAXL) a[i] = v;
+    }
+
+    len = L;
+    if (len > MAXL) len = MAXL;
+
+    sum = 0;
+    i = 0;
+    for (i = 0; i < len; ) {
+        int c;
+        int k;
+        int n;
+
+        c = a[i];
+        k = 0;
+        if (c == 67) k = 12;      /* 'C' */
+        else if (c == 72) k = 1;  /* 'H' */
+        else if (c == 79) k = 16; /* 'O' */
+        else if (c == 78) k = 14; /* 'N' */
+
+        if (k == 0) {
+            i = i + 1;
+        } else {
+            i = i + 1;
+            n = 0;
+            for (; i < len && a[i] >= 48 && a[i] <= 57; i = i + 1) {
+                n = n * 10 + (a[i] - 48);
+            }
+            if (n == 0) n = 1;
+            sum = sum + n * k;
+        }
+    }
+
+    printf("%d\n", sum);
+    return 0;
+}

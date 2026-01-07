@@ -1,0 +1,31 @@
+/* Description:
+ *   Converted from codes/2023fa/exam/E1/C.c
+ *   Input: n, then n integers, then t (one integer per line).
+ *   Output depends on the sum of the n integers.
+ */
+
+int main() {
+    int n;
+    int a;
+    int t;
+    int i;
+    int x;
+
+    a = 0;
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        x = getint();
+        a = a + x;
+    }
+    t = getint();
+
+    if (a <= 0) {
+        printf("0\nMoca finish 0 requirement!");
+    } else if (a >= t) {
+        printf("%d\nMoca finish all requirements!", t);
+    } else {
+        printf("%d", a);
+    }
+
+    return 0;
+}

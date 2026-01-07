@@ -1,0 +1,38 @@
+/* Description:
+ *   Converted from: codes/2023fa/contest/C4/B.c
+ *
+ *   Original behavior:
+ *     Reads a stream of '0'/'1' characters (ignoring newlines) until EOF.
+ *     Outputs:
+ *       '0' -> '0'
+ *       '1' -> '+1', '-1' alternating (starting with '+1')
+ *     Each token is followed by a space.
+ *
+ *   Strict SysY adaptation:
+ *     Input uses integers only: first line N, then N lines of bits (0/1).
+ *     Output maps '+1' -> 1 and '-1' -> -1, each followed by a space.
+ */
+
+int main() {
+    int n;
+    int i;
+    int bit;
+    int flag;
+    n = getint();
+    flag = 1;
+    for (i = 0; i < n; i = i + 1) {
+        bit = getint();
+        if (bit == 0) {
+            printf("%d ", 0);
+        } else {
+            if (flag == 1) {
+                printf("%d ", 1);
+                flag = 0;
+            } else {
+                printf("%d ", -1);
+                flag = 1;
+            }
+        }
+    }
+    return 0;
+}

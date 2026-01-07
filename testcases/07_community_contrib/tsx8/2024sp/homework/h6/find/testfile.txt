@@ -1,0 +1,191 @@
+/* Description:
+ *   Refactor of a dictionary word-lookup program into Strict SysY:
+ *   - Words are encoded as integers in base-27 (a=1..z=26), fixed length 6.
+ *   - The dictionary is provided as sorted encoded integers via input.
+ *   - Supports 4 lookup modes (linear, binary, first-letter binary, hash-chain).
+ *
+ * Input format (one integer per line):
+ *   N
+ *   dict[0..N-1] (sorted)
+ *   Q
+ *   (s, op) repeated Q times
+ */
+
+int pow27[6] = {14348907, 531441, 19683, 729, 27, 1};
+
+int dic[32];
+int id_start[26];
+int id_len[26];
+
+int head[17];
+int nxt[32];
+int key[32];
+
+int cmp_int(int a, int b) {
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+}
+
+int first_letter_idx(int code) {
+    int d;
+    d = code / pow27[0];
+    return d - 1;
+}
+
+int hash_code(int code) {
+    int h;
+    int i;
+    int tmp;
+    int digit;
+    h = 0;
+    tmp = code;
+    for (i = 0; i < 6; i = i + 1) {
+        digit = tmp / pow27[i];
+        tmp = tmp - digit * pow27[i];
+        h = (37 * h + digit) % 17;
+    }
+    return h;
+}
+
+void build_id(int n) {
+    int i;
+    int fl;
+    for (i = 0; i < 26; i = i + 1) {
+        id_start[i] = 0;
+        id_len[i] = 0;
+    }
+    for (i = 0; i < n; i = i + 1) {
+        fl = first_letter_idx(dic[i]);
+        if (fl >= 0 && fl < 26) {
+            if (id_len[fl] == 0) id_start[fl] = i;
+            id_len[fl] = id_len[fl] + 1;
+        }
+    }
+}
+
+void build_hash(int n) {
+    int i;
+    int b;
+    int node;
+    int k;
+    int prev;
+    int cur;
+    for (i = 0; i < 17; i = i + 1) head[i] = 0;
+    for (i = 0; i < n; i = i + 1) {
+        node = i + 1;
+        k = dic[i];
+        key[node] = k;
+        nxt[node] = 0;
+        b = hash_code(k);
+        if (head[b] == 0 || cmp_int(key[head[b]], k) > 0) {
+            nxt[node] = head[b];
+            head[b] = node;
+        } else {
+            prev = head[b];
+            cur = nxt[prev];
+            for (; cur != 0 && cmp_int(key[cur], k) <= 0;) {
+                prev = cur;
+                cur = nxt[cur];
+            }
+            nxt[node] = cur;
+            nxt[prev] = node;
+        }
+    }
+}
+
+int main() {
+    int n;
+    int q;
+    int i;
+    int t;
+    int s;
+    int op;
+    int cnt;
+    int found;
+    int low;
+    int high;
+    int mid;
+    int fl;
+    int b;
+    int cur;
+    int c;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) dic[i] = getint();
+    build_id(n);
+    build_hash(n);
+
+    q = getint();
+    for (t = 0; t < q; t = t + 1) {
+        s = getint();
+        op = getint();
+
+        if (op == 1) {
+            cnt = 0;
+            found = 0;
+            for (i = 0; i < n; i = i + 1) {
+                c = cmp_int(dic[i], s);
+                cnt = cnt + 1;
+                if (c >= 0) {
+                    if (c == 0) found = 1;
+                    break;
+                }
+            }
+            printf("%d %d\n", found, cnt);
+        } else if (op == 2) {
+            low = 0;
+            high = n - 1;
+            cnt = 0;
+            found = 0;
+            for (; low <= high;) {
+                mid = (low + high) / 2;
+                c = cmp_int(dic[mid], s);
+                cnt = cnt + 1;
+                if (c == 0) {
+                    found = 1;
+                    break;
+                }
+                if (c < 0) low = mid + 1;
+                else high = mid - 1;
+            }
+            printf("%d %d\n", found, cnt);
+        } else if (op == 3) {
+            fl = first_letter_idx(s);
+            low = id_start[fl];
+            high = low + id_len[fl] - 1;
+            if (fl == 23) high = low - 1; /* keep the original 'x' special-case */
+            cnt = 0;
+            found = 0;
+            for (; low <= high;) {
+                mid = (low + high) / 2;
+                c = cmp_int(dic[mid], s);
+                cnt = cnt + 1;
+                if (c == 0) {
+                    found = 1;
+                    break;
+                }
+                if (c < 0) low = mid + 1;
+                else high = mid - 1;
+            }
+            printf("%d %d\n", found, cnt);
+        } else {
+            b = hash_code(s);
+            cur = head[b];
+            cnt = 0;
+            found = 0;
+            for (; cur != 0;) {
+                c = cmp_int(key[cur], s);
+                cnt = cnt + 1;
+                if (c >= 0) {
+                    if (c == 0) found = 1;
+                    break;
+                }
+                cur = nxt[cur];
+            }
+            printf("%d %d\n", found, cnt);
+        }
+    }
+
+    return 0;
+}

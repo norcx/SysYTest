@@ -1,0 +1,93 @@
+/*
+  Partition an array into m groups as in the original C code, then answer T queries.
+  Strict SysY refactor: no pointers/structs/malloc/bsearch, and only for-loops.
+*/
+
+const int MAXN = 128;
+const int MAXM = 128;
+const int MAXLIST = 256;
+
+int a[MAXN];
+int groupHead[MAXM];
+int groupNumber[MAXM];
+int groupStart[MAXM];
+int groupLen[MAXM];
+int flatList[MAXLIST];
+
+int main() {
+    int n;
+    int m;
+    int T;
+    int i;
+    int j;
+    int p;
+    int listPos;
+    int t;
+    int key;
+    int target;
+    int found;
+    int start;
+    int len;
+    int k;
+    int idx;
+
+    n = getint();
+    m = getint();
+    T = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+
+    i = 1;
+    listPos = 0;
+    for (p = 0; p < m; p = p + 1) {
+        groupHead[p] = a[i];
+        groupNumber[p] = i;
+
+        j = i;
+        for (; j <= n && a[j] <= a[i]; j = j + 1) {
+        }
+
+        groupStart[p] = listPos;
+        groupLen[p] = 0;
+        for (; i < j && i <= n; i = i + 1) {
+            flatList[listPos] = a[i];
+            listPos = listPos + 1;
+            groupLen[p] = groupLen[p] + 1;
+        }
+    }
+
+    for (t = 0; t < T; t = t + 1) {
+        key = getint();
+
+        target = -1;
+        for (p = 0; p < m; p = p + 1) {
+            if (target < 0 && groupHead[p] >= key) {
+                target = p;
+            }
+        }
+
+        if (target < 0) {
+            printf("0\n");
+        } else {
+            found = 0;
+            start = groupStart[target];
+            len = groupLen[target];
+            idx = 0;
+            for (k = 0; k < len; k = k + 1) {
+                if (found == 0 && flatList[start + k] == key) {
+                    found = 1;
+                    idx = k;
+                }
+            }
+            if (found == 0) {
+                printf("0\n");
+            } else {
+                printf("%d\n", groupNumber[target] + idx);
+            }
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,37 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E2/E.c`.
+ *   For each test case, read 6 integers (td) and compute a "failure" deficit:
+ *     - td < 48 increases deficit by (48 - td)
+ *     - once deficit exists, td > 48 decreases it by (td - 48), clamped to 0
+ *   Print "Success" if deficit ends at 0, otherwise "Failure X".
+ */
+
+int main() {
+    int n;
+    int case_idx;
+
+    n = getint();
+    for (case_idx = 0; case_idx < n; case_idx = case_idx + 1) {
+        int i;
+        int td;
+        int failure;
+
+        failure = 0;
+        for (i = 1; i <= 6; i = i + 1) {
+            td = getint();
+            if (failure != 0 && td > 48 || td < 48) {
+                failure = failure + 48 - td;
+            }
+            if (failure < 0) {
+                failure = 0;
+            }
+        }
+
+        if (failure != 0) {
+            printf("Failure %d\n", failure);
+        } else {
+            printf("Success\n");
+        }
+    }
+    return 0;
+}

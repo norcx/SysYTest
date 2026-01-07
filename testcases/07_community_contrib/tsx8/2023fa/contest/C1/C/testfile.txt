@@ -1,0 +1,22 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C1/C.c to Strict SysY.
+ *   Reads a, b; prints (b - (a - b)) and then "Yes" if >= 4 else "No".
+ */
+
+int main() {
+    int a;
+    int b;
+    int res;
+
+    a = getint();
+    b = getint();
+
+    res = b - (a - b);
+    printf("%d\n", res);
+    if (res >= 4) {
+        printf("Yes\n");
+    } else {
+        printf("No\n");
+    }
+    return 0;
+}

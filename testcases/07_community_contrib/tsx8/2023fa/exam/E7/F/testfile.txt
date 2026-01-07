@@ -1,0 +1,76 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E7/F.c`.
+ *
+ *   Input:
+ *     n, t
+ *     a[0..n-1] (non-decreasing)
+ *     t query keys
+ *
+ *   For each key:
+ *     if key not present => print -1
+ *     else print: (1-indexed first position) and (occurrence count)
+ */
+
+int lower_bound(int arr[], int n, int key) {
+    int l;
+    int r;
+    int mid;
+    l = 0;
+    r = n;
+    for (; l < r;) {
+        mid = (l + r) / 2;
+        if (arr[mid] < key) {
+            l = mid + 1;
+        } else {
+            r = mid;
+        }
+    }
+    return l;
+}
+
+int upper_bound(int arr[], int n, int key) {
+    int l;
+    int r;
+    int mid;
+    l = 0;
+    r = n;
+    for (; l < r;) {
+        mid = (l + r) / 2;
+        if (arr[mid] <= key) {
+            l = mid + 1;
+        } else {
+            r = mid;
+        }
+    }
+    return l;
+}
+
+int main() {
+    int a[64];
+    int n;
+    int t;
+    int i;
+    int key;
+    int p1;
+    int p2;
+
+    n = getint();
+    t = getint();
+
+    for (i = 0; i < n; i = i + 1) {
+        a[i] = getint();
+    }
+
+    for (i = 0; i < t; i = i + 1) {
+        key = getint();
+        p1 = lower_bound(a, n, key);
+        if (p1 >= n || a[p1] != key) {
+            printf("-1\n");
+        } else {
+            p2 = upper_bound(a, n, key);
+            printf("%d %d\n", p1 + 1, p2 - p1);
+        }
+    }
+
+    return 0;
+}

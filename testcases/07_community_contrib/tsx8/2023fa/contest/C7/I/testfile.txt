@@ -1,0 +1,75 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C7/I.c` to Strict SysY.
+ */
+
+const int MAXH = 20;
+const int MAXW = 20;
+const int STRIDE = 22;
+const int MAXSZ = 484;
+
+int ma[MAXSZ];
+int vis[MAXSZ];
+int h;
+int w;
+
+int idx(int r, int c) {
+    return r * STRIDE + c;
+}
+
+int dfs(int y, int x) {
+    int ans = 1;
+    int t1 = 0;
+
+    if (ma[idx(x, y - 1)] + ma[idx(x, y + 1)] + ma[idx(x + 1, y)] == 0) {
+        return x;
+    }
+
+    if (ma[idx(x, y - 1)] == 1 && vis[idx(x, y - 1)] == 0) {
+        vis[idx(x, y - 1)] = 1;
+        t1 = dfs(y - 1, x);
+        if (t1 > ans) ans = t1;
+    }
+    if (ma[idx(x, y + 1)] == 1 && vis[idx(x, y + 1)] == 0) {
+        vis[idx(x, y + 1)] = 1;
+        t1 = dfs(y + 1, x);
+        if (t1 > ans) ans = t1;
+    }
+    if (ma[idx(x + 1, y)] == 1 && vis[idx(x + 1, y)] == 0) {
+        vis[idx(x + 1, y)] = 1;
+        t1 = dfs(y, x + 1);
+        if (t1 > ans) ans = t1;
+    }
+    if (ma[idx(x - 1, y)] == 1 && vis[idx(x - 1, y)] == 0) {
+        vis[idx(x - 1, y)] = 1;
+        t1 = dfs(y, x - 1);
+        if (t1 > ans) ans = t1;
+    }
+
+    return ans;
+}
+
+int main() {
+    h = getint();
+    w = getint();
+
+    int i;
+    int j;
+    int t = 0;
+    int ans = 1;
+
+    for (i = 1; i <= h; i = i + 1) {
+        for (j = 1; j <= w; j = j + 1) {
+            ma[idx(i, j)] = getint();
+        }
+    }
+
+    for (i = 1; i <= w; i = i + 1) {
+        if (ma[idx(1, i)] == 1) {
+            t = dfs(i, 1);
+            if (t > ans) ans = t;
+        }
+    }
+
+    printf("%d", ans);
+    return 0;
+}

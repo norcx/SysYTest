@@ -1,0 +1,76 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C4/E.c` into Strict SysY.
+ *
+ *   Input (1 integer per line):
+ *     m
+ *     n
+ *     i1
+ *     x1
+ *     y1
+ *     ...
+ *     in
+ *     xn
+ *     yn
+ *
+ *   Output:
+ *     For each i = 1..m, print one integer per line:
+ *       -1 if (fga == 0 && fta == 0),
+ *       else TS% in basis points (percent * 100), truncated.
+ */
+
+const int TEAMS = 13;
+const int CATS = 4;
+
+int dat[104];
+
+int main() {
+    int m, n;
+    int k, i, x, y, j;
+    int pts, fga, fta;
+    int idx0, idx1;
+    int denom, num;
+
+    for (k = 0; k < 104; k = k + 1) {
+        dat[k] = 0;
+    }
+
+    m = getint();
+    n = getint();
+
+    for (k = 0; k < n; k = k + 1) {
+        i = getint();
+        x = getint();
+        y = getint();
+
+        idx0 = (0 * TEAMS + i) * CATS + x;
+        dat[idx0] = dat[idx0] + 1;
+        if (y != 0) {
+            idx1 = (1 * TEAMS + i) * CATS + x;
+            dat[idx1] = dat[idx1] + 1;
+        }
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        pts = 0;
+        for (j = 1; j <= 3; j = j + 1) {
+            pts = pts + dat[(1 * TEAMS + i) * CATS + j] * j;
+        }
+
+        fga = dat[(0 * TEAMS + i) * CATS + 2] + dat[(0 * TEAMS + i) * CATS + 3];
+        fta = dat[(0 * TEAMS + i) * CATS + 1];
+
+        if (fga == 0 && fta == 0) {
+            printf("%d\n", -1);
+        } else {
+            denom = 2 * (100 * fga + 44 * fta);
+            num = pts * 1000000;
+            if (denom == 0) {
+                printf("%d\n", 0);
+            } else {
+                printf("%d\n", num / denom);
+            }
+        }
+    }
+
+    return 0;
+}
