@@ -4,7 +4,7 @@
 compiler_project_dir: "../Compiler"
 
 # Mars模拟器文件名
-mars_jar: "src/Mars.jar"
+mars_jar: "tools/Mars.jar"
 
 # 工具路径配置 (留空则使用环境变量PATH中的)
 tools:
