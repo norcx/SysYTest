@@ -385,7 +385,7 @@ class TestTab(BaseTab, OutputMixin):
             messagebox.showinfo("提示", "请先选择一个测试用例")
             return
         if not case.input_file:
-            messagebox.showinfo("提示", "该用例没有 input 文件")
+            messagebox.showinfo("提示", "该用例没有 in.txt")
             return
         self._open_in_notepad(case.input_file)
     
@@ -407,7 +407,7 @@ class TestTab(BaseTab, OutputMixin):
         self.case_menu.add_command(label="用记事本打开 testfile", command=self._open_selected_testfile_in_notepad)
         case = self._get_selected_case()
         if case and case.input_file:
-            self.case_menu.add_command(label="用记事本打开 input", command=self._open_selected_input_in_notepad)
+            self.case_menu.add_command(label="用记事本打开 in.txt", command=self._open_selected_input_in_notepad)
         
         try:
             self.case_menu.tk_popup(event.x_root, event.y_root)
@@ -450,8 +450,12 @@ class TestTab(BaseTab, OutputMixin):
         all_cases = []
         for lib in libs:
             cases = TestDiscovery.discover_in_dir(lib)
+            rel = lib.relative_to(testcases_dir)
             for case in cases:
-                case.name = f"{lib.name}/{case.name}"
+                if str(rel) == ".":
+                    case.name = case.name
+                else:
+                    case.name = f"{rel}/{case.name}"
             all_cases.extend(cases)
         
         self._run_tests(all_cases, f"运行所有测试 ({len(all_cases)} 个)")

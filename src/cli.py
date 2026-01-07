@@ -80,7 +80,10 @@ def run_cli(
     for lib in libs:
         rel = lib.relative_to(testcases_dir)
         for case in TestDiscovery.discover_in_dir(lib):
-            case.name = f"{rel}/{case.name}"
+            if str(rel) == ".":
+                case.name = case.name
+            else:
+                case.name = f"{rel}/{case.name}"
             cases.append(case)
 
     if match:

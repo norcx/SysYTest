@@ -39,3 +39,4 @@ class TestCase:
     name: str
     testfile: Path
     input_file: Optional[Path]
+    expected_output_file: Optional[Path] = None

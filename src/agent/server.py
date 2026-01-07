@@ -144,14 +144,14 @@ class SysYToolServer:
     
     def _generate_input(self, content: str) -> ToolResult:
         """生成输入文件，自动解析整数并每行一个存储"""
-        self.current_input = self.work_dir / "input.txt"
+        self.current_input = self.work_dir / "in.txt"
         
         if not content.strip():
             # 空输入
             try:
                 with open(self.current_input, "w", encoding="utf-8", newline="\n") as f:
                     f.write("")
-                return ToolResult(True, "✓ 已生成 input.txt (无输入)")
+                return ToolResult(True, "✓ 已生成 in.txt (无输入)")
             except Exception as e:
                 return ToolResult(False, f"写入文件失败: {e}")
         
@@ -176,7 +176,7 @@ class SysYToolServer:
         try:
             with open(self.current_input, "w", encoding="utf-8", newline="\n") as f:
                 f.write(formatted_content)
-            return ToolResult(True, f"✓ 已生成 input.txt ({len(integers)} 个整数，每行一个)")
+            return ToolResult(True, f"✓ 已生成 in.txt ({len(integers)} 个整数，每行一个)")
         except Exception as e:
             return ToolResult(False, f"写入文件失败: {e}")
     
@@ -308,21 +308,28 @@ class SysYToolServer:
         
         lib_path = self.test_dir / "testcases" / lib_name
         lib_path.mkdir(parents=True, exist_ok=True)
+
+        case_dir = lib_path / f"testcase{test_number}"
+        case_dir.mkdir(parents=True, exist_ok=True)
         
         # 保存 testfile
-        dest_testfile = lib_path / f"testfile{test_number}.txt"
+        dest_testfile = case_dir / "testfile.txt"
         content = self.current_testfile.read_text(encoding='utf-8')
         with open(dest_testfile, "w", encoding="utf-8", newline="\n") as f:
             f.write(content)
         
         # 保存 input
         if self.current_input and self.current_input.exists():
-            dest_input = lib_path / f"input{test_number}.txt"
+            dest_input = case_dir / "in.txt"
             input_content = self.current_input.read_text(encoding='utf-8')
-            with open(dest_input, "w", encoding="utf-8", newline="\n") as f:
-                f.write(input_content)
+            if input_content.strip():
+                with open(dest_input, "w", encoding="utf-8", newline="\n") as f:
+                    f.write(input_content)
+            else:
+                if dest_input.exists():
+                    dest_input.unlink()
         
-        return ToolResult(True, f"✓ 已保存到 {lib_name}/testfile{test_number}.txt")
+        return ToolResult(True, f"✓ 已保存到 {lib_name}/testcase{test_number}/testfile.txt")
     
     def _discard_case(self, reason: str) -> ToolResult:
         """放弃当前用例"""

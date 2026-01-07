@@ -618,8 +618,19 @@ class CompilerTester:
                 return True
         return False
 
-    def test(self, testfile: Path, input_file: Optional[Path] = None, worker_id: int = 0) -> TestResult:
-        """测试单个用例 (强制使用g++对拍)"""
+    def test(
+        self,
+        testfile: Path,
+        input_file: Optional[Path] = None,
+        expected_output_file: Optional[Path] = None,
+        worker_id: int = 0,
+    ) -> TestResult:
+        """测试单个用例
+
+        期望输出策略：
+        - 若用例目录提供 `ans.txt`（expected_output_file），优先使用
+        - 否则回退到 g++ 编译运行对拍
+        """
         if not testfile.exists():
             return TestResult(TestStatus.SKIPPED, f"找不到测试文件: {testfile}")
         
@@ -657,19 +668,25 @@ class CompilerTester:
                 cycle_breakdown=cycle_breakdown,
             )
         
-        # 3. 使用g++获取期望结果
-        gcc_out, gcc_err = self._run_gcc(testfile, input_file, worker_dir)
-        if gcc_out is None:
+        # 3. 获取期望结果（优先 ans.txt）
+        expected_out: Optional[str] = None
+        expected_err: str = ""
+        if expected_output_file and expected_output_file.exists():
+            expected_out = read_file_safe(expected_output_file)
+        else:
+            expected_out, expected_err = self._run_gcc(testfile, input_file, worker_dir)
+
+        if expected_out is None:
             return TestResult(
                 TestStatus.SKIPPED,
-                f"g++运行失败: {gcc_err}",
+                f"获取期望输出失败: {expected_err}",
                 compile_time_ms=compile_time_ms,
                 cycle=cycle,
                 cycle_breakdown=cycle_breakdown,
             )
         
         # 4. 比较结果
-        if compare_outputs(mars_out, gcc_out):
+        if compare_outputs(mars_out, expected_out):
             return TestResult(
                 TestStatus.PASSED,
                 compile_time_ms=compile_time_ms,
@@ -679,7 +696,7 @@ class CompilerTester:
         else:
             return TestResult(
                 TestStatus.FAILED, "输出不匹配",
-                actual_output=mars_out, expected_output=gcc_out,
+                actual_output=mars_out, expected_output=expected_out,
                 compile_time_ms=compile_time_ms,
                 cycle=cycle,
                 cycle_breakdown=cycle_breakdown,
@@ -719,7 +736,12 @@ class CompilerTester:
         def run_test(task: TestTask) -> Tuple[TestCase, TestResult]:
             # worker_id 由线程动态分配，确保每个线程有独立工作目录
             worker_id = self._get_thread_worker_id(max_workers)
-            result = self.test(task.case.testfile, task.case.input_file, worker_id)
+            result = self.test(
+                task.case.testfile,
+                task.case.input_file,
+                task.case.expected_output_file,
+                worker_id,
+            )
             return task.case, result
         
         tasks = [TestTask(case) for case in cases]

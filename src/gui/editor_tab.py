@@ -139,7 +139,7 @@ class EditorTab(BaseTab):
         input_header.pack(fill=tk.X, pady=(0, 6))
         ttk.Label(input_header, text="📥 输入数据",
                   font=('微软雅黑', 10, 'bold')).pack(side=tk.LEFT)
-        ttk.Label(input_header, text="input.txt", style='Status.TLabel').pack(side=tk.RIGHT)
+        ttk.Label(input_header, text="in.txt", style='Status.TLabel').pack(side=tk.RIGHT)
         
         # 输入文本框
         input_container = ttk.Frame(input_frame)
@@ -281,19 +281,26 @@ class EditorTab(BaseTab):
         
         lib_path = self.test_dir / "testcases" / lib_name
         lib_path.mkdir(parents=True, exist_ok=True)
-        
-        # 保存testfile
-        testfile_path = lib_path / f"testfile{num}.txt"
+
+        case_dir = lib_path / f"testcase{num}"
+        case_dir.mkdir(parents=True, exist_ok=True)
+
+        # 保存 testfile.txt
+        testfile_path = case_dir / "testfile.txt"
         with open(testfile_path, "w", encoding="utf-8", newline="\n") as f:
             f.write(code)
-        
-        # 保存input
+
+        # 保存 in.txt（可选）
         input_data = self.input_text.get(1.0, tk.END).rstrip()
-        input_path = lib_path / f"input{num}.txt"
-        with open(input_path, "w", encoding="utf-8", newline="\n") as f:
-            f.write(input_data)
-        
-        self.editor_status_var.set(f"✓ 已保存: testfile{num}.txt")
+        input_path = case_dir / "in.txt"
+        if input_data:
+            with open(input_path, "w", encoding="utf-8", newline="\n") as f:
+                f.write(input_data)
+        else:
+            if input_path.exists():
+                input_path.unlink()
+
+        self.editor_status_var.set(f"✓ 已保存: {lib_name}/testcase{num}/testfile.txt")
         self.app.test_tab.refresh_lists()
         return True
     

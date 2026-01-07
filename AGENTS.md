@@ -1,19 +1,37 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-SysYTest is invoked through `main.py`, which boots `src/cli.py`; core logic lives under `src/`, including CLI orchestration (`cli.py`), GUI components (`gui/` + `gui.py`), compiler orchestration (`tester.py`), discovery (`discovery.py`), and shared helpers (`utils.py`, `config.py`). Assets such as `Mars.jar` ship here as well. Shared configuration sits in `config.yaml`, while case data resides in `testcases/<suite>/` with paired `testfileN.txt` plus optional `inputN.txt`. Keep AI automation and agent scripts inside `src/agent/` if you extend that flow.
+- `main.py`: entry point (CLI or Tkinter GUI).
+- `src/`: framework code — CLI (`src/cli.py`), GUI (`src/gui/`), runner (`src/tester.py`), testcase discovery (`src/discovery.py`), config (`src/config.py`), shared models/utils.
+- `config.yaml`: local tool paths, timeouts, parallelism, and GUI settings.
+- `testcases/`: testcase libraries, organized by suite folders.
+- `scripts/`: contributor utilities (e.g. batch generation helpers).
+
+Testcases are organized as nested suites; a *leaf* directory containing `testfile.txt` is treated as one case. Each case directory typically contains:
+- `testfile.txt`: SysY source
+- `in.txt`: stdin (optional)
+- `ans.txt`: expected stdout (optional; some runners may still use g++ as reference until `src/` is updated)
 
 ## Build, Test, and Development Commands
-Create a virtual environment and install the lightweight deps the GUI and HTTP agent rely on: `pip install pyyaml httpx`. Run the desktop workflow with `python main.py`. For CI or headless usage, point to your compiler tree: `python main.py --project ../Compiler`. Filter workloads via repeated `--match parser` flags, and add `--show-cycle` or `--show-time` to surface performance diagnostics. Use `python main.py --help` to confirm switches after adjusting CLI arguments.
+- Install deps (GUI + agent): `python3 -m pip install pyyaml httpx`
+- Run GUI: `python3 main.py`
+- Run headless CLI: `python3 main.py --project ../Compiler`
+- Filter cases: `python3 main.py --project ../Compiler --match loop --match recursion`
+- Performance extras: `--show-time`, `--show-cycle`
+- Optional generator: `python3 scripts/generate_sysy_cases.py --help`
+
+The runner compares your compiler’s Mars output against a g++ reference; ensure `java` and `g++` are available (configure via `config.yaml` if not on `PATH`).
 
 ## Coding Style & Naming Conventions
-All Python modules target 3.8+, follow 4-space indentation, and prefer explicit type hints and dataclasses (see `src/tester.py`). Keep module docstrings concise and place logging helpers near their call sites as in `src/cli.py`. New utilities belong under `src/utils.py` or a dedicated subpackage—avoid cluttering the repo root. Test suites use descriptive folder names (for example `testcases/loops/`) and incremental filenames (`testfile3.txt`, `input3.txt`). Keep config keys snake_case to match `config.yaml`.
+- Python: 4-space indentation, `snake_case` for functions/vars, `PascalCase` for classes; keep type hints consistent with existing modules.
+- Keep repo root minimal; add new framework code under `src/` and suite data under `testcases/`.
+- Do not commit build outputs or secrets; `.tmp/` and `agent_config.json` are intentionally gitignored.
 
 ## Testing Guidelines
-Before submitting changes, run `python main.py --project <path>` and ensure every discovered case passes; capture failure diffs via the CLI output for triage. When adding tests, mirror the `testcases/<suite>/testfileN.txt` + `inputN.txt` layout and document the suite purpose if it is not obvious. Use `--match suite_name` while iterating to avoid rerunning the full catalog. Tune parallelism in `config.yaml` (`parallel.max_workers`) only if you also mention the new expectation in your PR. If you rely on the AI generator, record the prompt and verify the produced case with both Mars and g++ outputs.
+- “Tests” are the suites in `testcases/`; validate changes with `python3 main.py --project <compiler-path>`.
+- While iterating, use `--match <substring>` to avoid rerunning the full catalog.
+- For compile-only checks (no Mars/g++), add a `compile_only` marker file in the case directory.
 
 ## Commit & Pull Request Guidelines
-History shows Conventional Commit messaging (`feat(testcases): Add guluor-w test case`) with lowercase scopes; continue using `feat`, `fix`, or `chore` plus the touched module or suite. Include concise English or Chinese descriptions, but keep an imperative tone. Every PR should describe what changed, how it was validated (e.g., "`python main.py --project ../Compiler` all green"), and link the tracked issue or test plan. Provide screenshots only when UI behavior changes; otherwise paste relevant CLI snippets. Avoid committing generated binaries, personal compiler sources, or secrets—update `.gitignore` instead when a new build artifact appears.
-
-## Configuration & Security Tips
-Treat `config.yaml` as environment-specific: set `compiler_project_dir`, tool paths, and timeouts locally rather than embedding organization-wide defaults. Keep sensitive API keys for the AI generator in your OS keyring or `.env` files excluded by Git; never bake them into commits. If you script automation, reference the existing accessor methods in `src/config.py` so overrides continue to respect workspace-relative paths.
+- Use Conventional Commits as in history: `feat(testcases): add more testcases`, `fix(tester): ...`.
+- PRs should include: what changed, validation command output (e.g. `python3 main.py --project ...`), and screenshots only for GUI changes.
