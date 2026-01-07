@@ -1,27 +1,80 @@
 ---
 name: create-sysy-testcase
-description: Create SysY testcases that are 100% grammar-compliant (pure SysY syntax, for-loops only, printf-only output, newline-separated stdin) while delivering the canonical testfile/in/ans trio.
+description: Convert C/C++ code into Strict SysY testcases using Python automation scripts.
 ---
 
-# SysY Testcase Maker
+# SysY Testcase Conversion Workflow
 
-A testcase that drifts from the SysY grammar is useless. Treat every request as a grammar audit first and only ship when you can prove the program, inputs, and outputs would be accepted by a strict SysY parser.
+You are an expert compiler engineer. Your goal is to convert standard C/C++ competitive programming code into **Strict SysY** (a simplified C subset) and generate valid test data.
 
 ## Non-Negotiable Grammar Rules
-- Cross-check every construct against `references/sysy_lang_grammar.md`; if it cannot be derived from that grammar, rewrite it.
-- All loops must be spelled as `for` statements—no `while`, `do while`, or disguised macros.
-- All observable output must flow through `printf` with literal format strings; never call `putch`, `putint`, or custom wrappers.
-- Never add manual prototypes for runtime helpers such as `getint`; the runtime library already provides them.
-- `in.txt` must list each numeric token on its own line. Spaces or mixed delimiters immediately invalidate the testcase.
-- Record in the testcase notes that you performed this audit; if any exception exists, fix the program instead of documenting the deviation.
+**Adhere to these rules strictly.** Read `references/sysy_lang_grammar.md` **only** if you encounter an obscure syntax edge case not covered here.
 
-## Workflow
-1. **Author strictly grammatical SysY** – Port or write the program while the grammar file is open. Replace any unsupported constructs (types, control flow, IO) with SysY-compliant equivalents. Keep the code minimal and comment the covered grammar items only if it helps future audits.
-2. **Scaffold the files** – Use native shell commands (e.g., `cp -R create-sysy-testcase/assets/testcase_template <target-dir>`) to clone the template directory and immediately rename/populate `testfile.txt`, `in.txt`, `ans.txt`. Ignore taxonomy concerns; just keep the trio together with no extra files.
-3. **Define stdin/stdout carefully** – Write `in.txt` with newline-separated literals in the exact evaluation order. Compile and run the testcase with the toolchain available in this environment (e.g., gcc, clang, or the provided SysY compiler) to obtain the authoritative output, then store the exact `printf` result in `ans.txt`, including the trailing newline if emitted.
-4. **Validate relentlessly** – Recompile with your SysY toolchain, run against `in.txt`, and `diff -u` the result with `ans.txt`. Manually re-scan `testfile.txt` to ensure only `for` loops, `printf` output, and grammar-approved constructs remain.
-5. **Document verification** – Leave a short note or comment with the commands you ran and a checkbox-style reminder of the grammar audit so future maintainers know the testcase already passed the strict checks.
+| Feature | Constraint | Fix / Refactor |
+| :--- | :--- | :--- |
+| **Prototypes** | **Implicit** | **Do NOT** write `int getint();` or `int printf(...);`. |
+| **Memory / Size** | **Max 4MB Total** (MARS Limit) | **Scale Down Constants**. `1e6` $\to$ `1e4`. Total `int` elements < 500,000. |
+| **Preprocessor** | **BANNED** (`#include`, `#define`, `#ifdef`) | Use `const int` for constants. Delete imports. |
+| **Types** | `int`, `void` **ONLY** | No `long long`, `float`, `double`, `char`, `bool`. |
+| **Pointers** | **BANNED** (`int *p`, `&x`, `*ptr`) | Pass arrays as `int a[]`. Use **return values** for scalar outputs (no `void f(int *res)`). |
+| **Arrays** | **1D Arrays ONLY** | Flatten `int a[N][M]` $\to$ `int a[N*M]`. **No VLAs**. |
+| **Loops** | **`for` loops ONLY**. **No declarations inside `()`** | Move vars out: `int i; for(i=0;...)`. No `do-while`. |
+| **Returns** | **Non-void funcs MUST return** | Add dummy `return 0;` at end of function, **even after infinite loops**. |
+| **Input** | `int getint()` **ONLY** | No `scanf`, `cin`, `getchar`. |
+| **Output** | `printf` **ONLY** | Format string supports `%d` and `\n` **ONLY**. No `%c`, `%s`, `%05d`. |
+| **Operators** | No Bitwise (`<<`, `>>`, `&`, `|`, `^`) | Use arithmetic: `*2`, `/2`, `%2`. Use lookup tables. |
+| **Structs** | **BANNED** | Split into parallel arrays (e.g., `x[N]`, `y[N]`). |
+| **Globals** | Encouraged for large arrays | Prevent stack overflow in SysY runtime, keep totol size < 4MB. |
+| **Input Data** | **Strictly 1 Integer Per Line** (`in.txt`) | No spaces (`1 2`). Must be `1\n2`. Matches MIPS syscall. |
 
-## Resources
-- `references/sysy_lang_grammar.md` – canonical grammar used for every audit.
-- `create-sysy-testcase/assets/testcase_template/` – canonical directory to copy when creating `testfile.txt`, `in.txt`, and `ans.txt` with native filesystem commands.
+## Execution Protocol
+
+Follow these steps sequentially.
+
+### Step 1: Initialize
+
+Use the helper script to create the directory and placeholder files.
+
+```bash
+python3 .codex/skills/create-sysy-testcase/scripts/init_case.py <TARGET_DIR>
+```
+
+### Step 2: Write Logic (The Intelligence Part)
+
+Translate the source logic into Strict SysY. Focus your "thinking" here.
+
+- **Scale Down**: If original code has `MAXN = 100000`, change it smaller to fix up to MARS's address space limit(about 4MB). Ensure logic consistency.
+- **Refactor** logic to fit the constraints above (e.g., flatten 2D arrays).
+- **Write** the code to `testfile.txt`.
+- **Write** input data to `in.txt` (newline-separated integers only) matching your scaled-down size.
+
+```bash
+cat <<'EOF' > <TARGET_DIR>/testfile.txt
+// ... your converted SysY code ...
+EOF
+
+cat <<'EOF' > <TARGET_DIR>/in.txt
+// ... your input numbers ...
+EOF
+```
+
+### Step 3: Compile, Run & Verify
+
+Use the runner script. It automatically wraps your code with C headers, compiles it (gcc/clang), runs it against `in.txt`, and generates `ans.txt`.
+
+```bash
+python3 .codex/skills/create-sysy-testcase/scripts/run_case.py <TARGET_DIR>
+```
+
+### Step 4: Fix & Retry
+
+If Step 3 reports a **COMPILE ERROR** or **RUNTIME ERROR**:
+
+1. Read the error output.
+2. Fix the logic in `testfile.txt`.
+3. Rerun Step 3.
+
+## Translation Strategy Tips
+- SysY input (`in.txt`) must be **newline-separated integers**.
+- If the original problem uses strings (e.g., "PUSH", "POP"), map them to integers (e.g., 1, 2) in your translation logic.
+- **MIPS Compatibility Check**: `in.txt` **must not** contain spaces between numbers.
