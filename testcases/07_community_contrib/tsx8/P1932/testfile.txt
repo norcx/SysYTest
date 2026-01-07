@@ -1,0 +1,280 @@
+/* Description: SysY port of Luogu P1932 arbitrary-precision operations using BASE=10000 digits and printf-only output. */
+
+const int BASE = 10000;
+const int MAX_DIGITS = 64;
+const int MAX_BUFFER = (2 * MAX_DIGITS + 8);
+
+int number_a[MAX_DIGITS];
+int number_b[MAX_DIGITS];
+int sum_digits[MAX_DIGITS + 2];
+int diff_digits[MAX_DIGITS + 2];
+int product_digits[MAX_BUFFER];
+int quotient_digits[MAX_DIGITS + 2];
+int remainder_digits[MAX_DIGITS + 2];
+int helper_digits[MAX_BUFFER];
+int remainder_length;
+
+void clear_digits(int arr[], int len) {
+    int idx;
+    for (idx = 0; idx < len; idx = idx + 1) {
+        arr[idx] = 0;
+    }
+}
+
+int trim_length(int arr[], int len) {
+    if (len <= 0) {
+        return 0;
+    }
+    for (; len > 1 && arr[len - 1] == 0; ) {
+        len = len - 1;
+    }
+    return len;
+}
+
+int read_big(int arr[]) {
+    int raw_len;
+    int idx;
+    raw_len = getint();
+    if (raw_len <= 0) {
+        arr[0] = 0;
+        return 1;
+    }
+    for (idx = 0; idx < raw_len; idx = idx + 1) {
+        arr[raw_len - 1 - idx] = getint();
+    }
+    raw_len = trim_length(arr, raw_len);
+    if (raw_len == 0) {
+        raw_len = 1;
+        arr[0] = 0;
+    }
+    return raw_len;
+}
+
+int cmp_big(int lhs[], int len_lhs, int rhs[], int len_rhs) {
+    if (len_lhs < len_rhs) {
+        return -1;
+    }
+    if (len_lhs > len_rhs) {
+        return 1;
+    }
+    int idx;
+    idx = len_lhs - 1;
+    for (idx = len_lhs - 1; idx >= 0; idx = idx - 1) {
+        if (lhs[idx] < rhs[idx]) {
+            return -1;
+        }
+        if (lhs[idx] > rhs[idx]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int add_big(int lhs[], int len_lhs, int rhs[], int len_rhs, int res[]) {
+    int idx;
+    int carry;
+    int max_len;
+    max_len = len_lhs;
+    if (len_rhs > max_len) {
+        max_len = len_rhs;
+    }
+    carry = 0;
+    for (idx = 0; idx < max_len || carry > 0; idx = idx + 1) {
+        int cur;
+        cur = carry;
+        if (idx < len_lhs) {
+            cur = cur + lhs[idx];
+        }
+        if (idx < len_rhs) {
+            cur = cur + rhs[idx];
+        }
+        res[idx] = cur % BASE;
+        carry = cur / BASE;
+    }
+    return trim_length(res, idx);
+}
+
+int sub_big(int lhs[], int len_lhs, int rhs[], int len_rhs, int res[]) {
+    int idx;
+    int borrow;
+    borrow = 0;
+    for (idx = 0; idx < len_lhs; idx = idx + 1) {
+        int cur;
+        cur = lhs[idx] - borrow;
+        if (idx < len_rhs) {
+            cur = cur - rhs[idx];
+        }
+        if (cur < 0) {
+            cur = cur + BASE;
+            borrow = 1;
+        } else {
+            borrow = 0;
+        }
+        res[idx] = cur;
+    }
+    return trim_length(res, len_lhs);
+}
+
+int multiply_small(int src[], int len_src, int factor, int res[]) {
+    int idx;
+    int carry;
+    carry = 0;
+    for (idx = 0; idx < len_src || carry > 0; idx = idx + 1) {
+        int cur;
+        cur = carry;
+        if (idx < len_src) {
+            cur = cur + src[idx] * factor;
+        }
+        res[idx] = cur % BASE;
+        carry = cur / BASE;
+    }
+    if (idx == 0) {
+        res[0] = 0;
+        idx = 1;
+    }
+    return trim_length(res, idx);
+}
+
+int multiply_big(int lhs[], int len_lhs, int rhs[], int len_rhs, int res[]) {
+    int total_len;
+    int idx;
+    int jdx;
+    int carry;
+    total_len = len_lhs + len_rhs + 2;
+    for (idx = 0; idx < total_len; idx = idx + 1) {
+        res[idx] = 0;
+    }
+    for (idx = 0; idx < len_lhs; idx = idx + 1) {
+        carry = 0;
+        for (jdx = 0; jdx < len_rhs || carry > 0; jdx = jdx + 1) {
+            int cur;
+            cur = res[idx + jdx] + carry;
+            if (jdx < len_rhs) {
+                cur = cur + lhs[idx] * rhs[jdx];
+            }
+            res[idx + jdx] = cur % BASE;
+            carry = cur / BASE;
+        }
+    }
+    return trim_length(res, total_len);
+}
+
+int push_digit(int arr[], int len, int digit) {
+    int idx;
+    for (idx = len; idx > 0; idx = idx - 1) {
+        arr[idx] = arr[idx - 1];
+    }
+    arr[0] = digit;
+    len = len + 1;
+    return trim_length(arr, len);
+}
+
+int divide_big(int dividend[], int len_dividend, int divisor[], int len_divisor, int quotient[], int remainder[]) {
+    int idx;
+    int rem_len;
+    int left;
+    int right;
+    int mid;
+    int best;
+    int cmp_result;
+    int tmp_len;
+    rem_len = 1;
+    remainder[0] = 0;
+    for (idx = 0; idx < len_dividend; idx = idx + 1) {
+        quotient[idx] = 0;
+    }
+    for (idx = len_dividend - 1; idx >= 0; idx = idx - 1) {
+        rem_len = push_digit(remainder, rem_len, dividend[idx]);
+        rem_len = trim_length(remainder, rem_len);
+        left = 0;
+        right = BASE - 1;
+        best = 0;
+        for (; left <= right; ) {
+            mid = (left + right) / 2;
+            tmp_len = multiply_small(divisor, len_divisor, mid, helper_digits);
+            cmp_result = cmp_big(helper_digits, tmp_len, remainder, rem_len);
+            if (cmp_result <= 0) {
+                best = mid;
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+        quotient[idx] = best;
+        tmp_len = multiply_small(divisor, len_divisor, best, helper_digits);
+        rem_len = sub_big(remainder, rem_len, helper_digits, tmp_len, remainder);
+    }
+    int q_len;
+    q_len = len_dividend;
+    for (; q_len > 1 && quotient[q_len - 1] == 0; ) {
+        q_len = q_len - 1;
+    }
+    remainder_length = trim_length(remainder, rem_len);
+    return q_len;
+}
+
+void print_chunk(int value) {
+    if (value < 1000) {
+        printf("0");
+    }
+    if (value < 100) {
+        printf("0");
+    }
+    if (value < 10) {
+        printf("0");
+    }
+    printf("%d", value);
+}
+
+void print_big(int arr[], int len) {
+    int trimmed;
+    int idx;
+    trimmed = trim_length(arr, len);
+    if (trimmed == 0) {
+        printf("0\n");
+        return;
+    }
+    printf("%d", arr[trimmed - 1]);
+    for (idx = trimmed - 2; idx >= 0; idx = idx - 1) {
+        print_chunk(arr[idx]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int len_a;
+    int len_b;
+    int sum_len;
+    int cmp_result;
+    int diff_len;
+    int product_len;
+    int quotient_len;
+    int idx;
+    clear_digits(number_a, MAX_DIGITS);
+    clear_digits(number_b, MAX_DIGITS);
+    clear_digits(sum_digits, MAX_DIGITS + 2);
+    clear_digits(diff_digits, MAX_DIGITS + 2);
+    clear_digits(product_digits, MAX_BUFFER);
+    clear_digits(quotient_digits, MAX_DIGITS + 2);
+    clear_digits(remainder_digits, MAX_DIGITS + 2);
+    clear_digits(helper_digits, MAX_BUFFER);
+    len_a = read_big(number_a);
+    len_b = read_big(number_b);
+    sum_len = add_big(number_a, len_a, number_b, len_b, sum_digits);
+    print_big(sum_digits, sum_len);
+    cmp_result = cmp_big(number_a, len_a, number_b, len_b);
+    if (cmp_result >= 0) {
+        diff_len = sub_big(number_a, len_a, number_b, len_b, diff_digits);
+        print_big(diff_digits, diff_len);
+    } else {
+        diff_len = sub_big(number_b, len_b, number_a, len_a, diff_digits);
+        printf("-");
+        print_big(diff_digits, diff_len);
+    }
+    product_len = multiply_big(number_a, len_a, number_b, len_b, product_digits);
+    print_big(product_digits, product_len);
+    quotient_len = divide_big(number_a, len_a, number_b, len_b, quotient_digits, remainder_digits);
+    print_big(quotient_digits, quotient_len);
+    print_big(remainder_digits, remainder_length);
+    return 0;
+}

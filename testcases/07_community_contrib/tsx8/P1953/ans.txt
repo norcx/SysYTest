@@ -1,0 +1,10 @@
+alpha_slot4.in7 alpha_slot4.out7
+alpha_slot9.in8 alpha_slot9.out8
+alpha_slot2.in9 alpha_slot2.out9
+alpha_slot5.in10 alpha_slot5.out10
+tail_case5.dat11 tail_case5.res11
+tail_case2.dat13 tail_case2.res13
+tail_case8.dat15 tail_case8.res15
+embed4.case10 embed4.ans13
+embed5.case12 embed5.ans15
+embed6.case15 embed6.ans18

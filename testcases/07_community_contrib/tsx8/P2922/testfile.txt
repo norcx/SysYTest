@@ -1,0 +1,85 @@
+int child[192];
+int pass_count[64];
+int finish_count[64];
+int digits[16];
+int node_total;
+
+void zero_node(int node) {
+    int slot;
+    for (slot = 0; slot < 3; slot = slot + 1) {
+        child[node * 3 + slot] = 0;
+    }
+}
+
+void insert_sequence(int length) {
+    int idx;
+    int digit;
+    int current;
+    int offset;
+    current = 0;
+    for (idx = 0; idx < length; idx = idx + 1) {
+        digit = digits[idx];
+        offset = current * 3 + digit;
+        if (child[offset] == 0) {
+            child[offset] = node_total;
+            pass_count[node_total] = 0;
+            finish_count[node_total] = 0;
+            zero_node(node_total);
+            node_total = node_total + 1;
+        }
+        current = child[offset];
+        pass_count[current] = pass_count[current] + 1;
+    }
+    finish_count[current] = finish_count[current] + 1;
+}
+
+int query_sequence(int length) {
+    int idx;
+    int digit;
+    int current;
+    int offset;
+    int answer;
+    current = 0;
+    answer = 0;
+    for (idx = 0; idx < length; idx = idx + 1) {
+        digit = digits[idx];
+        offset = current * 3 + digit;
+        if (child[offset] == 0) {
+            return answer;
+        }
+        current = child[offset];
+        answer = answer + finish_count[current];
+    }
+    return answer + pass_count[current] - finish_count[current];
+}
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int j;
+    int length;
+    node_total = 1;
+    for (i = 0; i < 64; i = i + 1) {
+        pass_count[i] = 0;
+        finish_count[i] = 0;
+        zero_node(i);
+    }
+    n = getint();
+    m = getint();
+    for (i = 0; i < n; i = i + 1) {
+        length = getint();
+        for (j = 0; j < length; j = j + 1) {
+            digits[j] = getint();
+        }
+        insert_sequence(length);
+    }
+    for (i = 0; i < m; i = i + 1) {
+        length = getint();
+        for (j = 0; j < length; j = j + 1) {
+            digits[j] = getint();
+        }
+        printf("%d\n", query_sequence(length));
+    }
+    return 0;
+}

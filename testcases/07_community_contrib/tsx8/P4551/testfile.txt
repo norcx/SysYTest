@@ -1,0 +1,123 @@
+const int MAXN = 10000;
+const int MAXE = 20000;
+const int MAXNODE = 310000;
+
+int head[MAXN];
+int to[MAXE];
+int wt[MAXE];
+int nxt[MAXE];
+int edge_cnt;
+
+int n;
+int xorr[MAXN];
+
+int child0[MAXNODE];
+int child1[MAXNODE];
+int trie_sz;
+
+int pow2[31];
+int best;
+
+void add_edge(int u, int v, int w) {
+    edge_cnt = edge_cnt + 1;
+    to[edge_cnt] = v;
+    wt[edge_cnt] = w;
+    nxt[edge_cnt] = head[u];
+    head[u] = edge_cnt;
+}
+
+int xor31(int a, int b) {
+    int res = 0;
+    int i = 0;
+    for (i = 0; i <= 30; i = i + 1) {
+        int abit = (a / pow2[i]) % 2;
+        int bbit = (b / pow2[i]) % 2;
+        int xbit = (abit + bbit) % 2;
+        res = res + xbit * pow2[i];
+    }
+    return res;
+}
+
+void dfs(int u, int parent) {
+    int ei = 0;
+    for (ei = head[u]; ei != 0; ei = nxt[ei]) {
+        int v = to[ei];
+        if (v != parent) {
+            xorr[v] = xor31(xorr[u], wt[ei]);
+            dfs(v, u);
+        }
+    }
+}
+
+void trie_insert(int val) {
+    int u = 0;
+    int i = 0;
+    for (i = 30; i >= 0; i = i - 1) {
+        int bit = (val / pow2[i]) % 2;
+        if (bit == 0) {
+            if (child0[u] == 0) {
+                trie_sz = trie_sz + 1;
+                child0[u] = trie_sz;
+            }
+            u = child0[u];
+        } else {
+            if (child1[u] == 0) {
+                trie_sz = trie_sz + 1;
+                child1[u] = trie_sz;
+            }
+            u = child1[u];
+        }
+    }
+}
+
+int trie_query(int val) {
+    int u = 0;
+    int ans = 0;
+    int i = 0;
+    for (i = 30; i >= 0; i = i - 1) {
+        int bit = (val / pow2[i]) % 2;
+        int want = 1 - bit;
+        if (want == 0) {
+            if (child0[u] != 0) {
+                u = child0[u];
+                ans = ans + pow2[i];
+            } else {
+                u = child1[u];
+            }
+        } else {
+            if (child1[u] != 0) {
+                u = child1[u];
+                ans = ans + pow2[i];
+            } else {
+                u = child0[u];
+            }
+        }
+    }
+    return ans;
+}
+
+int main() {
+    int i = 0;
+    pow2[0] = 1;
+    for (i = 1; i <= 30; i = i + 1) pow2[i] = pow2[i - 1] * 2;
+
+    n = getint();
+    for (i = 1; i < n; i = i + 1) {
+        int u = getint();
+        int v = getint();
+        int w = getint();
+        add_edge(u, v, w);
+        add_edge(v, u, w);
+    }
+
+    dfs(1, 0);
+
+    for (i = 1; i <= n; i = i + 1) trie_insert(xorr[i]);
+    for (i = 1; i <= n; i = i + 1) {
+        int cur = trie_query(xorr[i]);
+        if (cur > best) best = cur;
+    }
+
+    printf("%d\n", best);
+    return 0;
+}

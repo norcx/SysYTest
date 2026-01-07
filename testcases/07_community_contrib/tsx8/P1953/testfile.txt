@@ -1,0 +1,99 @@
+/* Description: Numeric recreation of codes/P1953.cpp's file-renaming logic.
+ * It reads layouts that mimic the original string-heavy branches and emits
+ * deterministic rename pairs using only SysY primitives (for-loops + printf).
+ */
+
+const int SLOT_CAP = 64;
+int slot_map[64];
+
+void handle_digit_mode() {
+    int start_number;
+    int max_suffix;
+    int entry_count;
+    int idx;
+    int limit;
+    int printed;
+    start_number = getint();
+    max_suffix = getint();
+    entry_count = getint();
+    for (idx = 0; idx < SLOT_CAP; idx = idx + 1) {
+        slot_map[idx] = -1;
+    }
+    for (idx = 0; idx < entry_count; idx = idx + 1) {
+        int suffix;
+        int tag;
+        suffix = getint();
+        tag = getint();
+        if (suffix >= 0 && suffix < SLOT_CAP) {
+            slot_map[suffix] = tag;
+        }
+    }
+    printed = 0;
+    limit = max_suffix;
+    if (limit >= SLOT_CAP) {
+        limit = SLOT_CAP - 1;
+    }
+    for (idx = 0; idx <= limit; idx = idx + 1) {
+        if (slot_map[idx] != -1) {
+            int seq;
+            seq = start_number + printed;
+            printf("alpha_slot%d.in%d alpha_slot%d.out%d\n", slot_map[idx], seq, slot_map[idx], seq);
+            printed = printed + 1;
+        }
+    }
+}
+
+void handle_tail_mode() {
+    int base_seq;
+    int count;
+    int step;
+    int idx;
+    int seq;
+    base_seq = getint();
+    count = getint();
+    step = getint();
+    seq = base_seq;
+    for (idx = 0; idx < count; idx = idx + 1) {
+        int token;
+        token = getint();
+        printf("tail_case%d.dat%d tail_case%d.res%d\n", token, seq, token, seq);
+        seq = seq + step;
+    }
+}
+
+void handle_embed_mode() {
+    int start_seq;
+    int count;
+    int offset;
+    int idx;
+    start_seq = getint();
+    count = getint();
+    offset = getint();
+    for (idx = 0; idx < count; idx = idx + 1) {
+        int token;
+        int seq;
+        token = getint();
+        seq = start_seq + idx;
+        printf("embed%d.case%d embed%d.ans%d\n", seq, token, seq, token + offset);
+    }
+}
+
+int main() {
+    int scenarios;
+    int case_idx;
+    scenarios = getint();
+    for (case_idx = 0; case_idx < scenarios; case_idx = case_idx + 1) {
+        int type;
+        type = getint();
+        if (type == 1) {
+            handle_digit_mode();
+        }
+        else if (type == 2) {
+            handle_tail_mode();
+        }
+        else {
+            handle_embed_mode();
+        }
+    }
+    return 0;
+}

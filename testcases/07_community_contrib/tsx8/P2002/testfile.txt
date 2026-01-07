@@ -1,0 +1,112 @@
+int head[16];
+int to[64];
+int nxt[64];
+int edge_count;
+
+int stack_nodes[16];
+int stack_top;
+int in_stack[16];
+int dfn[16];
+int low[16];
+int belong[16];
+
+int idx_counter;
+int scc_count;
+int has_incoming[16];
+int node_count;
+int edge_total;
+
+void add_edge(int u, int v) {
+    edge_count = edge_count + 1;
+    to[edge_count] = v;
+    nxt[edge_count] = head[u];
+    head[u] = edge_count;
+}
+
+void tarjan(int u) {
+    int i;
+    int v;
+    idx_counter = idx_counter + 1;
+    dfn[u] = idx_counter;
+    low[u] = idx_counter;
+    stack_top = stack_top + 1;
+    stack_nodes[stack_top] = u;
+    in_stack[u] = 1;
+
+    i = head[u];
+    for (; i != 0; ) {
+        v = to[i];
+        if (dfn[v] == 0) {
+            tarjan(v);
+            if (low[u] > low[v]) {
+                low[u] = low[v];
+            }
+        } else {
+            if (in_stack[v] == 1) {
+                if (low[u] > dfn[v]) {
+                    low[u] = dfn[v];
+                }
+            }
+        }
+        i = nxt[i];
+    }
+
+    if (low[u] == dfn[u]) {
+        scc_count = scc_count + 1;
+        v = stack_nodes[stack_top];
+        stack_top = stack_top - 1;
+        in_stack[v] = 0;
+        belong[v] = scc_count;
+        for (; v != u; ) {
+            v = stack_nodes[stack_top];
+            stack_top = stack_top - 1;
+            in_stack[v] = 0;
+            belong[v] = scc_count;
+        }
+    }
+}
+
+int main() {
+    int i;
+    int u;
+    int v;
+
+    node_count = getint();
+    edge_total = getint();
+
+    for (i = 0; i < edge_total; i = i + 1) {
+        u = getint();
+        v = getint();
+        if (u != v) {
+            add_edge(u, v);
+        }
+    }
+
+    for (i = 1; i <= node_count; i = i + 1) {
+        if (dfn[i] == 0) {
+            tarjan(i);
+        }
+    }
+
+    for (u = 1; u <= node_count; u = u + 1) {
+        i = head[u];
+        for (; i != 0; ) {
+            v = to[i];
+            if (belong[u] != belong[v]) {
+                has_incoming[belong[v]] = 1;
+            }
+            i = nxt[i];
+        }
+    }
+
+    int answer;
+    answer = 0;
+    for (i = 1; i <= scc_count; i = i + 1) {
+        if (has_incoming[i] == 0) {
+            answer = answer + 1;
+        }
+    }
+
+    printf("%d\n", answer);
+    return 0;
+}

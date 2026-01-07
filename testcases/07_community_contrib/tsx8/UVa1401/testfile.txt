@@ -1,0 +1,84 @@
+const int MOD = 20071027;
+const int SS = 26;
+const int MAXL = 205;
+const int MAXNODE = 5000;
+
+int ch[MAXNODE * SS];
+int val[MAXNODE];
+int sz;
+
+int text[MAXL];
+int d[MAXL + 1];
+
+void trie_clear() {
+    int i;
+    sz = 1;
+    for (i = 0; i < MAXNODE * SS; i = i + 1) ch[i] = 0;
+    for (i = 0; i < MAXNODE; i = i + 1) val[i] = 0;
+}
+
+void trie_insert(int wlen) {
+    int u;
+    int i;
+    int c;
+    int nxt;
+    int k;
+    u = 0;
+    for (i = 0; i < wlen; i = i + 1) {
+        c = getint();
+        nxt = ch[u * SS + c];
+        if (nxt == 0) {
+            nxt = sz;
+            sz = sz + 1;
+            for (k = 0; k < SS; k = k + 1) ch[nxt * SS + k] = 0;
+            val[nxt] = 0;
+            ch[u * SS + c] = nxt;
+        }
+        u = nxt;
+    }
+    val[u] = 1;
+}
+
+int main() {
+    int kase;
+    int L;
+    int i;
+    int S;
+    int wlen;
+    int u;
+    int j;
+    int c;
+
+    kase = 0;
+    for (;;) {
+        L = getint();
+        if (L == 0) break;
+
+        trie_clear();
+
+        for (i = 0; i < L; i = i + 1) text[i] = getint();
+
+        S = getint();
+        for (i = 0; i < S; i = i + 1) {
+            wlen = getint();
+            trie_insert(wlen);
+        }
+
+        for (i = 0; i <= L; i = i + 1) d[i] = 0;
+        d[L] = 1;
+
+        for (i = L - 1; i >= 0; i = i - 1) {
+            u = 0;
+            for (j = i; j < L; j = j + 1) {
+                c = text[j];
+                u = ch[u * SS + c];
+                if (u == 0) break;
+                if (val[u] != 0) d[i] = (d[i] + d[j + 1]) % MOD;
+            }
+        }
+
+        kase = kase + 1;
+        printf("Case %d: %d\n", kase, d[0]);
+    }
+    return 0;
+}

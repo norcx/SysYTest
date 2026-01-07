@@ -1,0 +1,102 @@
+/* Luogu P1120 small-stick reconstruction translated to SysY: brute-force the minimal original stick length while obeying for-loop + printf rules. */
+
+int sticks[64];
+int used[64];
+int stick_count = 0;
+int success_flag = 0;
+
+int dfs(int start_idx, int partial, int built_groups, int target_len, int needed_groups) {
+    if (built_groups == needed_groups) {
+        success_flag = 1;
+        return 1;
+    }
+    if (partial == target_len) {
+        dfs(0, 0, built_groups + 1, target_len, needed_groups);
+        return success_flag;
+    }
+    int prev_value = -1;
+    int i = start_idx;
+    for (i = start_idx; i < stick_count; i = i + 1) {
+        if (used[i] == 0 && partial + sticks[i] <= target_len) {
+            if (sticks[i] == prev_value) {
+                continue;
+            }
+            used[i] = 1;
+            dfs(i + 1, partial + sticks[i], built_groups, target_len, needed_groups);
+            if (success_flag == 1) {
+                return 1;
+            }
+            used[i] = 0;
+            prev_value = sticks[i];
+            if (partial == 0) {
+                return 0;
+            }
+            if (partial + sticks[i] == target_len) {
+                return 0;
+            }
+        }
+    }
+    return 0;
+}
+
+int main() {
+    int n = getint();
+    int idx = 0;
+    int value = 0;
+    int total_sum = 0;
+    stick_count = 0;
+    for (idx = 0; idx < n; idx = idx + 1) {
+        value = getint();
+        if (value > 50) {
+            continue;
+        }
+        sticks[stick_count] = value;
+        stick_count = stick_count + 1;
+        total_sum = total_sum + value;
+    }
+    if (stick_count == 0) {
+        printf("0\n");
+        return 0;
+    }
+    int i = 0;
+    int j = 0;
+    int swap_idx = 0;
+    int tmp = 0;
+    for (i = 0; i < stick_count; i = i + 1) {
+        swap_idx = i;
+        for (j = i + 1; j < stick_count; j = j + 1) {
+            if (sticks[j] > sticks[swap_idx]) {
+                swap_idx = j;
+            }
+        }
+        if (swap_idx != i) {
+            tmp = sticks[i];
+            sticks[i] = sticks[swap_idx];
+            sticks[swap_idx] = tmp;
+        }
+    }
+    for (i = 0; i < stick_count; i = i + 1) {
+        used[i] = 0;
+    }
+    int max_len = sticks[0];
+    int answer = total_sum;
+    int target = max_len;
+    int groups = 0;
+    for (target = max_len; target <= total_sum; target = target + 1) {
+        if (total_sum % target != 0) {
+            continue;
+        }
+        groups = total_sum / target;
+        success_flag = 0;
+        for (i = 0; i < stick_count; i = i + 1) {
+            used[i] = 0;
+        }
+        dfs(0, 0, 0, target, groups);
+        if (success_flag == 1) {
+            answer = target;
+            break;
+        }
+    }
+    printf("%d\n", answer);
+    return 0;
+}

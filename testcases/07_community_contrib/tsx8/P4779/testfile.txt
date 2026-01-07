@@ -1,0 +1,87 @@
+const int INF = 2147483647;
+const int MAXN = 10005;
+const int MAXM = 50005;
+
+int n;
+int m;
+int s;
+int e;
+int fst[MAXN];
+int to[MAXM];
+int wt[MAXM];
+int nxt[MAXM];
+int d[MAXN];
+int vis[MAXN];
+
+void add_edge(int u, int v, int w) {
+  e = e + 1;
+  to[e] = v;
+  wt[e] = w;
+  nxt[e] = fst[u];
+  fst[u] = e;
+}
+
+void dijkstra(int src) {
+  int i, iter, ei;
+  for (i = 1; i <= n; i = i + 1) {
+    d[i] = INF;
+    vis[i] = 0;
+  }
+  d[src] = 0;
+
+  for (iter = 1; iter <= n; iter = iter + 1) {
+    int u = 0;
+    int best = INF;
+    for (i = 1; i <= n; i = i + 1) {
+      if (vis[i] == 0) {
+        if (d[i] < best) {
+          best = d[i];
+          u = i;
+        }
+      }
+    }
+    if (u == 0) {
+      iter = n + 1;
+    } else {
+      vis[u] = 1;
+      for (ei = fst[u]; ei != 0; ei = nxt[ei]) {
+        int v = to[ei];
+        int w = wt[ei];
+        if (d[u] != INF) {
+          if (d[v] > d[u] + w) {
+            d[v] = d[u] + w;
+          }
+        }
+      }
+    }
+  }
+}
+
+int main() {
+  n = getint();
+  m = getint();
+  s = getint();
+
+  e = 0;
+  int i;
+  for (i = 1; i <= n; i = i + 1) fst[i] = 0;
+
+  for (i = 1; i <= m; i = i + 1) {
+    int u = getint();
+    int v = getint();
+    int w = getint();
+    add_edge(u, v, w);
+  }
+
+  dijkstra(s);
+
+  for (i = 1; i <= n; i = i + 1) {
+    printf("%d", d[i]);
+    if (i < n) {
+      printf(" ");
+    } else {
+      printf("\n");
+    }
+  }
+  return 0;
+}

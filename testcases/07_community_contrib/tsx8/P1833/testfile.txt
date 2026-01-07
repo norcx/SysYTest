@@ -1,0 +1,78 @@
+/* P1833 amusement planning: reproduce the multiple knapsack variant with
+ * SysY-friendly constructs only (for-loops and printf output).
+ */
+
+int durations[16];
+int rewards[16];
+int limits[16];
+int dp[640];
+
+int min_value(int a, int b) {
+    if (a < b) {
+        return a;
+    }
+    return b;
+}
+
+int main() {
+    int start_hour;
+    int start_minute;
+    int end_hour;
+    int end_minute;
+    int total_time;
+    int n;
+    int i;
+    int j;
+    int k;
+    int chunk;
+    int remaining;
+    int weight;
+    int gain;
+    int candidate;
+    start_hour = getint();
+    start_minute = getint();
+    end_hour = getint();
+    end_minute = getint();
+    total_time = (end_hour - start_hour) * 60 + end_minute - start_minute;
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        durations[i] = getint();
+        rewards[i] = getint();
+        limits[i] = getint();
+    }
+    for (i = 0; i <= total_time; i = i + 1) {
+        dp[i] = 0;
+    }
+    for (i = 0; i < n; i = i + 1) {
+        int max_use;
+        max_use = total_time / durations[i];
+        if (limits[i] != 0) {
+            max_use = min_value(max_use, limits[i]);
+        }
+        remaining = max_use;
+        chunk = 1;
+        for (; chunk <= remaining; chunk = chunk * 2) {
+            weight = chunk * durations[i];
+            gain = chunk * rewards[i];
+            for (j = total_time; j >= weight; j = j - 1) {
+                candidate = dp[j - weight] + gain;
+                if (candidate > dp[j]) {
+                    dp[j] = candidate;
+                }
+            }
+            remaining = remaining - chunk;
+        }
+        if (remaining > 0) {
+            weight = remaining * durations[i];
+            gain = remaining * rewards[i];
+            for (k = total_time; k >= weight; k = k - 1) {
+                candidate = dp[k - weight] + gain;
+                if (candidate > dp[k]) {
+                    dp[k] = candidate;
+                }
+            }
+        }
+    }
+    printf("%d\n", dp[total_time]);
+    return 0;
+}

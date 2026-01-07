@@ -1,0 +1,111 @@
+/* Tree DP port of Luogu P1273: pick the largest subscriber count with non-negative profit. */
+int head[50];
+int edge_to[100];
+int edge_weight[100];
+int edge_next[100];
+int fee[50];
+int dp[2500];
+int dp_width = 50;
+int neg_inf = -1000000000;
+int edge_count = 0;
+int n = 0;
+int m = 0;
+
+int idx(int node, int count) {
+    return node * dp_width + count;
+}
+
+void add_edge(int u, int v, int w) {
+    edge_count = edge_count + 1;
+    edge_to[edge_count] = v;
+    edge_weight[edge_count] = w;
+    edge_next[edge_count] = head[u];
+    head[u] = edge_count;
+}
+
+int dfs(int x) {
+    int leaf_limit = n - m;
+    int sum = 0;
+    int edge_index = 0;
+    int j = 0;
+    int k = 0;
+    int v = 0;
+    int used = 0;
+    int prev_index = 0;
+    int parent_value = 0;
+    int child_value = 0;
+    int candidate = 0;
+    if (x > leaf_limit) {
+        dp[idx(x, 1)] = fee[x];
+        return 1;
+    }
+    edge_index = head[x];
+    for (; edge_index != 0; edge_index = edge_next[edge_index]) {
+        v = edge_to[edge_index];
+        used = dfs(v);
+        sum = sum + used;
+        if (sum > dp_width - 1) {
+            sum = dp_width - 1;
+        }
+        for (j = sum; j >= 1; j = j - 1) {
+            for (k = 1; k <= used; k = k + 1) {
+                prev_index = j - k;
+                if (prev_index >= 0) {
+                    parent_value = dp[idx(x, prev_index)];
+                    child_value = dp[idx(v, k)];
+                    if (parent_value == neg_inf || child_value == neg_inf) {
+                        continue;
+                    }
+                    candidate = parent_value + child_value - edge_weight[edge_index];
+                    if (candidate > dp[idx(x, j)]) {
+                        dp[idx(x, j)] = candidate;
+                    }
+                }
+            }
+        }
+    }
+    return sum;
+}
+
+int main() {
+    int i = 0;
+    int j = 0;
+    int k = 0;
+    int child_count = 0;
+    int v = 0;
+    int w = 0;
+    int total_slots = 2500;
+    n = getint();
+    m = getint();
+    edge_count = 0;
+    for (i = 0; i < 50; i = i + 1) {
+        head[i] = 0;
+        fee[i] = 0;
+    }
+    for (i = 0; i < total_slots; i = i + 1) {
+        dp[i] = neg_inf;
+    }
+    for (i = 1; i <= n; i = i + 1) {
+        dp[idx(i, 0)] = 0;
+    }
+    for (i = 1; i <= n - m; i = i + 1) {
+        child_count = getint();
+        for (j = 0; j < child_count; j = j + 1) {
+            v = getint();
+            w = getint();
+            add_edge(i, v, w);
+        }
+    }
+    for (i = n - m + 1; i <= n; i = i + 1) {
+        fee[i] = getint();
+    }
+    dfs(1);
+    for (i = m; i >= 1; i = i - 1) {
+        if (dp[idx(1, i)] >= 0) {
+            printf("%d\n", i);
+            return 0;
+        }
+    }
+    printf("0\n");
+    return 0;
+}

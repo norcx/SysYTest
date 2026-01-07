@@ -1,0 +1,90 @@
+int a[200020];
+int q1[200020];
+int q2[200020];
+
+int main() {
+    int t;
+    int case_id;
+    int n;
+    int d;
+    int k;
+    int i;
+    int delta;
+    int front;
+    int rear;
+    int mm;
+    int ans;
+    int ans2;
+    int l;
+    int r;
+    int current;
+
+    t = getint();
+    for(case_id = 0; case_id < t; case_id = case_id + 1) {
+        n = getint();
+        d = getint();
+        k = getint();
+        for(i = 0; i <= n + 2; i = i + 1) {
+            a[i] = 0;
+            q1[i] = 0;
+            q2[i] = 0;
+        }
+        for(i = 0; i < k; i = i + 1) {
+            l = getint();
+            r = getint();
+            a[l] = a[l] + 1;
+            a[r + 1] = a[r + 1] - 1;
+        }
+        delta = 0;
+        for(i = 1; i <= n; i = i + 1) {
+            delta = delta + a[i];
+            a[i] = delta;
+        }
+        for(i = 1; i <= n; i = i + 1) {
+            a[i] = a[i] + a[i - 1];
+        }
+        front = 0;
+        rear = -1;
+        mm = -2147483647;
+        ans = 0;
+        for(i = 0; i <= n; i = i + 1) {
+            for(; front <= rear && q1[front] + d < i; ) {
+                front = front + 1;
+            }
+            for(; front <= rear && a[q1[rear]] >= a[i]; ) {
+                rear = rear - 1;
+            }
+            rear = rear + 1;
+            q1[rear] = i;
+            current = a[i] - a[q1[front]];
+            if(mm < current) {
+                mm = current;
+                ans = q1[front];
+            }
+        }
+        printf("%d ", ans);
+        front = 0;
+        rear = -1;
+        mm = 2147483647;
+        ans2 = 0;
+        for(i = 0; i <= n; i = i + 1) {
+            for(; front <= rear && i - q2[front] < d; ) {
+                front = front + 1;
+            }
+            if(front <= rear) {
+                current = a[i] - a[q2[front]];
+                if(mm > current) {
+                    mm = current;
+                    ans2 = q2[front];
+                }
+            }
+            for(; front <= rear && a[i] >= a[q2[rear]]; ) {
+                rear = rear - 1;
+            }
+            rear = rear + 1;
+            q2[rear] = i;
+        }
+        printf("%d\n", ans2);
+    }
+    return 0;
+}

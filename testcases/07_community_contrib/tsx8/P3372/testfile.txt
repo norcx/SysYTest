@@ -1,0 +1,99 @@
+const int MAXN = 100000 + 10;
+
+int n;
+int m;
+int a[MAXN];
+int segSum[MAXN * 4];
+int segTag[MAXN * 4];
+
+void build(int o, int L, int R) {
+    if (L == R) {
+        segSum[o] = a[L];
+        return;
+    }
+    int M;
+    M = (L + R) / 2;
+    build(o * 2, L, M);
+    build(o * 2 + 1, M + 1, R);
+    segSum[o] = segSum[o * 2] + segSum[o * 2 + 1];
+}
+
+void pushdown(int o, int L, int R) {
+    if (segTag[o] == 0) {
+        return;
+    }
+    int M;
+    int leftLen;
+    int rightLen;
+    M = (L + R) / 2;
+    leftLen = M - L + 1;
+    rightLen = R - M;
+    segSum[o * 2] = segSum[o * 2] + segTag[o] * leftLen;
+    segTag[o * 2] = segTag[o * 2] + segTag[o];
+    segSum[o * 2 + 1] = segSum[o * 2 + 1] + segTag[o] * rightLen;
+    segTag[o * 2 + 1] = segTag[o * 2 + 1] + segTag[o];
+    segTag[o] = 0;
+}
+
+void add(int o, int L, int R, int x, int y, int k) {
+    if (x <= L && R <= y) {
+        segSum[o] = segSum[o] + k * (R - L + 1);
+        segTag[o] = segTag[o] + k;
+        return;
+    }
+    pushdown(o, L, R);
+    int M;
+    M = (L + R) / 2;
+    if (x <= M) {
+        add(o * 2, L, M, x, y, k);
+    }
+    if (y > M) {
+        add(o * 2 + 1, M + 1, R, x, y, k);
+    }
+    segSum[o] = segSum[o * 2] + segSum[o * 2 + 1];
+}
+
+int query(int o, int L, int R, int x, int y) {
+    if (x <= L && R <= y) {
+        return segSum[o];
+    }
+    pushdown(o, L, R);
+    int M;
+    int res;
+    res = 0;
+    M = (L + R) / 2;
+    if (x <= M) {
+        res = res + query(o * 2, L, M, x, y);
+    }
+    if (y > M) {
+        res = res + query(o * 2 + 1, M + 1, R, x, y);
+    }
+    return res;
+}
+
+int main() {
+    int i;
+    n = getint();
+    m = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+    build(1, 1, n);
+    int t;
+    for (t = 0; t < m; t = t + 1) {
+        int opt;
+        int qL;
+        int qR;
+        opt = getint();
+        qL = getint();
+        qR = getint();
+        if (opt == 1) {
+            int k;
+            k = getint();
+            add(1, 1, n, qL, qR, k);
+        } else {
+            printf("%d\n", query(1, 1, n, qL, qR));
+        }
+    }
+    return 0;
+}

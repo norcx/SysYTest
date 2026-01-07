@@ -1,0 +1,97 @@
+/* Description: UVa213 Message Decoding ported to SysY.
+ * Reads ASCII codes as integers from input.
+ */
+const int COL = 256;
+const int ROW = 8;
+
+int code[2048]; // ROW * COL flattened
+int pow2[8];
+
+void init_pow2() {
+    int i;
+    pow2[0] = 1;
+    for (i = 1; i <= 7; i = i + 1) {
+        pow2[i] = pow2[i - 1] * 2;
+    }
+}
+
+void clear_code() {
+    int i;
+    for (i = 0; i < 2048; i = i + 1) {
+        code[i] = 0;
+    }
+}
+
+int read_non_nl() {
+    int ch;
+    for (;;) {
+        ch = getint();
+        if (ch == 0) return 0;
+        if (ch != 10 && ch != 13) return ch;
+    }
+    return 0; // Fix: Add unreachable return to satisfy strict SysY syntax
+}
+
+int read_bits(int c) {
+    int v = 0;
+    int i;
+    for (i = 0; i < c; i = i + 1) {
+        int ch = read_non_nl();
+        v = v * 2 + (ch - 48);
+    }
+    return v;
+}
+
+int readcodes() {
+    clear_code();
+
+    int first = read_non_nl();
+    if (first == 0) return 0;
+    code[1 * COL + 0] = first;
+
+    int len;
+    for (len = 2; len <= 7; len = len + 1) {
+        int limit = pow2[len] - 1;
+        int i;
+        for (i = 0; i < limit; i = i + 1) {
+            int ch = getint();
+            if (ch == 0) return 0;
+            if (ch == 10 || ch == 13) return 1;
+            code[len * COL + i] = ch;
+        }
+    }
+    return 1;
+}
+
+int main() {
+    init_pow2();
+
+    for (;;) {
+        int ok = readcodes();
+        if (ok == 0) break;
+
+        int first_out = 1;
+        for (;;) {
+            int len = read_bits(3);
+            if (len == 0) break;
+
+            for (;;) {
+                int v = read_bits(len);
+                if (v == pow2[len] - 1) break;
+
+                int outch = code[len * COL + v];
+                /* Note: SysY only supports %d. The original problem outputs chars.
+                   Here we output the ASCII integer value. */
+                if (first_out != 0) {
+                    printf("%d", outch);
+                    first_out = 0;
+                } else {
+                    printf(" %d", outch); // Space separated for readability
+                }
+            }
+        }
+        printf("\n");
+    }
+
+    return 0;
+}

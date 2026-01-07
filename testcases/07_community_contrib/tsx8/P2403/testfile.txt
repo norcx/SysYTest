@@ -1,0 +1,235 @@
+const int NODE_LIMIT = 32;
+const int EDGE_LIMIT = 128;
+
+int head[NODE_LIMIT];
+int head2[NODE_LIMIT];
+int to[EDGE_LIMIT];
+int to2[EDGE_LIMIT];
+int nxt[EDGE_LIMIT];
+int nxt2[EDGE_LIMIT];
+int ecnt;
+int ecnt2;
+int raw_u[EDGE_LIMIT];
+int raw_v[EDGE_LIMIT];
+int raw_cnt;
+
+int stack_nodes[NODE_LIMIT];
+int stack_top;
+int in_stack[NODE_LIMIT];
+int dfn[NODE_LIMIT];
+int low[NODE_LIMIT];
+int color[NODE_LIMIT];
+int dfs_time;
+int scc_count;
+
+int value[NODE_LIMIT];
+int indeg[NODE_LIMIT];
+int dp[NODE_LIMIT];
+
+int queue_nodes[NODE_LIMIT];
+int q_head;
+int q_tail;
+
+int bx[8];
+int by[8];
+int bt[8];
+int treasure_count;
+int row_count;
+int col_count;
+int total_nodes;
+int rc_limit;
+
+int dx[8] = {1, 1, 1, 0, 0, -1, -1, -1};
+int dy[8] = {1, 0, -1, 1, -1, 1, 0, -1};
+
+void add_edge(int u, int v) {
+    if (raw_cnt < EDGE_LIMIT) {
+        raw_u[raw_cnt] = u;
+        raw_v[raw_cnt] = v;
+        raw_cnt = raw_cnt + 1;
+    }
+    if (ecnt < EDGE_LIMIT) {
+        to[ecnt] = v;
+        nxt[ecnt] = head[u];
+        head[u] = ecnt;
+        ecnt = ecnt + 1;
+    }
+}
+
+void add_cond_edge(int u, int v) {
+    if (ecnt2 < EDGE_LIMIT) {
+        to2[ecnt2] = v;
+        nxt2[ecnt2] = head2[u];
+        head2[u] = ecnt2;
+        ecnt2 = ecnt2 + 1;
+    }
+}
+
+int getid(int x, int y) {
+    int i;
+    for (i = 1; i <= treasure_count; i = i + 1) {
+        if (bx[i] == x && by[i] == y) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void tarjan(int u) {
+    dfs_time = dfs_time + 1;
+    dfn[u] = dfs_time;
+    low[u] = dfs_time;
+    stack_top = stack_top + 1;
+    stack_nodes[stack_top] = u;
+    in_stack[u] = 1;
+    int e = head[u];
+    for (; e != -1; ) {
+        int v = to[e];
+        if (dfn[v] == 0) {
+            tarjan(v);
+            if (low[v] < low[u]) {
+                low[u] = low[v];
+            }
+        } else if (in_stack[v] == 1) {
+            if (dfn[v] < low[u]) {
+                low[u] = dfn[v];
+            }
+        }
+        e = nxt[e];
+    }
+    if (dfn[u] == low[u]) {
+        scc_count = scc_count + 1;
+        value[scc_count] = 0;
+        int loop_flag = 1;
+        for (; loop_flag == 1; ) {
+            int w = stack_nodes[stack_top];
+            stack_top = stack_top - 1;
+            in_stack[w] = 0;
+            color[w] = scc_count;
+            if (w > rc_limit) {
+                value[scc_count] = value[scc_count] + 1;
+            }
+            if (w == u) {
+                loop_flag = 0;
+            }
+        }
+    }
+}
+
+int main() {
+    row_count = 2;
+    col_count = 2;
+    treasure_count = 3;
+    rc_limit = row_count + col_count;
+    total_nodes = rc_limit + treasure_count;
+    int i;
+    for (i = 0; i < NODE_LIMIT; i = i + 1) {
+        head[i] = -1;
+        head2[i] = -1;
+        in_stack[i] = 0;
+        dfn[i] = 0;
+        low[i] = 0;
+        color[i] = 0;
+        value[i] = 0;
+        indeg[i] = 0;
+        dp[i] = 0;
+    }
+    ecnt = 0;
+    ecnt2 = 0;
+    raw_cnt = 0;
+    stack_top = 0;
+    dfs_time = 0;
+    scc_count = 0;
+    q_head = 0;
+    q_tail = 0;
+
+    bx[1] = 1;
+    by[1] = 1;
+    bt[1] = 3;
+    bx[2] = 1;
+    by[2] = 2;
+    bt[2] = 1;
+    bx[3] = 2;
+    by[3] = 1;
+    bt[3] = 2;
+
+    for (i = 1; i <= treasure_count; i = i + 1) {
+        int row_node = bx[i];
+        int col_node = row_count + by[i];
+        int treasure_index = rc_limit + i;
+        add_edge(row_node, treasure_index);
+        add_edge(col_node, treasure_index);
+        if (bt[i] == 1) {
+            add_edge(treasure_index, row_node);
+        } else if (bt[i] == 2) {
+            add_edge(treasure_index, col_node);
+        } else {
+            int k;
+            for (k = 0; k < 8; k = k + 1) {
+                int nx_pos = bx[i] + dx[k];
+                int ny_pos = by[i] + dy[k];
+                if (nx_pos >= 1 && nx_pos <= row_count && ny_pos >= 1 && ny_pos <= col_count) {
+                    int id = getid(nx_pos, ny_pos);
+                    if (id != -1) {
+                        int linked = rc_limit + id;
+                        add_edge(treasure_index, linked);
+                    }
+                }
+            }
+        }
+    }
+
+    for (i = 1; i <= total_nodes; i = i + 1) {
+        if (dfn[i] == 0) {
+            tarjan(i);
+        }
+    }
+
+    for (i = 0; i < raw_cnt; i = i + 1) {
+        int u = color[raw_u[i]];
+        int v = color[raw_v[i]];
+        if (u != v) {
+            add_cond_edge(u, v);
+            indeg[v] = indeg[v] + 1;
+        }
+    }
+
+    for (i = 1; i <= scc_count; i = i + 1) {
+        if (indeg[i] == 0) {
+            queue_nodes[q_tail] = i;
+            q_tail = q_tail + 1;
+        }
+    }
+
+    for (; q_head < q_tail; ) {
+        int u = queue_nodes[q_head];
+        q_head = q_head + 1;
+        if (dp[u] == 0) {
+            dp[u] = value[u];
+        }
+        int e = head2[u];
+        for (; e != -1; ) {
+            int v = to2[e];
+            int candidate = dp[u] + value[v];
+            if (candidate > dp[v]) {
+                dp[v] = candidate;
+            }
+            indeg[v] = indeg[v] - 1;
+            if (indeg[v] == 0) {
+                queue_nodes[q_tail] = v;
+                q_tail = q_tail + 1;
+            }
+            e = nxt2[e];
+        }
+    }
+
+    int ans = 0;
+    for (i = 1; i <= scc_count; i = i + 1) {
+        if (dp[i] > ans) {
+            ans = dp[i];
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

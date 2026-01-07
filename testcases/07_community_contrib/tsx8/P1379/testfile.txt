@@ -1,0 +1,185 @@
+/* Description:
+ *   Luogu P1379 "Eight Puzzle" distance-to-goal solver.
+ *   Input: a 9-digit integer (digits 0..8, each exactly once), no spaces.
+ *   Output: minimum moves to reach goal state 123804765.
+ */
+
+const int NSTATE = 362880;
+
+int fact[9];
+int dist[362880];
+int q[362880];
+int dx[4];
+int dy[4];
+int goal[9];
+int buf[9];
+
+void init_fact() {
+    int i;
+    fact[0] = 1;
+    for (i = 1; i < 9; i = i + 1) {
+        fact[i] = fact[i - 1] * i;
+    }
+}
+
+void init_dirs() {
+    dx[0] = -1;
+    dx[1] = 1;
+    dx[2] = 0;
+    dx[3] = 0;
+    dy[0] = 0;
+    dy[1] = 0;
+    dy[2] = -1;
+    dy[3] = 1;
+}
+
+void init_goal() {
+    goal[0] = 1;
+    goal[1] = 2;
+    goal[2] = 3;
+    goal[3] = 8;
+    goal[4] = 0;
+    goal[5] = 4;
+    goal[6] = 7;
+    goal[7] = 6;
+    goal[8] = 5;
+}
+
+int rank_perm(int a[]) {
+    int code;
+    int i;
+    int j;
+    int cnt;
+    code = 0;
+    for (i = 0; i < 9; i = i + 1) {
+        cnt = 0;
+        for (j = i + 1; j < 9; j = j + 1) {
+            if (a[j] < a[i]) {
+                cnt = cnt + 1;
+            }
+        }
+        code = code + fact[8 - i] * cnt;
+    }
+    return code;
+}
+
+void unrank_perm(int code, int out[]) {
+    int pool[9];
+    int len;
+    int i;
+    int j;
+    int f;
+    int idx;
+
+    len = 9;
+    for (i = 0; i < 9; i = i + 1) {
+        pool[i] = i;
+    }
+
+    for (i = 0; i < 9; i = i + 1) {
+        f = fact[8 - i];
+        idx = code / f;
+        code = code - idx * f;
+        out[i] = pool[idx];
+        for (j = idx; j < len - 1; j = j + 1) {
+            pool[j] = pool[j + 1];
+        }
+        len = len - 1;
+    }
+}
+
+int bfs_dist(int start_id, int goal_id) {
+    int i;
+    int front;
+    int rear;
+
+    for (i = 0; i < NSTATE; i = i + 1) {
+        dist[i] = -1;
+    }
+
+    front = 0;
+    rear = 0;
+    dist[start_id] = 0;
+    q[rear] = start_id;
+    rear = rear + 1;
+
+    for (front = 0; front < rear; front = front + 1) {
+        int cur;
+        int z;
+        int x;
+        int y;
+        int d;
+
+        cur = q[front];
+        if (cur == goal_id) {
+            return dist[cur];
+        }
+
+        unrank_perm(cur, buf);
+
+        z = 0;
+        for (i = 0; i < 9; i = i + 1) {
+            if (buf[i] == 0) {
+                z = i;
+            }
+        }
+        x = z / 3;
+        y = z - x * 3;
+
+        for (d = 0; d < 4; d = d + 1) {
+            int nx;
+            int ny;
+            int nz;
+            int tmp;
+            int nid;
+
+            nx = x + dx[d];
+            ny = y + dy[d];
+            if (nx >= 0 && nx < 3 && ny >= 0 && ny < 3) {
+                nz = nx * 3 + ny;
+
+                tmp = buf[z];
+                buf[z] = buf[nz];
+                buf[nz] = tmp;
+
+                nid = rank_perm(buf);
+                if (dist[nid] == -1) {
+                    dist[nid] = dist[cur] + 1;
+                    q[rear] = nid;
+                    rear = rear + 1;
+                }
+
+                tmp = buf[z];
+                buf[z] = buf[nz];
+                buf[nz] = tmp;
+            }
+        }
+    }
+
+    return -1;
+}
+
+int main() {
+    int t;
+    int start[9];
+    int i;
+    int start_id;
+    int goal_id;
+    int ans;
+
+    init_fact();
+    init_dirs();
+    init_goal();
+
+    t = getint();
+    for (i = 8; i >= 0; i = i - 1) {
+        start[i] = t % 10;
+        t = t / 10;
+    }
+
+    start_id = rank_perm(start);
+    goal_id = rank_perm(goal);
+    ans = bfs_dist(start_id, goal_id);
+    printf("%d\n", ans);
+    return 0;
+}

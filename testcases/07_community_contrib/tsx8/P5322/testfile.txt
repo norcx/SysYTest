@@ -1,0 +1,110 @@
+const int MAXN = 110;
+const int MAXM = 200;
+const int SZ = MAXN * MAXM + 5;
+
+int a[SZ];
+int w[SZ];
+int c[SZ];
+int f[MAXM + 5];
+
+int idx(int i, int j) {
+    return i * MAXM + j;
+}
+
+void swap_a(int p, int q) {
+    int t;
+    t = a[p];
+    a[p] = a[q];
+    a[q] = t;
+}
+
+void qsort_row(int row, int l, int r) {
+    int i;
+    int j;
+    int pivot;
+    int mid;
+    int li;
+    int ri;
+
+    i = l;
+    j = r;
+    mid = (l + r) / 2;
+    pivot = a[idx(row, mid)];
+
+    for (; i <= j; ) {
+        for (; a[idx(row, i)] < pivot; ) {
+            i = i + 1;
+        }
+        for (; a[idx(row, j)] > pivot; ) {
+            j = j - 1;
+        }
+        if (i <= j) {
+            li = idx(row, i);
+            ri = idx(row, j);
+            swap_a(li, ri);
+            i = i + 1;
+            j = j - 1;
+        }
+    }
+
+    if (l < j) {
+        qsort_row(row, l, j);
+    }
+    if (i < r) {
+        qsort_row(row, i, r);
+    }
+}
+
+int main() {
+    int s;
+    int n;
+    int m;
+    int i;
+    int j;
+    int k;
+    int id;
+    int cost;
+    int cand;
+
+    s = getint();
+    n = getint();
+    m = getint();
+
+    for (i = 0; i <= m; i = i + 1) {
+        f[i] = 0;
+    }
+
+    for (i = 1; i <= s; i = i + 1) {
+        for (j = 1; j <= n; j = j + 1) {
+            a[idx(j, i)] = getint();
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (s >= 1) {
+            qsort_row(i, 1, s);
+        }
+        for (j = 1; j <= s; j = j + 1) {
+            id = idx(i, j);
+            w[id] = a[id] * 2 + 1;
+            c[id] = j * i;
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = m; j >= 1; j = j - 1) {
+            for (k = 1; k <= s; k = k + 1) {
+                cost = w[idx(i, k)];
+                if (j >= cost) {
+                    cand = f[j - cost] + c[idx(i, k)];
+                    if (f[j] < cand) {
+                        f[j] = cand;
+                    }
+                }
+            }
+        }
+    }
+
+    printf("%d", f[m]);
+    return 0;
+}

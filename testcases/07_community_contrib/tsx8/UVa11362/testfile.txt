@@ -1,0 +1,79 @@
+const int DIG = 10;
+
+int ch[50000];
+int endFlag[5000];
+int sz;
+
+void clearTrie() {
+    int i;
+    int d;
+    for (i = 0; i <= sz; i = i + 1) {
+        endFlag[i] = 0;
+        for (d = 0; d < DIG; d = d + 1) {
+            ch[i * DIG + d] = 0;
+        }
+    }
+    sz = 0;
+}
+
+int insertNumber(int len) {
+    int u;
+    int created;
+    int sawEnd;
+    int i;
+    int d;
+    int idx;
+    int v;
+
+    u = 0;
+    created = 0;
+    sawEnd = 0;
+
+    for (i = 0; i < len; i = i + 1) {
+        d = getint();
+        idx = u * DIG + d;
+        v = ch[idx];
+        if (v == 0) {
+            sz = sz + 1;
+            v = sz;
+            ch[idx] = v;
+            created = 1;
+        }
+        u = v;
+        if (endFlag[u] == 1) sawEnd = 1;
+    }
+
+    endFlag[u] = 1;
+    if (sawEnd == 1) return 1;
+    if (created == 0) return 1;
+    return 0;
+}
+
+int main() {
+    int T;
+    int tc;
+    int n;
+    int i;
+    int len;
+    int inconsistent;
+    int j;
+    int dummy;
+
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        clearTrie();
+        inconsistent = 0;
+        n = getint();
+        for (i = 0; i < n; i = i + 1) {
+            len = getint();
+            if (inconsistent == 0) {
+                if (insertNumber(len) == 1) inconsistent = 1;
+            } else {
+                for (j = 0; j < len; j = j + 1) dummy = getint();
+            }
+        }
+        if (inconsistent == 1) printf("%d\n", 0);
+        else printf("%d\n", 1);
+    }
+    return 0;
+}

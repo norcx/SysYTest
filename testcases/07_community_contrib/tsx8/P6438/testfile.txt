@@ -1,0 +1,149 @@
+const int MAXV = 20000;
+const int MAXE = 200000;
+const int MAXQ = 40000;
+const int INF = 1000000000;
+
+int t_l[MAXV];
+int t_r[MAXV];
+
+int edge_v[MAXE];
+int edge_nxt[MAXE];
+int edge_w[MAXE];
+int fst[MAXV];
+int e;
+
+int n;
+int m;
+int s;
+int off;
+int id[MAXV];
+int cnt;
+int d[MAXV];
+
+void add(int u, int v, int w) {
+    e = e + 1;
+    edge_v[e] = v;
+    edge_w[e] = w;
+    edge_nxt[e] = fst[u];
+    fst[u] = e;
+}
+
+void build(int o, int l, int r) {
+    t_l[o] = l;
+    t_r[o] = r;
+    if (l == r) {
+        id[l] = o;
+        return;
+    }
+    add(o, o * 2, 0);
+    add(o * 2 + off, o + off, 0);
+    add(o, o * 2 + 1, 0);
+    add(o * 2 + 1 + off, o + off, 0);
+    build(o * 2, l, (l + r) / 2);
+    build(o * 2 + 1, (l + r) / 2 + 1, r);
+}
+
+void adds(int o, int x, int y, int type, int u) {
+    int l = t_l[o];
+    int r = t_r[o];
+    int mid = (l + r) / 2;
+    if (l == x && y == r) {
+        if (type == 0) {
+            add(u, o, 0);
+        } else {
+            add(o + off, u, 0);
+        }
+        return;
+    }
+    if (y <= mid) {
+        adds(o * 2, x, y, type, u);
+    } else if (x > mid) {
+        adds(o * 2 + 1, x, y, type, u);
+    } else {
+        adds(o * 2, x, mid, type, u);
+        adds(o * 2 + 1, mid + 1, y, type, u);
+    }
+}
+
+void bfs() {
+    int q[MAXQ];
+    int head = 0;
+    int tail = 0;
+
+    int i;
+    for (i = 0; i < MAXV; i = i + 1) {
+        d[i] = INF;
+    }
+    d[s] = 0;
+
+    q[tail] = s;
+    tail = (tail + 1) % MAXQ;
+
+    for (; head != tail;) {
+        int u = q[head];
+        head = (head + 1) % MAXQ;
+
+        int ei;
+        for (ei = fst[u]; ei != 0; ei = edge_nxt[ei]) {
+            int v = edge_v[ei];
+            int w = edge_w[ei];
+            int nd = d[u] + w;
+            if (d[v] > nd) {
+                d[v] = nd;
+                if (w == 0) {
+                    head = (head - 1 + MAXQ) % MAXQ;
+                    q[head] = v;
+                } else {
+                    q[tail] = v;
+                    tail = (tail + 1) % MAXQ;
+                }
+            }
+        }
+    }
+}
+
+int main() {
+    n = getint();
+    m = getint();
+    s = getint();
+
+    off = n * 4;
+    build(1, 1, n);
+
+    cnt = n * 8;
+
+    int i;
+    for (i = 1; i <= m; i = i + 1) {
+        int la = getint();
+        int lb = getint();
+        int ra = getint();
+        int rb = getint();
+
+        int x = cnt + 1;
+        int y = cnt + 2;
+        cnt = cnt + 2;
+        add(y, x, 1);
+        adds(1, ra, rb, 0, x);
+        adds(1, la, lb, 1, y);
+
+        x = cnt + 1;
+        y = cnt + 2;
+        cnt = cnt + 2;
+        add(y, x, 1);
+        adds(1, la, lb, 0, x);
+        adds(1, ra, rb, 1, y);
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        add(id[i], id[i] + off, 0);
+        add(id[i] + off, id[i], 0);
+    }
+
+    s = id[s] + off;
+    bfs();
+
+    for (i = 1; i <= n; i = i + 1) {
+        printf("%d\n", d[id[i]]);
+    }
+    return 0;
+}

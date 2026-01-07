@@ -1,0 +1,168 @@
+const int NMAX = 12;
+const int MAXL = 60;
+const int XSIZE = 61;
+const int MASKMAX = 4096;
+const int DPSIZE = 249856;
+
+int n;
+int a[NMAX];
+int pow2[16];
+int sum[MASKMAX];
+int f[DPSIZE];
+int vis[DPSIZE];
+
+int min2(int x, int y) {
+    if (x < y) return x;
+    return y;
+}
+
+int getbit(int s, int i) {
+    return (s / pow2[i]) % 2;
+}
+
+int bitcount(int s) {
+    int i;
+    int c;
+    c = 0;
+    for (i = 0; i < n; i = i + 1) {
+        if (getbit(s, i) == 1) c = c + 1;
+    }
+    return c;
+}
+
+int dp(int s, int x) {
+    int idx;
+    int y;
+    int i;
+    int j;
+    int k;
+    int limit;
+    int t;
+    int s0;
+    int s1;
+    int elems[16];
+    int nx0;
+    int nx1;
+    int ny0;
+    int ny1;
+
+    idx = s * XSIZE + x;
+    if (vis[idx] != 0) return f[idx];
+    vis[idx] = 1;
+
+    if (bitcount(s) == 1) {
+        f[idx] = 1;
+        return 1;
+    }
+
+    y = sum[s] / x;
+
+    k = 0;
+    for (i = 0; i < n; i = i + 1) {
+        if (getbit(s, i) == 1) {
+            elems[k] = i;
+            k = k + 1;
+        }
+    }
+
+    limit = pow2[k];
+    for (t = 1; t < limit - 1; t = t + 1) {
+        s0 = 0;
+        for (j = 0; j < k; j = j + 1) {
+            if (((t / pow2[j]) % 2) == 1) {
+                s0 = s0 + pow2[elems[j]];
+            }
+        }
+
+        s1 = s - s0;
+
+        if (sum[s0] % x == 0) {
+            nx0 = min2(x, sum[s0] / x);
+            nx1 = min2(x, sum[s1] / x);
+            if (dp(s0, nx0) != 0) {
+                if (dp(s1, nx1) != 0) {
+                    f[idx] = 1;
+                    return 1;
+                }
+            }
+        }
+
+        if (sum[s0] % y == 0) {
+            ny0 = min2(y, sum[s0] / y);
+            ny1 = min2(y, sum[s1] / y);
+            if (dp(s0, ny0) != 0) {
+                if (dp(s1, ny1) != 0) {
+                    f[idx] = 1;
+                    return 1;
+                }
+            }
+        }
+    }
+
+    f[idx] = 0;
+    return 0;
+}
+
+int main() {
+    int i;
+    int s;
+    int maskLimit;
+    int all;
+    int x;
+    int y;
+    int nRaw;
+    int caseNo;
+    int ans;
+    int total;
+    int smaller;
+    int visLimit;
+    int idx;
+
+    pow2[0] = 1;
+    for (i = 1; i < 16; i = i + 1) pow2[i] = pow2[i - 1] * 2;
+
+    caseNo = 0;
+    for (;;) {
+        nRaw = getint();
+        if (nRaw == 0) break;
+        x = getint();
+        y = getint();
+
+        if (nRaw > NMAX) {
+            for (i = 0; i < nRaw; i = i + 1) getint();
+            caseNo = caseNo + 1;
+            printf("Case %d: No\n", caseNo);
+            continue;
+        }
+
+        n = nRaw;
+        for (i = 0; i < n; i = i + 1) a[i] = getint();
+
+        maskLimit = pow2[n];
+        for (s = 0; s < maskLimit; s = s + 1) {
+            total = 0;
+            for (i = 0; i < n; i = i + 1) {
+                if (getbit(s, i) == 1) total = total + a[i];
+            }
+            sum[s] = total;
+        }
+
+        visLimit = maskLimit * XSIZE;
+        for (idx = 0; idx < visLimit; idx = idx + 1) vis[idx] = 0;
+
+        all = maskLimit - 1;
+        ans = 0;
+        smaller = min2(x, y);
+        if (x > 0 && y > 0) {
+            if (x <= MAXL && y <= MAXL && smaller <= MAXL) {
+                if (sum[all] == x * y) ans = dp(all, smaller);
+            }
+        }
+
+        caseNo = caseNo + 1;
+        if (ans != 0) printf("Case %d: Yes\n", caseNo);
+        else printf("Case %d: No\n", caseNo);
+    }
+
+    return 0;
+}

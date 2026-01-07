@@ -1,0 +1,119 @@
+const int MAXN = 50000 + 10;
+const int MAXT = MAXN * 4;
+
+int n;
+int m;
+
+int maxv[MAXT];
+int maxl[MAXT];
+int maxr[MAXT];
+int sumv[MAXT];
+
+int max2(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+void pushup(int o) {
+    int lc = o * 2;
+    int rc = o * 2 + 1;
+    int cross = maxr[lc] + maxl[rc];
+    int t = max2(maxv[lc], maxv[rc]);
+    maxv[o] = max2(t, cross);
+    maxl[o] = max2(maxl[lc], sumv[lc] + maxl[rc]);
+    maxr[o] = max2(maxr[rc], sumv[rc] + maxr[lc]);
+    sumv[o] = sumv[lc] + sumv[rc];
+}
+
+void build(int o, int L, int R) {
+    if (L == R) {
+        int v = getint();
+        maxv[o] = v;
+        maxl[o] = v;
+        maxr[o] = v;
+        sumv[o] = v;
+        return;
+    }
+    int M = (L + R) / 2;
+    build(o * 2, L, M);
+    build(o * 2 + 1, M + 1, R);
+    pushup(o);
+}
+
+void update(int p, int o, int L, int R, int k) {
+    if (L == R) {
+        maxv[o] = k;
+        maxl[o] = k;
+        maxr[o] = k;
+        sumv[o] = k;
+        return;
+    }
+    int M = (L + R) / 2;
+    if (p <= M) update(p, o * 2, L, M, k);
+    else update(p, o * 2 + 1, M + 1, R, k);
+    pushup(o);
+}
+
+void merge(int res[], int left[], int right[]) {
+    int cross = left[2] + right[1];
+    int t = max2(left[0], right[0]);
+    res[0] = max2(t, cross);
+    res[1] = max2(left[1], left[3] + right[1]);
+    res[2] = max2(right[2], right[3] + left[2]);
+    res[3] = left[3] + right[3];
+}
+
+void query(int o, int qL, int qR, int L, int R, int res[]) {
+    int left[4];
+    int right[4];
+    if (qL <= L) {
+        if (R <= qR) {
+            res[0] = maxv[o];
+            res[1] = maxl[o];
+            res[2] = maxr[o];
+            res[3] = sumv[o];
+            return;
+        }
+    }
+    int M = (L + R) / 2;
+    if (qR <= M) {
+        query(o * 2, qL, qR, L, M, res);
+        return;
+    }
+    if (qL > M) {
+        query(o * 2 + 1, qL, qR, M + 1, R, res);
+        return;
+    }
+    query(o * 2, qL, qR, L, M, left);
+    query(o * 2 + 1, qL, qR, M + 1, R, right);
+    merge(res, left, right);
+}
+
+int main() {
+    int i;
+    int opt;
+    int x;
+    int y;
+    int tmp;
+    int res[4];
+    n = getint();
+    m = getint();
+    build(1, 1, n);
+    for (i = 0; i < m; i = i + 1) {
+        opt = getint();
+        x = getint();
+        y = getint();
+        if (opt == 1) {
+            if (x > y) {
+                tmp = x;
+                x = y;
+                y = tmp;
+            }
+            query(1, x, y, 1, n, res);
+            printf("%d\n", res[0]);
+        } else {
+            update(x, 1, 1, n, y);
+        }
+    }
+    return 0;
+}

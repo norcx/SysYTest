@@ -1,0 +1,41 @@
+const int MAXA = 1024;
+const int MAXB = 1024;
+const int MAXC = 2048;
+
+int a[MAXA];
+int b[MAXB];
+int c[MAXC];
+
+int main() {
+    int n = getint();
+    int m = getint();
+
+    int i = 0;
+    for (i = 0; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+    for (i = 0; i <= m; i = i + 1) {
+        b[i] = getint();
+    }
+
+    int k = 0;
+    for (k = 0; k <= n + m; k = k + 1) {
+        c[k] = 0;
+    }
+
+    int j = 0;
+    for (i = 0; i <= n; i = i + 1) {
+        for (j = 0; j <= m; j = j + 1) {
+            c[i + j] = c[i + j] + a[i] * b[j];
+        }
+    }
+
+    for (k = 0; k <= n + m; k = k + 1) {
+        if (k == n + m) {
+            printf("%d\n", c[k]);
+        } else {
+            printf("%d ", c[k]);
+        }
+    }
+    return 0;
+}

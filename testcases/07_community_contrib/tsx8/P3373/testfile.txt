@@ -1,0 +1,144 @@
+int n;
+int m;
+int MOD;
+
+const int MAXN = 10010;
+const int MAXT = MAXN * 4;
+
+int a[MAXN];
+int sumv[MAXT];
+int addv[MAXT];
+int mulv[MAXT];
+
+void build(int o, int l, int r) {
+    int lc;
+    int rc;
+    int mid;
+    mulv[o] = 1;
+    addv[o] = 0;
+    if (l == r) {
+        sumv[o] = a[l] % MOD;
+        return;
+    }
+    lc = o * 2;
+    rc = lc + 1;
+    mid = (l + r) / 2;
+    build(lc, l, mid);
+    build(rc, mid + 1, r);
+    sumv[o] = (sumv[lc] + sumv[rc]) % MOD;
+}
+
+void pushdown(int o, int l, int r) {
+    int lc;
+    int rc;
+    int mid;
+    int leftLen;
+    int rightLen;
+    int mulTag;
+    int addTag;
+    lc = o * 2;
+    rc = lc + 1;
+    mid = (l + r) / 2;
+    leftLen = mid - l + 1;
+    rightLen = r - mid;
+    mulTag = mulv[o];
+    addTag = addv[o];
+
+    sumv[lc] = (sumv[lc] * mulTag + addTag * leftLen) % MOD;
+    sumv[rc] = (sumv[rc] * mulTag + addTag * rightLen) % MOD;
+
+    mulv[lc] = (mulv[lc] * mulTag) % MOD;
+    mulv[rc] = (mulv[rc] * mulTag) % MOD;
+
+    addv[lc] = (addv[lc] * mulTag + addTag) % MOD;
+    addv[rc] = (addv[rc] * mulTag + addTag) % MOD;
+
+    mulv[o] = 1;
+    addv[o] = 0;
+}
+
+void rangeMul(int o, int l, int r, int x, int y, int k) {
+    int lc;
+    int rc;
+    int mid;
+    if (y < l || r < x) return;
+    if (x <= l && r <= y) {
+        sumv[o] = (sumv[o] * k) % MOD;
+        addv[o] = (addv[o] * k) % MOD;
+        mulv[o] = (mulv[o] * k) % MOD;
+        return;
+    }
+    pushdown(o, l, r);
+    lc = o * 2;
+    rc = lc + 1;
+    mid = (l + r) / 2;
+    rangeMul(lc, l, mid, x, y, k);
+    rangeMul(rc, mid + 1, r, x, y, k);
+    sumv[o] = (sumv[lc] + sumv[rc]) % MOD;
+}
+
+void rangeAdd(int o, int l, int r, int x, int y, int k) {
+    int lc;
+    int rc;
+    int mid;
+    if (y < l || r < x) return;
+    if (x <= l && r <= y) {
+        sumv[o] = (sumv[o] + k * (r - l + 1)) % MOD;
+        addv[o] = (addv[o] + k) % MOD;
+        return;
+    }
+    pushdown(o, l, r);
+    lc = o * 2;
+    rc = lc + 1;
+    mid = (l + r) / 2;
+    rangeAdd(lc, l, mid, x, y, k);
+    rangeAdd(rc, mid + 1, r, x, y, k);
+    sumv[o] = (sumv[lc] + sumv[rc]) % MOD;
+}
+
+int query(int o, int l, int r, int x, int y) {
+    int lc;
+    int rc;
+    int mid;
+    int res;
+    if (y < l || r < x) return 0;
+    if (x <= l && r <= y) return sumv[o];
+    pushdown(o, l, r);
+    lc = o * 2;
+    rc = lc + 1;
+    mid = (l + r) / 2;
+    res = query(lc, l, mid, x, y) + query(rc, mid + 1, r, x, y);
+    return res % MOD;
+}
+
+int main() {
+    int i;
+    int opt;
+    int qL;
+    int qR;
+    int k;
+    n = getint();
+    m = getint();
+    MOD = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+    build(1, 1, n);
+    for (; m > 0; m = m - 1) {
+        opt = getint();
+        qL = getint();
+        qR = getint();
+        if (opt == 1) {
+            k = getint() % MOD;
+            rangeMul(1, 1, n, qL, qR, k);
+        } else {
+            if (opt == 2) {
+                k = getint() % MOD;
+                rangeAdd(1, 1, n, qL, qR, k);
+            } else {
+                printf("%d\n", query(1, 1, n, qL, qR));
+            }
+        }
+    }
+    return 0;
+}

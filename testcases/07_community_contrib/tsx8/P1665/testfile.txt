@@ -1,0 +1,56 @@
+/* Description: SysY port of Luogu P1665 square counting using midpoint hashing via doubled coordinates. */
+const int MAXN = 32;
+const int SHIFT = 51;
+
+int xs[MAXN];
+int ys[MAXN];
+int n;
+
+int point_exists(int px, int py) {
+    int idx;
+    idx = 0;
+    for (; idx < n; idx = idx + 1) {
+        if (xs[idx] == px && ys[idx] == py) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int main() {
+    int i;
+    int j;
+    int cnt;
+    int raw_x;
+    int raw_y;
+    n = getint();
+    i = 0;
+    for (; i < n; i = i + 1) {
+        raw_x = getint();
+        raw_y = getint();
+        xs[i] = (raw_x + SHIFT) * 2;
+        ys[i] = (raw_y + SHIFT) * 2;
+    }
+    cnt = 0;
+    i = 0;
+    for (; i < n; i = i + 1) {
+        j = 0;
+        for (; j < n; j = j + 1) {
+            if (i != j) {
+                int n1x;
+                int n1y;
+                int n2x;
+                int n2y;
+                n1x = (xs[i] + ys[i] + xs[j] - ys[j]) / 2;
+                n1y = (0 - xs[i] + ys[i] + xs[j] + ys[j]) / 2;
+                n2x = (xs[i] - ys[i] + xs[j] + ys[j]) / 2;
+                n2y = (xs[i] + ys[i] - xs[j] + ys[j]) / 2;
+                if (point_exists(n1x, n1y) && point_exists(n2x, n2y)) {
+                    cnt = cnt + 1;
+                }
+            }
+        }
+    }
+    printf("%d\n", cnt / 4);
+    return 0;
+}

@@ -1,0 +1,73 @@
+/* P1042 scoreboard variant: consume numeric rally outcomes (1 = win, 0 = loss)
+ * and print both the 11-point and 21-point tallies using SysY-compliant loops.
+ */
+int events[128];
+int eleven_wins[64];
+int eleven_losses[64];
+int twentyone_wins[64];
+int twentyone_losses[64];
+
+int abs_diff(int a, int b) {
+    if (a > b) {
+        return a - b;
+    }
+    return b - a;
+}
+
+int max_value(int a, int b) {
+    if (a > b) {
+        return a;
+    }
+    return b;
+}
+
+int main() {
+    int total = getint();
+    int i = 0;
+    for (i = 0; i < total; i = i + 1) {
+        events[i] = getint();
+    }
+    int w11 = 0;
+    int l11 = 0;
+    int w21 = 0;
+    int l21 = 0;
+    int finished11 = 0;
+    int finished21 = 0;
+    for (i = 0; i < total; i = i + 1) {
+        if (events[i] == 1) {
+            w11 = w11 + 1;
+            w21 = w21 + 1;
+        } else {
+            l11 = l11 + 1;
+            l21 = l21 + 1;
+        }
+        if (max_value(w11, l11) >= 11 && abs_diff(w11, l11) >= 2) {
+            eleven_wins[finished11] = w11;
+            eleven_losses[finished11] = l11;
+            finished11 = finished11 + 1;
+            w11 = 0;
+            l11 = 0;
+        }
+        if (max_value(w21, l21) >= 21 && abs_diff(w21, l21) >= 2) {
+            twentyone_wins[finished21] = w21;
+            twentyone_losses[finished21] = l21;
+            finished21 = finished21 + 1;
+            w21 = 0;
+            l21 = 0;
+        }
+    }
+    eleven_wins[finished11] = w11;
+    eleven_losses[finished11] = l11;
+    finished11 = finished11 + 1;
+    twentyone_wins[finished21] = w21;
+    twentyone_losses[finished21] = l21;
+    finished21 = finished21 + 1;
+    for (i = 0; i < finished11; i = i + 1) {
+        printf("%d:%d\n", eleven_wins[i], eleven_losses[i]);
+    }
+    printf("\n");
+    for (i = 0; i < finished21; i = i + 1) {
+        printf("%d:%d\n", twentyone_wins[i], twentyone_losses[i]);
+    }
+    return 0;
+}

@@ -1,0 +1,50 @@
+const int MAXN = 1010;
+
+int n;
+int m;
+int T[MAXN];
+int dp[MAXN];
+int d_room[MAXN];
+int d_val[MAXN];
+int d_t[MAXN];
+
+int main() {
+    int i;
+    int j;
+    int cand;
+
+    n = getint();
+    m = getint();
+
+    for (i = 0; i < n; i = i + 1) {
+        T[i] = getint();
+    }
+    for (i = 1; i < n; i = i + 1) {
+        if (T[i] > T[i - 1]) {
+            T[i] = T[i - 1];
+        }
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        d_room[i] = getint();
+        d_val[i] = getint();
+        d_t[i] = getint();
+    }
+
+    for (i = 1; i < T[0]; i = i + 1) {
+        dp[i] = dp[i - 1];
+        for (j = 1; j <= m; j = j + 1) {
+            if (T[d_room[j]] > i) {
+                if (d_t[j] <= i) {
+                    cand = dp[i - d_t[j]] + d_val[j];
+                    if (dp[i] < cand) {
+                        dp[i] = cand;
+                    }
+                }
+            }
+        }
+    }
+
+    printf("%d", dp[T[0] - 1]);
+    return 0;
+}

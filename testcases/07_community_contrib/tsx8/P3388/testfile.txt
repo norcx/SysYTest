@@ -1,0 +1,81 @@
+const int MAXN = 20010;
+const int MAXM = 100010;
+const int MAXE = MAXM * 2 + 5;
+
+int n;
+int m;
+int res;
+int e;
+
+int fst[MAXN];
+int eu[MAXE];
+int ev[MAXE];
+int enxt[MAXE];
+
+int dfn[MAXN];
+int low[MAXN];
+int bIndex;
+int cut[MAXN];
+
+void add(int u, int v) {
+    e = e + 1;
+    eu[e] = u;
+    ev[e] = v;
+    enxt[e] = fst[u];
+    fst[u] = e;
+}
+
+void tarjan(int u, int fa) {
+    int i;
+    int v;
+    int ch;
+
+    bIndex = bIndex + 1;
+    dfn[u] = bIndex;
+    low[u] = bIndex;
+    ch = 0;
+
+    for (i = fst[u]; i != 0; i = enxt[i]) {
+        v = ev[i];
+        if (dfn[v] == 0) {
+            tarjan(v, u);
+            if (low[u] > low[v]) low[u] = low[v];
+            if (low[v] >= dfn[u] && u != fa) cut[u] = 1;
+            if (u == fa) ch = ch + 1;
+        }
+        if (low[u] > dfn[v]) low[u] = dfn[v];
+    }
+
+    if (ch >= 2 && u == fa) cut[u] = 1;
+}
+
+int main() {
+    int i;
+    int u;
+    int v;
+
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= m; i = i + 1) {
+        u = getint();
+        v = getint();
+        add(u, v);
+        add(v, u);
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (dfn[i] == 0) tarjan(i, i);
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (cut[i] != 0) res = res + 1;
+    }
+
+    printf("%d\n", res);
+    for (i = 1; i <= n; i = i + 1) {
+        if (cut[i] != 0) printf("%d ", i);
+    }
+
+    return 0;
+}

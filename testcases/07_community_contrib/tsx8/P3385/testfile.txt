@@ -1,0 +1,108 @@
+const int MAXN = 2010;
+const int MAXM = 3010;
+const int MAXE = 2 * MAXM + 5;
+const int QCAP = MAXN + 5;
+const int INF = 1061109567;
+
+int n;
+int m;
+int head[MAXN];
+int to[MAXE];
+int wgt[MAXE];
+int nxt[MAXE];
+int e;
+
+int dis[MAXN];
+int cnt[MAXN];
+int vis[MAXN];
+
+int q[QCAP];
+int qh;
+int qt;
+
+void add(int u, int v, int w) {
+    e = e + 1;
+    to[e] = v;
+    wgt[e] = w;
+    nxt[e] = head[u];
+    head[u] = e;
+}
+
+int spfa() {
+    int i;
+    int u;
+    int v;
+    int w;
+
+    for (i = 1; i <= n; i = i + 1) {
+        dis[i] = INF;
+        cnt[i] = 0;
+        vis[i] = 0;
+    }
+
+    qh = 0;
+    qt = 0;
+    dis[1] = 0;
+    vis[1] = 1;
+    q[qt] = 1;
+    qt = qt + 1;
+    if (qt >= QCAP) qt = 0;
+
+    for (; qh != qt;) {
+        u = q[qh];
+        qh = qh + 1;
+        if (qh >= QCAP) qh = 0;
+        vis[u] = 0;
+
+        for (i = head[u]; i != 0; i = nxt[i]) {
+            v = to[i];
+            w = wgt[i];
+            if (dis[u] != INF && dis[v] > dis[u] + w) {
+                dis[v] = dis[u] + w;
+                cnt[v] = cnt[u] + 1;
+                if (cnt[v] >= n) {
+                    printf("YES\n");
+                    return 0;
+                }
+                if (vis[v] == 0) {
+                    vis[v] = 1;
+                    q[qt] = v;
+                    qt = qt + 1;
+                    if (qt >= QCAP) qt = 0;
+                }
+            }
+        }
+    }
+
+    printf("NO\n");
+    return 0;
+}
+
+int main() {
+    int T;
+    int t;
+    int i;
+    int u;
+    int v;
+    int w;
+
+    T = getint();
+    for (t = 0; t < T; t = t + 1) {
+        n = getint();
+        m = getint();
+        e = 0;
+
+        for (i = 1; i <= n; i = i + 1) head[i] = 0;
+
+        for (i = 1; i <= m; i = i + 1) {
+            u = getint();
+            v = getint();
+            w = getint();
+            add(u, v, w);
+            if (w >= 0) add(v, u, w);
+        }
+
+        spfa();
+    }
+    return 0;
+}

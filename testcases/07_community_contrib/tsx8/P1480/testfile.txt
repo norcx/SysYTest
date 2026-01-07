@@ -1,0 +1,177 @@
+/* Description: Full big integer division path from Luogu P1480 rewritten with SysY-compliant loops and printf-only output. */
+
+const int MAX_DIGITS=128;
+
+int dividend[MAX_DIGITS];
+int divisor[MAX_DIGITS];
+int quotient[MAX_DIGITS];
+int mod_digits[MAX_DIGITS];
+
+int trim_digits(int arr[], int len) {
+    if (len == 0) {
+        return 0;
+    }
+    for (; len > 1 && arr[len - 1] == 0; ) {
+        len = len - 1;
+    }
+    return len;
+}
+
+int read_digits(int arr[]) {
+    int len;
+    int idx;
+    int digit;
+    len = getint();
+    for (idx = 0; idx < len; idx = idx + 1) {
+        digit = getint();
+        arr[len - 1 - idx] = digit;
+    }
+    return trim_digits(arr, len);
+}
+
+int cmp_digits(int lhs[], int lhs_len, int rhs[], int rhs_len) {
+    if (lhs_len == 0 && rhs_len == 0) {
+        return 0;
+    }
+    if (lhs_len == 0) {
+        return -1;
+    }
+    if (rhs_len == 0) {
+        return 1;
+    }
+    if (lhs_len > rhs_len) {
+        return 1;
+    }
+    if (lhs_len < rhs_len) {
+        return -1;
+    }
+    int idx;
+    idx = lhs_len - 1;
+    for (; idx >= 0; idx = idx - 1) {
+        if (lhs[idx] > rhs[idx]) {
+            return 1;
+        }
+        if (lhs[idx] < rhs[idx]) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int sub_assign(int lhs[], int lhs_len, int rhs[], int rhs_len) {
+    int idx;
+    int borrow;
+    int cur;
+    borrow = 0;
+    idx = 0;
+    for (idx = 0; idx < lhs_len; idx = idx + 1) {
+        cur = lhs[idx] - borrow;
+        if (idx < rhs_len) {
+            cur = cur - rhs[idx];
+        }
+        if (cur < 0) {
+            cur = cur + 10;
+            borrow = 1;
+        } else {
+            borrow = 0;
+        }
+        lhs[idx] = cur;
+    }
+    for (; lhs_len > 1 && lhs[lhs_len - 1] == 0; ) {
+        lhs_len = lhs_len - 1;
+    }
+    if (lhs_len == 0) {
+        lhs_len = 1;
+        lhs[0] = 0;
+    }
+    return lhs_len;
+}
+
+int mul_small_assign(int arr[], int len, int factor) {
+    int idx;
+    int carry;
+    int cur;
+    carry = 0;
+    idx = 0;
+    for (idx = 0; idx < len; idx = idx + 1) {
+        cur = arr[idx] * factor + carry;
+        arr[idx] = cur % 10;
+        carry = cur / 10;
+    }
+    for (; carry > 0; ) {
+        arr[len] = carry % 10;
+        len = len + 1;
+        carry = carry / 10;
+    }
+    return len;
+}
+
+int add_small_assign(int arr[], int len, int value) {
+    int idx;
+    int carry;
+    int cur;
+    carry = value;
+    idx = 0;
+    for (idx = 0; idx < len && carry > 0; idx = idx + 1) {
+        cur = arr[idx] + carry;
+        arr[idx] = cur % 10;
+        carry = cur / 10;
+    }
+    for (; carry > 0; ) {
+        arr[len] = carry % 10;
+        len = len + 1;
+        carry = carry / 10;
+    }
+    return len;
+}
+
+int main() {
+    int idx;
+    for (idx = 0; idx < MAX_DIGITS; idx = idx + 1) {
+        dividend[idx] = 0;
+        divisor[idx] = 0;
+        quotient[idx] = 0;
+        mod_digits[idx] = 0;
+    }
+    int dividend_len;
+    int divisor_len;
+    dividend_len = read_digits(dividend);
+    divisor_len = read_digits(divisor);
+    if (dividend_len == 0) {
+        dividend_len = 1;
+        dividend[0] = 0;
+    }
+    if (divisor_len == 0) {
+        divisor_len = 1;
+        divisor[0] = 0;
+    }
+    int mod_len;
+    mod_len = 1;
+    mod_digits[0] = 0;
+    int pos;
+    for (pos = dividend_len - 1; pos >= 0; pos = pos - 1) {
+        mod_len = mul_small_assign(mod_digits, mod_len, 10);
+        mod_len = add_small_assign(mod_digits, mod_len, dividend[pos]);
+        int digit;
+        digit = 0;
+        for (; cmp_digits(mod_digits, mod_len, divisor, divisor_len) >= 0; ) {
+            mod_len = sub_assign(mod_digits, mod_len, divisor, divisor_len);
+            digit = digit + 1;
+        }
+        quotient[pos] = digit;
+    }
+    int q_len;
+    q_len = dividend_len;
+    for (; q_len > 1 && quotient[q_len - 1] == 0; ) {
+        q_len = q_len - 1;
+    }
+    if (q_len <= 0) {
+        q_len = 1;
+    }
+    printf("%d", quotient[q_len - 1]);
+    for (pos = q_len - 2; pos >= 0; pos = pos - 1) {
+        printf("%d", quotient[pos]);
+    }
+    printf("\n");
+    return 0;
+}

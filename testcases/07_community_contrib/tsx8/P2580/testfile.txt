@@ -1,0 +1,122 @@
+/* Description: SysY recreation of codes/P2580.cpp using an integer-based trie.
+ * Dictionary names and queries are provided as letter indices (1=a, 26=z),
+ * with all loops written as for-loops and printf handling every output.
+ */
+
+const int BRANCH = 26;
+const int NODE_CAP = 96;
+const int EDGE_CAP = BRANCH * NODE_CAP;
+
+int trie_edges[26 * 96];
+int name_seen[96];
+int node_total;
+
+int clamp_letter(int idx) {
+    if (idx < 0) {
+        return 0;
+    }
+    if (idx >= BRANCH) {
+        return BRANCH - 1;
+    }
+    return idx;
+}
+
+int edge_slot(int node_idx, int letter_idx) {
+    return node_idx * BRANCH + letter_idx;
+}
+
+void reset_trie() {
+    int i;
+    node_total = 1;
+    for (i = 0; i < EDGE_CAP; i = i + 1) {
+        trie_edges[i] = 0;
+    }
+    for (i = 0; i < NODE_CAP; i = i + 1) {
+        name_seen[i] = 0;
+    }
+}
+
+void insert_word(int length) {
+    int node;
+    int step;
+    int letter_value;
+    int letter_idx;
+    int slot;
+    int child;
+    node = 0;
+    for (step = 0; step < length; step = step + 1) {
+        letter_value = getint();
+        letter_idx = clamp_letter(letter_value - 1);
+        slot = edge_slot(node, letter_idx);
+        child = trie_edges[slot];
+        if (child == 0) {
+            child = node_total;
+            trie_edges[slot] = child;
+            node_total = node_total + 1;
+        }
+        node = child;
+    }
+}
+
+int query_word(int length) {
+    int node;
+    int step;
+    int letter_value;
+    int letter_idx;
+    int slot;
+    int child;
+    int matched;
+    node = 0;
+    matched = 1;
+    for (step = 0; step < length; step = step + 1) {
+        letter_value = getint();
+        letter_idx = clamp_letter(letter_value - 1);
+        if (matched == 1) {
+            slot = edge_slot(node, letter_idx);
+            child = trie_edges[slot];
+            if (child == 0) {
+                matched = 0;
+            }
+            else {
+                node = child;
+            }
+        }
+    }
+    if (matched == 0) {
+        return 0;
+    }
+    if (name_seen[node] == 0) {
+        name_seen[node] = 1;
+        return 1;
+    }
+    return 2;
+}
+
+int main() {
+    int dict_count;
+    int query_count;
+    int idx;
+    int length;
+    int result;
+    reset_trie();
+    dict_count = getint();
+    for (idx = 0; idx < dict_count; idx = idx + 1) {
+        length = getint();
+        insert_word(length);
+    }
+    query_count = getint();
+    for (idx = 0; idx < query_count; idx = idx + 1) {
+        length = getint();
+        result = query_word(length);
+        if (result == 0) {
+            printf("WRONG\n");
+        }
+        else if (result == 1) {
+            printf("OK\n");
+        }
+        else {
+            printf("REPEAT\n");
+        }
+    }
+    return 0;
+}

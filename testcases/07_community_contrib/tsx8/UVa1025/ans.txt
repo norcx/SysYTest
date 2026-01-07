@@ -1,0 +1,3 @@
+Case Number 1: 0
+Case Number 2: 4
+Case Number 3: impossible

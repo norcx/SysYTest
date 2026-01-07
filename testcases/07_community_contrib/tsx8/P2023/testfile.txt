@@ -1,0 +1,66 @@
+/* SysY testcase mirroring Luogu P2023 range-maintenance logic with direct for-loop updates under a modulus. */
+
+const int MAXN = 16;
+
+int values[16];
+
+int clamp_mod(int raw_value, int mod_value) {
+    int value = raw_value % mod_value;
+    if (value < 0) {
+        value = value + mod_value;
+    }
+    return value;
+}
+
+int main() {
+    int n = getint();
+    int mod_value = getint();
+    int i = 0;
+    int j = 0;
+    int op_total = 0;
+    int opt = 0;
+    int left = 0;
+    int right = 0;
+    int delta = 0;
+    int current = 0;
+    if (n > MAXN) {
+        n = MAXN;
+    }
+    for (i = 0; i < n; i = i + 1) {
+        current = getint();
+        values[i] = clamp_mod(current, mod_value);
+    }
+    op_total = getint();
+    for (i = 0; i < op_total; i = i + 1) {
+        opt = getint();
+        left = getint() - 1;
+        right = getint() - 1;
+        if (left < 0) {
+            left = 0;
+        }
+        if (right >= n) {
+            right = n - 1;
+        }
+        if (opt == 1) {
+            delta = getint();
+            delta = clamp_mod(delta, mod_value);
+            for (j = left; j <= right; j = j + 1) {
+                values[j] = clamp_mod(values[j] * delta, mod_value);
+            }
+        } else if (opt == 2) {
+            delta = getint();
+            delta = clamp_mod(delta, mod_value);
+            for (j = left; j <= right; j = j + 1) {
+                values[j] = clamp_mod(values[j] + delta, mod_value);
+            }
+        } else {
+            current = 0;
+            for (j = left; j <= right; j = j + 1) {
+                current = current + values[j];
+                current = clamp_mod(current, mod_value);
+            }
+            printf("%d\n", clamp_mod(current, mod_value));
+        }
+    }
+    return 0;
+}

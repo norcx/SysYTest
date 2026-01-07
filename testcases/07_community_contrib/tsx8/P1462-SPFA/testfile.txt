@@ -1,0 +1,133 @@
+/* Description: SysY port of the Luogu P1462 SPFA + binary search idea on a
+ * fixed 4-node graph to validate limit-aware shortest paths.
+ */
+
+int head[16];
+int to_node[64];
+int edge_w[64];
+int next_edge[64];
+int node_fi[16];
+int sorted_fi[16];
+int dist_arr[16];
+int in_queue[16];
+int queue_nodes[64];
+int edge_count = 0;
+int n;
+int m;
+int hp;
+int INF_VALUE = 1000000000;
+
+void add_edge(int u, int v, int w) {
+    edge_count = edge_count + 1;
+    to_node[edge_count] = v;
+    edge_w[edge_count] = w;
+    next_edge[edge_count] = head[u];
+    head[u] = edge_count;
+}
+
+int check_limit(int limit) {
+    int i;
+    int front;
+    int rear;
+    int u;
+    int e;
+    int v;
+    int w;
+    if (node_fi[1] > limit || node_fi[n] > limit) {
+        return 0;
+    }
+    for (i = 1; i <= n; i = i + 1) {
+        dist_arr[i] = INF_VALUE;
+        in_queue[i] = 0;
+    }
+    dist_arr[1] = 0;
+    front = 0;
+    rear = 0;
+    queue_nodes[rear] = 1;
+    rear = rear + 1;
+    in_queue[1] = 1;
+    for (; front < rear;) {
+        u = queue_nodes[front];
+        front = front + 1;
+        in_queue[u] = 0;
+        e = head[u];
+        for (; e != 0;) {
+            v = to_node[e];
+            w = edge_w[e];
+            if (node_fi[v] <= limit && dist_arr[v] > dist_arr[u] + w) {
+                dist_arr[v] = dist_arr[u] + w;
+                if (in_queue[v] == 0) {
+                    queue_nodes[rear] = v;
+                    rear = rear + 1;
+                    in_queue[v] = 1;
+                }
+            }
+            e = next_edge[e];
+        }
+    }
+    if (dist_arr[n] <= hp) {
+        return 1;
+    }
+    return 0;
+}
+
+int main() {
+    int i;
+    int j;
+    int u;
+    int v;
+    int w;
+    int l;
+    int r;
+    int mid;
+    int current_limit;
+    int ans_value;
+    n = getint();
+    m = getint();
+    hp = getint();
+    for (i = 0; i < 16; i = i + 1) {
+        head[i] = 0;
+    }
+    for (i = 1; i <= n; i = i + 1) {
+        node_fi[i] = getint();
+        sorted_fi[i] = node_fi[i];
+    }
+    edge_count = 0;
+    for (i = 0; i < m; i = i + 1) {
+        u = getint();
+        v = getint();
+        w = getint();
+        add_edge(u, v, w);
+        add_edge(v, u, w);
+    }
+    for (i = 1; i <= n; i = i + 1) {
+        j = i + 1;
+        for (; j <= n;) {
+            if (sorted_fi[j] < sorted_fi[i]) {
+                current_limit = sorted_fi[i];
+                sorted_fi[i] = sorted_fi[j];
+                sorted_fi[j] = current_limit;
+            }
+            j = j + 1;
+        }
+    }
+    ans_value = -1;
+    if (check_limit(INF_VALUE) == 0) {
+        printf("-1\n");
+        return 0;
+    }
+    l = 1;
+    r = n;
+    for (; l <= r;) {
+        mid = (l + r) / 2;
+        current_limit = sorted_fi[mid];
+        if (check_limit(current_limit)) {
+            ans_value = current_limit;
+            r = mid - 1;
+        } else {
+            l = mid + 1;
+        }
+    }
+    printf("%d\n", ans_value);
+    return 0;
+}
