@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import sys
 import os
+import re
 import subprocess
 import shutil
+
+_INT_RE = re.compile(r"-?\d+")
 
 # C 语言兼容层 wrapper
 C_WRAPPER_HEADER = """
@@ -23,6 +26,32 @@ def find_compiler():
     if shutil.which("clang"): return "clang"
     if shutil.which("gcc"): return "gcc"
     return None
+
+def normalize_in_file(in_path: str) -> bool:
+    if not os.path.exists(in_path):
+        raise FileNotFoundError(in_path)
+
+    with open(in_path, "r", encoding="utf-8") as f:
+        raw_lines = f.readlines()
+
+    normalized_lines = []
+    for idx, line in enumerate(raw_lines, start=1):
+        stripped = line.strip()
+        if stripped == "":
+            continue
+        numbers = _INT_RE.findall(stripped)
+        if not numbers:
+            raise ValueError(f"{in_path}:{idx}: no integer found in line: {stripped!r}")
+        for number in numbers:
+            normalized_lines.append(number + "\n")
+
+    original = "".join(raw_lines)
+    normalized = "".join(normalized_lines)
+    if normalized != original:
+        with open(in_path, "w", encoding="utf-8") as f:
+            f.write(normalized)
+        return True
+    return False
 
 def main():
     if len(sys.argv) < 2:
@@ -69,6 +98,17 @@ def main():
     if res_compile.returncode != 0:
         print("COMPILE ERROR:")
         print(res_compile.stderr)
+        sys.exit(1)
+
+    # 3.5 规范化 in.txt：严格每行一个整数（允许从空白/空行/一行多整数自动修正）
+    try:
+        if normalize_in_file(in_file):
+            print(f"[*] Normalized {in_file}")
+    except FileNotFoundError:
+        print(f"ERROR: {in_file} not found.")
+        sys.exit(1)
+    except ValueError as e:
+        print(f"ERROR: {e}")
         sys.exit(1)
 
     # 4. 运行并生成 ans.txt
