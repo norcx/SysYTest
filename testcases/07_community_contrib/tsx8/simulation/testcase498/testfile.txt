@@ -1,0 +1,217 @@
+/* Description:
+ * SCC condensation DAG DP testcase (converted from C++).
+ * Input:
+ *   n
+ *   m
+ *   x y z (m lines)
+ * Output:
+ *   ans1 ans2
+ */
+
+const int MAXN = 5000;
+const int MAXM = 50000;
+
+int n;
+int m;
+
+int cnt;
+int cnt_2;
+
+int head[MAXN];
+int to[MAXM];
+int val[MAXM];
+int nxt[MAXM];
+
+int head_2[MAXN];
+int to_2[MAXM];
+int val_2[MAXM];
+int nxt_2[MAXM];
+
+int dfn[MAXN];
+int low[MAXN];
+int stk[MAXN];
+int top;
+int indx;
+int scc;
+int belong[MAXN];
+int c[MAXN];
+int ind[MAXN];
+
+int chu[MAXN];
+int ru[MAXN];
+
+int dis[MAXN];
+int f[MAXN];
+int vis[MAXN];
+
+int q[MAXN];
+
+int my_min(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+void add_edge(int x, int y, int z) {
+    cnt = cnt + 1;
+    to[cnt] = y;
+    val[cnt] = z;
+    nxt[cnt] = head[x];
+    head[x] = cnt;
+}
+
+void add_edge_2(int x, int y, int z) {
+    cnt_2 = cnt_2 + 1;
+    to_2[cnt_2] = y;
+    val_2[cnt_2] = z;
+    nxt_2[cnt_2] = head_2[x];
+    head_2[x] = cnt_2;
+}
+
+void tarjan(int now) {
+    int i;
+    int nn;
+    int tmp;
+
+    indx = indx + 1;
+    dfn[now] = indx;
+    low[now] = indx;
+
+    stk[top] = now;
+    top = top + 1;
+    ind[now] = 1;
+
+    for (i = head[now]; i != 0; i = nxt[i]) {
+        nn = to[i];
+        if (dfn[nn] == 0) {
+            tarjan(nn);
+            low[now] = my_min(low[now], low[nn]);
+        } else {
+            if (ind[nn] != 0) low[now] = my_min(low[now], dfn[nn]);
+        }
+    }
+
+    if (dfn[now] == low[now]) {
+        scc = scc + 1;
+        tmp = 0;
+        for (tmp = 0; tmp != now; tmp = tmp) {
+            tmp = stk[top - 1];
+            ind[tmp] = 0;
+            top = top - 1;
+            belong[tmp] = scc;
+            c[scc] = c[scc] + 1;
+        }
+    }
+
+    return;
+}
+
+int main() {
+    int i;
+    int j;
+    int x;
+    int y;
+    int z;
+    int nn;
+    int start;
+    int qhead;
+    int qtail;
+    int now;
+    int tmp;
+    int cand;
+    int ans1;
+    int ans2;
+
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= m; i = i + 1) {
+        x = getint();
+        y = getint();
+        z = getint();
+        add_edge(x, y, z);
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (dfn[i] == 0) tarjan(i);
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = head[i]; j != 0; j = nxt[j]) {
+            nn = to[j];
+            if (belong[i] == belong[nn]) {
+            } else {
+                add_edge_2(belong[i], belong[nn], val[j]);
+                chu[belong[i]] = chu[belong[i]] + 1;
+            }
+        }
+    }
+
+    start = belong[1];
+
+    qhead = 0;
+    qtail = 0;
+    q[qtail] = start;
+    qtail = qtail + 1;
+    vis[start] = 1;
+
+    for (qhead = 0; qhead < qtail; qhead = qhead + 1) {
+        now = q[qhead];
+        for (i = head_2[now]; i != 0; i = nxt_2[i]) {
+            nn = to_2[i];
+            ru[nn] = ru[nn] + 1;
+            if (vis[nn] == 0) {
+                q[qtail] = nn;
+                qtail = qtail + 1;
+            }
+            vis[nn] = 1;
+        }
+    }
+
+    qhead = 0;
+    qtail = 0;
+    q[qtail] = start;
+    qtail = qtail + 1;
+
+    dis[start] = c[start] - 1;
+    f[start] = c[start];
+
+    for (qhead = 0; qhead < qtail; qhead = qhead + 1) {
+        now = q[qhead];
+        for (i = head_2[now]; i != 0; i = nxt_2[i]) {
+            nn = to_2[i];
+            ru[nn] = ru[nn] - 1;
+
+            tmp = f[now] + c[nn];
+            if (f[nn] == tmp) {
+                cand = dis[now] + val_2[i] + c[nn] - 1;
+                if (dis[nn] > cand) dis[nn] = cand;
+            } else {
+                if (f[nn] < tmp) {
+                    f[nn] = tmp;
+                    dis[nn] = dis[now] + val_2[i] + c[nn] - 1;
+                }
+            }
+
+            if (ru[nn] == 0) {
+                q[qtail] = nn;
+                qtail = qtail + 1;
+            }
+        }
+    }
+
+    ans1 = 0;
+    ans2 = 0;
+    for (i = 1; i <= scc; i = i + 1) {
+        if (f[i] > ans1) {
+            ans1 = f[i];
+            ans2 = dis[i];
+        } else {
+            if (f[i] == ans1) {
+                if (dis[i] < ans2) ans2 = dis[i];
+            }
+        }
+    }
+
+    printf("%d %d\n", ans1, ans2);
+    return 0;
+}

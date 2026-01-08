@@ -1,0 +1,163 @@
+/*
+ * Converted from C++ to Strict SysY.
+ * Single test case: reads ta, tb, X, n, m; then n triples for a; then m triples for b.
+ * Prints one integer result followed by '\n'.
+ */
+
+const int MAXN = 20000;
+
+int ta, tb, X, n, m, ans, cnt;
+int vis[20005];
+
+int a_x[20005], a_y[20005], a_z[20005];
+int b_x[20005], b_y[20005], b_z[20005];
+int c_x[20005], c_y[20005], c_z[20005];
+int d_x[20005], d_y[20005], d_z[20005];
+int e_x[20005], e_y[20005], e_z[20005];
+
+void swap3(int x[], int y[], int z[], int i, int j) {
+    int t;
+    t = x[i]; x[i] = x[j]; x[j] = t;
+    t = y[i]; y[i] = y[j]; y[j] = t;
+    t = z[i]; z[i] = z[j]; z[j] = t;
+    return;
+}
+
+void quicksort3(int x[], int y[], int z[], int l, int r) {
+    int i, j, pivot;
+    if (l >= r) return;
+    i = l;
+    j = r;
+    pivot = x[(l + r) / 2];
+    for (; i <= j; ) {
+        for (; i <= r && x[i] < pivot; ) i = i + 1;
+        for (; j >= l && x[j] > pivot; ) j = j - 1;
+        if (i <= j) {
+            swap3(x, y, z, i, j);
+            i = i + 1;
+            j = j - 1;
+        }
+    }
+    if (l < j) quicksort3(x, y, z, l, j);
+    if (i < r) quicksort3(x, y, z, i, r);
+    return;
+}
+
+void work() {
+    int i;
+    int s;
+    int tmp;
+    int t1;
+    int l1, r1, l2, r2, sum1;
+    int l, r;
+    int id;
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (a_x[i] + a_y[i] >= X && a_x[i] + a_y[i] <= X + tb) {
+            m = m + 1;
+            b_x[m] = a_x[i] + a_y[i];
+            b_y[m] = a_y[i];
+            b_z[m] = a_z[i];
+        }
+    }
+
+    s = 0;
+    for (i = 1; i <= m; i = i + 1) {
+        tmp = b_y[i] * 2;
+        cnt = cnt + 1;
+        c_z[cnt] = b_z[i];
+
+        if (b_x[i] + tmp < X || b_x[i] + tmp > X + tb) {
+            c_x[cnt] = b_x[i] + b_y[i];
+            c_y[cnt] = c_x[cnt];
+        } else {
+            t1 = (tb + X - b_x[i]) / tmp;
+            c_x[cnt] = b_x[i] + b_y[i];
+            c_y[cnt] = b_x[i] + t1 * tmp + b_y[i];
+        }
+
+        s = s + b_z[i];
+
+        d_x[i] = c_x[cnt];
+        d_y[i] = cnt;
+        d_z[i] = c_z[cnt];
+
+        e_x[i] = c_y[cnt];
+        e_y[i] = cnt;
+        e_z[i] = c_z[cnt];
+    }
+
+    if (cnt > 1) {
+        quicksort3(d_x, d_y, d_z, 1, cnt);
+        quicksort3(e_x, e_y, e_z, 1, cnt);
+    }
+
+    l1 = 1;
+    r1 = 0;
+    l2 = 1;
+    r2 = 0;
+    sum1 = 0;
+
+    for (i = 1; i <= cnt; i = i + 1) {
+        l = d_x[i];
+        r = l + ta;
+
+        for (; r1 < cnt && d_x[r1 + 1] <= r; ) {
+            r1 = r1 + 1;
+            id = d_y[r1];
+            vis[id] = vis[id] + 1;
+            if (vis[id] == 2) sum1 = sum1 + d_z[r1];
+        }
+
+        for (; l1 < i; ) {
+            id = d_y[l1];
+            vis[id] = vis[id] - 1;
+            if (vis[id] == 1) sum1 = sum1 - d_z[l1];
+            l1 = l1 + 1;
+        }
+
+        for (; r2 < cnt && e_x[r2 + 1] <= r; ) {
+            r2 = r2 + 1;
+            id = e_y[r2];
+            vis[id] = vis[id] + 1;
+            if (vis[id] == 2) sum1 = sum1 + e_z[r2];
+        }
+
+        for (; l2 <= cnt && e_x[l2] < l; ) {
+            id = e_y[l2];
+            vis[id] = vis[id] - 1;
+            if (vis[id] == 1) sum1 = sum1 - e_z[l2];
+            l2 = l2 + 1;
+        }
+
+        if (sum1 > ans) ans = sum1;
+    }
+
+    printf("%d\n", s - ans);
+
+    for (i = 1; i <= cnt; i = i + 1) vis[i] = 0;
+    return;
+}
+
+int main() {
+    int i;
+    ta = getint();
+    tb = getint();
+    X = getint();
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        a_x[i] = getint();
+        a_y[i] = getint();
+        a_z[i] = getint();
+    }
+    for (i = 1; i <= m; i = i + 1) {
+        b_x[i] = getint();
+        b_y[i] = getint();
+        b_z[i] = getint();
+    }
+
+    work();
+    return 0;
+}

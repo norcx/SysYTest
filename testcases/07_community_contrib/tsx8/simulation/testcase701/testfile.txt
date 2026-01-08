@@ -1,0 +1,116 @@
+/* Description:
+ *   Converted from a C++ random data generator.
+ *   Refactored to Strict SysY, scaled down, deterministic RNG.
+ */
+
+const int LETTERS = 6;
+const int M = 12;
+
+int g_seed = 12345;
+
+int rng_next() {
+    g_seed = (g_seed * 657 + 17) % 1000003;
+    return g_seed;
+}
+
+int ran1(int x) {
+    int r;
+    r = rng_next() % x;
+    return r + 1;
+}
+
+void print_letter(int v) {
+    if (v == 1) printf("a");
+    else if (v == 2) printf("b");
+    else if (v == 3) printf("c");
+    else if (v == 4) printf("d");
+    else if (v == 5) printf("e");
+    else if (v == 6) printf("f");
+    else if (v == 7) printf("g");
+    else if (v == 8) printf("h");
+    else if (v == 9) printf("i");
+    else if (v == 10) printf("j");
+    else if (v == 11) printf("k");
+    else if (v == 12) printf("l");
+    else if (v == 13) printf("m");
+    else if (v == 14) printf("n");
+    else if (v == 15) printf("o");
+    else if (v == 16) printf("p");
+    else if (v == 17) printf("q");
+    else if (v == 18) printf("r");
+    else if (v == 19) printf("s");
+    else if (v == 20) printf("t");
+    else if (v == 21) printf("u");
+    else if (v == 22) printf("v");
+    else if (v == 23) printf("w");
+    else if (v == 24) printf("x");
+    else if (v == 25) printf("y");
+    else printf("z");
+    return;
+}
+
+void print_ranit4() {
+    int a;
+    int b;
+    int c;
+    int d;
+    a = ran1(LETTERS);
+    b = ran1(LETTERS);
+    c = ran1(LETTERS);
+    d = ran1(LETTERS);
+    print_letter(a);
+    print_letter(b);
+    print_letter(c);
+    print_letter(d);
+    return;
+}
+
+int main() {
+    int n;
+    int i;
+    int j;
+    int k;
+    int l;
+    int x;
+    int t;
+    int rem;
+    int maxx;
+
+    n = LETTERS * LETTERS * LETTERS * LETTERS + 1;
+    printf("%d\n", n);
+
+    for (i = 1; i <= LETTERS; i = i + 1)
+        for (j = 1; j <= LETTERS; j = j + 1)
+            for (k = 1; k <= LETTERS; k = k + 1)
+                for (l = 1; l <= LETTERS; l = l + 1) {
+                    print_letter(i);
+                    print_letter(j);
+                    print_letter(k);
+                    print_letter(l);
+                    printf(" ");
+                    if (j == 1) printf("%d\n", 0);
+                    else {
+                        t = ran1(1000);
+                        printf("%d\n", t);
+                    }
+                }
+
+    printf("aaaaaaaaaaaaaaaa 0\n");
+
+    printf("%d\n", M);
+    rem = 80;
+    for (i = 1; i <= M; i = i + 1) {
+        maxx = rem - (M - i);
+        x = ran1(maxx);
+        rem = rem - x;
+
+        printf("%d", x);
+        for (j = 1; j <= x; j = j + 1) {
+            printf(" ");
+            print_ranit4();
+        }
+        printf("\n");
+    }
+
+    return 0;
+}

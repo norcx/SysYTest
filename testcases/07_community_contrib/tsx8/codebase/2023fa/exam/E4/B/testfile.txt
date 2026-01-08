@@ -1,0 +1,35 @@
+/* Description:
+ *   Converted from codes/2023fa/exam/E4/B.c
+ *   Reads N digits (0..9) and prints their Aiken (2421) code bits.
+ *   Input format: first line N, then N lines each with one digit.
+ */
+
+int aiken_bits[40] = {
+    0, 0, 0, 0,
+    0, 0, 0, 1,
+    0, 0, 1, 0,
+    0, 0, 1, 1,
+    0, 1, 0, 0,
+    1, 0, 1, 1,
+    1, 1, 0, 0,
+    1, 1, 0, 1,
+    1, 1, 1, 0,
+    1, 1, 1, 1
+};
+
+int main() {
+    int n;
+    int i;
+    int d;
+    int j;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        d = getint();
+        for (j = 0; j < 4; j = j + 1) {
+            printf("%d", aiken_bits[d * 4 + j]);
+        }
+    }
+    printf("\n");
+    return 0;
+}

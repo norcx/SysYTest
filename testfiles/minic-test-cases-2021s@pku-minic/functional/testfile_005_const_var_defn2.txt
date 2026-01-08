@@ -1,7 +1,0 @@
-//test const gloal var define
-const int a = 10;
-const int b = 5;
-
-int main(){
-    return b;
-}

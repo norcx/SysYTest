@@ -139,7 +139,7 @@ class EditorTab(BaseTab):
         input_header.pack(fill=tk.X, pady=(0, 6))
         ttk.Label(input_header, text="📥 输入数据",
                   font=('微软雅黑', 10, 'bold')).pack(side=tk.LEFT)
-        ttk.Label(input_header, text="input.txt", style='Status.TLabel').pack(side=tk.RIGHT)
+        ttk.Label(input_header, text="in.txt", style='Status.TLabel').pack(side=tk.RIGHT)
         
         # 输入文本框
         input_container = ttk.Frame(input_frame)
@@ -216,10 +216,10 @@ class EditorTab(BaseTab):
     
     def refresh_libs(self, set_default: bool = False):
         """刷新测试库列表"""
-        testfiles_dir = self.test_dir / "testfiles"
-        libs = TestDiscovery.discover_test_libs(testfiles_dir)
+        testcases_dir = self.test_dir / "testcases"
+        libs = TestDiscovery.discover_test_libs(testcases_dir)
         
-        lib_names = [str(lib.relative_to(testfiles_dir)) for lib in libs]
+        lib_names = [str(lib.relative_to(testcases_dir)) for lib in libs]
         
         # 生成基于当前时间的默认目录名
         default_name = datetime.now().strftime("%Y%m%d_%H%M")
@@ -238,7 +238,7 @@ class EditorTab(BaseTab):
         if not name:
             return
         
-        new_dir = self.test_dir / "testfiles" / name
+        new_dir = self.test_dir / "testcases" / name
         if new_dir.exists():
             messagebox.showerror("错误", f"测试库 '{name}' 已存在")
             return
@@ -256,7 +256,7 @@ class EditorTab(BaseTab):
             messagebox.showwarning("提示", "请先选择测试库")
             return
         
-        lib_path = self.test_dir / "testfiles" / lib_name
+        lib_path = self.test_dir / "testcases" / lib_name
         next_num = TestDiscovery.get_next_testfile_number(lib_path)
         self.editor_num_var.set(str(next_num))
         self.editor_status_var.set(f"下一个编号: {next_num}")
@@ -279,21 +279,28 @@ class EditorTab(BaseTab):
             messagebox.showwarning("提示", "请输入源代码")
             return False
         
-        lib_path = self.test_dir / "testfiles" / lib_name
+        lib_path = self.test_dir / "testcases" / lib_name
         lib_path.mkdir(parents=True, exist_ok=True)
-        
-        # 保存testfile
-        testfile_path = lib_path / f"testfile{num}.txt"
+
+        case_dir = lib_path / f"testcase{num}"
+        case_dir.mkdir(parents=True, exist_ok=True)
+
+        # 保存 testfile.txt
+        testfile_path = case_dir / "testfile.txt"
         with open(testfile_path, "w", encoding="utf-8", newline="\n") as f:
             f.write(code)
-        
-        # 保存input
+
+        # 保存 in.txt（可选）
         input_data = self.input_text.get(1.0, tk.END).rstrip()
-        input_path = lib_path / f"input{num}.txt"
-        with open(input_path, "w", encoding="utf-8", newline="\n") as f:
-            f.write(input_data)
-        
-        self.editor_status_var.set(f"✓ 已保存: testfile{num}.txt")
+        input_path = case_dir / "in.txt"
+        if input_data:
+            with open(input_path, "w", encoding="utf-8", newline="\n") as f:
+                f.write(input_data)
+        else:
+            if input_path.exists():
+                input_path.unlink()
+
+        self.editor_status_var.set(f"✓ 已保存: {lib_name}/testcase{num}/testfile.txt")
         self.app.test_tab.refresh_lists()
         return True
     

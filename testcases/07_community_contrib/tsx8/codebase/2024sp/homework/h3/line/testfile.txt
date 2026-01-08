@@ -1,0 +1,214 @@
+/* Description:
+ *   Build chains of connected line segments, merge chains, then output
+ *   the largest chain's segment count and its starting point.
+ *
+ * Input (one integer per line):
+ *   n
+ *   x1 y1 x2 y2   (repeated n times)
+ *
+ * Output:
+ *   cnt start_x start_y
+ */
+
+const int MAXG = 110;
+const int MAXN = 200;
+const int MAXNODE = 400;
+
+int node_p1x[MAXNODE];
+int node_p1y[MAXNODE];
+int node_p2x[MAXNODE];
+int node_p2y[MAXNODE];
+int node_nxt[MAXNODE];
+int node_tot;
+
+int g_head[MAXG];
+int g_cnt[MAXG];
+int pos;
+
+int new_node(int p1x, int p1y, int p2x, int p2y) {
+    node_tot = node_tot + 1;
+    node_p1x[node_tot] = p1x;
+    node_p1y[node_tot] = p1y;
+    node_p2x[node_tot] = p2x;
+    node_p2y[node_tot] = p2y;
+    node_nxt[node_tot] = 0;
+    return node_tot;
+}
+
+void insert_after(int p1x, int p1y, int p2x, int p2y, int prev) {
+    int id;
+    id = new_node(p1x, p1y, p2x, p2y);
+    node_nxt[id] = node_nxt[prev];
+    node_nxt[prev] = id;
+    return;
+}
+
+int find_prev(int target, int head) {
+    int cur;
+    cur = head;
+    for (;;) {
+        if (node_nxt[cur] == target) {
+            break;
+        }
+        cur = node_nxt[cur];
+        if (cur == 0) {
+            break;
+        }
+    }
+    return cur;
+}
+
+int find_last(int head) {
+    int cur;
+    cur = head;
+    for (;;) {
+        if (node_nxt[cur] == 0) {
+            break;
+        }
+        cur = node_nxt[cur];
+    }
+    return cur;
+}
+
+int main() {
+    int n;
+    int i;
+    int j;
+    int ii;
+    int jj;
+
+    int p1x;
+    int p1y;
+    int p2x;
+    int p2y;
+
+    int head;
+    int ptr;
+    int flag;
+    int prev;
+
+    int first_i;
+    int last_i;
+    int start_ix;
+    int start_iy;
+    int end_ix;
+    int end_iy;
+
+    int first_j;
+    int last_j;
+    int start_jx;
+    int start_jy;
+    int end_jx;
+    int end_jy;
+
+    int id;
+
+    n = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        p1x = getint();
+        p1y = getint();
+        p2x = getint();
+        p2y = getint();
+
+        for (j = 0; j <= pos; j = j + 1) {
+            if (g_cnt[j] == 0) {
+                head = new_node(0, 0, 0, 0);
+                g_head[j] = head;
+                node_nxt[head] = 0;
+                insert_after(p1x, p1y, p2x, p2y, head);
+                g_cnt[j] = g_cnt[j] + 1;
+                pos = pos + 1;
+                break;
+            }
+
+            head = g_head[j];
+            ptr = head;
+            flag = 0;
+            for (;;) {
+                if (node_nxt[ptr] == 0) {
+                    break;
+                }
+                ptr = node_nxt[ptr];
+
+                if (node_p1x[ptr] == p2x && node_p1y[ptr] == p2y) {
+                    prev = find_prev(ptr, head);
+                    insert_after(p1x, p1y, p2x, p2y, prev);
+                    g_cnt[j] = g_cnt[j] + 1;
+                    flag = 1;
+                    break;
+                }
+
+                if (node_p2x[ptr] == p1x && node_p2y[ptr] == p1y) {
+                    insert_after(p1x, p1y, p2x, p2y, ptr);
+                    g_cnt[j] = g_cnt[j] + 1;
+                    flag = 1;
+                    break;
+                }
+            }
+
+            if (flag == 1) {
+                break;
+            }
+        }
+    }
+
+    for (ii = 0; ii < pos; ii = ii + 1) {
+        if (g_cnt[ii] == 0) {
+        } else {
+            first_i = node_nxt[g_head[ii]];
+            last_i = find_last(g_head[ii]);
+            start_ix = node_p1x[first_i];
+            start_iy = node_p1y[first_i];
+            end_ix = node_p2x[last_i];
+            end_iy = node_p2y[last_i];
+
+            for (jj = 0; jj < pos; jj = jj + 1) {
+                if (jj == ii || g_cnt[jj] == 0) {
+                } else {
+                    first_j = node_nxt[g_head[jj]];
+                    last_j = find_last(g_head[jj]);
+                    start_jx = node_p1x[first_j];
+                    start_jy = node_p1y[first_j];
+                    end_jx = node_p2x[last_j];
+                    end_jy = node_p2y[last_j];
+
+                    if (start_jx == end_ix && start_jy == end_iy) {
+                        node_nxt[last_i] = node_nxt[g_head[jj]];
+                        g_cnt[ii] = g_cnt[ii] + g_cnt[jj];
+                        g_cnt[jj] = 0;
+
+                        last_i = find_last(g_head[ii]);
+                        end_ix = node_p2x[last_i];
+                        end_iy = node_p2y[last_i];
+                    } else {
+                        if (end_jx == start_ix && end_jy == start_iy) {
+                            node_nxt[last_j] = node_nxt[g_head[ii]];
+                            node_nxt[g_head[ii]] = node_nxt[g_head[jj]];
+                            g_cnt[ii] = g_cnt[ii] + g_cnt[jj];
+                            g_cnt[jj] = 0;
+
+                            first_i = node_nxt[g_head[ii]];
+                            start_ix = node_p1x[first_i];
+                            start_iy = node_p1y[first_i];
+                            last_i = find_last(g_head[ii]);
+                            end_ix = node_p2x[last_i];
+                            end_iy = node_p2y[last_i];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    id = 0;
+    for (j = 0; j < pos; j = j + 1) {
+        if (g_cnt[j] > g_cnt[id]) {
+            id = j;
+        }
+    }
+
+    first_i = node_nxt[g_head[id]];
+    printf("%d %d %d\n", g_cnt[id], node_p1x[first_i], node_p1y[first_i]);
+    return 0;
+}

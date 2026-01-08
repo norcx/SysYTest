@@ -1,0 +1,64 @@
+/* Description:
+ *   Converted from the given C program (string/char based) into Strict SysY.
+ *
+ *   Input (newline-separated integers only):
+ *     t
+ *     repeat t times:
+ *       flag  (0: original flag==false, 1: original flag==true)
+ *       n
+ *       m
+ *       len1
+ *       len1 integers: ASCII codes for s1[0..len1-1]
+ *
+ *   Output:
+ *     Each output character is printed as its ASCII code, one per line.
+ */
+
+int main() {
+    int t;
+    int case_id;
+    t = getint();
+
+    for (case_id = 0; case_id < t; case_id = case_id + 1) {
+        int flag;
+        int n;
+        int m;
+        int len1;
+        int s1[128];
+        int i;
+
+        flag = getint();
+        n = getint();
+        m = getint();
+        len1 = getint();
+
+        for (i = 0; i < len1; i = i + 1) {
+            s1[i] = getint();
+        }
+
+        if (flag == 0) {
+            int l;
+            int j;
+            l = n;
+            if (l > len1) l = len1;
+            for (i = 0; i < l; i = i + 1) {
+                printf("%d\n", s1[i]);
+            }
+            for (j = 0; j < m - l; j = j + 1) {
+                printf("%d\n", 35);
+            }
+        } else {
+            int l;
+            int j;
+            l = n;
+            if (l > len1) l = len1;
+            for (j = 0; j < m - l; j = j + 1) {
+                printf("%d\n", 35);
+            }
+            for (i = 0; i < l; i = i + 1) {
+                printf("%d\n", s1[i]);
+            }
+        }
+    }
+    return 0;
+}

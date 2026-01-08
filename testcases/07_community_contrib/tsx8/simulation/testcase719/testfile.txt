@@ -1,0 +1,33 @@
+/* Description:
+ *   Deterministic replacement for rand()/time(): reads a seed, prints a 10-char
+ *   'F'/'T' sequence, then prints a number in [1,10].
+ */
+
+int seed;
+
+int next_rand() {
+  seed = (seed * 1103 + 12345) % 10000;
+  return seed;
+}
+
+int main() {
+  int len;
+  int i;
+  int r;
+  int n;
+
+  seed = getint();
+  len = 10;
+
+  for (i = 1; i <= len; i = i + 1) {
+    r = next_rand();
+    if (r % 2) printf("F");
+    else printf("T");
+  }
+  printf("\n");
+
+  r = next_rand();
+  n = r % len + 1;
+  printf("%d\n", n);
+  return 0;
+}

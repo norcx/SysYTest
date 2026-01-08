@@ -1,0 +1,6 @@
+int main() {
+  int arr[4096] = {1};
+  printf("%d %d", arr[0], arr[4095]);
+    printf("%d", arr[0]);
+  return 0;
+}

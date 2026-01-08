@@ -1,0 +1,62 @@
+/* Description:
+ *   Converted from codes/2023fa/exam/E3/G.c
+ *   For each test case:
+ *     - read m numbers, compute their XOR
+ *     - if m is even: print "Congratulations!"
+ *     - else: print "Single Dog! <xor>"
+ *
+ *   Notes:
+ *     - Strict SysY: no bitwise ops, so XOR is emulated via /2 and %2.
+ *     - This testcase uses small non-negative integers.
+ */
+
+int xor_int(int a, int b) {
+    int res;
+    int base;
+    int i;
+    int abit;
+    int bbit;
+    int xbit;
+    res = 0;
+    base = 1;
+    for (i = 0; i < 20; i = i + 1) {
+        abit = a % 2;
+        bbit = b % 2;
+        xbit = (abit + bbit) % 2;
+        res = res + xbit * base;
+        a = a / 2;
+        b = b / 2;
+        base = base * 2;
+    }
+    return res;
+}
+
+int main() {
+    int n;
+    int case_idx;
+    n = getint();
+
+    for (case_idx = 0; case_idx < n; case_idx = case_idx + 1) {
+        int m;
+        int o;
+        int t;
+        int x;
+        int i;
+
+        m = getint();
+        o = m;
+        t = getint();
+        for (i = 1; i < o; i = i + 1) {
+            x = getint();
+            t = xor_int(t, x);
+        }
+
+        if (o % 2 == 0) {
+            printf("Congratulations!\n");
+        } else {
+            printf("Single Dog! %d\n", t);
+        }
+    }
+
+    return 0;
+}

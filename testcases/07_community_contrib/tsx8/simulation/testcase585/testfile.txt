@@ -1,0 +1,126 @@
+/* Description:
+ * Segment tree maintenance with point updates.
+ * Input format (newline-separated integers):
+ *   n
+ *   m
+ *   a1
+ *   b1
+ *   ...
+ *   an
+ *   bn
+ *   (repeat m times)
+ *   x
+ *   y
+ *   z
+ * Output:
+ *   After each update, print sum[1] on its own line.
+ */
+
+const int MAXN = 2000;
+const int MAXM = MAXN * 4 + 10;
+
+int n;
+int m;
+int sum[MAXM];
+int addv[MAXM];
+int delv[MAXM];
+int a[MAXN + 5];
+int b[MAXN + 5];
+
+int query(int o, int tar) {
+    if (tar == 0) return sum[o];
+    int lch;
+    int rch;
+    lch = o * 2;
+    rch = lch + 1;
+    if (tar == addv[rch]) return sum[o] - sum[rch];
+    if (tar < addv[rch]) return sum[o] - sum[rch] + query(rch, tar);
+    return query(lch, tar - addv[rch] + delv[rch]);
+    return 0;
+}
+
+void push_up(int o) {
+    int lch;
+    int rch;
+    lch = o * 2;
+    rch = lch + 1;
+    if (delv[rch] >= addv[lch]) {
+        delv[o] = delv[rch] + delv[lch] - addv[lch];
+        addv[o] = addv[rch];
+        sum[o] = sum[rch];
+    } else {
+        delv[o] = delv[lch];
+        addv[o] = addv[lch] + addv[rch] - delv[rch];
+        sum[o] = sum[rch] + query(lch, delv[rch]);
+    }
+    return;
+}
+
+void build(int l, int r, int o) {
+    if (l == r) {
+        addv[o] = 0;
+        sum[o] = 0;
+        delv[o] = 0;
+        if (a[l] != 0) {
+            delv[o] = b[l];
+        } else {
+            addv[o] = 1;
+            sum[o] = b[l];
+        }
+        return;
+    }
+    int mid;
+    mid = (l + r) / 2;
+    build(l, mid, o * 2);
+    build(mid + 1, r, o * 2 + 1);
+    push_up(o);
+    return;
+}
+
+void updata(int l, int r, int o, int x) {
+    if (l == r) {
+        int y;
+        int z;
+        y = getint();
+        z = getint();
+        addv[o] = 0;
+        sum[o] = 0;
+        delv[o] = 0;
+        if (y != 0) {
+            delv[o] = z;
+        } else {
+            addv[o] = 1;
+            sum[o] = z;
+        }
+        return;
+    }
+    int mid;
+    mid = (l + r) / 2;
+    if (x <= mid) updata(l, mid, o * 2, x);
+    else updata(mid + 1, r, o * 2 + 1, x);
+    push_up(o);
+    return;
+}
+
+int main() {
+    n = getint();
+    m = getint();
+
+    int i;
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        b[i] = getint();
+    }
+
+    build(1, n, 1);
+
+    int op;
+    for (op = 0; op < m; op = op + 1) {
+        int x;
+        x = getint();
+        updata(1, n, 1, x);
+        printf("%d\n", sum[1]);
+    }
+
+    return 0;
+}

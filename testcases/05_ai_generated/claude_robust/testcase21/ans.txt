@@ -1,0 +1,11 @@
+Loop1 i=0 g=1
+Loop1 i=1 g=2
+Loop1 i=2 g=3
+After loop1: i=3 g=3
+Loop2 i=0 g=0
+Loop2 i=1 g=0
+Loop2 i=2 g=0
+After loop2: g=0
+Loop3 i=10 g=1
+Loop3 i=11 g=2
+After loop3: i=12 g=3

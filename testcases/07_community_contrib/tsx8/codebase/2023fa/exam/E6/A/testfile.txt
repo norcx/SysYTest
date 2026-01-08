@@ -1,0 +1,34 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E6/A.c`.
+ *   Input encoding (integers only, one per line):
+ *     - first line: initial number n0
+ *     - then repeated pairs: op, n
+ *       op = 1 means '+', op = 2 means '-', op = 0 means '=' (end)
+ */
+
+int main() {
+    int n;
+    int sum;
+    int op;
+
+    n = getint();
+    sum = n;
+
+    for (;;){
+        op = getint();
+        if (op == 0) {
+            break;
+        }
+        n = getint();
+        if (op == 1) {
+            sum = sum + n;
+        } else if (op == 2) {
+            sum = sum - n;
+        } else {
+            /* Invalid op: ignore (input is generated to avoid this path). */
+        }
+    }
+
+    printf("%d", sum);
+    return 0;
+}

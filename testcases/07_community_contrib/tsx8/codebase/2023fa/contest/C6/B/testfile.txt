@@ -1,0 +1,34 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C6/B.c`.
+ *
+ *   Original behavior:
+ *     Read triples (op, t, n) until EOF; if op == 1, accumulate:
+ *       res += t + 20*60*(n-1)
+ *
+ *   SysY adaptation:
+ *     Since SysY `getint()` has no EOF check, the input begins with `m`,
+ *     the number of triples to read.
+ */
+
+int main() {
+    int m;
+    int i;
+    int op;
+    int t;
+    int n;
+    int res;
+
+    res = 0;
+    m = getint();
+    for (i = 0; i < m; i = i + 1) {
+        op = getint();
+        t = getint();
+        n = getint();
+        if (op == 1) {
+            res = res + t + 1200 * (n - 1);
+        }
+    }
+
+    printf("%d", res);
+    return 0;
+}

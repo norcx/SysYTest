@@ -1,0 +1,25 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C3/E.c`.
+ *   Input: first integer T, then T pairs (m, n).
+ *   Output: 1 if (m, n) is (1, 2) or (2, 1), else 0 (one per line).
+ */
+
+int main() {
+    int t;
+    int i;
+    int m;
+    int n;
+
+    t = getint();
+    for (i = 0; i < t; i = i + 1) {
+        m = getint();
+        n = getint();
+        if (m == 1 && n == 2 || m == 2 && n == 1) {
+            printf("%d\n", 1);
+        } else {
+            printf("%d\n", 0);
+        }
+    }
+
+    return 0;
+}

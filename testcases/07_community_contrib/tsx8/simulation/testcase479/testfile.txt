@@ -1,0 +1,38 @@
+/* Description:
+ *   Converted from a C/C++ output-diff tool.
+ *   Input format:
+ *     n
+ *     m
+ *     a1..an (one int per line)
+ *     b1..bm (one int per line)
+ *   Output: prints a "bug!!" line for each i in [1..n] where a[i] != b[i].
+ */
+
+const int MAXN = 10000;
+
+int a[MAXN];
+int b[MAXN];
+
+int main() {
+    int n;
+    int m;
+    int i;
+
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+    for (i = 1; i <= m; i = i + 1) {
+        b[i] = getint();
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (a[i] != b[i]) {
+            printf("bug!!  %d a[%d] = %d  b[%d] = %d\n", i, i, a[i], i, b[i]);
+        }
+    }
+
+    return 0;
+}

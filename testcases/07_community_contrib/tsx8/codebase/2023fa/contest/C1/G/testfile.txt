@@ -1,0 +1,22 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C1/G.c`.
+ *   Reads an integer x, iterates Collatz steps until x becomes 1,
+ *   and prints the number of steps.
+ */
+
+int main() {
+    int x;
+    int cnt;
+    x = getint();
+    cnt = 0;
+    for (; x != 1; ) {
+        if (x % 2 != 0) {
+            x = 3 * x + 1;
+        } else {
+            x = x / 2;
+        }
+        cnt = cnt + 1;
+    }
+    printf("%d", cnt);
+    return 0;
+}

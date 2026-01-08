@@ -1,0 +1,65 @@
+/* Description:
+ *   Deterministic translation of the given C/C++ generator.
+ *   Uses a fixed-seed PRNG (Park–Miller) to avoid time()/stdlib.
+ */
+
+int n;
+int A;
+int B;
+int C;
+int D;
+
+int seed;
+
+int rand() {
+    int a;
+    int m;
+    int q;
+    int r;
+    int hi;
+    int lo;
+    int test;
+
+    a = 16807;
+    m = 2147483647;
+    q = 127773;
+    r = 2836;
+
+    hi = seed / q;
+    lo = seed - hi * q;
+    test = a * lo - r * hi;
+    if (test > 0) seed = test;
+    else seed = test + m;
+
+    return seed;
+}
+
+int main() {
+    int i;
+
+    seed = 1;
+    n = 0;
+
+    for (i = 1; i <= 10000; i = i + 1) {
+        n = n + rand();
+        n = n % 100000000;
+    }
+
+    A = 150;
+    B = 150;
+    C = 150;
+    D = 150;
+
+    printf("%d %d %d %d %d\n", n, A, B, C, D);
+
+    for (i = 1; i <= A; i = i + 1) printf("%d ", rand());
+    printf("\n");
+    for (i = 1; i <= B; i = i + 1) printf("%d ", rand());
+    printf("\n");
+    for (i = 1; i <= C; i = i + 1) printf("%d ", rand());
+    printf("\n");
+    for (i = 1; i <= D; i = i + 1) printf("%d ", rand());
+    printf("\n");
+
+    return 0;
+}

@@ -1,0 +1,38 @@
+/*
+  Computes sum_{i=1..n} f(i), where f(i) is the number of ordered pairs (a,b)
+  such that a*b divides i (equivalently: number of ordered triples (a,b,c) with a*b*c=i).
+*/
+
+const int MAXN = 200005;
+
+int tau[MAXN];
+int f[MAXN];
+
+int main() {
+  int n;
+  int ans;
+  int i;
+  int j;
+
+  n = getint();
+
+  for (i = 1; i <= n; i = i + 1) {
+    for (j = i; j <= n; j = j + i) {
+      tau[j] = tau[j] + 1;
+    }
+  }
+
+  for (i = 1; i <= n; i = i + 1) {
+    for (j = i; j <= n; j = j + i) {
+      f[j] = f[j] + tau[i];
+    }
+  }
+
+  ans = 0;
+  for (i = 1; i <= n; i = i + 1) {
+    ans = ans + f[i];
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

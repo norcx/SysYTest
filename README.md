@@ -9,31 +9,34 @@
 - Python 3.8+
 - JDK 8+（用于运行 Mars 模拟器）
 - g++（用于生成期望输出）
+- （GUI）Tkinter（多数 Python 发行版自带；若无 GUI/无 Tk 可使用命令行模式）
 
 ### 安装依赖
 
 ```bash
-pip install pyyaml httpx
+python3 -m pip install pyyaml httpx
 ```
 
 ### 目录结构
 
 ```
 YourCodesFolder/
-├── Compiler/              # 你的编译器项目
-│   └── src/
-│       ├── Compiler.java  # 或 .c/.cpp
-│       └── config.json    # 编译器配置
 └── SysYTest/              # 本测试框架
+    ├── zips/              # 你的编译器源码 zip（可多个）
+    │   ├── A.zip
+    │   └── B.zip
     ├── config.yaml
     ├── main.py
-    └── testfiles/         # 测试用例
+    ├── src/               # 框架代码（CLI/GUI/Runner/Discovery）
+    └── testcases/         # 测试用例库（可多层嵌套；叶子目录为一个用例目录）
 ```
 
 ### 运行
 
+不带参数默认启动 GUI：
+
 ```bash
-python main.py
+python3 main.py
 ```
 
 ### 命令行模式
@@ -41,7 +44,13 @@ python main.py
 指定 `--project` 参数可以在命令行环境下直接编译+测试，适合 CI/CD 或无 GUI 环境：
 
 ```bash
-python main.py --project path_to_src
+python3 main.py --project zips/
+```
+
+如需只测试部分 zip，可多次指定 `--compiler`（zip 文件名去扩展名，或完整 zip 文件名）：
+
+```bash
+python3 main.py --project zips/ --compiler A --compiler B.zip
 ```
 
 运行时会实时打印 `PASS`/`FAIL` 结果和进度，失败时显示实际/期望输出对比。
@@ -51,7 +60,7 @@ python main.py --project path_to_src
 - `--show-cycle` - 显示运行周期数（需 Mars 支持）
 - `--show-time` - 显示编译耗时
 
-运行 `python main.py --help` 查看完整参数列表。
+运行 `python3 main.py --help` 查看完整参数列表。
 
 ## 同步更新测试用例
 
@@ -101,18 +110,18 @@ git push origin main
 
 4. **添加测试用例**
    
-   在 `testfiles/` 下创建你的测试库文件夹，添加测试文件：
+   在 `testcases/` 下创建你的测试库文件夹，添加用例目录（支持任意深度嵌套；叶子目录直接包含 `testfile.txt` 即会被识别为一个用例）：
    ```
-   testfiles/你的测试库名/
-   ├── testfile1.txt
-   ├── input1.txt
-   ├── testfile2.txt
-   └── ...
+   testcases/你的测试库名/
+   └── testcase1/
+       ├── testfile.txt   # 源代码
+       ├── in.txt         # 输入（可选）
+       └── ans.txt        # 期望输出（可选）
    ```
 
 5. **提交更改**
    ```bash
-   git add testfiles/你的测试库名/
+   git add testcases/你的测试库名/
    git commit -m "添加测试用例：你的测试库名"
    git push origin add-testcases-你的昵称
    ```
@@ -133,13 +142,14 @@ git push origin main
 编辑 `config.yaml` 配置测试框架：
 
 ```yaml
-# 编译器项目路径（相对于本框架目录）
-compiler_project_dir: "../Compiler"
+# zip_dir：编译器源码压缩包目录（相对于本框架目录）
+compiler_project_dir: "zips/"
 
 # 工具路径（留空使用环境变量）
 tools:
   jdk_home: ""      # JDK安装目录，如 "C:/Program Files/Java/jdk-17"
   gcc_path: ""      # g++路径
+  cmake_path: ""    # cmake 路径（C/C++ 项目可选）
 
 # 并行测试
 parallel:
@@ -148,7 +158,7 @@ parallel:
 
 ### 编译器配置
 
-在你的编译器项目 `src/config.json` 中配置：
+在你的 zip 包**顶层**放置 `config.json`：
 
 ```json
 {
@@ -159,12 +169,21 @@ parallel:
 
 支持的语言：`java`、`c`、`cpp`
 
+### 编译器源码 zip 格式
+
+- zip 包顶层必须包含 `config.json`
+- `java`：入口为 `Compiler.java` 的 `main` 方法；提交时请将 `Compiler.java` 放在 zip 顶层（不要再嵌套一层 `src/` 目录）
+- `cpp`：若使用 CMake，zip 顶层包含 `CMakeLists.txt`，且需 `project(Compiler)` 以确保输出可执行文件名为 `Compiler`；不要提交构建产物/临时文件
+- `c/cpp`：若不使用 CMake，默认按 C++17 用 `g++` 编译 zip 中的 `.c/.cpp/.h`
+- macOS 压缩可能带 `__MACOSX/`、`.DS_Store` 等额外文件，请删除后再提交
+
 ## 使用指南
 
 ### 🧪 测试运行
 
-1. 启动程序后，在「测试运行」标签页选择编译器项目目录
-2. 点击「编译」编译你的编译器
+1. 启动程序后，在「测试运行」标签页选择 `zip_dir`（如 `zips/`）
+2. 在「编译器实例（zip）」列表中多选需要测试的编译器（不选则默认全部）
+3. 点击「编译选中」编译所选编译器实例
 3. 在左侧选择测试库，右侧会显示该库的测试用例
 4. 点击「运行全部」运行所有测试，或选择特定用例运行
 
@@ -174,7 +193,7 @@ parallel:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✗ 测试库名/testfile3
+✗ 测试库名/某个用例
   状态: FAILED
   原因: 输出不匹配
   行数: 实际 5 | 期望 5
@@ -186,15 +205,16 @@ parallel:
 
 **找到对应的测试文件进行调试：**
 
-1. 根据日志中的路径 `测试库名/testfile3`，找到文件：
+1. 根据日志中的路径 `测试库名/某个用例`，找到文件：
    ```
-   testfiles/测试库名/testfile3.txt   # 源代码
-   testfiles/测试库名/input3.txt      # 输入数据
+   testcases/测试库名/某个用例目录/    # 用例目录（例如 testcase3/ 或 A/）
+   ├── testfile.txt                 # 源代码
+   └── in.txt                       # 输入（可选）
    ```
 
-2. 将 `testfile3.txt` 的内容复制到你编译器项目的 `testfile.txt`
+2. 将该用例目录下的 `testfile.txt` 内容复制到你编译器项目的 `testfile.txt`
 
-3. 将 `input3.txt` 的内容作为 Mars 模拟器的输入
+3. 将 `in.txt` 的内容作为 Mars 模拟器的输入（若存在）
 
 4. 运行你的编译器和 Mars 进行调试
 
@@ -235,27 +255,39 @@ parallel:
 **安装额外依赖：**
 
 ```bash
-pip install httpx
+python3 -m pip install httpx
 ```
 
 ### 测试用例格式
 
+测试用例从 `testcases/` 下发现：任意深度嵌套目录中，**直接包含 `testfile.txt` 的叶子目录**会被识别为一个用例目录（case directory）。
+
 ```
-testfiles/
-└── 你的测试库/
-    ├── testfile1.txt    # 第1个测试的源代码
-    ├── input1.txt       # 第1个测试的输入（可选）
-    ├── testfile2.txt    # 第2个测试的源代码
-    ├── input2.txt       # 第2个测试的输入（可选）
-    └── ...
+testcases/
+└── 01_language_basics/
+    ├── testcase1/
+    │   ├── testfile.txt
+    │   ├── in.txt
+    │   └── ans.txt
+    └── getint_for_matrix/
+        └── testcase1/
+            ├── testfile.txt
+            ├── in.txt
+            └── ans.txt
 ```
+
+单个用例目录常见文件：
+- `testfile.txt`: SysY 源码（必需）
+- `in.txt`: 输入（可选；按行提供整数）
+- `ans.txt`: 期望输出（可选）
+- `compile_only` / `compile_only.txt` / `.compile_only`: 仅编译检查（可选）
 
 ## 测试原理
 
 1. **编译**：将你的编译器编译为可执行文件（JAR/EXE）
 2. **运行编译器**：用你的编译器将 SysY 源码编译为 MIPS 汇编
 3. **运行 Mars**：用 Mars 模拟器执行 MIPS 代码，获取实际输出
-4. **运行 g++**：用 g++ 编译运行同一份源码，获取期望输出
+4. **获取期望输出**：优先使用用例目录内的 `ans.txt`（若提供）；否则可用 g++ 编译运行同一份源码生成参考输出
 5. **对比**：比较实际输出和期望输出
 
 ## 常见问题
@@ -275,6 +307,18 @@ testfiles/
 ### Q: 如何只测试特定用例
 
 在 GUI 中选择测试库后，在右侧用例列表中按住 Ctrl 多选，然后点击「运行选中」。
+
+在命令行中可使用 `--match` 过滤（可多次指定）：
+
+```bash
+python3 main.py --project zips/ --match loop --match recursion
+```
+
+如需只测试部分编译器 zip，可多次指定 `--compiler`：
+
+```bash
+python3 main.py --project zips/ --compiler A --compiler B.zip
+```
 
 ### Q: Mars 运行超时
 可能是死循环，也可能是优化不够导致的 TLE，后者可以在 `config.yaml` 中增加 Mars 执行超时时间。

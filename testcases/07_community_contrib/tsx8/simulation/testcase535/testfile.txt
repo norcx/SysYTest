@@ -1,0 +1,72 @@
+/* Description:
+ *   [Add description here]
+ */
+
+const int N = 2000;
+const int MOD = 1000000000;
+const int A = 48271;
+
+int n;
+int m;
+int seed;
+int vals[N];
+
+int mod_mul(int x, int y, int mod) {
+  int res;
+  int a;
+  int b;
+  res = 0;
+  a = x % mod;
+  b = y;
+  for (; b > 0;) {
+    if (b % 2 == 1) {
+      res = res + a;
+      if (res >= mod) res = res - mod;
+    }
+    a = a + a;
+    if (a >= mod) a = a - mod;
+    b = b / 2;
+  }
+  return res;
+}
+
+int myrand() {
+  seed = mod_mul(seed, A, MOD);
+  seed = seed + 12345;
+  if (seed >= MOD) seed = seed - MOD;
+  return seed;
+}
+
+int main() {
+  int i;
+  int j;
+  int tmp;
+  int ok;
+
+  seed = 123456789;
+
+  n = N;
+  printf("%d\n", n);
+  for (i = 0; i < n; i = i + 1) {
+    for (;;) {
+      tmp = myrand() - myrand();
+      ok = 1;
+      for (j = 0; j < i; j = j + 1) {
+        if (vals[j] == tmp) ok = 0;
+      }
+      if (ok == 1) break;
+    }
+    vals[i] = tmp;
+    printf("%d ", tmp);
+  }
+  printf("\n");
+
+  for (i = 0; i < n; i = i + 1) printf("%d ", myrand() % 2);
+  printf("\n");
+
+  m = N;
+  printf("%d\n", m);
+  for (i = 0; i < m; i = i + 1) printf("%d %d\n", myrand() % n, myrand());
+
+  return 0;
+}

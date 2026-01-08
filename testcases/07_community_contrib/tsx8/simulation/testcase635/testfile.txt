@@ -1,0 +1,30 @@
+/* Description:
+ *   Converted from a C++ differential-testing driver.
+ *   Original program prints an incrementing counter each round, then runs
+ *   external tools and stops when a comparison fails.
+ *
+ *   In Strict SysY (no system/files), we model the comparison result via input:
+ *     - each iteration reads one integer `res` from stdin
+ *     - `res == 0` means "same, continue"
+ *     - `res != 0` means "different, stop"
+ *
+ *   This testcase therefore prints 1..k and then terminates when the first
+ *   non-zero input value is encountered.
+ */
+
+int main() {
+    int cnt;
+    int i;
+    int res;
+
+    cnt = 0;
+    for (i = 0; i < 1000; i = i + 1) {
+        cnt = cnt + 1;
+        printf("%d\n", cnt);
+        res = getint();
+        if (res != 0) {
+            break;
+        }
+    }
+    return 0;
+}

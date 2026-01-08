@@ -1,0 +1,76 @@
+/* Description:
+ *   Converted from a C++ solution that sorts an array descending and binary-searches
+ *   the minimum mid satisfying judge(mid).
+ */
+
+const int MAXN = 7000;
+
+int n;
+int ans;
+int l;
+int r;
+int a[MAXN];
+int mn[MAXN];
+
+int min2(int x, int y) {
+    if (x < y) return x;
+    return y;
+}
+
+void sort_desc(int arr[], int len) {
+    int i;
+    int j;
+    int max_idx;
+    int tmp;
+    for (i = 1; i <= len; i = i + 1) {
+        max_idx = i;
+        for (j = i + 1; j <= len; j = j + 1) {
+            if (arr[j] > arr[max_idx]) max_idx = j;
+        }
+        tmp = arr[i];
+        arr[i] = arr[max_idx];
+        arr[max_idx] = tmp;
+    }
+}
+
+int judge(int mid) {
+    int i;
+    int now;
+
+    for (i = 1; i <= mid; i = i + 1) mn[i] = a[i];
+
+    now = 1;
+    for (i = mid + 1; i <= n; i = i + 1) {
+        if (mn[now] - 1 < 0) return 0;
+        mn[now] = min2(mn[now] - 1, a[i]);
+        now = now + 1;
+        if (now > mid) now = 1;
+    }
+    return 1;
+}
+
+int main() {
+    int i;
+    int mid;
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) a[i] = getint();
+
+    sort_desc(a, n);
+
+    l = 1;
+    r = n;
+    ans = n;
+    for (; l <= r;) {
+        mid = (l + r) / 2;
+        if (judge(mid) == 1) {
+            ans = mid;
+            r = mid - 1;
+        } else {
+            l = mid + 1;
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

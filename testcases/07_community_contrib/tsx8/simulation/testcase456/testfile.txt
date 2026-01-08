@@ -1,0 +1,104 @@
+const int MAXN = 64;
+const int MAXM = 4096;
+
+int n;
+int sx;
+int sy;
+int sp;
+int sr;
+
+int hx[MAXN];
+int hy[MAXN];
+int hm[MAXN];
+int hp[MAXN];
+int hr[MAXN];
+
+int head[MAXN];
+int to[MAXM];
+int nxt[MAXM];
+int ecnt;
+
+int vis[MAXN];
+int que[MAXN];
+int ql;
+int qr;
+
+int dis2(int x1, int y1, int x2, int y2) {
+  int dx;
+  int dy;
+  dx = x1 - x2;
+  dy = y1 - y2;
+  return dx * dx + dy * dy;
+}
+
+void add_edge(int x, int y) {
+  ecnt = ecnt + 1;
+  to[ecnt] = y;
+  nxt[ecnt] = head[x];
+  head[x] = ecnt;
+}
+
+int main() {
+  int i;
+  int j;
+  int start;
+  int ans;
+  int loop;
+  int now;
+  int eidx;
+  int nn;
+
+  sx = getint();
+  sy = getint();
+  sp = getint();
+  sr = getint();
+  n = getint();
+
+  for (i = 0; i < n; i = i + 1) {
+    hx[i] = getint();
+    hy[i] = getint();
+    hm[i] = getint();
+    hp[i] = getint();
+    hr[i] = getint();
+  }
+
+  start = n;
+
+  for (i = 0; i < n; i = i + 1) {
+    if (dis2(sx, sy, hx[i], hy[i]) <= sr * sr && sp >= hm[i]) {
+      add_edge(start, i);
+    }
+    for (j = 0; j < n; j = j + 1) {
+      if (i != j) {
+        if (dis2(sx, sy, hx[j], hy[j]) <= hr[i] * hr[i] && hp[i] >= hm[j]) {
+          add_edge(i, j);
+        }
+      }
+    }
+  }
+
+  ql = 0;
+  qr = 0;
+  que[qr] = start;
+  qr = qr + 1;
+  vis[start] = 1;
+
+  ans = 0;
+  for (loop = 0; ql < qr; loop = loop + 1) {
+    now = que[ql];
+    ql = ql + 1;
+
+    for (eidx = head[now]; eidx != 0; eidx = nxt[eidx]) {
+      nn = to[eidx];
+      if (vis[nn] == 0) {
+        vis[nn] = 1;
+        ans = ans + 1;
+        que[qr] = nn;
+        qr = qr + 1;
+      }
+    }
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

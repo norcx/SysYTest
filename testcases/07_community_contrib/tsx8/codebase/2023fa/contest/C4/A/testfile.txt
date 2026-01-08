@@ -1,0 +1,46 @@
+/* Description:
+ * Converted from `codes/2023fa/contest/C4/A.c`.
+ *
+ * Input:
+ *   t
+ *   year_1
+ *   score_1
+ *   ...
+ *   year_t
+ *   score_t
+ *
+ * Output encoding (to avoid string printing in Strict SysY):
+ *   - When original prints "You have to take the course.": print 0
+ *   - When original prints "You can choose whether to take the course or not.": print 1
+ *   - When original prints just the score: print the score
+ *   - When original prints score + sentence: print score then 1
+ */
+
+int main() {
+    int t;
+    int i;
+    int year;
+    int score;
+
+    t = getint();
+    for (i = 0; i < t; i = i + 1) {
+        year = getint();
+        score = getint();
+
+        if (year == 2023) {
+            if (score >= 85) {
+                printf("%d\n", score);
+                printf("%d\n", 1);
+            } else {
+                printf("%d\n", 0);
+            }
+        } else {
+            if (score >= 60) {
+                printf("%d\n", score);
+            } else {
+                printf("%d\n", 0);
+            }
+        }
+    }
+    return 0;
+}

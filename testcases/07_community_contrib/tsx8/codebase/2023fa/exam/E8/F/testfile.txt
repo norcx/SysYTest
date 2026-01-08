@@ -1,0 +1,51 @@
+/* Description:
+ *   [Add description here]
+ */
+
+int m;
+int n;
+int t;
+int ax[13];
+int ay[13];
+int ans;
+
+int check(int x, int y) {
+    int i;
+    for (i = 1; i <= t; i = i + 1) {
+        if (ax[i] == x && ay[i] == y) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void dfs(int x, int y) {
+    if (x > m || y > n) {
+        return;
+    }
+    if (x == m && y == n) {
+        ans = ans + 1;
+    }
+    if (check(x + 1, y)) {
+        dfs(x + 1, y);
+    }
+    if (check(x, y + 1)) {
+        dfs(x, y + 1);
+    }
+    return;
+}
+
+int main() {
+    int i;
+    m = getint();
+    n = getint();
+    t = getint();
+    for (i = 1; i <= t; i = i + 1) {
+        ax[i] = getint();
+        ay[i] = getint();
+    }
+    ans = 0;
+    dfs(0, 0);
+    printf("%d", ans);
+    return 0;
+}

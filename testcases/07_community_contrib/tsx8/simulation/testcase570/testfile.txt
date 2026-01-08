@@ -1,0 +1,114 @@
+/* Description:
+ *   Weighted undirected graph shortest path queries.
+ *   Input:
+ *     n, m, Q
+ *     m edges: x, y, z
+ *     Q queries: s, t
+ *   Output:
+ *     shortest distance(s, t) per line
+ */
+
+const int MAXN = 200;
+const int MAXM = 800;
+const int MAXE = 1605;
+const int QSIZE = 20000;
+const int INF = 1000000000;
+
+int head[MAXN + 1];
+int to[MAXE];
+int w[MAXE];
+int nxt[MAXE];
+int ecnt;
+
+int dis[MAXN + 1];
+int inq[MAXN + 1];
+int q[QSIZE];
+int qh;
+int qt;
+
+void add_edge(int x, int y, int z) {
+    ecnt = ecnt + 1;
+    to[ecnt] = y;
+    w[ecnt] = z;
+    nxt[ecnt] = head[x];
+    head[x] = ecnt;
+    return;
+}
+
+int spfa(int s, int t, int n) {
+    int i;
+    for (i = 1; i <= n; i = i + 1) {
+        dis[i] = INF;
+        inq[i] = 0;
+    }
+
+    qh = 0;
+    qt = 0;
+    dis[s] = 0;
+    inq[s] = 1;
+    q[qt] = s;
+    qt = qt + 1;
+    if (qt == QSIZE) qt = 0;
+
+    for (; qh != qt;) {
+        int u;
+        int ei;
+        u = q[qh];
+        qh = qh + 1;
+        if (qh == QSIZE) qh = 0;
+        inq[u] = 0;
+
+        ei = head[u];
+        for (; ei != 0; ei = nxt[ei]) {
+            int v;
+            int nd;
+            v = to[ei];
+            nd = dis[u] + w[ei];
+            if (nd < dis[v]) {
+                dis[v] = nd;
+                if (inq[v] == 0) {
+                    inq[v] = 1;
+                    q[qt] = v;
+                    qt = qt + 1;
+                    if (qt == QSIZE) qt = 0;
+                }
+            }
+        }
+    }
+
+    return dis[t];
+}
+
+int main() {
+    int n;
+    int m;
+    int Q;
+    int i;
+    int x;
+    int y;
+    int z;
+
+    n = getint();
+    m = getint();
+    Q = getint();
+
+    for (i = 1; i <= n; i = i + 1) head[i] = 0;
+    ecnt = 0;
+
+    for (i = 1; i <= m; i = i + 1) {
+        x = getint();
+        y = getint();
+        z = getint();
+        add_edge(x, y, z);
+        add_edge(y, x, z);
+    }
+
+    for (i = 1; i <= Q; i = i + 1) {
+        x = getint();
+        y = getint();
+        z = spfa(x, y, n);
+        printf("%d\n", z);
+    }
+
+    return 0;
+}

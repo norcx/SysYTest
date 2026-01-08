@@ -1,0 +1,7 @@
+After empty if: count=0
+After empty else: count=0
+After empty for: i=10
+After nested: count=2
+After continue loop: count=5
+After break loop: i=0
+Deep nesting OK

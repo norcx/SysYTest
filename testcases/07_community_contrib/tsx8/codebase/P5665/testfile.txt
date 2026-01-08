@@ -1,0 +1,216 @@
+const int MAXN = 1100;
+const int MAXM = 1100;
+
+const int BASE = 10000;
+
+int n;
+int type;
+int q[MAXN];
+int b[MAXN];
+int lq[MAXM];
+int rq[MAXM];
+int pq[MAXM];
+int g[MAXN];
+int sum[MAXN];
+
+int ans_digits[1000];
+int ans_len;
+
+int tmp_digits[64];
+int tmp_len;
+
+int sq_digits[128];
+int sq_len;
+
+void big_init() {
+    ans_len = 1;
+    ans_digits[0] = 0;
+}
+
+void big_add(int add_digits[], int add_len) {
+    int max_len;
+    int carry;
+    int i;
+    int av;
+    int bv;
+    int s;
+
+    max_len = ans_len;
+    if (add_len > max_len) max_len = add_len;
+
+    carry = 0;
+    for (i = 0; i < max_len; i = i + 1) {
+        av = 0;
+        bv = 0;
+        if (i < ans_len) av = ans_digits[i];
+        if (i < add_len) bv = add_digits[i];
+        s = av + bv + carry;
+        ans_digits[i] = s % BASE;
+        carry = s / BASE;
+    }
+    ans_len = max_len;
+    for (; carry > 0; ) {
+        ans_digits[ans_len] = carry % BASE;
+        carry = carry / BASE;
+        ans_len = ans_len + 1;
+    }
+}
+
+int int_to_big(int x, int out_digits[]) {
+    int t;
+    int len;
+
+    t = x;
+    if (t == 0) {
+        out_digits[0] = 0;
+        return 1;
+    }
+    len = 0;
+    for (; t > 0; ) {
+        out_digits[len] = t % BASE;
+        t = t / BASE;
+        len = len + 1;
+    }
+    return len;
+}
+
+int square_big(int in_digits[], int in_len, int out_digits[]) {
+    int i;
+    int j;
+    int k;
+    int carry;
+    int len;
+    int v;
+
+    len = in_len * 2;
+    for (i = 0; i < len; i = i + 1) out_digits[i] = 0;
+
+    for (i = 0; i < in_len; i = i + 1) {
+        for (j = 0; j < in_len; j = j + 1) {
+            out_digits[i + j] = out_digits[i + j] + in_digits[i] * in_digits[j];
+        }
+    }
+
+    carry = 0;
+    for (k = 0; k < len; k = k + 1) {
+        v = out_digits[k] + carry;
+        out_digits[k] = v % BASE;
+        carry = v / BASE;
+    }
+    for (; carry > 0; ) {
+        out_digits[len] = carry % BASE;
+        carry = carry / BASE;
+        len = len + 1;
+    }
+
+    for (; len > 1 && out_digits[len - 1] == 0; ) len = len - 1;
+    return len;
+}
+
+void big_print() {
+    int i;
+    int x;
+
+    printf("%d", ans_digits[ans_len - 1]);
+    for (i = ans_len - 2; i >= 0; i = i - 1) {
+        x = ans_digits[i];
+        if (x < 1000) printf("0");
+        if (x < 100) printf("0");
+        if (x < 10) printf("0");
+        printf("%d", x);
+    }
+    printf("\n");
+}
+
+int main() {
+    int i;
+    int aa;
+
+    n = getint();
+    type = getint();
+
+    sum[0] = 0;
+    if (type == 0) {
+        for (i = 1; i <= n; i = i + 1) {
+            aa = getint();
+            sum[i] = sum[i - 1] + aa;
+        }
+    } else {
+        const int MOD2 = 1073741824;
+        int x;
+        int y;
+        int z;
+        int m;
+        int j;
+        int t1;
+        int t2;
+        int t3;
+
+        x = getint();
+        y = getint();
+        z = getint();
+        b[1] = getint();
+        b[2] = getint();
+        m = getint();
+        pq[0] = 0;
+        for (i = 1; i <= m; i = i + 1) {
+            pq[i] = getint();
+            lq[i] = getint();
+            rq[i] = getint();
+        }
+        for (i = 3; i <= n; i = i + 1) {
+            t1 = (x * b[i - 1]) % MOD2;
+            t2 = (y * b[i - 2]) % MOD2;
+            t3 = t1 + t2 + z;
+            b[i] = t3 % MOD2;
+        }
+        for (j = 1; j <= m; j = j + 1) {
+            for (i = pq[j - 1] + 1; i <= pq[j]; i = i + 1) {
+                aa = b[i] % (rq[j] - lq[j] + 1) + lq[j];
+                sum[i] = sum[i - 1] + aa;
+            }
+        }
+    }
+
+    {
+        int L;
+        int R;
+        int left_val;
+        int right_val;
+        int cur_val;
+
+        L = 1;
+        R = 1;
+        q[1] = 0;
+        g[0] = 0;
+
+        for (i = 1; i <= n; i = i + 1) {
+            for (; L < R; ) {
+                left_val = sum[q[L + 1]] * 2 - sum[g[q[L + 1]]];
+                if (left_val <= sum[i]) L = L + 1;
+                else break;
+            }
+            g[i] = q[L];
+
+            cur_val = sum[i] * 2 - sum[g[i]];
+            for (; L <= R; ) {
+                right_val = sum[q[R]] * 2 - sum[g[q[R]]];
+                if (right_val >= cur_val) R = R - 1;
+                else break;
+            }
+            R = R + 1;
+            q[R] = i;
+        }
+    }
+
+    big_init();
+    for (i = n; i > 0; i = g[i]) {
+        int seg;
+        seg = sum[i] - sum[g[i]];
+        tmp_len = int_to_big(seg, tmp_digits);
+        sq_len = square_big(tmp_digits, tmp_len, sq_digits);
+        big_add(sq_digits, sq_len);
+    }
+    big_print();
+    return 0;
+}

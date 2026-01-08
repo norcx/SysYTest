@@ -1,0 +1,87 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C7/E.c`.
+ *
+ *   Original program:
+ *     - Reads a string s and an integer n.
+ *     - Repeats n times:
+ *         t = s + reverse(s)
+ *         s1 = t[1],t[3],... (odd indices)
+ *         s2 = t[0],t[2],... (even indices)
+ *         s = min_lex(s1, s2)   (if equal, choose s2)
+ *     - Prints final s.
+ *
+ *   Strict SysY adaptation:
+ *     - No strings/chars; encode s as an int array of length L.
+ *     - Input format:
+ *         L
+ *         s[0]
+ *         ...
+ *         s[L-1]
+ *         n
+ *     - Output format: final s[i] as integers, one per line.
+ */
+
+const int MAXL = 1024;
+int s[MAXL];
+int s1[MAXL];
+int s2[MAXL];
+
+int get_t(int idx, int len) {
+    if (idx < len) {
+        return s[idx];
+    }
+    return s[2 * len - idx - 1];
+}
+
+void op(int len) {
+    int j;
+    for (j = 0; j < len; j = j + 1) {
+        s2[j] = get_t(2 * j, len);
+        s1[j] = get_t(2 * j + 1, len);
+    }
+
+    int choose_s1;
+    choose_s1 = 0;
+    for (j = 0; j < len; j = j + 1) {
+        if (s1[j] < s2[j]) {
+            choose_s1 = 1;
+            j = len;
+        } else {
+            if (s1[j] > s2[j]) {
+                choose_s1 = 0;
+                j = len;
+            }
+        }
+    }
+
+    for (j = 0; j < len; j = j + 1) {
+        if (choose_s1 == 1) {
+            s[j] = s1[j];
+        } else {
+            s[j] = s2[j];
+        }
+    }
+}
+
+int main() {
+    int len;
+    int i;
+    int n;
+    int step;
+
+    len = getint();
+
+    for (i = 0; i < len; i = i + 1) {
+        s[i] = getint();
+    }
+
+    n = getint();
+    for (step = 0; step < n; step = step + 1) {
+        op(len);
+    }
+
+    for (i = 0; i < len; i = i + 1) {
+        printf("%d\n", s[i]);
+    }
+    return 0;
+}

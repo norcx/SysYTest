@@ -1,0 +1,71 @@
+const int SCALE = 1000000;
+const int MAX_W = 10;
+const int MAX_B = 10;
+const int STRIDE = MAX_B + 1;
+const int DP_SIZE = (MAX_W + 1) * (MAX_B + 1);
+int dp[DP_SIZE];
+
+int get_index(int white, int black) {
+    return white * STRIDE + black;
+}
+
+int clamp_prob(int value) {
+    if (value < 0) {
+        return 0;
+    }
+    if (value > SCALE) {
+        return SCALE;
+    }
+    return value;
+}
+
+int main() {
+    int w = getint();
+    int b = getint();
+    if (w > MAX_W) {
+        w = MAX_W;
+    }
+    if (b > MAX_B) {
+        b = MAX_B;
+    }
+    int i = 0;
+    int j = 0;
+    for (j = 0; j <= b; j = j + 1) {
+        dp[get_index(0, j)] = 0;
+    }
+    for (i = 1; i <= w; i = i + 1) {
+        dp[get_index(i, 0)] = SCALE;
+        if (b >= 1) {
+            dp[get_index(i, 1)] = (SCALE * i) / (i + 1);
+        }
+    }
+    if (b == 0 || b == 1) {
+        int base = dp[get_index(w, b)];
+        printf("%d.%d\n", base / SCALE, base % SCALE);
+        return 0;
+    }
+    for (i = 1; i <= w; i = i + 1) {
+        for (j = 2; j <= b; j = j + 1) {
+            int value = (SCALE * i) / (i + j);
+            int t = 0;
+            if (i >= 1) {
+                t = dp[get_index(i - 1, j - 2)];
+                t = (t * i) / (i + j - 2);
+                t = (t * (j - 1)) / (i + j - 1);
+                t = (t * j) / (i + j);
+                value = value + t;
+            }
+            if (j >= 3) {
+                t = dp[get_index(i, j - 3)];
+                t = (t * (j - 2)) / (i + j - 2);
+                t = (t * (j - 1)) / (i + j - 1);
+                t = (t * j) / (i + j);
+                value = value + t;
+            }
+            dp[get_index(i, j)] = clamp_prob(value);
+        }
+    }
+    int ans = dp[get_index(w, b)];
+    printf("%d.%d\n", ans / SCALE, ans % SCALE);
+    return 0;
+}

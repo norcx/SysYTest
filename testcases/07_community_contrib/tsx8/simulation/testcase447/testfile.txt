@@ -1,0 +1,111 @@
+/* Description:
+ *   SysY translation of a tree-DFS DP from C++ (scaled down).
+ *   Input format (all integers):
+ *     n, m, mm
+ *     c[1..n]
+ *     (n-1) directed edges: x y
+ *   Output:
+ *     ans
+ */
+
+int n;
+int m;
+int mm;
+
+int cnt;
+int mx;
+
+int head[128];
+int to[260];
+int nxt[260];
+
+int c[128];
+int depth[128];
+int f[128];
+int ans;
+
+/* Flattened arrays: s[u][d] => s[u*D + d] */
+const int D = 140;
+int s[20000];
+int ss[20000];
+
+void add_edge(int x, int y) {
+    cnt = cnt + 1;
+    to[cnt] = y;
+    nxt[cnt] = head[x];
+    head[x] = cnt;
+    return;
+}
+
+void dfs(int now, int fat) {
+    int i;
+    int j;
+    int k;
+    int nn;
+    int base_now;
+    int base_nn;
+
+    depth[now] = depth[fat] + 1;
+    if (depth[now] > mx) mx = depth[now];
+
+    base_now = now * D;
+    s[base_now + 0] = c[now];
+    ss[base_now + 0] = c[now];
+
+    for (i = head[now]; i != 0; i = nxt[i]) {
+        nn = to[i];
+        if (nn == fat) continue;
+
+        dfs(nn, now);
+
+        base_nn = nn * D;
+        if (c[now] > mm) {
+            for (j = 1; j <= mx; j = j + 1) {
+                int idx_need;
+                int left_sum;
+                int right_sum;
+                idx_need = m - j + 1;
+                if (idx_need < 0) idx_need = 0;
+                left_sum = ss[base_now + idx_need];
+                right_sum = s[base_nn + (j - 1)];
+                f[now] = f[now] + left_sum * right_sum;
+            }
+        }
+
+        for (k = 0; k <= mx; k = k + 1) {
+            s[base_now + (k + 1)] = s[base_now + (k + 1)] + s[base_nn + k];
+            ss[base_now + (k + 1)] = s[base_now + (k + 1)];
+        }
+
+        for (k = mx; k >= 0; k = k - 1) {
+            ss[base_now + k] = ss[base_now + k] + ss[base_now + (k + 1)];
+        }
+    }
+
+    ans = ans + f[now];
+    return;
+}
+
+int main() {
+    int i;
+    int x;
+    int y;
+
+    n = getint();
+    m = getint();
+    mm = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        c[i] = getint();
+    }
+
+    for (i = 1; i < n; i = i + 1) {
+        x = getint();
+        y = getint();
+        add_edge(x, y);
+    }
+
+    dfs(1, 0);
+    printf("%d\n", ans);
+    return 0;
+}

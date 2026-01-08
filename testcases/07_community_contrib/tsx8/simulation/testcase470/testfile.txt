@@ -1,0 +1,84 @@
+/* Description:
+ *   Min-heap based accumulation testcase (multi-case, ends with n=0).
+ */
+
+int n;
+int cnt = 0;
+
+int heap_size = 0;
+int heap[20005];
+
+void heap_push(int x) {
+    int now;
+    int parent;
+    int tmp;
+    heap_size = heap_size + 1;
+    heap[heap_size] = x;
+    now = heap_size;
+    for (; now > 1; now = parent) {
+        parent = now / 2;
+        if (heap[now] >= heap[parent]) {
+            break;
+        }
+        tmp = heap[now];
+        heap[now] = heap[parent];
+        heap[parent] = tmp;
+    }
+}
+
+int heap_pop() {
+    int ret;
+    int now;
+    int child;
+    int tmp;
+    ret = heap[1];
+    heap[1] = heap[heap_size];
+    heap_size = heap_size - 1;
+    now = 1;
+    for (; now * 2 <= heap_size; now = child) {
+        child = now * 2;
+        if (child < heap_size && heap[child] > heap[child + 1]) {
+            child = child + 1;
+        }
+        if (heap[now] <= heap[child]) {
+            break;
+        }
+        tmp = heap[now];
+        heap[now] = heap[child];
+        heap[child] = tmp;
+    }
+    return ret;
+}
+
+void work() {
+    int i;
+    int x;
+    int tmp;
+    int ans;
+    cnt = cnt + 1;
+    ans = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        x = getint();
+        if (heap_size == 0 || heap[1] >= x) {
+            heap_push(x);
+        } else {
+            tmp = heap_pop();
+            ans = ans + (x - tmp);
+            heap_push(x);
+            heap_push(x);
+        }
+    }
+    printf("Case #%d: %d\n", cnt, ans);
+}
+
+int main() {
+    for (; 1;) {
+        n = getint();
+        if (n == 0) {
+            break;
+        }
+        work();
+        heap_size = 0;
+    }
+    return 0;
+}

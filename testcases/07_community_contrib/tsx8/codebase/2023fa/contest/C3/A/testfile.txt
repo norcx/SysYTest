@@ -1,0 +1,59 @@
+/* Description:
+ *   Arithmetic-only implementation of `a & (~b)` for non-negative ints.
+ *
+ *   Input format (Strict SysY / MARS friendly):
+ *     T
+ *     a1
+ *     b1
+ *     a2
+ *     b2
+ *     ...
+ *     aT
+ *     bT
+ *
+ *   Output:
+ *     For each pair (a, b), print a & (~b) as an integer.
+ */
+
+int and_not(int a, int b) {
+    int res;
+    int base;
+    int i;
+    int abit;
+    int bbit;
+    int outbit;
+
+    res = 0;
+    base = 1;
+    abit = 0;
+    bbit = 0;
+    outbit = 0;
+
+    for (i = 0; i < 31; i = i + 1) {
+        abit = a % 2;
+        a = a / 2;
+        bbit = b % 2;
+        b = b / 2;
+        outbit = abit * (1 - bbit);
+        res = res + outbit * base;
+        base = base * 2;
+    }
+    return res;
+}
+
+int main() {
+    int t;
+    int i;
+    int a;
+    int b;
+    int ans;
+
+    t = getint();
+    for (i = 0; i < t; i = i + 1) {
+        a = getint();
+        b = getint();
+        ans = and_not(a, b);
+        printf("%d\n", ans);
+    }
+    return 0;
+}

@@ -1,0 +1,4 @@
+Iter 0: DivSum=-56618, ModSum=-8
+Iter 5000: DivSum=-1251825900, ModSum=-446
+Iter 10000: DivSum=1651184170, ModSum=280
+Iter 15000: DivSum=856764208, ModSum=-628

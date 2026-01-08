@@ -1,0 +1,5 @@
+g_simple: 1 2 3 4 5 
+g_expr: 2 4 2 5 1 
+g_partial: 100 200 0 0 0 0 0 0 0 0 
+local_expr: 5 6 10 4 2 
+func call: 10 100 40

@@ -1,0 +1,100 @@
+const int INF = 1000000000;
+const int MAXT = 305;
+const int MAXN = 105;
+
+int dp[MAXT * MAXN];
+int train[MAXT * MAXN * 2];
+int t[MAXN];
+
+int main() {
+    int k = 0;
+    for (;;) {
+        int n = getint();
+        int T = getint();
+        if (n == 0) {
+            break;
+        }
+
+        int i = 0;
+        for (i = 1; i < n; i = i + 1) {
+            t[i] = getint();
+        }
+
+        int time = 0;
+        int station = 0;
+        for (time = 0; time <= T; time = time + 1) {
+            for (station = 1; station <= n; station = station + 1) {
+                train[(time * MAXN + station) * 2] = 0;
+                train[(time * MAXN + station) * 2 + 1] = 0;
+            }
+        }
+
+        int m1 = getint();
+        for (; m1 > 0; m1 = m1 - 1) {
+            int d = getint();
+            for (i = 1; i < n; i = i + 1) {
+                if (d <= T) {
+                    train[(d * MAXN + i) * 2] = 1;
+                }
+                d = d + t[i];
+            }
+        }
+
+        int m2 = getint();
+        for (; m2 > 0; m2 = m2 - 1) {
+            int d = getint();
+            for (i = n - 1; i >= 1; i = i - 1) {
+                if (d <= T) {
+                    train[(d * MAXN + (i + 1)) * 2 + 1] = 1;
+                }
+                d = d + t[i];
+            }
+        }
+
+        for (i = 1; i <= n - 1; i = i + 1) {
+            dp[T * MAXN + i] = INF;
+        }
+        dp[T * MAXN + n] = 0;
+
+        for (time = T - 1; time >= 0; time = time - 1) {
+            for (station = 1; station <= n; station = station + 1) {
+                int best = dp[(time + 1) * MAXN + station] + 1;
+
+                if (station < n) {
+                    if (train[(time * MAXN + station) * 2] == 1) {
+                        int arrive = time + t[station];
+                        if (arrive <= T) {
+                            int cand = dp[arrive * MAXN + (station + 1)];
+                            if (cand < best) {
+                                best = cand;
+                            }
+                        }
+                    }
+                }
+
+                if (station > 1) {
+                    if (train[(time * MAXN + station) * 2 + 1] == 1) {
+                        int arrive = time + t[station - 1];
+                        if (arrive <= T) {
+                            int cand = dp[arrive * MAXN + (station - 1)];
+                            if (cand < best) {
+                                best = cand;
+                            }
+                        }
+                    }
+                }
+
+                dp[time * MAXN + station] = best;
+            }
+        }
+
+        k = k + 1;
+        printf("Case Number %d: ", k);
+        if (dp[1] >= INF) {
+            printf("impossible\n");
+        } else {
+            printf("%d\n", dp[1]);
+        }
+    }
+    return 0;
+}

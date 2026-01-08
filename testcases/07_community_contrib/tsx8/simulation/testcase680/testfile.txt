@@ -1,0 +1,309 @@
+const int GRID = 6;
+const int CELLS = 36;
+const int MAXV = 6;
+const int VAL_STRIDE = 7;
+const int MAXVAL = 32;
+const int MAXNUM = 30;
+const int INF = 707406378;
+
+const int CENTER_CELLS = 4;
+const int PRE_STRIDE = 33;
+
+const int DP_A = 7;
+const int DP_B = 7;
+const int DP_C = 7;
+const int DP_D = 7;
+const int DP_MASK = 16;
+const int DP_LAYER_SIZE = 2401 * 16;
+
+int num[CELLS];
+int val[CELLS * VAL_STRIDE];
+int pre[CENTER_CELLS * PRE_STRIDE];
+int vis[CELLS * CELLS];
+int dp[2 * DP_LAYER_SIZE];
+
+int abs_int(int x) {
+  if (x < 0) return 0 - x;
+  return x;
+}
+
+int get_dis(int x, int y, int z, int w) {
+  int dx;
+  int dy;
+  dx = x - z;
+  dy = y - w;
+  if (dx < 0) dx = 0 - dx;
+  if (dy < 0) dy = 0 - dy;
+  return dx + dy;
+}
+
+int idx_state(int a, int b, int c, int d, int mask) {
+  return ((((a * DP_B + b) * DP_C + c) * DP_D + d) * DP_MASK + mask);
+}
+
+void sort_cell(int cell, int cnt) {
+  int i;
+  int j;
+  int t;
+  for (i = 1; i <= cnt; i = i + 1) {
+    for (j = i + 1; j <= cnt; j = j + 1) {
+      if (val[cell * VAL_STRIDE + i] > val[cell * VAL_STRIDE + j]) {
+        t = val[cell * VAL_STRIDE + i];
+        val[cell * VAL_STRIDE + i] = val[cell * VAL_STRIDE + j];
+        val[cell * VAL_STRIDE + j] = t;
+      }
+    }
+  }
+}
+
+int main() {
+  int A;
+  int B;
+  int C;
+  int D;
+  int E;
+
+  int i;
+  int j;
+  int k;
+  int l;
+  int u;
+  int v;
+
+  int base;
+  int ans;
+
+  int cell1;
+  int cell2;
+  int cnt1;
+  int cnt2;
+  int uu;
+  int vv;
+  int dis;
+  int diff;
+
+  int n00;
+  int n01;
+  int n10;
+  int n11;
+
+  int layer;
+  int next_layer;
+  int state;
+  int now;
+
+  int a;
+  int b;
+  int c;
+  int d;
+  int mask;
+  int e;
+  int f;
+  int g;
+  int h;
+  int tmp_mask;
+
+  int da;
+  int db;
+  int dc;
+  int dd;
+  int tmp;
+  int next_mask;
+  int next_state;
+  int next_val;
+
+  int center_r;
+  int center_c;
+  int center_idx;
+  int pre_idx;
+
+  A = getint();
+  B = getint();
+  C = getint();
+  D = getint();
+  E = getint();
+
+  for (i = 0; i < GRID; i = i + 1) {
+    for (j = 0; j < GRID; j = j + 1) {
+      cell1 = i * GRID + j;
+      num[cell1] = getint();
+      for (k = 1; k <= num[cell1]; k = k + 1) {
+        val[cell1 * VAL_STRIDE + k] = getint();
+      }
+    }
+  }
+
+  base = 0;
+  for (i = 0; i < GRID; i = i + 1) {
+    for (j = 0; j < GRID; j = j + 1) {
+      if (i >= 2 && i <= 3 && j >= 2 && j <= 3) continue;
+
+      cell1 = i * GRID + j;
+      cnt1 = num[cell1];
+      sort_cell(cell1, cnt1);
+      for (k = 2; k <= cnt1; k = k + 1) {
+        if (val[cell1 * VAL_STRIDE + k] == val[cell1 * VAL_STRIDE + k - 1] + 1) {
+          base = base + A;
+        }
+      }
+
+      for (center_r = 2; center_r <= 3; center_r = center_r + 1) {
+        for (center_c = 2; center_c <= 3; center_c = center_c + 1) {
+          dis = get_dis(i, j, center_r, center_c);
+          if (dis > 2) continue;
+
+          center_idx = (center_r - 2) * 2 + (center_c - 2);
+          for (u = 1; u <= cnt1; u = u + 1) {
+            uu = val[cell1 * VAL_STRIDE + u];
+            pre_idx = center_idx * PRE_STRIDE + uu;
+            if (dis == 1) {
+              if (uu >= 0 && uu <= MAXVAL) pre[pre_idx] = pre[pre_idx] + B;
+              if (uu + 1 >= 0 && uu + 1 <= MAXVAL) pre[center_idx * PRE_STRIDE + uu + 1] = pre[center_idx * PRE_STRIDE + uu + 1] + C;
+              if (uu - 1 >= 0 && uu - 1 <= MAXVAL) pre[center_idx * PRE_STRIDE + uu - 1] = pre[center_idx * PRE_STRIDE + uu - 1] + C;
+            }
+            if (dis == 2) {
+              if (uu >= 0 && uu <= MAXVAL) pre[pre_idx] = pre[pre_idx] + D;
+              if (uu + 1 >= 0 && uu + 1 <= MAXVAL) pre[center_idx * PRE_STRIDE + uu + 1] = pre[center_idx * PRE_STRIDE + uu + 1] + E;
+              if (uu - 1 >= 0 && uu - 1 <= MAXVAL) pre[center_idx * PRE_STRIDE + uu - 1] = pre[center_idx * PRE_STRIDE + uu - 1] + E;
+            }
+          }
+        }
+      }
+
+      for (k = 0; k < GRID; k = k + 1) {
+        for (l = 0; l < GRID; l = l + 1) {
+          if (k >= 2 && k <= 3 && l >= 2 && l <= 3) continue;
+          if (k == i && l == j) continue;
+
+          cell2 = k * GRID + l;
+          if (vis[cell1 * CELLS + cell2] == 1) continue;
+          vis[cell1 * CELLS + cell2] = 1;
+          vis[cell2 * CELLS + cell1] = 1;
+
+          dis = get_dis(i, j, k, l);
+          if (dis > 2) continue;
+
+          cnt2 = num[cell2];
+          for (u = 1; u <= cnt1; u = u + 1) {
+            uu = val[cell1 * VAL_STRIDE + u];
+            for (v = 1; v <= cnt2; v = v + 1) {
+              vv = val[cell2 * VAL_STRIDE + v];
+              if (dis == 1) {
+                if (uu == vv) base = base + B;
+                diff = uu - vv;
+                if (diff < 0) diff = 0 - diff;
+                if (diff == 1) base = base + C;
+              }
+              if (dis == 2) {
+                if (uu == vv) base = base + D;
+                diff = uu - vv;
+                if (diff < 0) diff = 0 - diff;
+                if (diff == 1) base = base + E;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  n00 = num[2 * GRID + 2];
+  n01 = num[2 * GRID + 3];
+  n10 = num[3 * GRID + 2];
+  n11 = num[3 * GRID + 3];
+
+  for (i = 0; i < 2 * DP_LAYER_SIZE; i = i + 1) dp[i] = INF;
+  dp[idx_state(0, 0, 0, 0, 0)] = base;
+
+  for (i = 0; i < MAXNUM; i = i + 1) {
+    layer = i % 2;
+    next_layer = 1 - layer;
+    for (j = 0; j < DP_LAYER_SIZE; j = j + 1) dp[next_layer * DP_LAYER_SIZE + j] = INF;
+
+    for (a = 0; a <= n00; a = a + 1) {
+      for (b = 0; b <= n01; b = b + 1) {
+        for (c = 0; c <= n10; c = c + 1) {
+          for (d = 0; d <= n11; d = d + 1) {
+            for (mask = 0; mask < DP_MASK; mask = mask + 1) {
+              state = idx_state(a, b, c, d, mask);
+              now = dp[layer * DP_LAYER_SIZE + state];
+              if (now == INF) continue;
+
+              tmp_mask = mask;
+              e = tmp_mask % 2;
+              tmp_mask = tmp_mask / 2;
+              f = tmp_mask % 2;
+              tmp_mask = tmp_mask / 2;
+              g = tmp_mask % 2;
+              tmp_mask = tmp_mask / 2;
+              h = tmp_mask % 2;
+
+              for (da = 0; da <= 1 && da + a <= n00; da = da + 1) {
+                for (db = 0; db <= 1 && db + b <= n01; db = db + 1) {
+                  for (dc = 0; dc <= 1 && dc + c <= n10; dc = dc + 1) {
+                    for (dd = 0; dd <= 1 && dd + d <= n11; dd = dd + 1) {
+                      tmp = 0;
+                      if (da == 1) {
+                        tmp = tmp + pre[0 * PRE_STRIDE + (i + 1)];
+                        if (e == 1) tmp = tmp + A;
+                        if (f == 1) tmp = tmp + C;
+                        if (g == 1) tmp = tmp + C;
+                        if (h == 1) tmp = tmp + E;
+                      }
+                      if (db == 1) {
+                        tmp = tmp + pre[1 * PRE_STRIDE + (i + 1)];
+                        if (e == 1) tmp = tmp + C;
+                        if (f == 1) tmp = tmp + A;
+                        if (g == 1) tmp = tmp + E;
+                        if (h == 1) tmp = tmp + C;
+                      }
+                      if (dc == 1) {
+                        tmp = tmp + pre[2 * PRE_STRIDE + (i + 1)];
+                        if (e == 1) tmp = tmp + C;
+                        if (f == 1) tmp = tmp + E;
+                        if (g == 1) tmp = tmp + A;
+                        if (h == 1) tmp = tmp + C;
+                      }
+                      if (dd == 1) {
+                        tmp = tmp + pre[3 * PRE_STRIDE + (i + 1)];
+                        if (e == 1) tmp = tmp + E;
+                        if (f == 1) tmp = tmp + C;
+                        if (g == 1) tmp = tmp + C;
+                        if (h == 1) tmp = tmp + A;
+                      }
+
+                      if (da == 1 && db == 1) tmp = tmp + B;
+                      if (da == 1 && dc == 1) tmp = tmp + B;
+                      if (da == 1 && dd == 1) tmp = tmp + D;
+                      if (db == 1 && dc == 1) tmp = tmp + D;
+                      if (db == 1 && dd == 1) tmp = tmp + B;
+                      if (dc == 1 && dd == 1) tmp = tmp + B;
+
+                      next_mask = da + db * 2 + dc * 4 + dd * 8;
+                      next_state = idx_state(a + da, b + db, c + dc, d + dd, next_mask);
+                      next_val = now + tmp;
+                      if (next_val < dp[next_layer * DP_LAYER_SIZE + next_state]) {
+                        dp[next_layer * DP_LAYER_SIZE + next_state] = next_val;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  ans = INF;
+  layer = MAXNUM % 2;
+  for (mask = 0; mask < DP_MASK; mask = mask + 1) {
+    state = idx_state(n00, n01, n10, n11, mask);
+    now = dp[layer * DP_LAYER_SIZE + state];
+    if (now < ans) ans = now;
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

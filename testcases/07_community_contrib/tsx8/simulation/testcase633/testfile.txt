@@ -1,0 +1,49 @@
+/*
+ * Description:
+ *   Converted from a C++ differential-testing harness that prints an increasing
+ *   counter each iteration and stops when two programs' outputs differ.
+ *
+ *   Strict SysY cannot execute external programs, so this testcase simulates
+ *   two "solvers" that match until a fixed iteration, then diverge; the loop
+ *   prints the counter each round and breaks on the first mismatch.
+ */
+
+int solve1(int x) {
+    int i;
+    int acc;
+    acc = 0;
+    for (i = 0; i < 8; i = i + 1) {
+        acc = (acc * 17 + x + i * 3) % 10007;
+    }
+    return acc;
+}
+
+int solve2(int x, int iter) {
+    int v;
+    v = solve1(x);
+    if (iter == 10) {
+        v = v + 1;
+    }
+    return v;
+}
+
+int main() {
+    int cnt;
+    int data;
+    int out1;
+    int out2;
+
+    cnt = 0;
+    for (;;) {
+        cnt = cnt + 1;
+        printf("%d\n", cnt);
+
+        data = (cnt * 97 + 13) % 1000;
+        out1 = solve1(data);
+        out2 = solve2(data, cnt);
+        if (out1 != out2) {
+            break;
+        }
+    }
+    return 0;
+}

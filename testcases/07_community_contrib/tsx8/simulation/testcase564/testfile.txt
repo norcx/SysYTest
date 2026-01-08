@@ -1,0 +1,105 @@
+/* Description:
+ *   Shortest path queries on an undirected weighted graph.
+ *   Input: n, m, Q; then m edges (x,y,z); then Q queries (x,y).
+ *   Output: for each query, the shortest path distance (or -1 if unreachable).
+ */
+
+const int MAXN = 64;
+const int MAXE = 512;
+
+int n;
+int m;
+int Q;
+
+int head[MAXN];
+int to[MAXE];
+int w[MAXE];
+int nxt[MAXE];
+int ecnt;
+
+int dist[MAXN];
+int inq[MAXN];
+int que[MAXE];
+
+void add_edge(int x, int y, int z) {
+    ecnt = ecnt + 1;
+    to[ecnt] = y;
+    w[ecnt] = z;
+    nxt[ecnt] = head[x];
+    head[x] = ecnt;
+}
+
+void spfa(int s, int t) {
+    int i;
+    int l;
+    int r;
+    int u;
+    int e;
+    int v;
+    int nd;
+
+    for (i = 1; i <= n; i = i + 1) {
+        dist[i] = -1;
+        inq[i] = 0;
+    }
+
+    l = 0;
+    r = 0;
+    dist[s] = 0;
+    que[r] = s;
+    r = r + 1;
+    inq[s] = 1;
+
+    for (; l < r; ) {
+        u = que[l];
+        l = l + 1;
+        inq[u] = 0;
+
+        e = head[u];
+        for (; e != 0; ) {
+            v = to[e];
+            nd = dist[u] + w[e];
+            if (dist[v] == -1 || nd < dist[v]) {
+                dist[v] = nd;
+                if (inq[v] == 0) {
+                    que[r] = v;
+                    r = r + 1;
+                    inq[v] = 1;
+                }
+            }
+            e = nxt[e];
+        }
+    }
+
+    printf("%d\n", dist[t]);
+}
+
+int main() {
+    int i;
+    int x;
+    int y;
+    int z;
+
+    n = getint();
+    m = getint();
+    Q = getint();
+
+    for (i = 1; i <= n; i = i + 1) head[i] = 0;
+    ecnt = 0;
+
+    for (i = 0; i < m; i = i + 1) {
+        x = getint();
+        y = getint();
+        z = getint();
+        add_edge(x, y, z);
+        add_edge(y, x, z);
+    }
+
+    for (i = 0; i < Q; i = i + 1) {
+        x = getint();
+        y = getint();
+        spfa(x, y);
+    }
+
+    return 0;
+}

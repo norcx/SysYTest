@@ -1,0 +1,6 @@
+Fill call count: 129
+arr[0..7]: 94 95 96 97 97 97 98 99 
+arr[31] = 103
+arr[32] = 100
+Recursive sum: 6394
+Recursive max: 190

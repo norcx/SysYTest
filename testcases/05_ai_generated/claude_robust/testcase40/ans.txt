@@ -1,0 +1,17 @@
+classify(-5)=-1
+classify(0)=0
+classify(5)=1
+classify(50)=2
+classify(500)=3
+classify(5000)=4
+nested(1,1,1)=1
+nested(1,1,-1)=2
+nested(1,-1,1)=3
+nested(1,-1,-1)=4
+nested(-1,1,1)=5
+nested(-1,1,-1)=6
+nested(-1,-1,1)=7
+nested(-1,-1,-1)=8
+find 7: 3
+find 6: -1
+find 20: -2

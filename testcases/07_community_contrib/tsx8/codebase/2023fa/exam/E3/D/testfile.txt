@@ -1,0 +1,78 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E3/D.c`.
+ *   Reads n students' 10-part scores, outputs:
+ *   - average score after capping to 100 (2 decimals)
+ *   - number of passing students (>=60 after cap)
+ *   - number of perfect raw totals (sum == 110)
+ *   - number of students with all parts below thresholds
+ */
+
+int a[10] = {30, 20, 10, 10, 10, 10, 5, 5, 5, 5};
+
+int main() {
+    int n;
+    int i;
+    int j;
+    int t;
+    int score;
+    int cnt;
+    int c2;
+    int c3;
+    int c4;
+    int total;
+    int scaled;
+    int avg100;
+    int rem;
+    int int_part;
+    int frac_part;
+
+    n = getint();
+    c2 = n;
+    c3 = 0;
+    c4 = 0;
+    total = 0;
+
+    for (j = 0; j < n; j = j + 1) {
+        score = 0;
+        cnt = 0;
+        for (i = 0; i < 10; i = i + 1) {
+            t = getint();
+            score = score + t;
+            if (t < a[i]) {
+                cnt = cnt + 1;
+            }
+        }
+        if (cnt == 10) {
+            c4 = c4 + 1;
+        }
+        if (score == 110) {
+            c3 = c3 + 1;
+        }
+        if (score > 100) {
+            score = 100;
+        }
+        if (score < 60) {
+            c2 = c2 - 1;
+        }
+        total = total + score;
+    }
+
+    scaled = total * 100;
+    avg100 = scaled / n;
+    rem = scaled - avg100 * n;
+    if (rem * 2 >= n) {
+        avg100 = avg100 + 1;
+    }
+
+    int_part = avg100 / 100;
+    frac_part = avg100 - int_part * 100;
+    printf("%d.", int_part);
+    if (frac_part < 10) {
+        printf("0");
+    }
+    printf("%d\n", frac_part);
+    printf("%d\n", c2);
+    printf("%d\n", c3);
+    printf("%d\n", c4);
+    return 0;
+}

@@ -1,0 +1,115 @@
+/*
+  Converted from a C++ DP solution into Strict SysY:
+  - No includes / scanf / sort
+  - 1D arrays only (3D DP flattened)
+  - int-only arithmetic (mod reduced to avoid overflow without long long)
+*/
+
+const int MAXN = 202;
+const int MAXM = 1002;
+const int MOD = 10000007;
+
+int n;
+int m;
+int a[MAXN];
+int f[2 * MAXN * MAXM];
+
+int main() {
+  int i;
+  int j;
+  int k;
+
+  n = getint();
+  m = getint();
+
+  for (i = 0; i < n; i = i + 1) {
+    a[i] = getint();
+  }
+
+  for (i = 0; i < n; i = i + 1) {
+    for (j = i + 1; j < n; j = j + 1) {
+      if (a[j] < a[i]) {
+        int tmp;
+        tmp = a[i];
+        a[i] = a[j];
+        a[j] = tmp;
+      }
+    }
+  }
+
+  int cur;
+  int nxt;
+  cur = 0;
+  nxt = 1;
+
+  f[(cur * MAXN + 0) * MAXM + 0] = 1;
+  f[(cur * MAXN + 1) * MAXM + 0] = 1;
+
+  for (i = 1; i < n; i = i + 1) {
+    int base_cur;
+    int base_nxt;
+    base_cur = cur * MAXN * MAXM;
+    base_nxt = nxt * MAXN * MAXM;
+
+    for (j = 0; j <= n; j = j + 1) {
+      for (k = 0; k <= m; k = k + 1) {
+        int idx_cur;
+        int v;
+        idx_cur = base_cur + j * MAXM + k;
+        v = f[idx_cur];
+        f[idx_cur] = 0;
+
+        if (v != 0) {
+          int diff;
+          int t;
+          diff = a[i] - a[i - 1];
+          t = diff * j + k;
+
+          if (t <= m) {
+            int idx1;
+            idx1 = base_nxt + (j + 1) * MAXM + t;
+            f[idx1] = f[idx1] + v;
+            f[idx1] = f[idx1] % MOD;
+
+            if (j != 0) {
+              int mul;
+              mul = (j * v) % MOD;
+
+              int idx2;
+              idx2 = base_nxt + (j - 1) * MAXM + t;
+              f[idx2] = f[idx2] + mul;
+              f[idx2] = f[idx2] % MOD;
+
+              int idx3;
+              idx3 = base_nxt + j * MAXM + t;
+              f[idx3] = f[idx3] + mul;
+              f[idx3] = f[idx3] % MOD;
+            }
+
+            int idx4;
+            idx4 = base_nxt + j * MAXM + t;
+            f[idx4] = f[idx4] + v;
+            f[idx4] = f[idx4] % MOD;
+          }
+        }
+      }
+    }
+
+    int tmp2;
+    tmp2 = cur;
+    cur = nxt;
+    nxt = tmp2;
+  }
+
+  int ans;
+  ans = 0;
+  int base_last;
+  base_last = cur * MAXN * MAXM;
+  for (i = 0; i <= m; i = i + 1) {
+    ans = ans + f[base_last + i];
+    ans = ans % MOD;
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

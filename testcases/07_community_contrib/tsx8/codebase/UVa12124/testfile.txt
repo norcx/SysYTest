@@ -1,0 +1,85 @@
+const int MAX_ITEMS = 2000;
+const int MAX_TYPES = 1000;
+
+int itemType[MAX_ITEMS];
+int itemPrice[MAX_ITEMS];
+int itemQuality[MAX_ITEMS];
+int minPrice[MAX_TYPES];
+
+int n;
+int b;
+int typeCount;
+
+int ok(int q) {
+    int t;
+    int i;
+    int sum;
+
+    for (t = 0; t < typeCount; t = t + 1) {
+        minPrice[t] = b + 1;
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+        if (itemQuality[i] >= q) {
+            int ty;
+            ty = itemType[i];
+            if (itemPrice[i] < minPrice[ty]) {
+                minPrice[ty] = itemPrice[i];
+            }
+        }
+    }
+
+    sum = 0;
+    for (t = 0; t < typeCount; t = t + 1) {
+        if (minPrice[t] == b + 1) return 0;
+        sum = sum + minPrice[t];
+        if (sum > b) return 0;
+    }
+    return 1;
+}
+
+int main() {
+    int T;
+    int tc;
+    int i;
+
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        int maxType;
+        int maxQ;
+        int L;
+        int R;
+        int M;
+
+        n = getint();
+        b = getint();
+        maxType = 0;
+        maxQ = 0;
+
+        for (i = 0; i < n; i = i + 1) {
+            int ty;
+            int p;
+            int q;
+            ty = getint();
+            p = getint();
+            q = getint();
+            itemType[i] = ty;
+            itemPrice[i] = p;
+            itemQuality[i] = q;
+            if (ty > maxType) maxType = ty;
+            if (q > maxQ) maxQ = q;
+        }
+
+        typeCount = maxType + 1;
+        L = 0;
+        R = maxQ;
+        for (;;) {
+            if (L >= R) break;
+            M = L + (R - L + 1) / 2;
+            if (ok(M)) L = M;
+            else R = M - 1;
+        }
+        printf("%d\n", L);
+    }
+    return 0;
+}

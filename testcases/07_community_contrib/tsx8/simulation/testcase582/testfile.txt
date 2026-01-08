@@ -1,0 +1,62 @@
+/*
+ * Description:
+ *   Deterministic data generator converted from C++ (rand/time removed).
+ *   Prints an (n, m) header followed by n + m lines of integers.
+ */
+
+int n;
+int m;
+
+int seed;
+
+int myrand() {
+    seed = seed + 1000003;
+    if (seed >= 1000000000) seed = seed - 1000000000;
+    return seed;
+}
+
+int main() {
+    int i;
+    int x;
+    int xx;
+    int guard;
+
+    seed = 123456789;
+    n = 800;
+    m = 800;
+
+    printf("%d %d\n", n, m);
+
+    for (i = 1; i <= n; i = i + 1) {
+        x = myrand() % 2;
+        printf("%d ", x);
+        if (x != 0) {
+            for (guard = 0; x < i; guard = guard + 1) {
+                x = myrand() % n + 1 + myrand() % (n / 2);
+            }
+            printf("%d\n", x);
+        } else {
+            x = myrand() % n;
+            printf("%d\n", x);
+        }
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        x = myrand() % n + 1;
+        printf("%d ", x);
+        xx = x;
+        x = myrand() % 2;
+        printf("%d ", x);
+        if (x != 0) {
+            for (guard = 0; x < xx; guard = guard + 1) {
+                x = myrand() % n + 1 + myrand() % (n / 2);
+            }
+            printf("%d\n", x);
+        } else {
+            x = myrand() % n;
+            printf("%d\n", x);
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,108 @@
+/* Description:
+ *   Maximum pairwise AND/XOR/OR (bitwise simulated via arithmetic).
+ *   Input:
+ *     T
+ *     For each case:
+ *       n
+ *       m   (1=AND, 2=XOR, 3=OR)
+ *       a1..an
+ *   Output: one answer per line.
+ */
+
+const int MAXN = 64;
+const int MAX_BITS = 11;
+
+int a[MAXN];
+
+int bit_and(int x, int y) {
+    int res;
+    int base;
+    int i;
+    res = 0;
+    base = 1;
+    for (i = 0; i < MAX_BITS; i = i + 1) {
+        int xb;
+        int yb;
+        xb = x % 2;
+        yb = y % 2;
+        if (xb == 1 && yb == 1) res = res + base;
+        x = x / 2;
+        y = y / 2;
+        base = base * 2;
+    }
+    return res;
+}
+
+int bit_or(int x, int y) {
+    int res;
+    int base;
+    int i;
+    res = 0;
+    base = 1;
+    for (i = 0; i < MAX_BITS; i = i + 1) {
+        int xb;
+        int yb;
+        xb = x % 2;
+        yb = y % 2;
+        if (xb == 1 || yb == 1) res = res + base;
+        x = x / 2;
+        y = y / 2;
+        base = base * 2;
+    }
+    return res;
+}
+
+int bit_xor(int x, int y) {
+    int res;
+    int base;
+    int i;
+    res = 0;
+    base = 1;
+    for (i = 0; i < MAX_BITS; i = i + 1) {
+        int xb;
+        int yb;
+        xb = x % 2;
+        yb = y % 2;
+        if (xb != yb) res = res + base;
+        x = x / 2;
+        y = y / 2;
+        base = base * 2;
+    }
+    return res;
+}
+
+int solve_case(int n, int m) {
+    int i;
+    int j;
+    int ans;
+    ans = 0;
+    for (i = 0; i < n; i = i + 1) {
+        for (j = i + 1; j < n; j = j + 1) {
+            int v;
+            v = 0;
+            if (m == 1) v = bit_and(a[i], a[j]);
+            if (m == 2) v = bit_xor(a[i], a[j]);
+            if (m == 3) v = bit_or(a[i], a[j]);
+            if (v > ans) ans = v;
+        }
+    }
+    return ans;
+}
+
+int main() {
+    int T;
+    int tc;
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        int n;
+        int m;
+        int i;
+        int ans;
+        n = getint();
+        m = getint();
+        for (i = 0; i < n; i = i + 1) a[i] = getint();
+        ans = solve_case(n, m);
+        printf("%d\n", ans);
+    }
+    return 0;
+}

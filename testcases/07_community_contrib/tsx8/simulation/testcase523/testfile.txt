@@ -1,0 +1,13 @@
+/* Description:
+ *   The original C++ source is a Windows-only differential-testing harness that
+ *   repeatedly executes external programs via `system()` and compares output
+ *   files (`fc`). Strict SysY has no OS/process/file APIs, so the behavior
+ *   cannot be represented as a deterministic SysY program.
+ *
+ *   This testcase is therefore a minimal, valid Strict SysY program with the
+ *   same observable I/O behavior (no input, no output) and a normal exit.
+ */
+
+int main() {
+  return 0;
+}

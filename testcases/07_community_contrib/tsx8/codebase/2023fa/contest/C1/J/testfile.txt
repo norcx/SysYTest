@@ -1,0 +1,35 @@
+/* Description:
+ *   Strict SysY translation of `codes/2023fa/contest/C1/J.c`.
+ *   Notes:
+ *   - Keeps original integer-division and modulo behavior (including negatives).
+ *   - Replaces `pow(2, n-1)` with integer `pow2(n-1)` (input chosen to avoid overflow).
+ */
+
+const int MOD = 998244353;
+
+int pow2(int exp) {
+    int r = 1;
+    int i;
+    for (i = 0; i < exp; i = i + 1) {
+        r = r * 2;
+    }
+    return r;
+}
+
+int main() {
+    int n;
+    int res;
+    n = getint();
+
+    res = n % MOD;
+    res = res * res;
+    res = res * ((n - 1) % MOD);
+    res = res % MOD;
+
+    res = (res / 2) % MOD;
+    res = res + 2;
+    res = (res - pow2(n - 1)) % MOD;
+
+    printf("%d", res % MOD);
+    return 0;
+}

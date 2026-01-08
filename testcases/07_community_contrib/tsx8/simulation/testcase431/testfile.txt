@@ -1,0 +1,151 @@
+/*
+  Converted from C++ to Strict SysY:
+  - Computes f(N) mod 64123 for a linear recurrence defined by p[]
+  - N is given in base-k digits (most significant to least)
+*/
+
+const int MOD = 64123;
+
+const int MATN = 21;
+const int MAT_SIZE = 441;
+
+const int MAXLEN = 30;
+const int MAXK = 10;
+const int MAXM = 50;
+
+int base[(MAXLEN + 1) * MAXK * MAT_SIZE];
+int p[MAXM + 1];
+int digits[205];
+
+int ans[22];
+int tmpVec[22];
+
+int T;
+int k;
+int m;
+int mx_p;
+int builtLen;
+
+int matOffset(int len, int digit) {
+    return (len * MAXK + digit) * MAT_SIZE;
+}
+
+int mulMod(int a, int b) {
+    int aa;
+    int bb;
+    int res;
+    int i;
+    aa = a % MOD;
+    if (aa < 0) aa = aa + MOD;
+    bb = b;
+    res = 0;
+    for (i = 0; i < 31; i = i + 1) {
+        if (bb % 2 == 1) {
+            res = res + aa;
+            res = res % MOD;
+        }
+        bb = bb / 2;
+        aa = aa + aa;
+        aa = aa % MOD;
+        if (bb == 0) i = 31;
+    }
+    return res;
+}
+
+void clearMat(int off) {
+    int i;
+    int j;
+    for (i = 1; i <= mx_p; i = i + 1) {
+        for (j = 1; j <= mx_p; j = j + 1) {
+            base[off + i * MATN + j] = 0;
+        }
+    }
+}
+
+void matMul(int offX, int offY, int offZ) {
+    int i;
+    int j;
+    int t;
+    int sum;
+    clearMat(offZ);
+    for (i = 1; i <= mx_p; i = i + 1) {
+        for (j = 1; j <= mx_p; j = j + 1) {
+            sum = 0;
+            for (t = 1; t <= mx_p; t = t + 1) {
+                sum = sum + mulMod(base[offX + i * MATN + t], base[offY + t * MATN + j]);
+                sum = sum % MOD;
+            }
+            base[offZ + i * MATN + j] = sum;
+        }
+    }
+}
+
+void vecMul(int offY) {
+    int i;
+    int j;
+    for (i = 1; i <= mx_p; i = i + 1) tmpVec[i] = 0;
+    for (i = 1; i <= mx_p; i = i + 1) {
+        for (j = 1; j <= mx_p; j = j + 1) {
+            tmpVec[i] = tmpVec[i] + mulMod(ans[j], base[offY + j * MATN + i]);
+            tmpVec[i] = tmpVec[i] % MOD;
+        }
+    }
+    for (i = 1; i <= mx_p; i = i + 1) ans[i] = tmpVec[i];
+}
+
+void ensureLen(int targetLen) {
+    int len;
+    int d;
+    for (len = builtLen + 1; len <= targetLen; len = len + 1) {
+        matMul(matOffset(len - 1, k - 1), matOffset(len - 1, 1), matOffset(len, 1));
+        for (d = 2; d <= k - 1; d = d + 1) {
+            matMul(matOffset(len, d - 1), matOffset(len, 1), matOffset(len, d));
+        }
+    }
+    builtLen = targetLen;
+}
+
+int main() {
+    int i;
+    int d;
+    int n;
+    int offA;
+    int tc;
+
+    T = getint();
+    k = getint();
+    m = getint();
+
+    mx_p = 0;
+    for (i = 1; i <= m; i = i + 1) {
+        p[i] = getint();
+        if (p[i] > mx_p) mx_p = p[i];
+    }
+
+    offA = matOffset(1, 1);
+    for (i = 2; i <= mx_p; i = i + 1) base[offA + (i - 1) * MATN + i] = 1;
+    for (i = 1; i <= m; i = i + 1) base[offA + p[i] * MATN + 1] = 1;
+
+    for (d = 2; d <= k - 1; d = d + 1) {
+        matMul(matOffset(1, d - 1), matOffset(1, 1), matOffset(1, d));
+    }
+    builtLen = 1;
+
+    for (tc = 0; tc < T; tc = tc + 1) {
+        n = getint();
+        for (i = 1; i <= n; i = i + 1) digits[i] = getint();
+
+        if (n > builtLen) ensureLen(n);
+
+        for (i = 1; i <= mx_p; i = i + 1) ans[i] = 0;
+        ans[1] = 1;
+
+        for (i = 1; i <= n; i = i + 1) {
+            d = digits[i];
+            if (d != 0) vecMul(matOffset(n - i + 1, d));
+        }
+
+        printf("%d\n", ans[1]);
+    }
+    return 0;
+}

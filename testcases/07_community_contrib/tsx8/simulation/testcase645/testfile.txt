@@ -1,0 +1,166 @@
+/*
+  Description:
+    Count the number of quadruples (a[i], b[j], c[k], d[t]) such that
+      a[i] + b[j] + c[k] + d[t] <= n
+    after removing elements > n from each list (keeping at least 1 element).
+
+    This is a strict SysY translation of the given C++ program, scaled down
+    to fit SysY/MARS memory limits.
+*/
+
+const int MAXN = 64;
+const int MAXM = 4096;
+
+int n, A, B, C, D;
+int ans;
+
+int a[MAXN];
+int b[MAXN];
+int c[MAXN];
+int d[MAXN];
+
+int e[MAXM];
+int f[MAXM];
+int c1[MAXM];
+int c2[MAXM];
+int sum[MAXM];
+
+int ecnt;
+int fcnt;
+
+void sort_range(int arr[], int l, int r) {
+    int i;
+    int j;
+    int min_idx;
+    int tmp;
+
+    for (i = l; i <= r; i = i + 1) {
+        min_idx = i;
+        for (j = i + 1; j <= r; j = j + 1) {
+            if (arr[j] < arr[min_idx]) {
+                min_idx = j;
+            }
+        }
+        tmp = arr[i];
+        arr[i] = arr[min_idx];
+        arr[min_idx] = tmp;
+    }
+    return;
+}
+
+void init() {
+    int i;
+    int j;
+    int t;
+    int tmp;
+
+    sort_range(a, 1, A);
+    sort_range(b, 1, B);
+    sort_range(c, 1, C);
+    sort_range(d, 1, D);
+
+    for (t = 0; A > 1 && a[A] > n; t = t + 1) {
+        A = A - 1;
+    }
+    for (t = 0; B > 1 && b[B] > n; t = t + 1) {
+        B = B - 1;
+    }
+    for (t = 0; C > 1 && c[C] > n; t = t + 1) {
+        C = C - 1;
+    }
+    for (t = 0; D > 1 && d[D] > n; t = t + 1) {
+        D = D - 1;
+    }
+
+    ecnt = 0;
+    for (i = 1; i <= A; i = i + 1) {
+        for (j = 1; j <= B; j = j + 1) {
+            ecnt = ecnt + 1;
+            e[ecnt] = a[i] + b[j];
+        }
+    }
+
+    fcnt = 0;
+    for (i = 1; i <= C; i = i + 1) {
+        for (j = 1; j <= D; j = j + 1) {
+            fcnt = fcnt + 1;
+            f[fcnt] = c[i] + d[j];
+        }
+    }
+
+    sort_range(e, 1, ecnt);
+    sort_range(f, 1, fcnt);
+
+    tmp = ecnt;
+    ecnt = 1;
+    c1[1] = 1;
+    for (i = 2; i <= tmp; i = i + 1) {
+        if (e[i] == e[ecnt]) {
+            c1[ecnt] = c1[ecnt] + 1;
+        } else {
+            ecnt = ecnt + 1;
+            e[ecnt] = e[i];
+            c1[ecnt] = 1;
+        }
+    }
+
+    tmp = fcnt;
+    fcnt = 1;
+    c2[1] = 1;
+    for (i = 2; i <= tmp; i = i + 1) {
+        if (f[i] == f[fcnt]) {
+            c2[fcnt] = c2[fcnt] + 1;
+        } else {
+            fcnt = fcnt + 1;
+            f[fcnt] = f[i];
+            c2[fcnt] = 1;
+        }
+    }
+
+    sum[0] = 0;
+    for (i = 1; i <= fcnt; i = i + 1) {
+        sum[i] = sum[i - 1] + c2[i];
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int r;
+    int t;
+
+    n = getint();
+    A = getint();
+    B = getint();
+    C = getint();
+    D = getint();
+
+    for (i = 1; i <= A; i = i + 1) {
+        a[i] = getint();
+    }
+    for (i = 1; i <= B; i = i + 1) {
+        b[i] = getint();
+    }
+    for (i = 1; i <= C; i = i + 1) {
+        c[i] = getint();
+    }
+    for (i = 1; i <= D; i = i + 1) {
+        d[i] = getint();
+    }
+
+    init();
+
+    r = fcnt;
+    for (i = 1; i <= ecnt; i = i + 1) {
+        for (t = 0; r > 0 && e[i] + f[r] > n; t = t + 1) {
+            r = r - 1;
+        }
+        if (r == 0) {
+            break;
+        }
+        ans = ans + c1[i] * sum[r];
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

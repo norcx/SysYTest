@@ -1,0 +1,48 @@
+/* Description:
+ * Source: codes/2023fa/exam/E7/A.c
+ * Problem essence: For each string, count mismatched mirrored pairs.
+ *
+ * Strict SysY adaptation:
+ * - No string/char I/O: each "string" is encoded as integers.
+ * - Input format: repeat { len, a0..a[len-1] }, terminated by len = -1.
+ * - Output format:
+ *     - palindrome: print `1`
+ *     - otherwise : print `0`, then print mismatch count on next line
+ */
+
+int s[1100];
+
+int main() {
+    int len;
+    int i;
+    int half;
+    int cnt;
+
+    for (;;) {
+        len = getint();
+        if (len == -1) {
+            break;
+        }
+
+        for (i = 0; i < len; i = i + 1) {
+            s[i] = getint();
+        }
+
+        cnt = 0;
+        half = len / 2;
+        for (i = 0; i < half; i = i + 1) {
+            if (s[i] != s[len - 1 - i]) {
+                cnt = cnt + 1;
+            }
+        }
+
+        if (cnt == 0) {
+            printf("%d\n", 1);
+        } else {
+            printf("%d\n", 0);
+            printf("%d\n", cnt);
+        }
+    }
+
+    return 0;
+}

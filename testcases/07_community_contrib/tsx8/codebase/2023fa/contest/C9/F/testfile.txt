@@ -1,0 +1,80 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C9/F.c`.
+ *   Marks cells occupied/attacked by knights as 0, others as 1.
+ */
+
+const int MAX = 128;
+const int MA_SIZE = 16384;
+const int HORSE_MAX = 128;
+
+int horse_x[HORSE_MAX];
+int horse_y[HORSE_MAX];
+int ma[MA_SIZE];
+
+const int dx[8] = {1, 2, 2, 1, -1, -2, -2, -1};
+const int dy[8] = {-2, -1, 1, 2, 2, 1, -1, -2};
+
+int main() {
+    int m;
+    int n;
+    int T;
+    int i;
+    int j;
+    int k;
+    int xx;
+    int yy;
+    int nx;
+    int ny;
+    int pos;
+    int v;
+
+    m = getint();
+    n = getint();
+    T = getint();
+
+    for (i = 0; i < T; i = i + 1) {
+        horse_x[i] = getint();
+        horse_y[i] = getint();
+        ma[horse_x[i] * MAX + horse_y[i]] = -1;
+    }
+
+    for (i = 0; i < T; i = i + 1) {
+        xx = horse_x[i];
+        yy = horse_y[i];
+        for (k = 0; k < 8; k = k + 1) {
+            nx = xx + dx[k];
+            ny = yy + dy[k];
+            if (nx < 1) {
+                continue;
+            }
+            if (ny < 1) {
+                continue;
+            }
+            if (nx > m) {
+                continue;
+            }
+            if (ny > n) {
+                continue;
+            }
+            pos = nx * MAX + ny;
+            if (ma[pos] == -1) {
+                continue;
+            }
+            ma[pos] = 1;
+        }
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        for (j = 1; j <= n; j = j + 1) {
+            v = ma[i * MAX + j];
+            if (v == -1 || v == 1) {
+                printf("%d", 0);
+            } else {
+                printf("%d", 1);
+            }
+        }
+        printf("\n");
+    }
+
+    return 0;
+}

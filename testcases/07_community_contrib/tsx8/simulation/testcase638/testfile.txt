@@ -1,0 +1,63 @@
+/* Description:
+ *   Find two non-overlapping subarrays of length m with maximum total sum.
+ *   Output the 1-based starting indices of the two subarrays.
+ */
+
+const int MAXN = 5000;
+
+int n;
+int m;
+int ansx;
+int ansy;
+int h;
+int t;
+int q[MAXN];
+int best;
+int a[MAXN];
+int sum[MAXN];
+
+int main() {
+    int i;
+    int tmp;
+
+    n = getint();
+    m = getint();
+
+    i = 1;
+    for (; i <= n; i = i + 1) {
+        a[i] = getint();
+        sum[i] = sum[i - 1] + a[i];
+    }
+
+    h = 1;
+    t = 0;
+
+    i = m + 1;
+    for (; i + m - 1 <= n; i = i + 1) {
+        for (; h <= t && sum[q[t] + m - 1] - sum[q[t] - 1] <= sum[i + m - 1] - sum[i - 1]; ) {
+            t = t - 1;
+        }
+        t = t + 1;
+        q[t] = i;
+    }
+
+    best = 0;
+    ansx = 0;
+    ansy = 0;
+
+    i = 1;
+    for (; i + m + m - 1 <= n; i = i + 1) {
+        for (; h <= t && i + m > q[h]; ) {
+            h = h + 1;
+        }
+        tmp = sum[i + m - 1] - sum[i - 1] + sum[q[h] + m - 1] - sum[q[h] - 1];
+        if (tmp > best) {
+            best = tmp;
+            ansx = i;
+            ansy = q[h];
+        }
+    }
+
+    printf("%d %d\n", ansx, ansy);
+    return 0;
+}

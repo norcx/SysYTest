@@ -1,0 +1,49 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E4/J.c`.
+ *   Compute the maximum subarray sum on a circular array with length <= m.
+ *   Input: n, m, then n integers (one per line).
+ *   Output: the maximum sum (int).
+ */
+
+const int MAXN = 1000;
+
+int q[MAXN * 2 + 5];
+int a[MAXN * 2 + 5];
+int sum[MAXN * 2 + 5];
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int head;
+    int tail;
+    int ans;
+
+    n = getint();
+    m = getint();
+    if (m > n) m = n;
+
+    head = 1;
+    tail = 1; /* q[1] is 0 due to global zero-initialization */
+    ans = -1000000000;
+
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        a[n + i] = a[i];
+    }
+
+    for (i = 1; i <= 2 * n; i = i + 1) {
+        sum[i] = sum[i - 1] + a[i];
+    }
+
+    for (i = 1; i <= 2 * n; i = i + 1) {
+        for (;head <= tail && q[head] < i - m;) head = head + 1;
+        if (ans < sum[i] - sum[q[head]]) ans = sum[i] - sum[q[head]];
+        for (;head <= tail && sum[q[tail]] >= sum[i];) tail = tail - 1;
+        tail = tail + 1;
+        q[tail] = i;
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

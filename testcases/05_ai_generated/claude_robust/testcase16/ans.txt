@@ -1,0 +1,3 @@
+sum of comparisons: 5
+Chain comparison OK
+Mixed chain OK

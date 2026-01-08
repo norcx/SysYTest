@@ -1,0 +1,5 @@
+After set: g_val=10
+After add: g_val=15
+After nested: g_val=120
+Filled array: 10 11 12 13 14 
+Modified array: 10 11 99 13 14 

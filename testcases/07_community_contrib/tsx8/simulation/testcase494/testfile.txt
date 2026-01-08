@@ -1,0 +1,124 @@
+/* Description:
+ *   DP with a max-heap (priority queue) refactored into strict SysY.
+ *   Input:
+ *     n, m
+ *     a[1..n]
+ *     b[1..n]
+ *   Output:
+ *     f[n]
+ */
+
+const int MAXN = 1200;
+
+int n;
+int m;
+int a[MAXN];
+int b[MAXN];
+int sum[MAXN];
+int f[MAXN];
+
+int heapX[MAXN];
+int heapY[MAXN];
+int heapSize;
+
+void heap_swap(int i, int j) {
+    int tx;
+    int ty;
+    tx = heapX[i];
+    ty = heapY[i];
+    heapX[i] = heapX[j];
+    heapY[i] = heapY[j];
+    heapX[j] = tx;
+    heapY[j] = ty;
+}
+
+void heap_push(int x, int y) {
+    int i;
+    int p;
+    heapSize = heapSize + 1;
+    heapX[heapSize] = x;
+    heapY[heapSize] = y;
+    i = heapSize;
+    for (; i > 1; ) {
+        p = i / 2;
+        if (heapY[p] >= heapY[i]) {
+            break;
+        } else {
+            heap_swap(p, i);
+            i = p;
+        }
+    }
+}
+
+void heap_pop() {
+    int i;
+    int l;
+    int r;
+    int best;
+    if (heapSize == 0) {
+        return;
+    }
+    heapX[1] = heapX[heapSize];
+    heapY[1] = heapY[heapSize];
+    heapSize = heapSize - 1;
+    i = 1;
+    for (; ; ) {
+        l = i * 2;
+        r = i * 2 + 1;
+        best = i;
+        if (l <= heapSize) {
+            if (heapY[l] > heapY[best]) {
+                best = l;
+            }
+        }
+        if (r <= heapSize) {
+            if (heapY[r] > heapY[best]) {
+                best = r;
+            }
+        }
+        if (best == i) {
+            return;
+        }
+        heap_swap(i, best);
+        i = best;
+    }
+}
+
+int main() {
+    int i;
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+    sum[0] = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        b[i] = getint();
+        sum[i] = sum[i - 1] + b[i];
+    }
+
+    heapSize = 0;
+    heap_push(m, m);
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (; ; ) {
+            if (heapSize == 0) {
+                break;
+            }
+            if (heapX[1] >= a[i]) {
+                break;
+            }
+            heap_pop();
+        }
+        if (heapSize == 0) {
+            f[i] = 0;
+        } else {
+            f[i] = heapY[1] - a[i] + sum[i];
+        }
+        heap_push(f[i], f[i] - sum[i]);
+    }
+
+    printf("%d\n", f[n]);
+    return 0;
+}

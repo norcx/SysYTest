@@ -1,0 +1,117 @@
+/*
+  Matrix exponentiation under mod, translated to Strict SysY.
+  Input:
+    T
+    n1
+    ...
+    nT
+  Output: one value per line.
+*/
+
+const int MOD = 1000000007;
+
+int base[9];
+int ans[9];
+int nowm[9];
+int tmpm[9];
+
+int mul_mod(int a, int b) {
+    int res;
+    int x;
+    int y;
+    res = 0;
+    x = a;
+    y = b;
+    for (; y > 0; y = y / 2) {
+        if (y % 2 == 1) {
+            res = res + x;
+            if (res >= MOD) res = res - MOD;
+        }
+        x = x + x;
+        if (x >= MOD) x = x - MOD;
+    }
+    return res;
+}
+
+void calc_1() {
+    int i;
+    int j;
+    int k;
+    int sum;
+    int prod;
+    for (i = 0; i < 3; i = i + 1) {
+        for (j = 0; j < 3; j = j + 1) {
+            sum = 0;
+            for (k = 0; k < 3; k = k + 1) {
+                prod = mul_mod(ans[i * 3 + k], nowm[k * 3 + j]);
+                sum = sum + prod;
+                if (sum >= MOD) sum = sum - MOD;
+            }
+            tmpm[i * 3 + j] = sum;
+        }
+    }
+    for (i = 0; i < 9; i = i + 1) ans[i] = tmpm[i];
+}
+
+void calc_2() {
+    int i;
+    int j;
+    int k;
+    int sum;
+    int prod;
+    for (i = 0; i < 3; i = i + 1) {
+        for (j = 0; j < 3; j = j + 1) {
+            sum = 0;
+            for (k = 0; k < 3; k = k + 1) {
+                prod = mul_mod(nowm[i * 3 + k], nowm[k * 3 + j]);
+                sum = sum + prod;
+                if (sum >= MOD) sum = sum - MOD;
+            }
+            tmpm[i * 3 + j] = sum;
+        }
+    }
+    for (i = 0; i < 9; i = i + 1) nowm[i] = tmpm[i];
+}
+
+void get_ans(int e) {
+    int i;
+    for (i = 0; i < 9; i = i + 1) {
+        ans[i] = base[i];
+        nowm[i] = base[i];
+    }
+    for (i = e; i > 0; i = i / 2) {
+        if (i % 2 == 1) calc_1();
+        calc_2();
+    }
+}
+
+int main() {
+    int T;
+    int tc;
+    int n;
+    int e;
+    int t;
+
+    base[0 * 3 + 2] = 1;
+    base[1 * 3 + 0] = 1;
+    base[2 * 3 + 1] = 1;
+    base[2 * 3 + 2] = 1;
+
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        n = getint();
+        if (n <= 3) {
+            printf("1\n");
+        } else {
+            e = n - 4;
+            get_ans(e);
+            t = ans[0 * 3 + 2];
+            t = t + ans[2 * 3 + 2];
+            if (t >= MOD) t = t - MOD;
+            t = t + ans[1 * 3 + 2];
+            if (t >= MOD) t = t - MOD;
+            printf("%d\n", t);
+        }
+    }
+    return 0;
+}

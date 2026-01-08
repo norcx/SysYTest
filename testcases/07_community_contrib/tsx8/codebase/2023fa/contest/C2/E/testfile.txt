@@ -1,0 +1,70 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C2/E.c (bowling-like scoring).
+ *
+ * Input:
+ *   n
+ *   x0..x(n-1)
+ *   y0..y(n-1)
+ *
+ * Output:
+ *   s1 s2
+ *   winner string (no trailing newline)
+ */
+
+int main() {
+    int n;
+    int i;
+
+    int s1;
+    int s2;
+
+    int x0;
+    int prev1;
+    int prev2;
+    int cur;
+
+    n = getint();
+
+    x0 = getint();
+    s1 = x0;
+    prev2 = 0;
+    prev1 = x0;
+
+    for (i = 1; i < n; i = i + 1) {
+        cur = getint();
+        if (i == 1) {
+            if (x0 == 10) s1 = s1 + 2 * cur;
+            else s1 = s1 + cur;
+        } else {
+            if (prev1 == 10 || prev2 == 10) s1 = s1 + 2 * cur;
+            else s1 = s1 + cur;
+        }
+        prev2 = prev1;
+        prev1 = cur;
+    }
+
+    x0 = getint();
+    s2 = x0;
+    prev2 = 0;
+    prev1 = x0;
+
+    for (i = 1; i < n; i = i + 1) {
+        cur = getint();
+        if (i == 1) {
+            if (x0 == 10) s2 = s2 + 2 * cur;
+            else s2 = s2 + cur;
+        } else {
+            if (prev1 == 10 || prev2 == 10) s2 = s2 + 2 * cur;
+            else s2 = s2 + cur;
+        }
+        prev2 = prev1;
+        prev1 = cur;
+    }
+
+    printf("%d %d\n", s1, s2);
+    if (s1 > s2) printf("violet");
+    else if (s1 < s2) printf("Lilsio");
+    else printf("Let's play again!");
+
+    return 0;
+}

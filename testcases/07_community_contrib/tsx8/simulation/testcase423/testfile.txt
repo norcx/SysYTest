@@ -1,0 +1,37 @@
+/* Description:
+ *   Compute a piecewise linear expression and print with 2 decimals.
+ */
+int main() {
+  int a;
+  int cents;
+  int sign;
+  int integer;
+  int frac;
+
+  a = getint();
+  if (a <= 15) {
+    cents = 75 * a;
+  } else {
+    cents = 50 * (5 * a - 21);
+  }
+
+  sign = 0;
+  if (cents < 0) {
+    sign = 1;
+    cents = 0 - cents;
+  }
+
+  integer = cents / 100;
+  frac = cents - integer * 100;
+
+  if (sign == 1) {
+    printf("-");
+  }
+  printf("%d", integer);
+  printf(".");
+  if (frac < 10) {
+    printf("0");
+  }
+  printf("%d\n", frac);
+  return 0;
+}

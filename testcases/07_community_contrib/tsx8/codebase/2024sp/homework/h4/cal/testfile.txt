@@ -1,0 +1,100 @@
+/* Description:
+ *   Expression evaluator (tokenized input) with 2-decimal output.
+ */
+const int SCALE = 1000;
+
+int p;
+int pp;
+int ops[4096];
+int st[4096];
+
+int prio(int op) {
+    if (op == -1 || op == -2) return 1;
+    if (op == -3 || op == -4) return 2;
+    return 0;
+}
+
+void calc() {
+    int r;
+    int l;
+    int op;
+    int v;
+    r = st[p - 1];
+    p = p - 1;
+    l = st[p - 1];
+    p = p - 1;
+    op = ops[pp - 1];
+    if (op == -1) {
+        v = l + r;
+    } else if (op == -2) {
+        v = l - r;
+    } else if (op == -3) {
+        v = (l * r) / SCALE;
+    } else if (op == -4) {
+        v = (l * SCALE) / r;
+    } else {
+        v = 0;
+    }
+    st[p] = v;
+    p = p + 1;
+}
+
+int main() {
+    int t;
+    int mills;
+    int cents;
+    int intpart;
+    int frac;
+
+    p = 0;
+    pp = 0;
+
+    for (;;) {
+        t = getint();
+        if (t == 0) break;
+        if (t > 0) {
+            st[p] = t * SCALE;
+            p = p + 1;
+        } else if (t == -5) {
+            ops[pp] = t;
+            pp = pp + 1;
+        } else if (t == -6) {
+            for (; pp > 0 && ops[pp - 1] != -5;) {
+                calc();
+                pp = pp - 1;
+            }
+            if (pp > 0) pp = pp - 1;
+        } else {
+            for (; pp > 0 && ops[pp - 1] != -5 && prio(ops[pp - 1]) >= prio(t);) {
+                calc();
+                pp = pp - 1;
+            }
+            ops[pp] = t;
+            pp = pp + 1;
+        }
+    }
+
+    for (; pp > 0;) {
+        if (ops[pp - 1] == -5) {
+            pp = pp - 1;
+        } else {
+            calc();
+            pp = pp - 1;
+        }
+    }
+
+    mills = st[p - 1];
+    if (mills >= 0) {
+        cents = (mills + 5) / 10;
+    } else {
+        cents = (mills - 5) / 10;
+    }
+    intpart = cents / 100;
+    frac = cents - intpart * 100;
+    if (frac < 0) frac = -frac;
+
+    printf("%d.", intpart);
+    if (frac < 10) printf("0");
+    printf("%d", frac);
+    return 0;
+}

@@ -1,0 +1,93 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C8/E.c.
+ *
+ * Behavior:
+ *   Read n integers x[i]. For each x[i], compute e[i] = popcount(x[i]) on 32 bits
+ *   (inputs are generated as non-negative ints). Sort by e ascending; if e ties,
+ *   sort by x descending. For each element, print: x e [32-bit binary].
+ *
+ * Notes (Strict SysY):
+ *   - No bitwise ops: use /2 and %2 for popcount and binary printing.
+ *   - No structs/qsort: use parallel arrays and bubble sort.
+ */
+
+const int MAXN = 64;
+
+int xs[64];
+int es[64];
+int bits[32];
+
+int popcount32(int x) {
+    int cnt;
+    int t;
+    int i;
+    cnt = 0;
+    t = x;
+    for (i = 0; i < 32; i = i + 1) {
+        cnt = cnt + (t % 2);
+        t = t / 2;
+    }
+    return cnt;
+}
+
+void build_bits32(int x) {
+    int t;
+    int i;
+    t = x;
+    for (i = 0; i < 32; i = i + 1) {
+        bits[i] = t % 2;
+        t = t / 2;
+    }
+}
+
+void print_bits32(int x) {
+    int i;
+    build_bits32(x);
+    for (i = 31; i >= 0; i = i - 1) {
+        printf("%d", bits[i]);
+    }
+    printf("\n");
+}
+
+void sort_by_e_then_x(int n) {
+    int i;
+    int j;
+    int tmp;
+    for (i = 0; i < n; i = i + 1) {
+        for (j = 0; j < n - 1 - i; j = j + 1) {
+            if (es[j] > es[j + 1]) {
+                tmp = es[j]; es[j] = es[j + 1]; es[j + 1] = tmp;
+                tmp = xs[j]; xs[j] = xs[j + 1]; xs[j + 1] = tmp;
+            } else if (es[j] == es[j + 1]) {
+                if (xs[j] < xs[j + 1]) {
+                    tmp = es[j]; es[j] = es[j + 1]; es[j + 1] = tmp;
+                    tmp = xs[j]; xs[j] = xs[j + 1]; xs[j + 1] = tmp;
+                }
+            }
+        }
+    }
+}
+
+int main() {
+    int n;
+    int i;
+
+    n = getint();
+    if (n < 0) n = 0;
+    if (n > MAXN) n = MAXN;
+
+    for (i = 0; i < n; i = i + 1) {
+        xs[i] = getint();
+        if (xs[i] < 0) xs[i] = 0;
+        es[i] = popcount32(xs[i]);
+    }
+
+    sort_by_e_then_x(n);
+
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d %d ", xs[i], es[i]);
+        print_bits32(xs[i]);
+    }
+
+    return 0;
+}

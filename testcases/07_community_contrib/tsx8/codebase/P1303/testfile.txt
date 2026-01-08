@@ -1,0 +1,74 @@
+/* Description: Digit-by-digit big integer multiplication mirroring P1303's bignum core.
+ */
+const int LEN_A = 25;
+const int LEN_B = 25;
+const int MAX_RESULT = 64;
+
+int digits_a[LEN_A] = {
+    3, 4, 6, 2, 6, 4, 8, 3, 2, 3, 9, 7, 9, 8, 5, 3, 5, 6, 2, 9, 5, 1, 4, 1, 3
+};
+int digits_b[LEN_B] = {
+    7, 8, 2, 0, 6, 3, 5, 3, 2, 5, 4, 0, 9, 5, 4, 8, 2, 8, 1, 8, 2, 8, 1, 7, 2
+};
+
+void multiply_digits(int a[], int len_a, int b[], int len_b, int res[], int res_len) {
+    int i;
+    for(i = 0; i < res_len; i = i + 1) {
+        res[i] = 0;
+    }
+    int j;
+    for(i = 0; i < len_a; i = i + 1) {
+        int carry;
+        carry = 0;
+        for(j = 0; j < len_b; j = j + 1) {
+            int idx;
+            int cur;
+            idx = i + j;
+            cur = res[idx] + a[i] * b[j] + carry;
+            res[idx] = cur % 10;
+            carry = cur / 10;
+        }
+        int advance;
+        advance = i + len_b;
+        for(; carry > 0; advance = advance + 1) {
+            int cur2;
+            cur2 = res[advance] + carry;
+            res[advance] = cur2 % 10;
+            carry = cur2 / 10;
+        }
+    }
+}
+
+int normalize_length(int res[], int limit) {
+    int idx;
+    idx = limit;
+    for(; idx > 0; idx = idx - 1) {
+        if(res[idx - 1] != 0) {
+            break;
+        }
+    }
+    if(idx == 0) {
+        idx = 1;
+    }
+    return idx;
+}
+
+void print_result(int res[], int len) {
+    int i;
+    printf("%d", res[len - 1]);
+    for(i = len - 2; i >= 0; i = i - 1) {
+        printf("%d", res[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int result[MAX_RESULT];
+    int limit;
+    int actual;
+    multiply_digits(digits_a, LEN_A, digits_b, LEN_B, result, MAX_RESULT);
+    limit = LEN_A + LEN_B + 2;
+    actual = normalize_length(result, limit);
+    print_result(result, actual);
+    return 0;
+}

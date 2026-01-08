@@ -1,0 +1,42 @@
+/* Description:
+ *   Converted from a C program that reads a line of characters and compresses
+ *   runs of consecutive ASCII codes (length >= 3) as: start '-' end.
+ *
+ *   Strict SysY constraints adaptation:
+ *   - Input: newline-separated integers via getint(), representing ASCII codes.
+ *   - Terminator: ASCII 10 (newline) ends the line.
+ *   - Output: newline-separated integers via printf("%d\n", x), representing
+ *     ASCII codes of the characters that would have been printed.
+ */
+
+int is_print(int x) {
+    if (x >= 32) {
+        if (x <= 126) return 1;
+    }
+    return 0;
+}
+
+int main() {
+    int pre;
+    int now;
+    int nxt;
+    pre = 0;
+    now = 0;
+
+    for (nxt = getint(); nxt != 10 && nxt != 0; nxt = getint()) {
+        if (now == pre + 1 && nxt == now + 1) {
+            for (; nxt == now + 1; ) {
+                now = nxt;
+                nxt = getint();
+            }
+            printf("%d\n", 45);
+        }
+
+        if (is_print(now) == 1) printf("%d\n", now);
+        pre = now;
+        now = nxt;
+    }
+
+    if (is_print(now) == 1) printf("%d\n", now);
+    return 0;
+}

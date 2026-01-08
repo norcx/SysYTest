@@ -1,0 +1,109 @@
+/* Description:
+ *   Segment tree with alternating OR/XOR operations (SysY strict).
+ *   Bitwise ops are emulated with arithmetic.
+ */
+
+const int MAXN = 4096;
+
+int nn, m;
+int N;
+int a[MAXN];
+int seg[MAXN * 4];
+
+int bit_or(int x, int y) {
+    int res;
+    int base;
+    int bx;
+    int by;
+    int br;
+    int i;
+    res = 0;
+    base = 1;
+    for (i = 0; i < 31; i = i + 1) {
+        bx = x % 2;
+        by = y % 2;
+        br = 0;
+        if (bx + by > 0) br = 1;
+        res = res + br * base;
+        x = x / 2;
+        y = y / 2;
+        if (x == 0 && y == 0) return res;
+        base = base * 2;
+    }
+    return res;
+}
+
+int bit_xor(int x, int y) {
+    int res;
+    int base;
+    int bx;
+    int by;
+    int br;
+    int i;
+    res = 0;
+    base = 1;
+    for (i = 0; i < 31; i = i + 1) {
+        bx = x % 2;
+        by = y % 2;
+        br = 0;
+        if (bx != by) br = 1;
+        res = res + br * base;
+        x = x / 2;
+        y = y / 2;
+        if (x == 0 && y == 0) return res;
+        base = base * 2;
+    }
+    return res;
+}
+
+int build(int idx, int l, int r, int p) {
+    int mid;
+    int lv;
+    int rv;
+    if (l == r) {
+        seg[idx] = a[l];
+        return seg[idx];
+    }
+    mid = (l + r) / 2;
+    lv = build(idx * 2, l, mid, p - 1);
+    rv = build(idx * 2 + 1, mid + 1, r, p - 1);
+    if (p % 2 == 1) seg[idx] = bit_or(lv, rv);
+    else seg[idx] = bit_xor(lv, rv);
+    return seg[idx];
+}
+
+int update(int idx, int l, int r, int pos, int val, int p) {
+    int mid;
+    if (l == r) {
+        a[pos] = val;
+        seg[idx] = val;
+        return seg[idx];
+    }
+    mid = (l + r) / 2;
+    if (pos <= mid) update(idx * 2, l, mid, pos, val, p - 1);
+    else update(idx * 2 + 1, mid + 1, r, pos, val, p - 1);
+    if (p % 2 == 1) seg[idx] = bit_or(seg[idx * 2], seg[idx * 2 + 1]);
+    else seg[idx] = bit_xor(seg[idx * 2], seg[idx * 2 + 1]);
+    return seg[idx];
+}
+
+int main() {
+    int i;
+    int x;
+    int y;
+    nn = getint();
+    m = getint();
+    N = 1;
+    for (i = 0; i < nn; i = i + 1) N = N * 2;
+    for (i = 1; i <= N; i = i + 1) a[i] = getint();
+
+    build(1, 1, N, nn);
+
+    for (i = 0; i < m; i = i + 1) {
+        x = getint();
+        y = getint();
+        update(1, 1, N, x, y, nn);
+        printf("%d\n", seg[1]);
+    }
+    return 0;
+}

@@ -1,0 +1,96 @@
+const int MAXN = 100010;
+int n;
+int m;
+int s[MAXN];
+int a[MAXN];
+int b[MAXN];
+
+int lowbit(int x) {
+    int t = 1;
+    for (; t * 2 <= x && x % (t * 2) == 0; t = t * 2) {
+    }
+    return t;
+}
+
+void addA(int idx, int delta) {
+    int i = idx;
+    for (; i <= n; i = i + lowbit(i)) {
+        a[i] = a[i] + delta;
+    }
+}
+
+void addB(int idx, int delta) {
+    int i = idx;
+    for (; i <= n; i = i + lowbit(i)) {
+        b[i] = b[i] + delta;
+    }
+}
+
+int sumA(int idx) {
+    int res = 0;
+    int i = idx;
+    for (; i > 0; i = i - lowbit(i)) {
+        res = res + a[i];
+    }
+    return res;
+}
+
+int sumB(int idx) {
+    int res = 0;
+    int i = idx;
+    for (; i > 0; i = i - lowbit(i)) {
+        res = res + b[i];
+    }
+    return res;
+}
+
+int main() {
+    n = getint();
+    m = getint();
+
+    int i = 1;
+    for (; i <= n; i = i + 1) {
+        int v = getint();
+        s[i] = s[i - 1] + v;
+    }
+
+    int op = 0;
+    for (; op < m; op = op + 1) {
+        int t = getint();
+        if (t == 1) {
+            int x = getint();
+            int y = getint();
+            int k = getint();
+
+            int left = x - 1;
+            int j = x;
+            for (; j <= n; j = j + lowbit(j)) {
+                a[j] = a[j] + k;
+                b[j] = b[j] + left * k;
+            }
+
+            int start = y + 1;
+            j = start;
+            for (; j <= n; j = j + lowbit(j)) {
+                a[j] = a[j] - k;
+                b[j] = b[j] - y * k;
+            }
+        } else {
+            int x = getint();
+            int y = getint();
+
+            int ans = s[y] - s[x - 1];
+            int ay = sumA(y);
+            int by = sumB(y);
+            ans = ans + ay * y - by;
+
+            int xm1 = x - 1;
+            int ax = sumA(xm1);
+            int bx = sumB(xm1);
+            ans = ans - (ax * xm1 - bx);
+
+            printf("%d\n", ans);
+        }
+    }
+    return 0;
+}

@@ -1,0 +1,35 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C9/D.c`.
+ *
+ *   Original program reads a stream of directions {N,E,S,W} and outputs
+ *   a relative movement code {F,L,B,R} depending on the current direction.
+ *
+ *   Strict SysY adaptation:
+ *     - Input: first line `n`, then `n` lines of direction codes:
+ *         0 = N, 1 = E, 2 = S, 3 = W
+ *     - Output: `n` lines of relative move codes:
+ *         0 = F, 1 = L, 2 = B, 3 = R
+ */
+
+const int turn_map[16] = {
+    0, 1, 2, 3,
+    3, 0, 1, 2,
+    2, 3, 0, 1,
+    1, 2, 3, 0
+};
+
+int main() {
+    int n = getint();
+    int now = 0;
+    int i;
+    int d;
+    int out;
+
+    for (i = 0; i < n; i = i + 1) {
+        d = getint();
+        out = turn_map[d * 4 + now];
+        printf("%d\n", out);
+        now = d;
+    }
+    return 0;
+}

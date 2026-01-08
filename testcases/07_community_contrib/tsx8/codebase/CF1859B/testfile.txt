@@ -1,0 +1,57 @@
+/* CF1859B-style aggregator: keep the smallest group minimum and sum the other second minima. */
+const int INF = 1000000000;
+const int MAX_N = 8;
+int second_values[MAX_N];
+
+int main() {
+    int t = getint();
+    int case_id = 0;
+    int n = 0;
+    int global_min = 0;
+    int i = 0;
+    int j = 0;
+    int len = 0;
+    int val = 0;
+    int first_min = 0;
+    int second_min = 0;
+    int temp = 0;
+    int result = 0;
+    for (case_id = 0; case_id < t; case_id = case_id + 1) {
+        n = getint();
+        global_min = INF;
+        for (i = 0; i < n; i = i + 1) {
+            len = getint();
+            first_min = INF;
+            second_min = INF;
+            for (j = 0; j < len; j = j + 1) {
+                val = getint();
+                if (val < first_min) {
+                    second_min = first_min;
+                    first_min = val;
+                } else if (val < second_min) {
+                    second_min = val;
+                }
+            }
+            if (global_min > first_min) {
+                global_min = first_min;
+            }
+            second_values[i] = second_min;
+        }
+        for (i = 0; i < n; i = i + 1) {
+            j = i + 1;
+            for (; j < n; j = j + 1) {
+                if (second_values[j] < second_values[i]) {
+                    temp = second_values[i];
+                    second_values[i] = second_values[j];
+                    second_values[j] = temp;
+                }
+            }
+        }
+        result = global_min;
+        for (i = 1; i < n; i = i + 1) {
+            result = result + second_values[i];
+        }
+        printf("%d\n", result);
+    }
+    return 0;
+}

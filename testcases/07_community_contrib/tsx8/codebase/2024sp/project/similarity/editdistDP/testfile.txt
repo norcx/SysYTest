@@ -1,0 +1,82 @@
+/* Description:
+ *   Edit distance (Levenshtein) on integer sequences.
+ *   Input:
+ *     T
+ *     For each case:
+ *       n
+ *       m
+ *       a0..a(n-1)
+ *       b0..b(m-1)
+ *   Output: one distance per line.
+ */
+
+const int MAXL = 60;
+
+int A[65];
+int B[65];
+int dp0[65];
+int dp1[65];
+
+int min2(int x, int y) {
+    if (x < y) return x;
+    return y;
+}
+
+int min3(int a, int b, int c) {
+    int m;
+    m = min2(a, b);
+    return min2(m, c);
+}
+
+int editdist(int n, int m) {
+    int i;
+    int j;
+    int cost;
+
+    for (j = 0; j <= m; j = j + 1) {
+        dp0[j] = j;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        dp1[0] = i;
+        for (j = 1; j <= m; j = j + 1) {
+            if (A[i - 1] == B[j - 1]) cost = 0;
+            else cost = 1;
+            dp1[j] = min3(dp1[j - 1] + 1, dp0[j] + 1, dp0[j - 1] + cost);
+        }
+        for (j = 0; j <= m; j = j + 1) {
+            dp0[j] = dp1[j];
+        }
+    }
+    return dp0[m];
+}
+
+int main() {
+    int T;
+    int t;
+    int n;
+    int m;
+    int i;
+    int ans;
+
+    T = getint();
+    for (t = 0; t < T; t = t + 1) {
+        n = getint();
+        m = getint();
+
+        if (n > MAXL) n = MAXL;
+        if (m > MAXL) m = MAXL;
+
+        for (i = 0; i < n; i = i + 1) {
+            A[i] = getint();
+        }
+        for (i = 0; i < m; i = i + 1) {
+            B[i] = getint();
+        }
+
+        ans = editdist(n, m);
+        printf("%d\n", ans);
+    }
+
+    return 0;
+}

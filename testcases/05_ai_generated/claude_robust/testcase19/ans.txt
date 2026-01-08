@@ -1,0 +1,9 @@
+Basic for: sum=10
+Step 2: sum=20
+Decrement: sum=55
+Decrement step 3: sum=45
+Nested dependent: sum=15
+Modified in body: sum=32
+Empty body: i=100
+Single iteration: sum=999
+Zero iteration: sum=0

@@ -1,0 +1,7 @@
+huge_arr[0] = 1
+huge_arr[999] = 2998
+huge_arr[1999] = 5998
+After modify:
+huge_arr[0] = 9999
+huge_arr[1999] = 8888
+Partial sum [0..99]: 24948

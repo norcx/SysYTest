@@ -1,0 +1,48 @@
+/* Description:
+ *   Deterministic pseudo-random output generator (Strict SysY).
+ *   Converted from a C++ rand()/time() based generator.
+ */
+
+int n;
+int m;
+int seed;
+
+int next_rand() {
+    int hi;
+    int lo;
+    int t;
+    hi = seed / 127773;
+    lo = seed - hi * 127773;
+    t = 16807 * lo - 2836 * hi;
+    if (t <= 0) t = t + 2147483647;
+    seed = t;
+    return seed;
+}
+
+int myrand() {
+    int x;
+    x = next_rand();
+    return x % 1000000000;
+}
+
+int main() {
+    int i;
+    int a;
+    int b;
+    seed = 1;
+    n = 5000;
+    m = myrand();
+    printf("%d %d\n", n, m);
+
+    for (i = 1; i <= n; i = i + 1) {
+        a = myrand() % 3000;
+        b = myrand() % 3000;
+        printf("%d ", a + b);
+    }
+    printf("\n");
+
+    for (i = 1; i <= n; i = i + 1) {
+        printf("%d ", myrand() + 5333);
+    }
+    return 0;
+}

@@ -1,0 +1,98 @@
+/* Description:
+ * Range add on an array using a segment tree with lazy propagation,
+ * then output the final array.
+ */
+
+const int MAXN = 20000;
+const int MAXM = 80005;
+
+int n;
+int m;
+int a[MAXN + 5];
+int add[MAXM];
+int res[MAXN + 5];
+
+void push_down(int o) {
+    if (add[o] != 0) {
+        add[o * 2] = add[o * 2] + add[o];
+        add[o * 2 + 1] = add[o * 2 + 1] + add[o];
+        add[o] = 0;
+    }
+    return;
+}
+
+void build(int l, int r, int o) {
+    add[o] = 0;
+    if (l == r) {
+        return;
+    }
+    int mid;
+    mid = (l + r) / 2;
+    build(l, mid, o * 2);
+    build(mid + 1, r, o * 2 + 1);
+    return;
+}
+
+void update(int l, int r, int o, int x, int y, int z) {
+    if (x <= l && r <= y) {
+        add[o] = add[o] + z;
+        return;
+    }
+    push_down(o);
+    int mid;
+    mid = (l + r) / 2;
+    if (x <= mid) {
+        update(l, mid, o * 2, x, y, z);
+    }
+    if (mid < y) {
+        update(mid + 1, r, o * 2 + 1, x, y, z);
+    }
+    return;
+}
+
+void dfs(int l, int r, int o) {
+    if (l == r) {
+        res[l] = a[l] + add[o];
+        return;
+    }
+    push_down(o);
+    int mid;
+    mid = (l + r) / 2;
+    dfs(l, mid, o * 2);
+    dfs(mid + 1, r, o * 2 + 1);
+    return;
+}
+
+int main() {
+    n = getint();
+    m = getint();
+
+    int i;
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+
+    build(1, n, 1);
+
+    int t;
+    for (t = 0; t < m; t = t + 1) {
+        int x;
+        int y;
+        int z;
+        x = getint();
+        y = getint();
+        z = getint();
+        update(1, n, 1, x, y, z);
+    }
+
+    dfs(1, n, 1);
+
+    for (i = 1; i <= n; i = i + 1) {
+        printf("%d", res[i]);
+        if (i != n) {
+            printf(" ");
+        }
+    }
+    printf("\n");
+    return 0;
+}

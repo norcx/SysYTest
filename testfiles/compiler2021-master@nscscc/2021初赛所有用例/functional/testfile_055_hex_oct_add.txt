@@ -1,6 +1,0 @@
-int main(){
-    int a, b;
-    a = 15;
-    b = 12;
-    return a + b + 75;
-}

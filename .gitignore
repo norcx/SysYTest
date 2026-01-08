@@ -13,6 +13,9 @@ venv/
 ENV/
 env/
 
+codes/
+zips/
+
 # 测试覆盖率
 htmlcov/
 .coverage
@@ -47,3 +50,6 @@ agent_config.json
 # 测试产物 (运行时生成)
 input.txt
 InstructionStatistics.txt
+
+# 生成脚本日志 (scripts/generate_sysy_cases.py)
+testcases/**/*.log

@@ -1,0 +1,6 @@
+const int a[5]={0,1,2,3,4};
+
+int main(){
+        printf("%d", a[4]);
+    return 0;
+}

@@ -1,0 +1,123 @@
+/* Description:
+ *   [Add description here]
+ */
+
+const int MAXN = 2000;
+const int MAXM = MAXN * 18;
+
+int cnt;
+int ch0[MAXM];
+int ch1[MAXM];
+int s[MAXM];
+
+int bits[17];
+int ans;
+
+void init() {
+  cnt = 0;
+  ch0[0] = 0;
+  ch1[0] = 0;
+  s[0] = 0;
+}
+
+void insert(int now) {
+  int node;
+  int i;
+  node = 0;
+  for (i = 16; i >= 0; i = i - 1) {
+    bits[i] = now % 2;
+    now = now / 2;
+  }
+  for (i = 0; i <= 16; i = i + 1) {
+    if (bits[i] == 0) {
+      if (ch0[node] == 0) {
+        cnt = cnt + 1;
+        ch0[node] = cnt;
+        ch0[cnt] = 0;
+        ch1[cnt] = 0;
+        s[cnt] = 0;
+      }
+      node = ch0[node];
+    } else {
+      if (ch1[node] == 0) {
+        cnt = cnt + 1;
+        ch1[node] = cnt;
+        ch0[cnt] = 0;
+        ch1[cnt] = 0;
+        s[cnt] = 0;
+      }
+      node = ch1[node];
+    }
+    s[node] = s[node] + 1;
+  }
+}
+
+void del(int now) {
+  int node;
+  int i;
+  node = 0;
+  for (i = 16; i >= 0; i = i - 1) {
+    bits[i] = now % 2;
+    now = now / 2;
+  }
+  for (i = 0; i <= 16; i = i + 1) {
+    if (bits[i] == 0) {
+      node = ch0[node];
+    } else {
+      node = ch1[node];
+    }
+    s[node] = s[node] - 1;
+  }
+}
+
+void dfs(int node, int deep) {
+  int child;
+  if (deep > 16) {
+    ans = ans + s[node];
+    return;
+  }
+  if (bits[deep] == 0) {
+    child = ch0[node];
+    if (child != 0 && s[child] != 0) dfs(child, deep + 1);
+  } else {
+    child = ch1[node];
+    if (child != 0 && s[child] != 0) dfs(child, deep + 1);
+    child = ch0[node];
+    if (child != 0 && s[child] != 0) dfs(child, deep + 1);
+  }
+}
+
+int main() {
+  int n;
+  int i;
+  int j;
+  int op;
+  int x;
+  int tmp;
+
+  init();
+  n = getint();
+  for (i = 0; i < n; i = i + 1) {
+    op = getint();
+    x = getint();
+    if (op == 1) {
+      insert(x);
+    } else {
+      if (op == 2) {
+        del(x);
+      } else {
+        if (op == 3) {
+          ans = 0;
+          tmp = x;
+          for (j = 16; j >= 0; j = j - 1) {
+            bits[j] = tmp % 2;
+            tmp = tmp / 2;
+          }
+          dfs(0, 0);
+          printf("%d\n", ans);
+        }
+      }
+    }
+  }
+  return 0;
+}

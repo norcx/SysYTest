@@ -1,0 +1,74 @@
+const int N = 50000;
+const int S = 65536;
+const int K = 8;
+
+int m;
+int a[50008];
+int seed;
+
+int next_rand() {
+    seed = (seed * 25173 + 13849) % 65536;
+    return seed;
+}
+
+int calc(int x) {
+    int ret;
+    int t;
+    ret = 0;
+    for (t = x; t > 0; t = t / 2) {
+        ret = ret + t % 2;
+    }
+    return ret;
+}
+
+int main() {
+    int n;
+    int i;
+    int t;
+    int x;
+    int p;
+    int tmp;
+
+    seed = 12345;
+    m = 0;
+    n = N;
+    printf("%d\n", n);
+    for (i = 1; i <= n; i = i + 1) {
+        t = next_rand() % 4 + 1;
+        if (m == 0) {
+            if (t == 3) {
+                t = 1;
+            }
+        }
+        if (t != 3) {
+            if (t <= 2) {
+                x = next_rand() % S;
+            } else {
+                x = next_rand() % S;
+                for (; calc(x) <= K;) {
+                    x = next_rand() % S;
+                }
+            }
+        } else {
+            p = next_rand() % m + 1;
+            x = a[p];
+            tmp = a[p];
+            a[p] = a[m];
+            a[m] = tmp;
+            m = m - 1;
+        }
+
+        if (t <= 2) {
+            printf("add %d\n", x);
+            m = m + 1;
+            a[m] = x;
+        }
+        if (t == 3) {
+            printf("del %d\n", x);
+        }
+        if (t == 4) {
+            printf("cnt %d\n", x);
+        }
+    }
+    return 0;
+}

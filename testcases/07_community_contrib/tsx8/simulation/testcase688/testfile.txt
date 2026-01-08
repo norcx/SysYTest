@@ -1,0 +1,61 @@
+/* Description:
+ *   [Add description here]
+ */
+
+const int MOD = 998244353;
+const int MAXP = 5000;
+
+int n;
+int p;
+int prev[MAXP + 1];
+int cur[MAXP + 1];
+
+int main() {
+  int i;
+  int j;
+  int curj;
+  int ans;
+
+  n = getint();
+  p = getint();
+  if (p < 0) {
+    p = 0;
+  }
+  if (p > MAXP) {
+    p = MAXP;
+  }
+
+  prev[0] = 1;
+  ans = 0;
+
+  for (i = 1; (i + 1) * i / 2 <= p; i = i + 1) {
+    for (j = 0; j <= p; j = j + 1) {
+      cur[j] = 0;
+    }
+    for (j = i; j <= p; j = j + 1) {
+      curj = prev[j - i] + cur[j - i];
+      if (curj >= MOD) {
+        curj = curj - MOD;
+      }
+      if (j >= n + 1) {
+        curj = curj - prev[j - n - 1];
+        if (curj < 0) {
+          curj = curj + MOD;
+        }
+      }
+      cur[j] = curj;
+    }
+
+    ans = ans + cur[p];
+    if (ans >= MOD) {
+      ans = ans - MOD;
+    }
+
+    for (j = 0; j <= p; j = j + 1) {
+      prev[j] = cur[j];
+    }
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

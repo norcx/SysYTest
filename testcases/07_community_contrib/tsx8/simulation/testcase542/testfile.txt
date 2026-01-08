@@ -1,0 +1,169 @@
+/* Description:
+ * Converted from C++: range max of "beautiful" values.
+ */
+const int MAXN = 260;
+const int MAXV = 201;
+const int STK = 21;
+
+int n;
+int m;
+
+int a[MAXN];
+int beautiful[MAXN];
+
+int c_count[MAXV];
+int c_pos[MAXV * MAXN];
+int le[MAXV];
+
+int freq[MAXV];
+
+int pow2[STK];
+int ds[MAXN];
+int st[MAXN * STK];
+
+int max2(int x, int y) {
+  if (x > y) return x;
+  return y;
+}
+
+int st_get(int idx, int k) {
+  return st[idx * STK + k];
+}
+
+void st_set(int idx, int k, int val) {
+  st[idx * STK + k] = val;
+}
+
+void init_beautiful() {
+  int i;
+  int j;
+  int k;
+  int v;
+  int l;
+  int mid;
+  int acc;
+  int tmp;
+  int pos;
+
+  i = 1;
+  for (; i <= n; i = i + 2) {
+    v = 0;
+    for (; v < MAXV; v = v + 1) {
+      c_count[v] = 0;
+      le[v] = 1;
+    }
+
+    j = 1;
+    for (; j <= i; j = j + 1) {
+      v = a[j];
+      c_count[v] = c_count[v] + 1;
+      c_pos[v * MAXN + c_count[v]] = j;
+    }
+
+    j = 1;
+    for (; j + i - 1 <= n; j = j + 1) {
+      k = j + i - 1;
+
+      v = 0;
+      for (; v < MAXV; v = v + 1) {
+        freq[v] = 0;
+      }
+
+      l = j;
+      for (; l <= k; l = l + 1) {
+        v = a[l];
+        freq[v] = freq[v] + 1;
+      }
+
+      mid = (i + 1) / 2;
+      acc = 0;
+      tmp = 0;
+      v = 0;
+      for (; v < MAXV; v = v + 1) {
+        acc = acc + freq[v];
+        if (acc >= mid) {
+          tmp = v;
+          v = MAXV;
+        }
+      }
+
+      l = le[tmp];
+      for (; l <= c_count[tmp]; l = l + 1) {
+        pos = c_pos[tmp * MAXN + l];
+        beautiful[pos] = i;
+      }
+
+      v = a[j];
+      le[v] = le[v] + 1;
+      if (k + 1 <= n) {
+        v = a[k + 1];
+        c_count[v] = c_count[v] + 1;
+        c_pos[v * MAXN + c_count[v]] = k + 1;
+      }
+    }
+  }
+  return;
+}
+
+int main() {
+  int i;
+  int j;
+  int k;
+  int maxlog;
+  int x;
+  int y;
+  int len;
+  int tmp;
+  int ans;
+
+  n = getint();
+  i = 1;
+  for (; i <= n; i = i + 1) {
+    a[i] = getint();
+    beautiful[i] = 0;
+  }
+
+  init_beautiful();
+
+  pow2[0] = 1;
+  i = 1;
+  for (; i < STK; i = i + 1) {
+    pow2[i] = pow2[i - 1] * 2;
+  }
+
+  ds[1] = 0;
+  i = 2;
+  for (; i <= n; i = i + 1) {
+    ds[i] = ds[i / 2] + 1;
+  }
+
+  i = 1;
+  for (; i <= n; i = i + 1) {
+    st_set(i, 0, beautiful[i]);
+  }
+
+  maxlog = 0;
+  for (; maxlog + 1 < STK && pow2[maxlog + 1] <= n; ) {
+    maxlog = maxlog + 1;
+  }
+
+  k = 1;
+  for (; k <= maxlog; k = k + 1) {
+    j = 1;
+    for (; j + pow2[k] - 1 <= n; j = j + 1) {
+      st_set(j, k, max2(st_get(j, k - 1), st_get(j + pow2[k - 1], k - 1)));
+    }
+  }
+
+  m = getint();
+  for (; m > 0; m = m - 1) {
+    x = getint();
+    y = getint();
+    len = y - x + 1;
+    tmp = ds[len];
+    ans = max2(st_get(x, tmp), st_get(y - pow2[tmp] + 1, tmp));
+    printf("%d\n", ans);
+  }
+
+  return 0;
+}

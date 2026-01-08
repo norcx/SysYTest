@@ -1,0 +1,39 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E2/B.c`.
+ *
+ *   Original behavior (C):
+ *     - Reads a character stream.
+ *     - Skips '\n' and '\r'.
+ *     - For 'B'..'Z' outputs (c - 1); otherwise outputs c.
+ *
+ *   SysY adaptation:
+ *     - Input is integers: first `n`, then `n` ASCII codes (1 per line).
+ *     - Output is transformed ASCII codes, one per line.
+ */
+
+int main() {
+    const int ASCII_A = 65;
+    const int ASCII_Z = 90;
+    const int ASCII_LF = 10;
+    const int ASCII_CR = 13;
+
+    int n;
+    int i;
+    int x;
+    int y;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        x = getint();
+        if (x != ASCII_LF && x != ASCII_CR) {
+            if (x > ASCII_A && x <= ASCII_Z) {
+                y = x - 1;
+            } else {
+                y = x;
+            }
+            printf("%d\n", y);
+        }
+    }
+
+    return 0;
+}

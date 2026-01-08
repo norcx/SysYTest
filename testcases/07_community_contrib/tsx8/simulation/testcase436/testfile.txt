@@ -1,0 +1,94 @@
+/* Description:
+ *   Converted from a Windows-only differential-testing harness into Strict SysY.
+ *
+ *   The original program repeatedly ran `data.exe`, `std.exe`, `mine.exe`,
+ *   then used `fc` to stop on the first mismatch. SysY cannot spawn processes
+ *   or access files, so this testcase simulates the same control flow:
+ *   - generate deterministic "data" from a seed
+ *   - compute a reference ("std") and a buggy implementation ("mine")
+ *   - stop and print details on the first mismatch
+ *
+ * Input:
+ *   seed
+ *
+ * Output (when mismatch found):
+ *   iter
+ *   std_result
+ *   mine_result
+ *   data[0..7] (one per line)
+ *
+ * Output (if no mismatch within the iteration limit):
+ *   -1
+ */
+
+int mine_calls;
+
+int gen_data(int a[], int n, int seed) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        seed = seed * 17 + 43;
+        seed = seed % 100000;
+        a[i] = seed - 50000;
+    }
+    return seed;
+}
+
+int std_run(int a[], int n) {
+    int i;
+    int s;
+    int x;
+    s = 0;
+    for (i = 0; i < n; i = i + 1) {
+        x = a[i];
+        if (x < 0) {
+            x = 0 - x;
+        }
+        s = s + x;
+    }
+    return s;
+}
+
+int mine_run(int a[], int n) {
+    int v;
+    mine_calls = mine_calls + 1;
+    v = std_run(a, n);
+    if (mine_calls == 10) {
+        v = v + 1;
+    }
+    return v;
+}
+
+int main() {
+    int seed;
+    int n;
+    int i;
+    int k;
+    int stdv;
+    int minev;
+    int data[32];
+
+    seed = getint();
+    if (seed < 0) {
+        seed = 0 - seed;
+    }
+    seed = seed % 100000;
+    n = 32;
+
+    for (i = 0; i < 200; i = i + 1) {
+        seed = gen_data(data, n, seed);
+        stdv = std_run(data, n);
+        minev = mine_run(data, n);
+        if (stdv != minev) {
+            printf("%d\n", i);
+            printf("%d\n", stdv);
+            printf("%d\n", minev);
+            for (k = 0; k < 8; k = k + 1) {
+                printf("%d\n", data[k]);
+            }
+            return 0;
+        }
+    }
+
+    printf("%d\n", -1);
+    return 0;
+}

@@ -1,0 +1,40 @@
+/* Description:
+ *   For each input p, print YES iff there exists i (1..10000)
+ *   such that 3*i*i + 3*i + 1 == p; otherwise print NO.
+ *   (Scaled down from original upper bound 1e6 to 1e4.)
+ */
+
+int main() {
+    int t;
+    int caseIndex;
+    int p;
+    int flag;
+    int i;
+    int val;
+    int limit;
+
+    limit = 10000;
+    t = getint();
+
+    for (caseIndex = 0; caseIndex < t; caseIndex = caseIndex + 1) {
+        flag = 0;
+        p = getint();
+        for (i = 1; i <= limit; i = i + 1) {
+            val = 3 * i * i + 3 * i + 1;
+            if (val == p) {
+                flag = 1;
+                break;
+            }
+            if (val > p) {
+                break;
+            }
+        }
+        if (flag == 1) {
+            printf("YES\n");
+        } else {
+            printf("NO\n");
+        }
+    }
+
+    return 0;
+}

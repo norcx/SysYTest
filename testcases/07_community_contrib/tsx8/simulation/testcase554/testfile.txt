@@ -1,0 +1,79 @@
+/* Description:
+ *   Deterministic data generator converted from C++ (rand/time removed).
+ *   Prints:
+ *     n
+ *     a1..an (space-separated)
+ *     m
+ *     m lines of (l, r)
+ */
+
+int seed;
+
+int rand_int() {
+    int a;
+    int m;
+    int q;
+    int r;
+    int hi;
+    int lo;
+    int test;
+    a = 16807;
+    m = 2147483647;
+    q = 127773;
+    r = 2836;
+    hi = seed / q;
+    lo = seed - hi * q;
+    test = a * lo - r * hi;
+    if (test <= 0) test = test + m;
+    seed = test;
+    return seed;
+}
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int j;
+    int tmp;
+    int l;
+    int r;
+    int t;
+
+    seed = 1;
+
+    n = 800;
+    printf("%d\n", n);
+    for (i = 1; i <= n; i = i + 1) {
+        tmp = rand_int() % 200;
+        for (j = 1; j <= 7; j = j + 1) {
+            tmp = (tmp + (rand_int() % 200)) % 200;
+        }
+        printf("%d ", tmp);
+    }
+    printf("\n");
+
+    m = 1000;
+    printf("%d\n", m);
+    for (i = 1; i <= m; i = i + 1) {
+        l = rand_int() % n;
+        for (j = 1; j <= 7; j = j + 1) {
+            l = (l + (rand_int() % n)) % n;
+        }
+        l = l + 1;
+
+        r = rand_int() % n;
+        for (j = 1; j <= 7; j = j + 1) {
+            r = (r + (rand_int() % n)) % n;
+        }
+        r = r + 1;
+
+        if (l > r) {
+            t = l;
+            l = r;
+            r = t;
+        }
+        printf("%d %d\n", l, r);
+    }
+
+    return 0;
+}

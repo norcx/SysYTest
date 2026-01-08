@@ -1,0 +1,145 @@
+/* Description:
+ *   Convert the original C++ logic to Strict SysY:
+ *   Given n closed intervals [x, y], compute
+ *   max( cover(t) * t ) over all endpoints t in {x_i, y_i}.
+ *   cover(t) is the number of intervals containing t.
+ *
+ * Input:
+ *   n
+ *   x1 y1
+ *   ...
+ *   xn yn
+ *
+ * Output:
+ *   ans
+ */
+
+const int MAXN = 10010;
+const int MAXA = 20030;
+
+int n;
+int ans;
+int a0;
+
+int hx[MAXN];
+int hy[MAXN];
+int a[MAXA];
+int c[MAXA];
+
+int lowbit(int x) {
+    int lb;
+    lb = 1;
+    for (; x % 2 == 0; ) {
+        lb = lb * 2;
+        x = x / 2;
+    }
+    return lb;
+}
+
+void add(int x, int delta) {
+    int i;
+    if (x == 0) return;
+    for (i = x; i <= a0 + 1; i = i + lowbit(i)) {
+        c[i] = c[i] + delta;
+    }
+}
+
+int query(int x) {
+    int tmp;
+    int i;
+    tmp = 0;
+    for (i = x; i > 0; i = i - lowbit(i)) {
+        tmp = tmp + c[i];
+    }
+    return tmp;
+}
+
+void sort_a() {
+    int i;
+    int j;
+    int key;
+    for (i = 2; i <= a0; i = i + 1) {
+        key = a[i];
+        j = i - 1;
+        for (; j >= 1; ) {
+            if (a[j] > key) {
+                a[j + 1] = a[j];
+                j = j - 1;
+            } else {
+                break;
+            }
+        }
+        a[j + 1] = key;
+    }
+}
+
+int lower_bound_a(int value) {
+    int l;
+    int r;
+    int mid;
+    int pos;
+    l = 1;
+    r = a0;
+    pos = a0 + 1;
+    for (; l <= r; ) {
+        mid = (l + r) / 2;
+        if (a[mid] >= value) {
+            pos = mid;
+            r = mid - 1;
+        } else {
+            l = mid + 1;
+        }
+    }
+    return pos;
+}
+
+int main() {
+    int i;
+    int tmp;
+    int posx;
+    int posy;
+    int t;
+    int cand;
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        hx[i] = getint();
+        hy[i] = getint();
+        a0 = a0 + 1;
+        a[a0] = hx[i];
+        a0 = a0 + 1;
+        a[a0] = hy[i];
+    }
+
+    sort_a();
+    tmp = 1;
+    for (i = 2; i <= a0; i = i + 1) {
+        if (a[i] != a[tmp]) {
+            tmp = tmp + 1;
+            a[tmp] = a[i];
+        }
+    }
+    a0 = tmp;
+
+    for (i = 1; i <= n; i = i + 1) {
+        posx = lower_bound_a(hx[i]);
+        posy = lower_bound_a(hy[i]);
+        add(posx, 1);
+        add(posy + 1, -1);
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        posx = lower_bound_a(hx[i]);
+        t = query(posx);
+        cand = t * hx[i];
+        if (ans < cand) ans = cand;
+
+        posy = lower_bound_a(hy[i]);
+        t = query(posy);
+        cand = t * hy[i];
+        if (ans < cand) ans = cand;
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

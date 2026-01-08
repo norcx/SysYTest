@@ -1,0 +1,90 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E5/D.c`.
+ *   Reads 10 integers a[1..10], then answers 7 triangle-classification queries.
+ */
+
+int a[11];
+
+void classify_triangle(int x, int y, int z) {
+    int max_side;
+    int mid_side;
+    int min_side;
+    int sum_sq;
+    int max_sq;
+
+    if (x > y) {
+        if (x > z) {
+            max_side = x;
+            if (y > z) {
+                mid_side = y;
+                min_side = z;
+            } else {
+                mid_side = z;
+                min_side = y;
+            }
+        } else {
+            max_side = z;
+            mid_side = x;
+            min_side = y;
+        }
+    } else {
+        if (y > z) {
+            max_side = y;
+            if (x > z) {
+                mid_side = x;
+                min_side = z;
+            } else {
+                mid_side = z;
+                min_side = x;
+            }
+        } else {
+            max_side = z;
+            mid_side = y;
+            min_side = x;
+        }
+    }
+
+    if (mid_side + min_side <= max_side) {
+        printf("no triangle\n");
+        return;
+    }
+
+    sum_sq = mid_side * mid_side + min_side * min_side;
+    max_sq = max_side * max_side;
+    if (sum_sq < max_sq) {
+        printf("obtuse triangle\n");
+    } else if (sum_sq > max_sq) {
+        printf("acute triangle\n");
+    } else {
+        printf("right triangle\n");
+    }
+
+    if (max_side == min_side) {
+        printf("equilateral triangle\n");
+    } else if (mid_side == min_side || max_side == mid_side) {
+        printf("isosceles triangle\n");
+    }
+}
+
+int main() {
+    int i;
+    for (i = 1; i <= 10; i = i + 1) {
+        a[i] = getint();
+    }
+
+    printf("Question 1:\n");
+    classify_triangle(a[1], a[5], a[9]);
+    printf("Question 2:\n");
+    classify_triangle(a[2], a[7], a[10]);
+    printf("Question 3:\n");
+    classify_triangle(a[2], a[3], a[6]);
+    printf("Question 4:\n");
+    classify_triangle(a[8], a[9], a[10]);
+    printf("Question 5:\n");
+    classify_triangle(a[6], a[7], a[10]);
+    printf("Question 6:\n");
+    classify_triangle(a[3], a[4], a[8]);
+    printf("Question 7:\n");
+    classify_triangle(a[1], a[2], a[6]);
+    return 0;
+}

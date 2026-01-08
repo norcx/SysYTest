@@ -1,0 +1,50 @@
+int rng_seed = 123456789;
+
+int add_mod(int a, int b, int mod) {
+  int s = a + b;
+  if (s >= mod) s = s - mod;
+  return s;
+}
+
+int mul_48271_mod(int a) {
+  int mod = 1000000007;
+  int res = 0;
+  int cur = a;
+  int k = 48271;
+  int i;
+  for (i = 0; i < 16; i = i + 1) {
+    if (k % 2 == 1) res = add_mod(res, cur, mod);
+    cur = add_mod(cur, cur, mod);
+    k = k / 2;
+  }
+  return res;
+}
+
+int myrand() {
+  int mod = 1000000007;
+  rng_seed = mul_48271_mod(rng_seed);
+  rng_seed = add_mod(rng_seed, 12345, mod);
+  return rng_seed;
+}
+
+int main() {
+  int n = 56;
+  int m = 56;
+  int p = myrand() % 1000;
+  printf("%d %d %d\n", n, m, p);
+
+  int i;
+  int j;
+  for (i = 1; i <= n; i = i + 1) {
+    for (j = 1; j <= m; j = j + 1) {
+      int x = myrand() % 1000 + 1;
+      int y = myrand() % 2;
+      if (y == 0) y = -1;
+      x = x * y;
+      printf("%d ", x);
+    }
+    printf("\n");
+  }
+
+  return 0;
+}

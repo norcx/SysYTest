@@ -1,0 +1,251 @@
+/*
+  Range affine transforms on 2D points using a lazy segment tree.
+
+  Input (all integers, one per line):
+    n
+    x1
+    y1
+    ...
+    xn
+    yn
+    m
+    For each op:
+      t
+      l
+      r
+      if t == 1: p, q          (translate by (p,q))
+      if t == 5: k              (rotate by k*90 degrees CCW, k in [0..3])
+      otherwise: no extra args
+
+  Op types:
+    1: translate (M)
+    2: flip Y (X in original code: (x,y)->(x,-y))
+    3: flip X (Y in original code: (x,y)->(-x,y))
+    4: swap (O)
+    5: rotate by k*90 (R restricted to right angles)
+
+  Output:
+    n lines: "x y"
+*/
+
+const int MAXN = 64;
+const int MAXT = 300;
+
+int px[MAXN + 1];
+int py[MAXN + 1];
+
+int c00[MAXT];
+int c01[MAXT];
+int c10[MAXT];
+int c11[MAXT];
+int c20[MAXT];
+int c21[MAXT];
+
+void set_identity(int rt) {
+  c00[rt] = 1;
+  c01[rt] = 0;
+  c10[rt] = 0;
+  c11[rt] = 1;
+  c20[rt] = 0;
+  c21[rt] = 0;
+}
+
+void compose(int rt, int a00, int a01, int a10, int a11, int a20, int a21) {
+  int x00;
+  int x01;
+  int x10;
+  int x11;
+  int x20;
+  int x21;
+  int r00;
+  int r01;
+  int r10;
+  int r11;
+  int r20;
+  int r21;
+
+  x00 = c00[rt];
+  x01 = c01[rt];
+  x10 = c10[rt];
+  x11 = c11[rt];
+  x20 = c20[rt];
+  x21 = c21[rt];
+
+  r00 = x00 * a00 + x01 * a10;
+  r01 = x00 * a01 + x01 * a11;
+  r10 = x10 * a00 + x11 * a10;
+  r11 = x10 * a01 + x11 * a11;
+  r20 = x20 * a00 + x21 * a10 + a20;
+  r21 = x20 * a01 + x21 * a11 + a21;
+
+  c00[rt] = r00;
+  c01[rt] = r01;
+  c10[rt] = r10;
+  c11[rt] = r11;
+  c20[rt] = r20;
+  c21[rt] = r21;
+}
+
+void pushdown(int rt) {
+  int a00;
+  int a01;
+  int a10;
+  int a11;
+  int a20;
+  int a21;
+  a00 = c00[rt];
+  a01 = c01[rt];
+  a10 = c10[rt];
+  a11 = c11[rt];
+  a20 = c20[rt];
+  a21 = c21[rt];
+  compose(rt * 2, a00, a01, a10, a11, a20, a21);
+  compose(rt * 2 + 1, a00, a01, a10, a11, a20, a21);
+  set_identity(rt);
+}
+
+void update(int rt, int l, int r, int L, int R, int a00, int a01, int a10, int a11, int a20, int a21) {
+  int mid;
+  if (l >= L && r <= R) {
+    compose(rt, a00, a01, a10, a11, a20, a21);
+    return;
+  }
+  pushdown(rt);
+  mid = (l + r) / 2;
+  if (L <= mid) {
+    update(rt * 2, l, mid, L, R, a00, a01, a10, a11, a20, a21);
+  }
+  if (R > mid) {
+    update(rt * 2 + 1, mid + 1, r, L, R, a00, a01, a10, a11, a20, a21);
+  }
+  return;
+}
+
+void dfs(int rt, int l, int r) {
+  int mid;
+  int x;
+  int y;
+  int nx;
+  int ny;
+  if (l == r) {
+    x = px[l];
+    y = py[l];
+    nx = x * c00[rt] + y * c10[rt] + c20[rt];
+    ny = x * c01[rt] + y * c11[rt] + c21[rt];
+    printf("%d %d\n", nx, ny);
+    return;
+  }
+  pushdown(rt);
+  mid = (l + r) / 2;
+  dfs(rt * 2, l, mid);
+  dfs(rt * 2 + 1, mid + 1, r);
+  return;
+}
+
+int main() {
+  int n;
+  int m;
+  int i;
+  int t;
+  int l;
+  int r;
+  int p;
+  int q;
+  int k;
+  int a00;
+  int a01;
+  int a10;
+  int a11;
+  int a20;
+  int a21;
+
+  n = getint();
+  i = 1;
+  for (i = 1; i <= n; i = i + 1) {
+    px[i] = getint();
+    py[i] = getint();
+  }
+
+  for (i = 1; i < MAXT; i = i + 1) {
+    set_identity(i);
+  }
+
+  m = getint();
+  for (i = 1; i <= m; i = i + 1) {
+    t = getint();
+    l = getint();
+    r = getint();
+
+    a00 = 1;
+    a01 = 0;
+    a10 = 0;
+    a11 = 1;
+    a20 = 0;
+    a21 = 0;
+
+    if (t == 1) {
+      p = getint();
+      q = getint();
+      a20 = p;
+      a21 = q;
+      update(1, 1, n, l, r, a00, a01, a10, a11, a20, a21);
+    } else {
+      if (t == 2) {
+        a00 = 1;
+        a01 = 0;
+        a10 = 0;
+        a11 = -1;
+        update(1, 1, n, l, r, a00, a01, a10, a11, a20, a21);
+      } else {
+        if (t == 3) {
+          a00 = -1;
+          a01 = 0;
+          a10 = 0;
+          a11 = 1;
+          update(1, 1, n, l, r, a00, a01, a10, a11, a20, a21);
+        } else {
+          if (t == 4) {
+            a00 = 0;
+            a01 = 1;
+            a10 = 1;
+            a11 = 0;
+            update(1, 1, n, l, r, a00, a01, a10, a11, a20, a21);
+          } else {
+            if (t == 5) {
+              k = getint();
+              if (k == 0) {
+                a00 = 1;
+                a01 = 0;
+                a10 = 0;
+                a11 = 1;
+              } else {
+                if (k == 1) {
+                  a00 = 0;
+                  a01 = 1;
+                  a10 = -1;
+                  a11 = 0;
+                } else {
+                  if (k == 2) {
+                    a00 = -1;
+                    a01 = 0;
+                    a10 = 0;
+                    a11 = -1;
+                  } else {
+                    a00 = 0;
+                    a01 = -1;
+                    a10 = 1;
+                    a11 = 0;
+                  }
+                }
+              }
+              update(1, 1, n, l, r, a00, a01, a10, a11, a20, a21);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  dfs(1, 1, n);
+  return 0;
+}

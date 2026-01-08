@@ -1,0 +1,153 @@
+const int MAXN = 10010;
+const int MAXM = 100010;
+
+int n;
+int m;
+
+int head[MAXN];
+int to[MAXM];
+int nextEdge[MAXM];
+int fromU[MAXM];
+int edgeCnt;
+
+int headB[MAXN];
+int toB[MAXM];
+int nextEdgeB[MAXM];
+int edgeCntB;
+
+int weight[MAXN];
+int indeg[MAXN];
+int dist[MAXN];
+
+int stackArr[MAXN];
+int top;
+int inStack[MAXN];
+
+int low[MAXN];
+int dfn[MAXN];
+int belong[MAXN];
+int timeIdx;
+
+void addEdge(int u, int v) {
+    edgeCnt = edgeCnt + 1;
+    fromU[edgeCnt] = u;
+    to[edgeCnt] = v;
+    nextEdge[edgeCnt] = head[u];
+    head[u] = edgeCnt;
+}
+
+void addEdgeB(int u, int v) {
+    edgeCntB = edgeCntB + 1;
+    toB[edgeCntB] = v;
+    nextEdgeB[edgeCntB] = headB[u];
+    headB[u] = edgeCntB;
+}
+
+void tarjan(int u) {
+    int v;
+    int i;
+    timeIdx = timeIdx + 1;
+    low[u] = timeIdx;
+    dfn[u] = timeIdx;
+    top = top + 1;
+    stackArr[top] = u;
+    inStack[u] = 1;
+
+    for (i = head[u]; i != 0; i = nextEdge[i]) {
+        v = to[i];
+        if (dfn[v] == 0) {
+            tarjan(v);
+            if (low[u] > low[v]) low[u] = low[v];
+        } else {
+            if (inStack[v] != 0) {
+                if (low[u] > dfn[v]) low[u] = dfn[v];
+            }
+        }
+    }
+
+    if (low[u] == dfn[u]) {
+        for (;;) {
+            v = stackArr[top];
+            top = top - 1;
+            inStack[v] = 0;
+            belong[v] = u;
+            if (v == u) break;
+            weight[u] = weight[u] + weight[v];
+        }
+    }
+}
+
+void topo() {
+    int i;
+    int u;
+    int e;
+    int v;
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (belong[i] == i) {
+            if (indeg[i] == 0) {
+                top = top + 1;
+                stackArr[top] = i;
+                dist[i] = weight[i];
+            }
+        }
+    }
+
+    for (; top != 0;) {
+        u = stackArr[top];
+        top = top - 1;
+        for (e = headB[u]; e != 0; e = nextEdgeB[e]) {
+            v = toB[e];
+            if (dist[v] < dist[u] + weight[v]) dist[v] = dist[u] + weight[v];
+            indeg[v] = indeg[v] - 1;
+            if (indeg[v] == 0) {
+                top = top + 1;
+                stackArr[top] = v;
+            }
+        }
+    }
+}
+
+int main() {
+    int i;
+    int u;
+    int v;
+    int ans;
+
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        weight[i] = getint();
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        u = getint();
+        v = getint();
+        addEdge(u, v);
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (dfn[i] == 0) tarjan(i);
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        u = belong[fromU[i]];
+        v = belong[to[i]];
+        if (u != v) {
+            addEdgeB(u, v);
+            indeg[v] = indeg[v] + 1;
+        }
+    }
+
+    top = 0;
+    topo();
+
+    ans = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        if (ans < dist[i]) ans = dist[i];
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

@@ -1,0 +1,68 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C8/D.c`.
+ *   Original uses `double` temperatures; this SysY version uses scaled integers.
+ *   Input: n, then n integers where value = temperature * 10.
+ */
+
+const int SCALE = 10;
+const int THRESH_TE = 10 * SCALE;   /* te[i] < 10.0  <=> te[i] < 100 */
+const int THRESH_SUM = 50 * SCALE;  /* avg >= 10.0   <=> sum >= 50.0 */
+
+int te[111];
+int sum5[111];
+
+void calc_sum5(int x) {
+    int i;
+    int sum = 0;
+    for (i = x - 4; i <= x; i = i + 1) {
+        sum = sum + te[i];
+    }
+    sum5[x] = sum;
+}
+
+int check(int x) {
+    int i;
+    if (x < 9) return 0;
+    for (i = x - 4; i <= x; i = i + 1) {
+        if (sum5[i] >= THRESH_SUM) return 0;
+    }
+    return 1;
+}
+
+int find_pos(int x) {
+    int i;
+    for (i = x - 4; i <= x; i = i + 1) {
+        if (te[i] < THRESH_TE) return i;
+    }
+    return x;
+}
+
+int main() {
+    int n;
+    int i;
+    int flag;
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        te[i] = 0;
+        sum5[i] = 0;
+    }
+    for (i = 1; i <= n; i = i + 1) {
+        te[i] = getint();
+    }
+
+    flag = 0;
+    for (i = 5; i <= n; i = i + 1) {
+        calc_sum5(i);
+        if (check(i) > 0) {
+            printf("Success %d\n", find_pos(i - 4));
+            flag = 1;
+            break;
+        }
+    }
+
+    if (flag == 0) {
+        printf("Failure\n");
+    }
+    return 0;
+}

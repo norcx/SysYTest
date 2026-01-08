@@ -1,0 +1,93 @@
+/* Description:
+ *   DSU on 2*n nodes to find the highest edge weight that first makes the
+ *   "different color" constraints contradictory (graph becomes non-bipartite)
+ *   when adding edges from high weight to low weight.
+ */
+const int MAXN = 1000;
+const int MAXM = 1000;
+
+int n;
+int m;
+int ans;
+int fa[2 * MAXN + 5];
+int hx[MAXM + 5];
+int hy[MAXM + 5];
+int hz[MAXM + 5];
+
+int father(int x) {
+  if (fa[x] == x) {
+    return x;
+  }
+  fa[x] = father(fa[x]);
+  return fa[x];
+}
+
+int judge(int now) {
+  int fax;
+  int fay;
+  fax = father(hx[now]);
+  fay = father(hy[now]);
+  if (fax == fay) {
+    return 0;
+  }
+  fa[fax] = father(hy[now] + n);
+  fa[fay] = father(hx[now] + n);
+  return 1;
+}
+
+void sort_edges_desc() {
+  int i;
+  int j;
+  int max_idx;
+  int tmp;
+  for (i = 1; i <= m; i = i + 1) {
+    max_idx = i;
+    for (j = i + 1; j <= m; j = j + 1) {
+      if (hz[j] > hz[max_idx]) {
+        max_idx = j;
+      }
+    }
+    if (max_idx != i) {
+      tmp = hx[i];
+      hx[i] = hx[max_idx];
+      hx[max_idx] = tmp;
+      tmp = hy[i];
+      hy[i] = hy[max_idx];
+      hy[max_idx] = tmp;
+      tmp = hz[i];
+      hz[i] = hz[max_idx];
+      hz[max_idx] = tmp;
+    }
+  }
+}
+
+int main() {
+  int i;
+  n = getint();
+  m = getint();
+  for (i = 1; i <= m; i = i + 1) {
+    hx[i] = getint();
+    hy[i] = getint();
+    hz[i] = getint();
+  }
+
+  sort_edges_desc();
+
+  for (i = 1; i <= 2 * n; i = i + 1) {
+    fa[i] = i;
+  }
+
+  ans = hz[1];
+  for (i = 1; i <= m; i = i + 1) {
+    if (judge(i) == 1) {
+      if (i < m) {
+        ans = hz[i + 1];
+      }
+    } else {
+      break;
+    }
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

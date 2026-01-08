@@ -1,10 +1,10 @@
 # SysY编译器测试框架配置文件
 
-# 编译器项目路径
-compiler_project_dir: "../Compiler"
+# zip_dir：编译器源码压缩包目录（相对于本项目工作区根目录）
+compiler_project_dir: "zips/"
 
 # Mars模拟器文件名
-mars_jar: "src/Mars.jar"
+mars_jar: "tools/Mars.jar"
 
 # 工具路径配置 (留空则使用环境变量PATH中的)
 tools:

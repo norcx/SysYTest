@@ -1,0 +1,5 @@
+mixed_params_1: 655
+mixed_params_1 with global: 1050
+mixed_params_2: 5665
+mixed_params_3: 76
+After modify: g_arr[10]=9000, g_arr[14]=9004

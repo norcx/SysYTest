@@ -1,0 +1,54 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C7/D.c.
+ *
+ *   Input encoding (Strict SysY: integers only):
+ *     t
+ *     len_1
+ *     c_1[0]
+ *     ...
+ *     c_1[len_1-1]
+ *     len_2
+ *     ...
+ *
+ *   Each c_i[j] is the ASCII code of a character in the original string.
+ *
+ *   For each string, output: "<count> <last_pos>\n"
+ *     - count: number of occurrences of substring "kiss" (case-insensitive)
+ *     - last_pos: 0-based index of the last occurrence, or -1 if none
+ */
+
+int s[1010];
+
+int main() {
+    int t;
+    int tc;
+    t = getint();
+
+    for (tc = 0; tc < t; tc = tc + 1) {
+        int len;
+        int i;
+        int cnt;
+        int pos;
+
+        len = getint();
+        for (i = 0; i < len; i = i + 1) {
+            s[i] = getint();
+            if (s[i] >= 65 && s[i] <= 90) {
+                s[i] = s[i] + 32;
+            }
+        }
+
+        cnt = 0;
+        pos = -1;
+        for (i = 0; i <= len - 4; i = i + 1) {
+            if (s[i] == 107 && s[i + 1] == 105 && s[i + 2] == 115 && s[i + 3] == 115) {
+                cnt = cnt + 1;
+                pos = i;
+            }
+        }
+
+        printf("%d %d\n", cnt, pos);
+    }
+
+    return 0;
+}

@@ -1,0 +1,305 @@
+/* Description:
+ * Converted from a C++ BFS/DFS state search.
+ * Input encoding (newline-separated integers):
+ *   9 cells in row-major order, each with 5 integers:
+ *     c1 c2 c3 c4 lock
+ *   where c1..c4 are colors (0..3) and lock is 0/1.
+ * Output:
+ *   Prints the first popped state's 3x3 cells as 5 digits per cell, then its depth.
+ */
+
+const int N = 3;
+const int CELL = 5;
+const int STATE = 45;
+const int MAXQ = 1024;
+
+int q_state[MAXQ * STATE];
+int q_b[MAXQ];
+int head;
+int tail;
+
+int vis[36];
+int bo[5];
+
+int row_lock[3];
+int col_lock[3];
+
+int idx(int r, int c, int p) {
+    return (r * 3 + c) * 5 + p;
+}
+
+int vidx(int r, int c, int p) {
+    return (r * 3 + c) * 4 + p;
+}
+
+void clear_vis_bo() {
+    int i;
+    for (i = 0; i < 36; i = i + 1) vis[i] = 0;
+    for (i = 0; i < 5; i = i + 1) bo[i] = 0;
+}
+
+void dfs(int x, int y, int z, int st[], int base) {
+    int color;
+    int t;
+    vis[vidx(x, y, z)] = 1;
+    color = st[base + idx(x, y, z)];
+
+    if (z == 0 || z == 1) {
+        t = 2;
+        if (vis[vidx(x, y, t)] == 0 && st[base + idx(x, y, t)] == color) dfs(x, y, t, st, base);
+        t = 3;
+        if (vis[vidx(x, y, t)] == 0 && st[base + idx(x, y, t)] == color) dfs(x, y, t, st, base);
+    }
+    if (z == 2 || z == 3) {
+        t = 0;
+        if (vis[vidx(x, y, t)] == 0 && st[base + idx(x, y, t)] == color) dfs(x, y, t, st, base);
+        t = 1;
+        if (vis[vidx(x, y, t)] == 0 && st[base + idx(x, y, t)] == color) dfs(x, y, t, st, base);
+    }
+    return;
+}
+
+int judge(int st[], int base) {
+    int i;
+    int j;
+    int k;
+    int color;
+    clear_vis_bo();
+
+    for (i = 0; i < 3; i = i + 1) {
+        for (j = 0; j < 3; j = j + 1) {
+            for (k = 0; k < 4; k = k + 1) {
+                if (vis[vidx(i, j, k)] != 0) {
+                } else {
+                    color = st[base + idx(i, j, k)];
+                    if (bo[color] != 0) return 0;
+                    bo[color] = 1;
+                    dfs(i, j, k, st, base);
+                }
+            }
+        }
+    }
+    return 1;
+}
+
+void copy_state(int dst_base, int src_base) {
+    int i;
+    for (i = 0; i < STATE; i = i + 1) q_state[dst_base + i] = q_state[src_base + i];
+}
+
+void copy_local_to_queue(int dst_base, int local[]) {
+    int i;
+    for (i = 0; i < STATE; i = i + 1) q_state[dst_base + i] = local[i];
+}
+
+int equal_local_queue(int local[], int base) {
+    int i;
+    for (i = 0; i < STATE; i = i + 1) {
+        if (local[i] != q_state[base + i]) return 0;
+    }
+    return 1;
+}
+
+void rotate_row_left(int local[], int row) {
+    int p;
+    int c;
+    int src_c;
+    int dest_c;
+    int tmp[5];
+
+    for (p = 0; p < 5; p = p + 1) tmp[p] = local[idx(row, 0, p)];
+    for (c = 0; c < 2; c = c + 1) {
+        src_c = c + 1;
+        dest_c = c;
+        for (p = 0; p < 5; p = p + 1) local[idx(row, dest_c, p)] = local[idx(row, src_c, p)];
+    }
+    for (p = 0; p < 5; p = p + 1) local[idx(row, 2, p)] = tmp[p];
+    return;
+}
+
+void rotate_row_right(int local[], int row) {
+    int p;
+    int c;
+    int src_c;
+    int dest_c;
+    int tmp[5];
+
+    for (p = 0; p < 5; p = p + 1) tmp[p] = local[idx(row, 2, p)];
+    for (c = 2; c > 0; c = c - 1) {
+        src_c = c - 1;
+        dest_c = c;
+        for (p = 0; p < 5; p = p + 1) local[idx(row, dest_c, p)] = local[idx(row, src_c, p)];
+    }
+    for (p = 0; p < 5; p = p + 1) local[idx(row, 0, p)] = tmp[p];
+    return;
+}
+
+void rotate_col_up(int local[], int col) {
+    int p;
+    int r;
+    int src_r;
+    int dest_r;
+    int tmp[5];
+
+    for (p = 0; p < 5; p = p + 1) tmp[p] = local[idx(0, col, p)];
+    for (r = 0; r < 2; r = r + 1) {
+        src_r = r + 1;
+        dest_r = r;
+        for (p = 0; p < 5; p = p + 1) local[idx(dest_r, col, p)] = local[idx(src_r, col, p)];
+    }
+    for (p = 0; p < 5; p = p + 1) local[idx(2, col, p)] = tmp[p];
+    return;
+}
+
+void rotate_col_down(int local[], int col) {
+    int p;
+    int r;
+    int src_r;
+    int dest_r;
+    int tmp[5];
+
+    for (p = 0; p < 5; p = p + 1) tmp[p] = local[idx(2, col, p)];
+    for (r = 2; r > 0; r = r - 1) {
+        src_r = r - 1;
+        dest_r = r;
+        for (p = 0; p < 5; p = p + 1) local[idx(dest_r, col, p)] = local[idx(src_r, col, p)];
+    }
+    for (p = 0; p < 5; p = p + 1) local[idx(0, col, p)] = tmp[p];
+    return;
+}
+
+int main() {
+    int i;
+    int j;
+    int p;
+    int base;
+    int now_b;
+    int nn;
+    int tmp_state[45];
+    int r;
+    int c;
+    int seen;
+    int s;
+    int nb;
+
+    head = 0;
+    tail = 0;
+
+    for (i = 0; i < 3; i = i + 1) row_lock[i] = 0;
+    for (i = 0; i < 3; i = i + 1) col_lock[i] = 0;
+
+    for (i = 0; i < 3; i = i + 1) {
+        for (j = 0; j < 3; j = j + 1) {
+            for (p = 0; p < 5; p = p + 1) {
+                q_state[idx(i, j, p)] = getint();
+            }
+            if (q_state[idx(i, j, 4)] == 1) {
+                row_lock[i] = 1;
+                col_lock[j] = 1;
+            }
+        }
+    }
+
+    q_b[0] = 0;
+    head = 0;
+    tail = 1;
+
+    nn = 0;
+    for (;head < tail;) {
+        base = head * STATE;
+        now_b = q_b[head];
+        head = head + 1;
+
+        for (i = 0; i < 3; i = i + 1) {
+            for (j = 0; j < 3; j = j + 1) {
+                for (p = 0; p < 4; p = p + 1) printf("%d", q_state[base + idx(i, j, p)]);
+                printf("%d", q_state[base + idx(i, j, 4)]);
+                printf(" ");
+            }
+            printf("\n");
+        }
+        printf("%d\n", now_b);
+
+        nn = nn + 1;
+        if (judge(q_state, base) != 0) {
+            printf("%d\n", now_b);
+            printf("%d\n", nn);
+            return 0;
+        }
+
+        for (r = 0; r < 3; r = r + 1) {
+            if (row_lock[r] != 0) {
+            } else {
+                for (p = 0; p < STATE; p = p + 1) tmp_state[p] = q_state[base + p];
+                rotate_row_left(tmp_state, r);
+                seen = 0;
+                for (s = 0; s < tail; s = s + 1) {
+                    if (equal_local_queue(tmp_state, s * STATE) != 0) {
+                        seen = 1;
+                        s = tail;
+                    }
+                }
+                if (seen == 0 && tail < MAXQ) {
+                    copy_local_to_queue(tail * STATE, tmp_state);
+                    nb = now_b + 1;
+                    q_b[tail] = nb;
+                    tail = tail + 1;
+                }
+
+                for (p = 0; p < STATE; p = p + 1) tmp_state[p] = q_state[base + p];
+                rotate_row_right(tmp_state, r);
+                seen = 0;
+                for (s = 0; s < tail; s = s + 1) {
+                    if (equal_local_queue(tmp_state, s * STATE) != 0) {
+                        seen = 1;
+                        s = tail;
+                    }
+                }
+                if (seen == 0 && tail < MAXQ) {
+                    copy_local_to_queue(tail * STATE, tmp_state);
+                    nb = now_b + 1;
+                    q_b[tail] = nb;
+                    tail = tail + 1;
+                }
+            }
+        }
+
+        for (c = 0; c < 3; c = c + 1) {
+            if (col_lock[c] != 0) {
+            } else {
+                for (p = 0; p < STATE; p = p + 1) tmp_state[p] = q_state[base + p];
+                rotate_col_up(tmp_state, c);
+                seen = 0;
+                for (s = 0; s < tail; s = s + 1) {
+                    if (equal_local_queue(tmp_state, s * STATE) != 0) {
+                        seen = 1;
+                        s = tail;
+                    }
+                }
+                if (seen == 0 && tail < MAXQ) {
+                    copy_local_to_queue(tail * STATE, tmp_state);
+                    nb = now_b + 1;
+                    q_b[tail] = nb;
+                    tail = tail + 1;
+                }
+
+                for (p = 0; p < STATE; p = p + 1) tmp_state[p] = q_state[base + p];
+                rotate_col_down(tmp_state, c);
+                seen = 0;
+                for (s = 0; s < tail; s = s + 1) {
+                    if (equal_local_queue(tmp_state, s * STATE) != 0) {
+                        seen = 1;
+                        s = tail;
+                    }
+                }
+                if (seen == 0 && tail < MAXQ) {
+                    copy_local_to_queue(tail * STATE, tmp_state);
+                    nb = now_b + 1;
+                    q_b[tail] = nb;
+                    tail = tail + 1;
+                }
+            }
+        }
+    }
+    return 0;
+}

@@ -1,0 +1,18 @@
+/* Description:
+ *   Reads T testcases (n, m) and prints (n - m - 2) per line.
+ */
+
+int main() {
+    int t;
+    int n;
+    int m;
+    int i;
+
+    t = getint();
+    for (i = 0; i < t; i = i + 1) {
+        n = getint();
+        m = getint();
+        printf("%d\n", n - m - 2);
+    }
+    return 0;
+}

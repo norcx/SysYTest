@@ -1,0 +1,89 @@
+/* Description:
+ * Range transformations on points (integer-only SysY variant).
+ * Ops: 1=translate, 2=flip X, 3=flip Y, 4=swap, 5=rotate (0/90/180/270).
+ */
+const int MAXN = 64;
+
+int xs[MAXN];
+int ys[MAXN];
+
+int main() {
+  int n;
+  int m;
+  int i;
+  int j;
+  int op;
+  int l;
+  int r;
+  int dx;
+  int dy;
+  int deg;
+  int tmp;
+
+  n = getint();
+  for (i = 1; i <= n; i = i + 1) {
+    xs[i] = getint();
+    ys[i] = getint();
+  }
+
+  m = getint();
+  for (i = 0; i < m; i = i + 1) {
+    op = getint();
+    l = getint();
+    r = getint();
+
+    if (op == 1) {
+      dx = getint();
+      dy = getint();
+      for (j = l; j <= r; j = j + 1) {
+        xs[j] = xs[j] + dx;
+        ys[j] = ys[j] + dy;
+      }
+    } else if (op == 2) {
+      for (j = l; j <= r; j = j + 1) {
+        ys[j] = 0 - ys[j];
+      }
+    } else if (op == 3) {
+      for (j = l; j <= r; j = j + 1) {
+        xs[j] = 0 - xs[j];
+      }
+    } else if (op == 4) {
+      for (j = l; j <= r; j = j + 1) {
+        tmp = xs[j];
+        xs[j] = ys[j];
+        ys[j] = tmp;
+      }
+    } else if (op == 5) {
+      deg = getint();
+      deg = deg % 360;
+      if (deg < 0) {
+        deg = deg + 360;
+      }
+
+      if (deg == 90) {
+        for (j = l; j <= r; j = j + 1) {
+          tmp = xs[j];
+          xs[j] = 0 - ys[j];
+          ys[j] = tmp;
+        }
+      } else if (deg == 180) {
+        for (j = l; j <= r; j = j + 1) {
+          xs[j] = 0 - xs[j];
+          ys[j] = 0 - ys[j];
+        }
+      } else if (deg == 270) {
+        for (j = l; j <= r; j = j + 1) {
+          tmp = xs[j];
+          xs[j] = ys[j];
+          ys[j] = 0 - tmp;
+        }
+      }
+    }
+  }
+
+  for (i = 1; i <= n; i = i + 1) {
+    printf("%d %d\n", xs[i], ys[i]);
+  }
+
+  return 0;
+}

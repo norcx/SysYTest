@@ -1,0 +1,58 @@
+/*
+  Input:
+    n
+    a1
+    a2
+    ...
+    an
+  Where each ai is an integer in [0, 25] representing a lowercase letter ('a'+ai).
+
+  Output:
+    The computed maximum value `ans` from the original program.
+*/
+
+const int ALPHA = 26;
+
+int n;
+int ans;
+int c[26];
+int mn[676];
+
+int min2(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+int max2(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+int main() {
+    n = getint();
+
+    int i;
+    int j;
+    int tmp;
+    int idx1;
+    int idx2;
+
+    for (i = 1; i <= n; i = i + 1) {
+        tmp = getint();
+        c[tmp] = c[tmp] + 1;
+
+        for (j = 0; j < 26; j = j + 1) {
+            if (c[j] != 0) {
+                idx1 = tmp * ALPHA + j;
+                idx2 = j * ALPHA + tmp;
+                mn[idx1] = min2(mn[idx1], c[tmp] - c[j]);
+                mn[idx2] = min2(mn[idx2], c[j] - c[tmp]);
+                ans = max2(ans, c[tmp] - c[j] - mn[idx1]);
+                ans = max2(ans, c[j] - c[tmp] - mn[idx2]);
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

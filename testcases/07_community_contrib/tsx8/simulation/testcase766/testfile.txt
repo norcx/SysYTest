@@ -1,0 +1,13 @@
+/* Description:
+ *   [Add description here]
+ */
+ 
+int main() {
+  int n;
+  int cnt;
+  n = getint();
+  for (cnt = 0; cnt < n; cnt = cnt + 1) {
+    printf("%d\n", cnt + 1);
+  }
+  return 0;
+}

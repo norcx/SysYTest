@@ -1,0 +1,105 @@
+/* Description:
+ * Given n points A and m points B, find a point (x,y) that appears the most
+ * times in A but does not appear in B. If multiple points tie by frequency,
+ * pick the one with smallest (x+y). Output "x y".
+ */
+
+const int MAXN = 1111;
+
+int n;
+int m;
+int ansl;
+int ansx;
+int ansy;
+
+int xa[MAXN];
+int ya[MAXN];
+int xb[MAXN];
+int yb[MAXN];
+
+void sortPairs(int x[], int y[], int len) {
+    int i;
+    int j;
+    int tx;
+    int ty;
+    for (i = 1; i <= len; i = i + 1) {
+        for (j = i + 1; j <= len; j = j + 1) {
+            if (x[j] < x[i]) {
+                tx = x[i];
+                ty = y[i];
+                x[i] = x[j];
+                y[i] = y[j];
+                x[j] = tx;
+                y[j] = ty;
+            } else if (x[j] == x[i] && y[j] < y[i]) {
+                tx = x[i];
+                ty = y[i];
+                x[i] = x[j];
+                y[i] = y[j];
+                x[j] = tx;
+                y[j] = ty;
+            }
+        }
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int k;
+    int lst;
+    int p;
+    int cnt;
+
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        xa[i] = getint();
+        ya[i] = getint();
+    }
+    for (i = 1; i <= m; i = i + 1) {
+        xb[i] = getint();
+        yb[i] = getint();
+    }
+
+    sortPairs(xa, ya, n);
+    sortPairs(xb, yb, m);
+
+    ansl = 0;
+    ansx = 0;
+    ansy = 0;
+
+    i = 1;
+    for (; i <= n; ) {
+        lst = i;
+        for (; lst < n && xa[lst + 1] == xa[i] && ya[lst + 1] == ya[i]; lst = lst + 1) {
+        }
+
+        p = 0;
+        for (k = 1; k <= m; k = k + 1) {
+            if (xb[k] == xa[i] && yb[k] == ya[i]) {
+                p = 1;
+            }
+        }
+
+        if (p == 0) {
+            cnt = lst - i + 1;
+            if (ansl < cnt) {
+                ansl = cnt;
+                ansx = xa[i];
+                ansy = ya[i];
+            } else if (ansl == cnt) {
+                if (ansx + ansy > xa[i] + ya[i]) {
+                    ansx = xa[i];
+                    ansy = ya[i];
+                }
+            }
+        }
+
+        i = lst + 1;
+    }
+
+    printf("%d %d\n", ansx, ansy);
+    return 0;
+}

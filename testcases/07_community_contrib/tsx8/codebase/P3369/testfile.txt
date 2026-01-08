@@ -1,0 +1,134 @@
+const int MAXN = 100010;
+const int MAXT = 400050;
+
+int seg[MAXT];
+int a[MAXN];
+int tmp[MAXN];
+int op[MAXN];
+int val[MAXN];
+int n;
+int tot;
+
+void merge_sort(int l, int r) {
+    if (l >= r) return;
+    int mid = (l + r) / 2;
+    merge_sort(l, mid);
+    merge_sort(mid + 1, r);
+    int i = l;
+    int j = mid + 1;
+    int k = l;
+    for (; i <= mid && j <= r;) {
+        if (a[i] <= a[j]) {
+            tmp[k] = a[i];
+            k = k + 1;
+            i = i + 1;
+        } else {
+            tmp[k] = a[j];
+            k = k + 1;
+            j = j + 1;
+        }
+    }
+    for (; i <= mid;) {
+        tmp[k] = a[i];
+        k = k + 1;
+        i = i + 1;
+    }
+    for (; j <= r;) {
+        tmp[k] = a[j];
+        k = k + 1;
+        j = j + 1;
+    }
+    for (i = l; i <= r; i = i + 1) a[i] = tmp[i];
+}
+
+int lower_bound_int(int x) {
+    int l = 1;
+    int r = tot;
+    int ans = tot + 1;
+    for (; l <= r;) {
+        int mid = (l + r) / 2;
+        if (a[mid] >= x) {
+            ans = mid;
+            r = mid - 1;
+        } else {
+            l = mid + 1;
+        }
+    }
+    return ans;
+}
+
+void change(int o, int l, int r, int q, int v) {
+    if (l == r) {
+        seg[o] = seg[o] + v;
+        return;
+    }
+    int mid = (l + r) / 2;
+    if (q <= mid) change(o * 2, l, mid, q, v);
+    else change(o * 2 + 1, mid + 1, r, q, v);
+    seg[o] = seg[o * 2] + seg[o * 2 + 1];
+}
+
+int query_r(int o, int l, int r, int ql, int qr) {
+    if (ql <= l && r <= qr) return seg[o];
+    int mid = (l + r) / 2;
+    int ans = 0;
+    if (ql <= mid) ans = ans + query_r(o * 2, l, mid, ql, qr);
+    if (qr > mid) ans = ans + query_r(o * 2 + 1, mid + 1, r, ql, qr);
+    return ans;
+}
+
+int query_n(int o, int l, int r, int q) {
+    if (l == r) return l;
+    int mid = (l + r) / 2;
+    if (seg[o * 2] >= q) return query_n(o * 2, l, mid, q);
+    return query_n(o * 2 + 1, mid + 1, r, q - seg[o * 2]);
+}
+
+int main() {
+    n = getint();
+    tot = 0;
+    int i = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        op[i] = getint();
+        val[i] = getint();
+        if (op[i] != 4) {
+            tot = tot + 1;
+            a[tot] = val[i];
+        }
+    }
+
+    if (tot > 0) {
+        merge_sort(1, tot);
+        int new_tot = 0;
+        for (i = 1; i <= tot; i = i + 1) {
+            if (i == 1 || a[i] != a[i - 1]) {
+                new_tot = new_tot + 1;
+                a[new_tot] = a[i];
+            }
+        }
+        tot = new_tot;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (op[i] != 4) val[i] = lower_bound_int(val[i]);
+        if (op[i] == 1) change(1, 1, tot, val[i], 1);
+        if (op[i] == 2) change(1, 1, tot, val[i], 0 - 1);
+        if (op[i] == 3) {
+            if (val[i] == 1) {
+                printf("%d\n", 1);
+            } else {
+                printf("%d\n", query_r(1, 1, tot, 1, val[i] - 1) + 1);
+            }
+        }
+        if (op[i] == 4) printf("%d\n", a[query_n(1, 1, tot, val[i])]);
+        if (op[i] == 5) {
+            int rank = query_r(1, 1, tot, 1, val[i] - 1);
+            printf("%d\n", a[query_n(1, 1, tot, rank)]);
+        }
+        if (op[i] == 6) {
+            int rank = query_r(1, 1, tot, 1, val[i]) + 1;
+            printf("%d\n", a[query_n(1, 1, tot, rank)]);
+        }
+    }
+    return 0;
+}

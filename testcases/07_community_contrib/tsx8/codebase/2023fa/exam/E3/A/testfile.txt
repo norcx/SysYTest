@@ -1,0 +1,40 @@
+/* Description:
+ *   Converted from codes/2023fa/exam/E3/A.c
+ *   Print 32-bit binary of each non-negative integer.
+ *
+ *   Input format (SysY-friendly):
+ *     t
+ *     n1
+ *     ...
+ *     nt
+ */
+
+int main() {
+    int t;
+    int case_idx;
+    int n;
+    int bit_index;
+    int k;
+    int pow2;
+    int bit;
+
+    t = getint();
+    for (case_idx = 0; case_idx < t; case_idx = case_idx + 1) {
+        n = getint();
+
+        /* highest bit is always 0 for non-negative inputs */
+        printf("%d", 0);
+
+        for (bit_index = 30; bit_index >= 0; bit_index = bit_index - 1) {
+            pow2 = 1;
+            for (k = 0; k < bit_index; k = k + 1) {
+                pow2 = pow2 * 2;
+            }
+            bit = n / pow2;
+            bit = bit % 2;
+            printf("%d", bit);
+        }
+        printf("\n");
+    }
+    return 0;
+}

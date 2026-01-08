@@ -1,0 +1,83 @@
+const int MAXN = 60;
+const int OFFSET = 70;
+const int MAXD = 141;
+
+int n;
+int m;
+int a[MAXN];
+int beautiful[MAXN];
+int l[MAXN * MAXD];
+int r[MAXN * MAXD];
+
+void init() {
+  int i;
+  int j;
+  for (i = 1; i <= n; i = i + 1) {
+    int t1;
+    int t2;
+    int base;
+    t1 = 0;
+    t2 = 0;
+    base = i * MAXD;
+
+    for (j = i + 1; j <= n; j = j + 1) {
+      if (a[j] >= a[i]) t1 = t1 + 1;
+      else t1 = t1 - 1;
+      r[base + (t1 + OFFSET)] = j - i;
+    }
+
+    for (j = i - 1; j >= 1; j = j - 1) {
+      if (a[j] > a[i]) t2 = t2 + 1;
+      else t2 = t2 - 1;
+      l[base + (t2 + OFFSET)] = i - j;
+    }
+  }
+
+  for (i = 1; i <= n; i = i + 1) {
+    int best;
+    int base;
+    int bal;
+    best = 0;
+    base = i * MAXD;
+    for (bal = -n; bal <= n; bal = bal + 1) {
+      int leftDist;
+      int rightDist;
+      int totalLen;
+      leftDist = l[base + (OFFSET - bal)];
+      rightDist = r[base + (OFFSET + bal)];
+      totalLen = leftDist + rightDist + 1;
+
+      if (bal == 0) {
+        if (totalLen > best) best = totalLen;
+      }
+      if (leftDist != 0 && rightDist != 0) {
+        if (totalLen > best) best = totalLen;
+      }
+    }
+    beautiful[i] = best;
+  }
+}
+
+int main() {
+  int i;
+  int qi;
+  int x;
+  int y;
+  int ans;
+
+  n = getint();
+  for (i = 1; i <= n; i = i + 1) a[i] = getint();
+  init();
+
+  m = getint();
+  for (qi = 0; qi < m; qi = qi + 1) {
+    x = getint();
+    y = getint();
+    ans = 0;
+    for (i = x; i <= y; i = i + 1) {
+      if (beautiful[i] > ans) ans = beautiful[i];
+    }
+    printf("%d\n", ans);
+  }
+  return 0;
+}

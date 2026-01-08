@@ -1,0 +1,111 @@
+/* Description: SysY rewrite of Luogu P2142 big integer subtraction with decimal digits, for-loop only control, and printf-only output. */
+
+const int MAX_DIGITS = 80;
+
+int first_digits[MAX_DIGITS];
+int second_digits[MAX_DIGITS];
+int diff_digits[MAX_DIGITS];
+
+int trim_length(int digits[], int len) {
+    if (len <= 0) {
+        return 0;
+    }
+    for (; len > 1 && digits[len - 1] == 0; ) {
+        len = len - 1;
+    }
+    return len;
+}
+
+int read_digits(int digits[]) {
+    int len;
+    int idx;
+    len = getint();
+    idx = 0;
+    for (idx = 0; idx < len; idx = idx + 1) {
+        digits[len - 1 - idx] = getint();
+    }
+    len = trim_length(digits, len);
+    if (len <= 0) {
+        len = 1;
+        digits[0] = 0;
+    }
+    return len;
+}
+
+int compare_digits(int lhs[], int lhs_len, int rhs[], int rhs_len) {
+    int idx;
+    if (lhs_len > rhs_len) {
+        return 1;
+    }
+    if (lhs_len < rhs_len) {
+        return -1;
+    }
+    idx = lhs_len - 1;
+    for (; idx >= 0; idx = idx - 1) {
+        if (lhs[idx] > rhs[idx]) {
+            return 1;
+        }
+        if (lhs[idx] < rhs[idx]) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int subtract_digits(int lhs[], int lhs_len, int rhs[], int rhs_len, int res[]) {
+    int idx;
+    int borrow;
+    int cur;
+    borrow = 0;
+    idx = 0;
+    for (idx = 0; idx < lhs_len; idx = idx + 1) {
+        cur = lhs[idx] - borrow;
+        if (idx < rhs_len) {
+            cur = cur - rhs[idx];
+        }
+        if (cur < 0) {
+            cur = cur + 10;
+            borrow = 1;
+        } else {
+            borrow = 0;
+        }
+        res[idx] = cur;
+    }
+    return trim_length(res, lhs_len);
+}
+
+void print_digits(int digits[], int len) {
+    int idx;
+    if (len <= 0) {
+        printf("0\n");
+        return;
+    }
+    printf("%d", digits[len - 1]);
+    for (idx = len - 2; idx >= 0; idx = idx - 1) {
+        printf("%d", digits[idx]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int len_a;
+    int len_b;
+    int cmp;
+    int diff_len;
+    len_a = read_digits(first_digits);
+    len_b = read_digits(second_digits);
+    cmp = compare_digits(first_digits, len_a, second_digits, len_b);
+    if (cmp == 0) {
+        printf("0\n");
+        return 0;
+    }
+    if (cmp > 0) {
+        diff_len = subtract_digits(first_digits, len_a, second_digits, len_b, diff_digits);
+        print_digits(diff_digits, diff_len);
+    } else {
+        diff_len = subtract_digits(second_digits, len_b, first_digits, len_a, diff_digits);
+        printf("-");
+        print_digits(diff_digits, diff_len);
+    }
+    return 0;
+}

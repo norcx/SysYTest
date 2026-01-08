@@ -1,0 +1,236 @@
+/*
+  Converted from C++ to Strict SysY.
+
+  Input format (one integer per line):
+    n
+    x[1..n]
+    t[1..n]   (1 -> group A, else group B)
+    m
+    (x, y) repeated m times
+
+  Output:
+    For each query, print one integer answer on its own line.
+*/
+
+const int MAXN = 6000;
+
+int n;
+int m;
+
+int a[MAXN];
+int b[MAXN];
+int a0;
+int b0;
+
+int hx[MAXN];
+int hid[MAXN];
+int idpos[MAXN];
+
+void sort_arr(int arr[], int len) {
+    int i;
+    int j;
+    for (i = 2; i <= len; i = i + 1) {
+        j = i;
+        for (; j > 1 && arr[j - 1] > arr[j]; ) {
+            int tmp;
+            tmp = arr[j - 1];
+            arr[j - 1] = arr[j];
+            arr[j] = tmp;
+            j = j - 1;
+        }
+    }
+    return;
+}
+
+void sort_pairs(int x[], int y[], int len) {
+    int i;
+    int j;
+    for (i = 2; i <= len; i = i + 1) {
+        j = i;
+        for (; j > 1 && x[j - 1] > x[j]; ) {
+            int tx;
+            int ty;
+            tx = x[j - 1];
+            x[j - 1] = x[j];
+            x[j] = tx;
+            ty = y[j - 1];
+            y[j - 1] = y[j];
+            y[j] = ty;
+            j = j - 1;
+        }
+    }
+    return;
+}
+
+int found_1_r(int now) {
+    int l;
+    int r;
+    int mid;
+    int tmp;
+    l = 1;
+    r = a0;
+    tmp = 0;
+    for (; l <= r; ) {
+        mid = (l + r) / 2;
+        if (a[mid] <= now) {
+            tmp = mid;
+            l = mid + 1;
+        } else {
+            r = mid - 1;
+        }
+    }
+    return tmp;
+}
+
+int found_1_l(int now) {
+    int l;
+    int r;
+    int mid;
+    int tmp;
+    l = 1;
+    r = a0;
+    tmp = 0;
+    for (; l <= r; ) {
+        mid = (l + r) / 2;
+        if (a[mid] < now) {
+            tmp = mid;
+            l = mid + 1;
+        } else {
+            r = mid - 1;
+        }
+    }
+    return tmp;
+}
+
+int found_2_r(int now) {
+    int l;
+    int r;
+    int mid;
+    int tmp;
+    l = 1;
+    r = b0;
+    tmp = 0;
+    for (; l <= r; ) {
+        mid = (l + r) / 2;
+        if (b[mid] <= now) {
+            tmp = mid;
+            l = mid + 1;
+        } else {
+            r = mid - 1;
+        }
+    }
+    return tmp;
+}
+
+int found_2_l(int now) {
+    int l;
+    int r;
+    int mid;
+    int tmp;
+    l = 1;
+    r = b0;
+    tmp = 0;
+    for (; l <= r; ) {
+        mid = (l + r) / 2;
+        if (b[mid] < now) {
+            tmp = mid;
+            l = mid + 1;
+        } else {
+            r = mid - 1;
+        }
+    }
+    return tmp;
+}
+
+void get_ans(int x, int y) {
+    int ans;
+    int l;
+    int r;
+    int mid;
+    ans = 0;
+
+    l = 1;
+    r = a0;
+    for (; l <= r; ) {
+        int tmp_r;
+        int tmp_l;
+        mid = (l + r) / 2;
+        tmp_r = mid + found_2_r(a[mid] + y * 2);
+        tmp_l = mid + found_2_l(a[mid] + y * 2);
+        if (tmp_l <= x && x <= tmp_r) {
+            ans = a[mid] + y;
+            break;
+        }
+        if (tmp_l > x) {
+            r = mid - 1;
+        } else {
+            l = mid + 1;
+        }
+    }
+
+    l = 1;
+    r = b0;
+    for (; l <= r; ) {
+        int tmp_l;
+        int tmp_r;
+        mid = (l + r) / 2;
+        tmp_l = mid + found_1_l(b[mid] - y * 2);
+        tmp_r = mid + found_1_r(b[mid] - y * 2);
+        if (tmp_l <= x && x <= tmp_r) {
+            ans = b[mid] - y;
+            break;
+        }
+        if (tmp_l > x) {
+            r = mid - 1;
+        } else {
+            l = mid + 1;
+        }
+    }
+
+    printf("%d\n", ans);
+    return;
+}
+
+int main() {
+    int i;
+
+    a0 = 0;
+    b0 = 0;
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        int x;
+        x = getint();
+        hx[i] = x;
+        hid[i] = i;
+    }
+    for (i = 1; i <= n; i = i + 1) {
+        int t;
+        t = getint();
+        if (t == 1) {
+            a0 = a0 + 1;
+            a[a0] = hx[i];
+        } else {
+            b0 = b0 + 1;
+            b[b0] = hx[i];
+        }
+    }
+
+    sort_arr(a, a0);
+    sort_arr(b, b0);
+    sort_pairs(hx, hid, n);
+
+    for (i = 1; i <= n; i = i + 1) {
+        idpos[hid[i]] = i;
+    }
+
+    m = getint();
+    for (i = 1; i <= m; i = i + 1) {
+        int x;
+        int y;
+        x = getint();
+        y = getint();
+        get_ans(idpos[x + 1], y);
+    }
+    return 0;
+}

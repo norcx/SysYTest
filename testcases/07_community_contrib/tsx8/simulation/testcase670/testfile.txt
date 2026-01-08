@@ -1,0 +1,119 @@
+/* Description:
+ * Computes a minimum value using integer-only arithmetic and prints the result
+ * scaled by 100 (i.e., "cents") as an integer.
+ *
+ * Input format (all integers, one per line):
+ *   n
+ *   a1
+ *   b1
+ *   ...
+ *   an
+ *   bn
+ *   T
+ */
+
+const int MAXN = 10000;
+
+int n;
+int a[MAXN + 5], b[MAXN + 5];
+int sa1[MAXN + 5], sb1[MAXN + 5], sa2[MAXN + 5], sb2[MAXN + 5];
+
+int min_int(int x, int y) {
+    if (x < y) return x;
+    return y;
+}
+
+int gcd_int(int x, int y) {
+    int t;
+    if (x < 0) x = -x;
+    if (y < 0) y = -y;
+    for (;y != 0;) {
+        t = x % y;
+        x = y;
+        y = t;
+    }
+    if (x == 0) return 1;
+    return x;
+}
+
+/* Round( (numer / denom) * 100 ) for positive values, using half-up. */
+int frac_to_cents(int numer, int denom) {
+    int g;
+    int scaled_numer;
+    if (denom == 0) return 0;
+    if (numer <= 0) return 0;
+    g = gcd_int(numer, denom);
+    numer = numer / g;
+    denom = denom / g;
+    scaled_numer = numer * 100;
+    return (scaled_numer + denom / 2) / denom;
+}
+
+int main() {
+    int i;
+    int T;
+    int ans_cents;
+
+    n = getint();
+    sa1[0] = 0;
+    sb1[0] = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        b[i] = getint();
+        sa1[i] = sa1[i - 1] + a[i];
+        sb1[i] = sb1[i - 1] + b[i];
+    }
+    T = getint();
+
+    sa2[n + 1] = 0;
+    sb2[n + 1] = 0;
+    for (i = n; i >= 1; i = i - 1) {
+        sa2[i] = sa2[i + 1] + a[i];
+        sb2[i] = sb2[i + 1] + b[i];
+    }
+
+    ans_cents = 2000000000;
+    for (i = 0; i <= n; i = i + 1) {
+        int A, B, C, D, S1, S2, SB;
+        int cand;
+
+        A = sa1[i];
+        B = sb1[i];
+        C = sa2[i + 1];
+        D = sb2[i + 1];
+        S1 = A + B;
+        S2 = C + D;
+        SB = B + D;
+
+        if (i < n) {
+            if (S2 != 0) {
+                if (SB <= S2) {
+                    cand = frac_to_cents(C * SB * T, S2);
+                    if (cand < ans_cents) ans_cents = cand;
+                } else {
+                    if (S1 != 0) {
+                        cand = C * T * 100 + frac_to_cents(A * (SB - S2) * T, S1);
+                        if (cand < ans_cents) ans_cents = cand;
+                    }
+                }
+            }
+        }
+
+        if (i != 0) {
+            if (S1 != 0) {
+                if (SB <= S1) {
+                    cand = frac_to_cents(A * SB * T, S1);
+                    if (cand < ans_cents) ans_cents = cand;
+                } else {
+                    if (S2 != 0) {
+                        cand = A * T * 100 + frac_to_cents(C * (SB - S1) * T, S2);
+                        if (cand < ans_cents) ans_cents = cand;
+                    }
+                }
+            }
+        }
+    }
+
+    printf("%d\n", ans_cents);
+    return 0;
+}

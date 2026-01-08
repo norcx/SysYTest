@@ -1,0 +1,133 @@
+int head[32];
+int to_arr[64];
+int nxt[64];
+int edge_idx;
+int stack_arr[32];
+int stack_top;
+int in_stack[32];
+int dfn[32];
+int low[32];
+int timer_val;
+int comp_id[32];
+int comp_size[32];
+int comp_count;
+int out_deg[32];
+int n;
+int m;
+
+void add_edge(int u, int v) {
+    edge_idx = edge_idx + 1;
+    to_arr[edge_idx] = v;
+    nxt[edge_idx] = head[u];
+    head[u] = edge_idx;
+}
+
+void tarjan(int u) {
+    int i;
+    int v;
+    int loop_flag;
+    timer_val = timer_val + 1;
+    dfn[u] = timer_val;
+    low[u] = timer_val;
+    stack_arr[stack_top] = u;
+    stack_top = stack_top + 1;
+    in_stack[u] = 1;
+    for (i = head[u]; i != 0; i = nxt[i]) {
+        v = to_arr[i];
+        if (dfn[v] == 0) {
+            tarjan(v);
+            if (low[u] > low[v]) {
+                low[u] = low[v];
+            }
+        } else {
+            if (in_stack[v] != 0) {
+                if (low[u] > dfn[v]) {
+                    low[u] = dfn[v];
+                }
+            }
+        }
+    }
+    if (low[u] == dfn[u]) {
+        loop_flag = 1;
+        comp_count = comp_count + 1;
+        for (; loop_flag; ) {
+            stack_top = stack_top - 1;
+            v = stack_arr[stack_top];
+            in_stack[v] = 0;
+            comp_id[v] = comp_count;
+            comp_size[comp_count] = comp_size[comp_count] + 1;
+            if (v == u) {
+                loop_flag = 0;
+            }
+        }
+    }
+}
+
+int main() {
+    int i;
+    int u;
+    int v;
+    int idx;
+    int sink_comp;
+    int ans;
+    n = getint();
+    m = getint();
+    for (i = 0; i < 32; i = i + 1) {
+        head[i] = 0;
+        to_arr[i] = 0;
+        nxt[i] = 0;
+        stack_arr[i] = 0;
+        in_stack[i] = 0;
+        dfn[i] = 0;
+        low[i] = 0;
+        comp_id[i] = 0;
+        comp_size[i] = 0;
+        out_deg[i] = 0;
+    }
+    for (i = 32; i < 64; i = i + 1) {
+        to_arr[i] = 0;
+        nxt[i] = 0;
+    }
+    edge_idx = 0;
+    stack_top = 0;
+    timer_val = 0;
+    comp_count = 0;
+    for (i = 0; i < m; i = i + 1) {
+        u = getint();
+        v = getint();
+        add_edge(u, v);
+    }
+    for (i = 1; i <= n; i = i + 1) {
+        if (dfn[i] == 0) {
+            tarjan(i);
+        }
+    }
+    for (u = 1; u <= n; u = u + 1) {
+        idx = head[u];
+        for (; idx != 0; ) {
+            v = to_arr[idx];
+            if (comp_id[u] != comp_id[v]) {
+                out_deg[comp_id[u]] = out_deg[comp_id[u]] + 1;
+            }
+            idx = nxt[idx];
+        }
+    }
+    sink_comp = 0;
+    for (i = 1; i <= comp_count; i = i + 1) {
+        if (out_deg[i] == 0) {
+            if (sink_comp == 0) {
+                sink_comp = i;
+            } else {
+                printf("%d\n", 0);
+                return 0;
+            }
+        }
+    }
+    if (sink_comp == 0) {
+        printf("%d\n", 0);
+        return 0;
+    }
+    ans = comp_size[sink_comp];
+    printf("%d\n", ans);
+    return 0;
+}

@@ -1,0 +1,169 @@
+/* Description:
+ *   Converted from C/C++ to Strict SysY (scaled down to fit 4MB/1D-array rules).
+ *   Reads:
+ *     n
+ *     w1 h1
+ *     ...
+ *     wn hn
+ *   Prints:
+ *     ans
+ */
+
+const int MAXN = 40;
+const int MAXH = 50;
+const int MAXJ = 21;
+const int INF = 1047483647;
+
+int n;
+int ans;
+int H;
+int w[MAXN + 1];
+int h[MAXN + 1];
+
+int f0[MAXJ * (MAXH + 1)];
+int f1[MAXJ * (MAXH + 1)];
+int g0[MAXJ * (MAXH + 1)];
+int g1[MAXJ * (MAXH + 1)];
+
+int idx(int j, int k) {
+    return j * (MAXH + 1) + k;
+}
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int now;
+    int curIndex;
+    int curVal;
+    int left;
+    int val;
+    int area;
+
+    n = getint();
+    H = 0;
+    ans = INF;
+
+    for (i = 1; i <= n; i = i + 1) {
+        w[i] = getint();
+        h[i] = getint();
+        if (w[i] > H) H = w[i];
+        if (h[i] > H) H = h[i];
+    }
+
+    for (j = 0; j < MAXJ; j = j + 1) {
+        for (k = 0; k <= MAXH; k = k + 1) {
+            f0[idx(j, k)] = INF;
+            f1[idx(j, k)] = INF;
+            g0[idx(j, k)] = INF;
+            g1[idx(j, k)] = INF;
+        }
+    }
+
+    f0[idx(0, 0)] = 0;
+    for (k = 0; k <= H; k = k + 1) g0[idx(0, k)] = 0;
+
+    now = 1;
+    for (i = 1; i <= n; i = i + 1) {
+        if (now == 0) {
+            for (j = n / 2; j >= 0; j = j - 1) {
+                for (k = 0; k <= H; k = k + 1) {
+                    curIndex = idx(j, k);
+                    f0[curIndex] = INF;
+                    g0[curIndex] = INF;
+
+                    if (k > h[i]) {
+                        if (f1[curIndex] != INF) {
+                            curVal = f1[curIndex] + w[i];
+                            if (curVal < f0[curIndex]) f0[curIndex] = curVal;
+                        }
+                    }
+                    if (k > w[i] && j > 0) {
+                        val = f1[idx(j - 1, k)];
+                        if (val != INF) {
+                            curVal = val + h[i];
+                            if (curVal < f0[curIndex]) f0[curIndex] = curVal;
+                        }
+                    }
+                    if (k == h[i]) {
+                        if (g1[curIndex] != INF) {
+                            curVal = g1[curIndex] + w[i];
+                            if (curVal < f0[curIndex]) f0[curIndex] = curVal;
+                        }
+                    }
+                    if (k == w[i] && j > 0) {
+                        val = g1[idx(j - 1, k)];
+                        if (val != INF) {
+                            curVal = val + h[i];
+                            if (curVal < f0[curIndex]) f0[curIndex] = curVal;
+                        }
+                    }
+
+                    g0[curIndex] = f0[curIndex];
+                    if (k != 0) {
+                        left = g0[curIndex - 1];
+                        if (left < g0[curIndex]) g0[curIndex] = left;
+                    }
+                }
+            }
+        } else {
+            for (j = n / 2; j >= 0; j = j - 1) {
+                for (k = 0; k <= H; k = k + 1) {
+                    curIndex = idx(j, k);
+                    f1[curIndex] = INF;
+                    g1[curIndex] = INF;
+
+                    if (k > h[i]) {
+                        if (f0[curIndex] != INF) {
+                            curVal = f0[curIndex] + w[i];
+                            if (curVal < f1[curIndex]) f1[curIndex] = curVal;
+                        }
+                    }
+                    if (k > w[i] && j > 0) {
+                        val = f0[idx(j - 1, k)];
+                        if (val != INF) {
+                            curVal = val + h[i];
+                            if (curVal < f1[curIndex]) f1[curIndex] = curVal;
+                        }
+                    }
+                    if (k == h[i]) {
+                        if (g0[curIndex] != INF) {
+                            curVal = g0[curIndex] + w[i];
+                            if (curVal < f1[curIndex]) f1[curIndex] = curVal;
+                        }
+                    }
+                    if (k == w[i] && j > 0) {
+                        val = g0[idx(j - 1, k)];
+                        if (val != INF) {
+                            curVal = val + h[i];
+                            if (curVal < f1[curIndex]) f1[curIndex] = curVal;
+                        }
+                    }
+
+                    g1[curIndex] = f1[curIndex];
+                    if (k != 0) {
+                        left = g1[curIndex - 1];
+                        if (left < g1[curIndex]) g1[curIndex] = left;
+                    }
+                }
+            }
+        }
+        now = 1 - now;
+    }
+
+    now = 1 - now;
+    for (j = 0; j <= n / 2; j = j + 1) {
+        for (k = 0; k <= H; k = k + 1) {
+            curIndex = idx(j, k);
+            if (now == 0) val = f0[curIndex];
+            else val = f1[curIndex];
+            if (val != INF) {
+                area = val * k;
+                if (area < ans) ans = area;
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

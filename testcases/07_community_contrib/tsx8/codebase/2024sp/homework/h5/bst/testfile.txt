@@ -1,0 +1,86 @@
+/* Description:
+ *   Build a BST by insertion order; print (key, depth) for each leaf in DFS preorder.
+ */
+int key_arr[512];
+int left_arr[512];
+int right_arr[512];
+int height_arr[512];
+int stack_arr[512];
+int node_count;
+
+void insert(int k) {
+    int p;
+    int ptr;
+    int pre;
+    int flag;
+    p = node_count;
+    node_count = node_count + 1;
+    key_arr[p] = k;
+    left_arr[p] = -1;
+    right_arr[p] = -1;
+    height_arr[p] = 1;
+
+    ptr = 0;
+    pre = 0;
+    flag = 0;
+    for (; ptr != -1;) {
+        pre = ptr;
+        if (key_arr[ptr] > k) {
+            ptr = left_arr[ptr];
+            flag = 0;
+        } else {
+            ptr = right_arr[ptr];
+            flag = 1;
+        }
+        height_arr[p] = height_arr[p] + 1;
+    }
+
+    if (flag == 1) {
+        right_arr[pre] = p;
+    } else {
+        left_arr[pre] = p;
+    }
+    return;
+}
+
+int main() {
+    int n;
+    int i;
+    int p;
+    n = getint();
+    if (n <= 0) {
+        return 0;
+    }
+
+    node_count = 1;
+    left_arr[0] = -1;
+    right_arr[0] = -1;
+    height_arr[0] = 1;
+    key_arr[0] = getint();
+
+    for (i = 1; i < n; i = i + 1) {
+        insert(getint());
+    }
+
+    p = 0;
+    stack_arr[0] = 0;
+    for (; p >= 0;) {
+        int ptr;
+        ptr = stack_arr[p];
+        p = p - 1;
+
+        if (left_arr[ptr] == -1 && right_arr[ptr] == -1) {
+            printf("%d %d\n", key_arr[ptr], height_arr[ptr]);
+        }
+        if (right_arr[ptr] != -1) {
+            p = p + 1;
+            stack_arr[p] = right_arr[ptr];
+        }
+        if (left_arr[ptr] != -1) {
+            p = p + 1;
+            stack_arr[p] = left_arr[ptr];
+        }
+    }
+
+    return 0;
+}

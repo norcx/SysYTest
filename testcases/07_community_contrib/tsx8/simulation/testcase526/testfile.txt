@@ -1,0 +1,54 @@
+/*
+  Greedy grouping after sorting:
+  Maintain num groups with current lengths t[1..num].
+  For each a[i] (nondecreasing), place it into the first group whose length <= a[i],
+  then increment that group's length; otherwise create a new group.
+  Output num.
+*/
+
+int n;
+int a[5005];
+int t[5005];
+
+int main() {
+    int i;
+    int j;
+    int tmp;
+    int num;
+    int flag;
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = i + 1; j <= n; j = j + 1) {
+            if (a[j] < a[i]) {
+                tmp = a[i];
+                a[i] = a[j];
+                a[j] = tmp;
+            }
+        }
+    }
+
+    num = 1;
+    t[1] = 1;
+
+    for (i = 2; i <= n; i = i + 1) {
+        flag = 0;
+        for (j = 1; j <= num; j = j + 1) {
+            if (flag == 0 && a[i] >= t[j]) {
+                t[j] = t[j] + 1;
+                flag = 1;
+            }
+        }
+        if (flag == 0) {
+            num = num + 1;
+            t[num] = 1;
+        }
+    }
+
+    printf("%d", num);
+    return 0;
+}

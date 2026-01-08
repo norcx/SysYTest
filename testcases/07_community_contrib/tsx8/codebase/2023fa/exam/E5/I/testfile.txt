@@ -1,0 +1,118 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E5/I.c`.
+ *   Prints a symmetric 0/1 pattern derived from the original bitmask logic:
+ *   original output used '1' and ' ' (space); this SysY version prints 1 and 0.
+ */
+
+const int BLOCK = 256; /* number of 4x4 blocks per axis */
+const int MA_SIZE = 65536; /* 256 * 256 */
+
+int ma[65536];
+int pow2_arr[16] = {
+    1, 2, 4, 8,
+    16, 32, 64, 128,
+    256, 512, 1024, 2048,
+    4096, 8192, 16384, 32768
+};
+
+int i;
+int j;
+
+int pow2(int p) {
+    return pow2_arr[p];
+}
+
+int idx_of(int x, int y) {
+    return (x / 4) * BLOCK + (y / 4);
+}
+
+int pos_of(int x, int y) {
+    return (y % 4) * 4 + (x % 4);
+}
+
+int get_bit_xy(int x, int y) {
+    int idx;
+    int pos;
+    int cell;
+    idx = idx_of(x, y);
+    pos = pos_of(x, y);
+    cell = ma[idx];
+    return (cell / pow2(pos)) % 2;
+}
+
+void set_bit_xy(int x, int y) {
+    int idx;
+    int pos;
+    int cell;
+    idx = idx_of(x, y);
+    pos = pos_of(x, y);
+    cell = ma[idx];
+    if (((cell / pow2(pos)) % 2) == 0) {
+        ma[idx] = cell + pow2(pos);
+    }
+}
+
+void f(int x) {
+    if (x == 1) {
+        if (((ma[0] / pow2(5)) % 2) == 0) {
+            ma[0] = ma[0] + pow2(5);
+        }
+        return;
+    }
+
+    for (i = (x / 2) + 1; i <= x; i = i + 1) {
+        for (j = (x / 2) + 1; j <= x; j = j + 1) {
+            set_bit_xy(i, j);
+        }
+    }
+
+    f(x / 2);
+
+    for (i = 0; i <= (x / 2); i = i + 1) {
+        for (j = 0; j <= (x / 2); j = j + 1) {
+            if (get_bit_xy(i, j) == 1) {
+                set_bit_xy(x - i, j);
+                set_bit_xy(i, x - j);
+            }
+        }
+    }
+}
+
+int main() {
+    int k;
+    int size;
+    int half;
+    int ii;
+    int jj;
+    int bit;
+
+    k = getint();
+    if (k == 0) {
+        printf("%d\n", 11);
+        printf("%d\n", 11);
+        return 0;
+    }
+
+    size = pow2(k + 1);
+    half = pow2(k) - 1;
+
+    f(pow2(k) - 1);
+
+    for (i = 0; i < size; i = i + 1) {
+        for (j = 0; j < size; j = j + 1) {
+            ii = i;
+            jj = j;
+            if (ii > half) {
+                ii = (size - 1) - ii;
+            }
+            if (jj > half) {
+                jj = (size - 1) - jj;
+            }
+            bit = get_bit_xy(ii, jj);
+            printf("%d", 1 - bit);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}

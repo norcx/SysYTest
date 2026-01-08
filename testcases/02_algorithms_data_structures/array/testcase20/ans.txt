@@ -1,0 +1,7 @@
+add(g_arr[0], g_arr[1]) = 30
+mul(local_arr[2], local_arr[3]) = 12
+add(g_arr[5], local_arr[5]) = 66
+compute = 62
+add(g_arr[0]+1, g_arr[1]*2) = 51
+Sum of adds: 165
+add(add(g_arr[0],g_arr[1]), mul(local_arr[0],local_arr[1])) = 32

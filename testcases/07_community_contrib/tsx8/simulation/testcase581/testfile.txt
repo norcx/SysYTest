@@ -1,0 +1,58 @@
+/* Description:
+ *   Converted into Strict SysY.
+ *   Original logic preserved; removed fast I/O and file redirection.
+ */
+
+const int MAXN = 2048;
+
+int a[MAXN];
+int q[MAXN];
+
+int main() {
+    int T;
+    int n;
+    int m;
+    int D;
+    int L;
+    int h;
+    int t;
+    int i;
+    int ans;
+
+    T = getint();
+    for (; T > 0; T = T - 1) {
+        n = getint();
+        m = getint();
+        D = getint();
+        L = getint();
+
+        h = 1;
+        t = m;
+
+        for (i = 1; i <= m; i = i + 1) {
+            q[i] = 0;
+        }
+
+        for (i = 1; i <= n; i = i + 1) {
+            a[i] = getint();
+            for (; h <= t && a[q[h]] + D < a[i]; h = h + 1) {
+            }
+            if (h <= t) {
+                h = h + 1;
+                t = t + 1;
+                q[t] = i;
+            }
+        }
+
+        for (; h <= t && a[q[h]] + D < L; h = h + 1) {
+        }
+
+        ans = t - h + 1;
+        if (ans >= m) {
+            printf("Excited\n");
+        } else {
+            printf("%d\n", ans);
+        }
+    }
+    return 0;
+}

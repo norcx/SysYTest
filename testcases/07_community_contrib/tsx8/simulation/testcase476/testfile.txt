@@ -1,0 +1,261 @@
+/* Description:
+ *   Converted from the given C++ "warchess" simulator into Strict SysY.
+ *
+ *   Input encoding (all via getint()):
+ *     n, m, C, E
+ *     g[1..n][1..m]
+ *     For i = 1..C:
+ *       hp, at, mv, ad1, ad2, x, y, gr
+ *     Then E commands, each starts with cmd:
+ *       1 now_gr                (Round)
+ *       2 id                    (Action: select character id)
+ *       3 nx ny                 (Move)
+ *       4 target_id             (Attack)
+ *       5 target_id             (Drive out)
+ *
+ *   Output matches the original logic:
+ *     - Move: prints remaining mv, or "INVALID"
+ *     - Attack: prints target hp if still alive, else "INVALID"
+ *     - Drive out: prints target hp (<=0) if killed, else "INVALID"
+ */
+
+const int STRIDE = 110;
+const int GRID_SIZE = 12100;
+const int MAXC = 110;
+const int QSIZE = 40000;
+
+int n, m, C, E;
+int now_gr, now_id;
+
+int g[GRID_SIZE];
+int bo[GRID_SIZE];
+int dis[GRID_SIZE];
+int inq[GRID_SIZE];
+int q[QSIZE];
+
+int ch_hp[MAXC];
+int ch_at[MAXC];
+int ch_mv[MAXC];
+int ch_ad1[MAXC];
+int ch_ad2[MAXC];
+int ch_x[MAXC];
+int ch_y[MAXC];
+int ch_gr[MAXC];
+int ch_die[MAXC];
+
+int now_hp, now_at, now_mv, now_ad1, now_ad2, now_x, now_y, now_ch_gr, now_die;
+
+int dx[5] = {0, 1, 0, -1, 0};
+int dy[5] = {0, 0, 1, 0, -1};
+
+int abs_int(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+int judge_0(int x, int y) {
+    int i, nx, ny, idx;
+    int other;
+    other = 1 - now_gr;
+    for (i = 1; i <= 4; i = i + 1) {
+        nx = x + dx[i];
+        ny = y + dy[i];
+        if (nx < 1 || ny < 1 || nx > n || ny > m) {
+        } else {
+            idx = nx * STRIDE + ny;
+            if (bo[idx] == other) return 1;
+        }
+    }
+    return 0;
+}
+
+int move_to(int tx, int ty) {
+    int i, j, head, tail;
+    int start, target;
+    int pos, nowx, nowy;
+    int k, nx, ny, nid;
+    int mv_left;
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            pos = i * STRIDE + j;
+            dis[pos] = -1;
+            inq[pos] = 0;
+        }
+    }
+
+    start = now_x * STRIDE + now_y;
+    dis[start] = now_mv;
+    inq[start] = 1;
+    head = 0;
+    tail = 0;
+    q[tail] = start;
+    tail = tail + 1;
+
+    for (head = 0; head < tail; head = head + 1) {
+        pos = q[head];
+        inq[pos] = 0;
+        nowx = pos / STRIDE;
+        nowy = pos - nowx * STRIDE;
+
+        for (k = 1; k <= 4; k = k + 1) {
+            nx = nowx + dx[k];
+            ny = nowy + dy[k];
+            if (nx < 1 || nx > n || ny < 1 || ny > m) {
+            } else {
+                nid = nx * STRIDE + ny;
+                if (bo[nid] != -1) {
+                } else {
+                    mv_left = dis[pos] - g[nid];
+                    if (mv_left < 0) {
+                    } else {
+                        if (judge_0(nx, ny) != 0) {
+                            if (dis[nid] == -1) dis[nid] = 0;
+                        } else {
+                            if (dis[nid] == -1 || dis[nid] < mv_left) {
+                                dis[nid] = mv_left;
+                                if (inq[nid] == 0) {
+                                    inq[nid] = 1;
+                                    q[tail] = nid;
+                                    tail = tail + 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    target = tx * STRIDE + ty;
+    if (dis[target] == -1) return 0;
+    return 1;
+}
+
+int main() {
+    int i, j, k;
+    int cmd;
+    int idx;
+    int nx, ny;
+    int tmp, dist;
+
+    n = getint();
+    m = getint();
+    C = getint();
+    E = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            idx = i * STRIDE + j;
+            g[idx] = getint();
+            bo[idx] = -1;
+        }
+    }
+
+    for (i = 1; i <= C; i = i + 1) {
+        ch_hp[i] = getint();
+        ch_at[i] = getint();
+        ch_mv[i] = getint();
+        ch_ad1[i] = getint();
+        ch_ad2[i] = getint();
+        ch_x[i] = getint();
+        ch_y[i] = getint();
+        ch_gr[i] = getint();
+        ch_die[i] = 0;
+        bo[ch_x[i] * STRIDE + ch_y[i]] = ch_gr[i];
+    }
+
+    now_gr = 0;
+    now_id = 0;
+    now_hp = 0;
+    now_at = 0;
+    now_mv = 0;
+    now_ad1 = 0;
+    now_ad2 = 0;
+    now_x = 0;
+    now_y = 0;
+    now_ch_gr = 0;
+    now_die = 0;
+
+    for (k = 1; k <= E; k = k + 1) {
+        cmd = getint();
+        if (cmd == 1) {
+            now_gr = getint();
+        } else if (cmd == 2) {
+            now_id = getint();
+            now_hp = ch_hp[now_id];
+            now_at = ch_at[now_id];
+            now_mv = ch_mv[now_id];
+            now_ad1 = ch_ad1[now_id];
+            now_ad2 = ch_ad2[now_id];
+            now_x = ch_x[now_id];
+            now_y = ch_y[now_id];
+            now_ch_gr = ch_gr[now_id];
+            now_die = ch_die[now_id];
+        } else if (cmd == 3) {
+            nx = getint();
+            ny = getint();
+            if (now_die != 0) {
+                printf("INVALID\n");
+            } else {
+                if (move_to(nx, ny) != 0) {
+                    printf("%d\n", dis[nx * STRIDE + ny]);
+                    bo[now_x * STRIDE + now_y] = -1;
+                    bo[nx * STRIDE + ny] = now_ch_gr;
+                    now_x = nx;
+                    now_y = ny;
+                    ch_x[now_id] = nx;
+                    ch_y[now_id] = ny;
+                } else {
+                    printf("INVALID\n");
+                }
+            }
+        } else if (cmd == 4) {
+            tmp = getint();
+            if (ch_die[tmp] != 0) {
+                printf("INVALID\n");
+            } else if (now_ch_gr == ch_gr[tmp]) {
+                printf("INVALID\n");
+            } else {
+                dist = abs_int(now_x - ch_x[tmp]) + abs_int(now_y - ch_y[tmp]);
+                if (dist < now_ad1 || dist > now_ad2) {
+                    printf("INVALID\n");
+                } else {
+                    ch_hp[tmp] = ch_hp[tmp] - now_at;
+                    if (ch_hp[tmp] <= 0) {
+                        bo[ch_x[tmp] * STRIDE + ch_y[tmp]] = -1;
+                        ch_die[tmp] = 1;
+                        printf("INVALID\n");
+                    } else {
+                        printf("%d\n", ch_hp[tmp]);
+                    }
+                }
+            }
+        } else if (cmd == 5) {
+            tmp = getint();
+            if (ch_die[tmp] != 0) {
+                printf("INVALID\n");
+            } else if (now_ch_gr == ch_gr[tmp]) {
+                printf("INVALID\n");
+            } else {
+                dist = abs_int(now_x - ch_x[tmp]) + abs_int(now_y - ch_y[tmp]);
+                if (dist < now_ad1 || dist > now_ad2) {
+                    printf("INVALID\n");
+                } else {
+                    ch_hp[tmp] = ch_hp[tmp] - now_at;
+                    if (ch_hp[tmp] <= 0) {
+                        bo[ch_x[tmp] * STRIDE + ch_y[tmp]] = -1;
+                        ch_die[tmp] = 1;
+                        printf("%d\n", ch_hp[tmp]);
+                    } else {
+                        printf("INVALID\n");
+                    }
+                }
+            }
+        } else {
+            printf("INVALID\n");
+        }
+    }
+
+    return 0;
+}

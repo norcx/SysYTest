@@ -1,0 +1,52 @@
+/* Description:
+ * Converted from `codes/2023fa/contest/C4/H.c`.
+ * For each test case (n, p), prints a constructed ordering.
+ */
+
+int vis[100010];
+
+int main() {
+    int T;
+    int n;
+    int p;
+    int i;
+    int j;
+    int x;
+    int t;
+
+    T = getint();
+    for (t = 0; t < T; t = t + 1) {
+        n = getint();
+        p = getint();
+
+        x = n / p;
+
+        for (i = 1; i <= x; i = i + 1) {
+            printf("%d ", p * i);
+            vis[p * i] = 1;
+        }
+
+        for (i = 1; i <= p; i = i + 1) {
+            for (j = 1; j <= x; j = j + 1) {
+                if (vis[p * j - i] || vis[p * (j - 1) + i] ||
+                    (p * j - i) == (p * (j - 1) + i)) {
+                    continue;
+                }
+                printf("%d %d ", p * (j - 1) + i, p * j - i);
+                vis[p * j - i] = 1;
+                vis[p * (j - 1) + i] = 1;
+            }
+        }
+
+        for (i = 1; i <= n; i = i + 1) {
+            if (!vis[i]) {
+                printf("%d ", i);
+            }
+            vis[i] = 0;
+        }
+        vis[0] = 0;
+        printf("\n");
+    }
+
+    return 0;
+}

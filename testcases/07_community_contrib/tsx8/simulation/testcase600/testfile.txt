@@ -1,0 +1,38 @@
+/* Description:
+ *   Deterministic testcase generator converted from a C++ RNG-based program.
+ *   It prints:
+ *     n (=500)
+ *     then n lines: "u v" with 1 <= u,v <= n
+ */
+
+int seed = 1;
+
+int next_seed() {
+    seed = seed * 17 + 23;
+    seed = seed % 1000000;
+    return seed;
+}
+
+int next_in_range(int n) {
+    int x;
+    x = next_seed();
+    x = x % n;
+    x = x + 1;
+    return x;
+}
+
+int main() {
+    int n;
+    int i;
+    int a;
+    int b;
+
+    n = 500;
+    printf("%d\n", n);
+    for (i = 1; i <= n; i = i + 1) {
+        a = next_in_range(n);
+        b = next_in_range(n);
+        printf("%d %d\n", a, b);
+    }
+    return 0;
+}

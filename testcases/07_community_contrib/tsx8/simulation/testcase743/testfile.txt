@@ -1,0 +1,60 @@
+/* Description:
+ *   Adapted from a differential-testing harness that repeatedly prints an
+ *   iteration counter and stops when two "program outputs" differ.
+ *
+ * Input:
+ *   limit   - maximum iterations
+ *   bug_at  - iteration to introduce a mismatch (use -1 for never)
+ *   seed    - seed for deterministic data generation
+ *
+ * Output:
+ *   Prints 1..k (one per line), where k is the first mismatching iteration
+ *   (or limit if no mismatch happens).
+ */
+
+int gen_data(int seed, int cnt) {
+    int x;
+    x = seed + cnt * 17;
+    x = x % 1000;
+    if (x < 0) x = x + 1000;
+    return x;
+}
+
+int prog1(int data, int cnt) {
+    int y;
+    y = data * 3 + cnt * 5 + 7;
+    y = y % 997;
+    if (y < 0) y = y + 997;
+    return y;
+}
+
+int prog2(int data, int cnt, int bug_at) {
+    int y;
+    y = prog1(data, cnt);
+    if (cnt == bug_at) y = y + 1;
+    return y;
+}
+
+int main() {
+    int limit;
+    int bug_at;
+    int seed;
+    int cnt;
+    int data;
+    int a;
+    int b;
+
+    limit = getint();
+    bug_at = getint();
+    seed = getint();
+
+    if (limit < 0) limit = 0;
+    for (cnt = 1; cnt <= limit; cnt = cnt + 1) {
+        printf("%d\n", cnt);
+        data = gen_data(seed, cnt);
+        a = prog1(data, cnt);
+        b = prog2(data, cnt, bug_at);
+        if (a != b) break;
+    }
+    return 0;
+}

@@ -1,0 +1,71 @@
+int stones[32];
+int prefix_sums[32];
+int dp_min[2048];
+int dp_max[2048];
+
+int get_index(int left, int right) {
+    return left * 64 + right;
+}
+
+int range_sum(int left, int right) {
+    return prefix_sums[right] - prefix_sums[left - 1];
+}
+
+int main() {
+    int n;
+    int i;
+    int j;
+    int len;
+    int k;
+    int total;
+    int position;
+    int ans_min;
+    int ans_max;
+    int left_index;
+    int right_index;
+    int candidate;
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        stones[i] = getint();
+        stones[i + n] = stones[i];
+    }
+    for (i = 1; i <= n + n; i = i + 1) {
+        prefix_sums[i] = prefix_sums[i - 1] + stones[i];
+    }
+    for (len = 2; len <= n; len = len + 1) {
+        for (i = 1; i <= n + n - len + 1; i = i + 1) {
+            j = i + len - 1;
+            total = range_sum(i, j);
+            position = get_index(i, j);
+            dp_min[position] = 2147483647;
+            dp_max[position] = 0;
+            for (k = i; k <= j - 1; k = k + 1) {
+                left_index = get_index(i, k);
+                right_index = get_index(k + 1, j);
+                candidate = dp_min[left_index] + dp_min[right_index] + total;
+                if (candidate < dp_min[position]) {
+                    dp_min[position] = candidate;
+                }
+                candidate = dp_max[left_index] + dp_max[right_index] + total;
+                if (candidate > dp_max[position]) {
+                    dp_max[position] = candidate;
+                }
+            }
+        }
+    }
+    ans_min = 2147483647;
+    ans_max = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        j = i + n - 1;
+        position = get_index(i, j);
+        if (dp_min[position] < ans_min) {
+            ans_min = dp_min[position];
+        }
+        if (dp_max[position] > ans_max) {
+            ans_max = dp_max[position];
+        }
+    }
+    printf("%d\n", ans_min);
+    printf("%d\n", ans_max);
+    return 0;
+}

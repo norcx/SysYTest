@@ -1,0 +1,52 @@
+/* Description:
+ *   Converted from a C++ DP snippet (prints intermediate f[i]).
+ *   Strict SysY: int-only, getint input, printf with %d and \n only.
+ */
+
+const int MAXN = 1100;
+
+int n;
+int m;
+int a[MAXN];
+int b[MAXN];
+int sum[MAXN];
+int f[MAXN];
+
+int imax(int x, int y) {
+    if (x > y) return x;
+    return y;
+}
+
+int main() {
+    int i;
+    int j;
+    int cand;
+
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+
+    sum[0] = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        b[i] = getint();
+        sum[i] = sum[i - 1] + b[i];
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        f[i] = 0;
+        if (m >= a[i]) f[i] = m - a[i] + sum[i];
+        for (j = 1; j < i; j = j + 1) {
+            if (f[j] >= a[i]) {
+                cand = f[j] - a[i] + sum[i] - sum[j];
+                f[i] = imax(f[i], cand);
+            }
+        }
+        printf("f[%d] = %d\n", i, f[i]);
+    }
+
+    printf("%d\n", f[n]);
+    return 0;
+}

@@ -1,0 +1,122 @@
+/* Description:
+ * Tree DP adapted to Strict SysY (int/void only, 1D arrays only).
+ * Computes the same `ans` as the original C++ program.
+ */
+
+const int MAXN = 1000;
+const int MAXE = 1000;
+const int MAXK = 100;
+const int STRIDE = MAXK + 3;
+
+int n;
+int K;
+int L;
+
+int val[MAXN + 1];
+int head[MAXN + 1];
+int to[MAXE + 1];
+int nxt[MAXE + 1];
+int ecnt;
+
+int high[MAXN + 1];
+int f[(MAXN + 1) * STRIDE];
+int ans;
+
+int idx(int node, int dist) {
+    return node * STRIDE + dist;
+}
+
+void addEdge(int a, int b) {
+    ecnt = ecnt + 1;
+    to[ecnt] = b;
+    nxt[ecnt] = head[a];
+    head[a] = ecnt;
+    return;
+}
+
+void dp(int u) {
+    int e;
+    int v;
+    int d;
+    int type;
+    int start;
+    int exact;
+    int limit;
+
+    high[u] = 0;
+    for (e = head[u]; e != 0; e = nxt[e]) {
+        v = to[e];
+        dp(v);
+        if (high[v] + 1 > high[u]) {
+            high[u] = high[v] + 1;
+        }
+    }
+    if (high[u] > K) {
+        high[u] = K + 1;
+    }
+
+    for (d = 0; d <= K + 1; d = d + 1) {
+        f[idx(u, d)] = 0;
+    }
+    f[idx(u, 0)] = val[u];
+
+    type = 0;
+    if (val[u] > L) {
+        type = 1;
+    }
+
+    for (e = head[u]; e != 0; e = nxt[e]) {
+        v = to[e];
+
+        if (type == 1) {
+            start = K - high[u];
+            if (start < 0) {
+                start = 0;
+            }
+
+            for (d = start; d <= high[v] && d < K; d = d + 1) {
+                exact = f[idx(v, d)] - f[idx(v, d + 1)];
+                ans = ans + exact * f[idx(u, K - d)];
+            }
+            if (K <= high[v]) {
+                ans = ans + f[idx(v, K)] * f[idx(u, 0)];
+            }
+        }
+
+        limit = K;
+        if (high[v] < limit) {
+            limit = high[v];
+        }
+        for (d = 0; d <= limit; d = d + 1) {
+            f[idx(u, d + 1)] = f[idx(u, d + 1)] + f[idx(v, d)];
+        }
+        if (high[v] > K) {
+            f[idx(u, K + 1)] = f[idx(u, K + 1)] + f[idx(v, K + 1)];
+        }
+        f[idx(u, 0)] = f[idx(u, 0)] + f[idx(v, 0)];
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int x;
+    int y;
+
+    n = getint();
+    K = getint();
+    L = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        val[i] = getint();
+    }
+    for (i = 2; i <= n; i = i + 1) {
+        x = getint();
+        y = getint();
+        addEdge(x, y);
+    }
+
+    dp(1);
+    printf("%d\n", ans);
+    return 0;
+}

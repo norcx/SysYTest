@@ -1,0 +1,32 @@
+/* Description:
+ *   Deterministic version of the given C++ generator.
+ *   Prints:
+ *     n m p
+ *     n rows of m integers in [-1000, 1000], with a trailing space per number.
+ *   No input is read.
+ */
+
+int main() {
+    int n;
+    int m;
+    int p;
+    int i;
+    int j;
+    int val;
+
+    n = 299;
+    m = 300;
+    p = (n * 1000 + m * 7 + 13) % 2001 - 1000;
+
+    printf("%d %d %d\n", n, m, p);
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            val = (i * 173 + j * 97 + 12345) % 2001 - 1000;
+            printf("%d ", val);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}

@@ -1,0 +1,10 @@
+func_a positive: s=11
+Call 1: 11
+func_a non-positive: s=110
+Call 2: 110
+func_a positive: s=12
+Call 3: 12
+func_a non-positive: s=120
+Call 4: 120
+func_b(6)=66
+func_b(4)=99

@@ -1,0 +1,101 @@
+/* Description:
+ *   Process weighted edges from high to low, maintaining a 2*n DSU for bipartite constraints.
+ *   Output the weight of the first edge that violates bipartiteness (or 0 if none).
+ */
+
+const int MAXN = 1100;
+const int MAXM = 2100;
+
+int n;
+int m;
+int ans;
+
+int hx[MAXM];
+int hy[MAXM];
+int hz[MAXM];
+int fa[2 * MAXN + 5];
+
+int find_fa(int x) {
+    int root;
+    int t;
+    root = x;
+    for (; fa[root] != root; root = fa[root]) {
+    }
+    for (; fa[x] != x;) {
+        t = fa[x];
+        fa[x] = root;
+        x = t;
+    }
+    return root;
+}
+
+void swap_edge(int i, int j) {
+    int t;
+    t = hx[i];
+    hx[i] = hx[j];
+    hx[j] = t;
+
+    t = hy[i];
+    hy[i] = hy[j];
+    hy[j] = t;
+
+    t = hz[i];
+    hz[i] = hz[j];
+    hz[j] = t;
+}
+
+void sort_edges_desc() {
+    int i;
+    int j;
+    int best;
+    for (i = 1; i <= m; i = i + 1) {
+        best = i;
+        for (j = i + 1; j <= m; j = j + 1) {
+            if (hz[j] > hz[best]) {
+                best = j;
+            }
+        }
+        if (best != i) {
+            swap_edge(i, best);
+        }
+    }
+}
+
+int main() {
+    int i;
+    int x;
+    int y;
+    int fx;
+    int fy;
+
+    n = getint();
+    m = getint();
+    for (i = 1; i <= m; i = i + 1) {
+        hx[i] = getint();
+        hy[i] = getint();
+        hz[i] = getint();
+    }
+
+    sort_edges_desc();
+
+    for (i = 1; i <= 2 * n; i = i + 1) {
+        fa[i] = i;
+    }
+
+    ans = 0;
+    for (i = 1; i <= m; i = i + 1) {
+        x = hx[i];
+        y = hy[i];
+        fx = find_fa(x);
+        fy = find_fa(y);
+        if (fx == fy) {
+            ans = hz[i];
+            break;
+        }
+        fa[fx] = find_fa(y + n);
+        fa[fy] = find_fa(x + n);
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

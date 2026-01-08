@@ -1,0 +1,100 @@
+/* Description: SysY translation of Luogu P1601 big integer addition using decimal digits + printf-only output. */
+
+const int MAX_DIGITS = 64;
+
+int number_a[MAX_DIGITS];
+int number_b[MAX_DIGITS];
+int sum_digits[MAX_DIGITS + 1];
+
+int trim_length(int arr[], int len) {
+    if (len <= 0) {
+        return 0;
+    }
+    for (; len > 1 && arr[len - 1] == 0; ) {
+        len = len - 1;
+    }
+    return len;
+}
+
+int read_digits(int arr[]) {
+    int len;
+    int idx;
+    len = getint();
+    idx = 0;
+    for (idx = 0; idx < len; idx = idx + 1) {
+        arr[len - 1 - idx] = getint();
+    }
+    len = trim_length(arr, len);
+    if (len == 0) {
+        len = 1;
+        arr[0] = 0;
+    }
+    return len;
+}
+
+int add_digits(int lhs[], int lhs_len, int rhs[], int rhs_len, int res[]) {
+    int max_len;
+    int idx;
+    int carry;
+    int cur;
+    max_len = lhs_len;
+    if (rhs_len > max_len) {
+        max_len = rhs_len;
+    }
+    carry = 0;
+    idx = 0;
+    for (idx = 0; idx < max_len; idx = idx + 1) {
+        cur = carry;
+        if (idx < lhs_len) {
+            cur = cur + lhs[idx];
+        }
+        if (idx < rhs_len) {
+            cur = cur + rhs[idx];
+        }
+        res[idx] = cur % 10;
+        carry = cur / 10;
+    }
+    if (carry > 0) {
+        res[max_len] = carry;
+        max_len = max_len + 1;
+    }
+    return max_len;
+}
+
+void print_digits(int arr[], int len) {
+    int start;
+    int idx;
+    if (len <= 0) {
+        printf("0\n");
+        return;
+    }
+    start = len - 1;
+    for (; start > 0 && arr[start] == 0; ) {
+        start = start - 1;
+    }
+    printf("%d", arr[start]);
+    idx = start;
+    for (idx = start - 1; idx >= 0; idx = idx - 1) {
+        printf("%d", arr[idx]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int idx;
+    idx = 0;
+    for (idx = 0; idx < MAX_DIGITS; idx = idx + 1) {
+        number_a[idx] = 0;
+        number_b[idx] = 0;
+        sum_digits[idx] = 0;
+    }
+    sum_digits[MAX_DIGITS] = 0;
+    int len_a;
+    int len_b;
+    int sum_len;
+    len_a = read_digits(number_a);
+    len_b = read_digits(number_b);
+    sum_len = add_digits(number_a, len_a, number_b, len_b, sum_digits);
+    print_digits(sum_digits, sum_len);
+    return 0;
+}

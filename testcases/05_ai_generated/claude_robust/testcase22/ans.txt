@@ -1,0 +1,26 @@
+Branch 1 not taken
+call_count=0
+side_effect called with 1, count=1
+Branch 2 taken
+call_count=1
+Branch 3 taken
+call_count=0
+side_effect called with 1, count=1
+Branch 4 taken
+call_count=1
+side_effect called with 1, count=1
+side_effect called with 1, count=2
+side_effect called with 0, count=3
+Branch 5 not taken
+call_count=3
+side_effect called with 0, count=1
+Branch 6 not taken
+call_count=1
+side_effect called with 0, count=1
+side_effect called with 0, count=2
+side_effect called with 1, count=3
+Branch 7 taken
+call_count=3
+side_effect called with 1, count=1
+Branch 8 taken
+call_count=1

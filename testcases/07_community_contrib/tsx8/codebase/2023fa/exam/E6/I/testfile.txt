@@ -1,0 +1,12 @@
+/* Description:
+ *   Read an integer n (0..25) and print the precomputed value ans[n].
+ */
+
+int ans[26] = {0, 1, 0, 0, 2, 10, 12, 8, 12, 30, 72, 106, 128, 186, 316, 546, 836, 1186, 1756, 2720, 4224, 6366, 9374, 13932, 20958, 31470};
+
+int main() {
+    int n;
+    n = getint();
+    printf("%d\n", ans[n]);
+    return 0;
+}

@@ -1,0 +1,40 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E1/F.c` to Strict SysY.
+ *   Reads threshold `a`, then a sequence of integers `k` ending with -1.
+ *   Outputs: count(k>=a), average(sum(k)/n) with n starting at 1, and average of k>=a or -1.
+ */
+
+int main() {
+    int a;
+    int k;
+    int n;
+    int x1;
+    int x2;
+    int x3;
+
+    a = getint();
+    k = getint();
+
+    n = 1;
+    x1 = 0;
+    x2 = 0;
+    x3 = 0;
+
+    for (; k != -1;) {
+        if (k >= a) {
+            x1 = x1 + 1;
+            x2 = x2 + k;
+        }
+        n = n + 1;
+        x3 = x3 + k;
+        k = getint();
+    }
+
+    printf("%d %d ", x1, x3 / n);
+    if (x1 != 0) {
+        printf("%d", x2 / x1);
+    } else {
+        printf("%d", -1);
+    }
+    return 0;
+}

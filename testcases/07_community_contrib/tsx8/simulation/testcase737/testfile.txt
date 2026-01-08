@@ -1,0 +1,61 @@
+/*
+  Deterministic generator adapted from the provided C++ source.
+
+  Input (in.txt):
+    seed
+
+  Output (ans.txt):
+    k n M
+    k lines: X Y W
+*/
+
+const int RNG_MOD = 700000000;
+
+int rng_seed;
+
+int next_rand() {
+    rng_seed = rng_seed * 3 + 7;
+    if (rng_seed >= RNG_MOD) rng_seed = rng_seed - RNG_MOD;
+    if (rng_seed >= RNG_MOD) rng_seed = rng_seed - RNG_MOD;
+    if (rng_seed >= RNG_MOD) rng_seed = rng_seed - RNG_MOD;
+    return rng_seed;
+}
+
+int main() {
+    int k;
+    int n;
+    int M;
+    int i;
+    int X;
+    int Y;
+    int W;
+    int tmp;
+
+    rng_seed = getint();
+    if (rng_seed < 0) rng_seed = 0 - rng_seed;
+    rng_seed = rng_seed % RNG_MOD;
+
+    k = 5000;
+    n = 2000;
+    M = next_rand() % 50 + 50;
+
+    printf("%d %d %d\n", k, n, M);
+
+    for (i = 1; i <= k; i = i + 1) {
+        X = next_rand() % n + 1;
+        Y = next_rand() % n + 1;
+        if (X == Y) {
+            Y = Y + 1;
+            if (Y > n) Y = 1;
+        }
+        if (X > Y) {
+            tmp = X;
+            X = Y;
+            Y = tmp;
+        }
+        W = next_rand() % 100 + 1;
+        printf("%d %d %d\n", X, Y, W);
+    }
+
+    return 0;
+}

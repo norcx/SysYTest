@@ -1,0 +1,93 @@
+/* Description:
+ *   Converted from a C++ solution that computes an array beautiful[i]
+ *   using balance-walk tables to the left/right of each position, then
+ *   answers range maximum queries by scanning.
+ *
+ *   Scaled down for Strict SysY limits (1D arrays, <4MB memory).
+ */
+
+const int MAXN = 200;
+const int MAXD = 405;
+const int SHIFT = 202;
+
+int n;
+int m;
+int a[205];
+int beautiful[205];
+int ltab[81410];
+int rtab[81410];
+
+int idx(int i, int k) {
+    return i * MAXD + k;
+}
+
+void init() {
+    int i;
+    int j;
+    int t1;
+    int t2;
+    int leftLen;
+    int rightLen;
+    int val;
+
+    for (i = 1; i <= n; i = i + 1) {
+        t1 = 0;
+        t2 = 0;
+
+        for (j = i + 1; j <= n; j = j + 1) {
+            if (a[j] >= a[i]) t1 = t1 + 1;
+            else t1 = t1 - 1;
+            rtab[idx(i, t1 + SHIFT)] = j - i;
+        }
+
+        for (j = i - 1; j >= 1; j = j - 1) {
+            if (a[j] > a[i]) t2 = t2 + 1;
+            else t2 = t2 - 1;
+            ltab[idx(i, t2 + SHIFT)] = i - j;
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = -MAXN; j <= MAXN; j = j + 1) {
+            leftLen = ltab[idx(i, SHIFT - j)];
+            rightLen = rtab[idx(i, SHIFT + j)];
+            val = leftLen + rightLen + 1;
+
+            if (j == 0) {
+                if (beautiful[i] < val) beautiful[i] = val;
+            }
+
+            if (leftLen != 0 && rightLen != 0) {
+                if (beautiful[i] < val) beautiful[i] = val;
+            }
+        }
+    }
+}
+
+int main() {
+    int i;
+    int q;
+    int x;
+    int y;
+    int j;
+    int ans;
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+
+    init();
+
+    m = getint();
+    for (q = 0; q < m; q = q + 1) {
+        x = getint();
+        y = getint();
+        ans = 0;
+        for (j = x; j <= y; j = j + 1) {
+            if (ans < beautiful[j]) ans = beautiful[j];
+        }
+        printf("%d\n", ans);
+    }
+    return 0;
+}

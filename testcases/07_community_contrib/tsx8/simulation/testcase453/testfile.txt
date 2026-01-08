@@ -1,0 +1,139 @@
+/* Description:
+ *   Strict SysY testcase converted from a DSU + offline queries solution.
+ *   Notes:
+ *   - Uses only int/void, 1D arrays, and for-loops.
+ *   - Sort implemented via simple bubble sort (sizes are small).
+ */
+
+const int MAXN = 64;
+const int MAXM = 64;
+const int MAXQ = 64;
+
+int n, m, q;
+int fa[MAXN];
+int a[MAXN];
+int c[MAXN];
+int s[MAXN];
+
+int ex[MAXM];
+int ey[MAXM];
+int ez[MAXM];
+
+int pos[MAXQ];
+int qw[MAXQ];
+int qv[MAXQ];
+int qid[MAXQ];
+
+int father(int x) {
+    if (fa[x] == x) return x;
+    fa[x] = father(fa[x]);
+    return fa[x];
+}
+
+void swap3(int i, int j) {
+    int t;
+    t = ex[i]; ex[i] = ex[j]; ex[j] = t;
+    t = ey[i]; ey[i] = ey[j]; ey[j] = t;
+    t = ez[i]; ez[i] = ez[j]; ez[j] = t;
+}
+
+void swap1(int i, int j) {
+    int t;
+    t = qid[i]; qid[i] = qid[j]; qid[j] = t;
+}
+
+void sort_edges_desc() {
+    int i, j;
+    for (i = 1; i <= m; i = i + 1) {
+        for (j = 1; j <= m - i; j = j + 1) {
+            if (ez[j] < ez[j + 1]) swap3(j, j + 1);
+        }
+    }
+}
+
+void sort_queries_by_w_desc() {
+    int i, j;
+    for (i = 1; i <= q; i = i + 1) qid[i] = i;
+    for (i = 1; i <= q; i = i + 1) {
+        for (j = 1; j <= q - i; j = j + 1) {
+            if (qw[qid[j]] < qw[qid[j + 1]]) swap1(j, j + 1);
+        }
+    }
+}
+
+int main() {
+    int i, ii;
+    int x;
+    int ans;
+    int P;
+    int tmp;
+    int fax, fay;
+    int now;
+
+    n = getint();
+    m = getint();
+    q = getint();
+
+    ans = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        fa[i] = i;
+        c[i] = a[i];
+        s[i] = 0;
+        ans = ans + a[i];
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        ex[i] = getint();
+        ey[i] = getint();
+        ez[i] = getint();
+    }
+
+    for (i = 1; i <= q; i = i + 1) {
+        pos[i] = getint();
+        qw[i] = getint();
+        qv[i] = getint();
+        x = getint();
+        x = x + 0;
+    }
+
+    sort_edges_desc();
+    sort_queries_by_w_desc();
+
+    P = 1;
+    for (ii = 1; ii <= q; ii = ii + 1) {
+        i = qid[ii];
+
+        for (tmp = 0; P <= m && ez[P] >= qw[i]; P = P + 1) {
+            fax = father(ex[P]);
+            fay = father(ey[P]);
+            if (fax != fay) {
+                fa[fax] = fay;
+                c[fay] = c[fay] + c[fax];
+                c[fax] = 0;
+                s[fay] = s[fay] + s[fax];
+                s[fax] = 0;
+            }
+            tmp = tmp + 0;
+        }
+
+        now = father(pos[i]);
+        if (s[now] == 0 && qv[i] < c[now]) {
+            s[now] = qv[i];
+            ans = ans + qv[i];
+            ans = ans - c[now];
+            c[now] = 0;
+        } else {
+            if (s[now] + c[now] > qv[i]) {
+                ans = ans - s[now];
+                ans = ans + qv[i];
+                s[now] = qv[i];
+                ans = ans - c[now];
+                c[now] = 0;
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

@@ -1,0 +1,176 @@
+const int MAXN = 130;
+const int MAT_SIZE = 20000;
+const int MOD = 64123;
+
+int T;
+int k;
+int m;
+int mx_p;
+int n;
+
+int p[130];
+int f[130];
+
+int base[20000];
+int ans[20000];
+int nowm[20000];
+int tm[20000];
+
+int idx(int i, int j) {
+  return i * MAXN + j;
+}
+
+int mulmod(int a, int b) {
+  int res;
+  int aa;
+  int bb;
+  res = 0;
+  aa = a % MOD;
+  bb = b;
+  for (; bb > 0; bb = bb / 2) {
+    if (bb % 2 == 1) {
+      res = res + aa;
+      res = res % MOD;
+    }
+    aa = aa + aa;
+    aa = aa % MOD;
+  }
+  return res;
+}
+
+void work1() {
+  int i;
+  int j;
+  int t;
+  int sum;
+  int pos;
+  for (i = 1; i <= mx_p; i = i + 1) {
+    for (j = 1; j <= mx_p; j = j + 1) {
+      tm[idx(i, j)] = 0;
+    }
+  }
+
+  for (i = 1; i <= mx_p; i = i + 1) {
+    for (j = 1; j <= mx_p; j = j + 1) {
+      sum = 0;
+      for (t = 1; t <= mx_p; t = t + 1) {
+        sum = sum + mulmod(ans[idx(i, t)], nowm[idx(t, j)]);
+        sum = sum % MOD;
+      }
+      tm[idx(i, j)] = sum;
+    }
+  }
+
+  for (i = 1; i <= mx_p; i = i + 1) {
+    for (j = 1; j <= mx_p; j = j + 1) {
+      pos = idx(i, j);
+      ans[pos] = tm[pos];
+    }
+  }
+}
+
+void work2() {
+  int i;
+  int j;
+  int t;
+  int sum;
+  int pos;
+  for (i = 1; i <= mx_p; i = i + 1) {
+    for (j = 1; j <= mx_p; j = j + 1) {
+      tm[idx(i, j)] = 0;
+    }
+  }
+
+  for (i = 1; i <= mx_p; i = i + 1) {
+    for (j = 1; j <= mx_p; j = j + 1) {
+      sum = 0;
+      for (t = 1; t <= mx_p; t = t + 1) {
+        sum = sum + mulmod(nowm[idx(i, t)], nowm[idx(t, j)]);
+        sum = sum % MOD;
+      }
+      tm[idx(i, j)] = sum;
+    }
+  }
+
+  for (i = 1; i <= mx_p; i = i + 1) {
+    for (j = 1; j <= mx_p; j = j + 1) {
+      pos = idx(i, j);
+      nowm[pos] = tm[pos];
+    }
+  }
+}
+
+void init() {
+  int e;
+  int i;
+  int j;
+  int an;
+
+  e = n - mx_p - 1;
+
+  for (i = 1; i <= mx_p; i = i + 1) {
+    for (j = 1; j <= mx_p; j = j + 1) {
+      ans[idx(i, j)] = base[idx(i, j)];
+      nowm[idx(i, j)] = base[idx(i, j)];
+    }
+  }
+
+  for (; e > 0; ) {
+    if (e % 2 == 1) {
+      work1();
+    }
+    e = e / 2;
+    work2();
+  }
+
+  an = 0;
+  for (i = 1; i <= mx_p; i = i + 1) {
+    an = an + mulmod(f[i], ans[idx(i, mx_p)]);
+    an = an % MOD;
+  }
+  printf(">> %d\n", an);
+}
+
+int main() {
+  int i;
+  int j;
+  int pi;
+
+  T = getint();
+  k = getint();
+  m = getint();
+
+  mx_p = 0;
+  for (i = 1; i <= m; i = i + 1) {
+    p[i] = getint();
+    if (p[i] > mx_p) {
+      mx_p = p[i];
+    }
+  }
+
+  f[0] = 1;
+  for (i = 1; i <= mx_p; i = i + 1) {
+    f[i] = 0;
+    for (j = 1; j <= m; j = j + 1) {
+      pi = p[j];
+      if (i - pi >= 0) {
+        f[i] = f[i] + f[i - pi];
+        f[i] = f[i] % MOD;
+      }
+    }
+  }
+
+  for (i = 1; i < mx_p; i = i + 1) {
+    base[idx(i + 1, i)] = 1;
+  }
+  for (i = 1; i <= m; i = i + 1) {
+    base[idx(mx_p + 1 - p[i], mx_p)] = 1;
+  }
+
+  for (; T > 0; T = T - 1) {
+    n = getint();
+    init();
+  }
+
+  return 0;
+}

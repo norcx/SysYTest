@@ -1,0 +1,84 @@
+const int MAXN = 50010;
+const int SIG = 26;
+const int MAXC = 5010 * 26;
+
+int c[MAXC];
+int val[MAXN];
+int fail[MAXN];
+int q[MAXN];
+int cnt;
+
+void insert_pattern(int len) {
+    int u = 0;
+    int i = 0;
+    for (i = 0; i < len; i = i + 1) {
+        int v = getint();
+        int idx = u * 26 + v;
+        if (c[idx] == 0) {
+            cnt = cnt + 1;
+            c[idx] = cnt;
+        }
+        u = c[idx];
+    }
+    val[u] = val[u] + 1;
+}
+
+void build_ac() {
+    int head = 0;
+    int tail = 0;
+    int i = 0;
+    for (i = 0; i < 26; i = i + 1) {
+        int child = c[i];
+        if (child != 0) {
+            fail[child] = 0;
+            q[tail] = child;
+            tail = tail + 1;
+        }
+    }
+
+    for (; head < tail;) {
+        int u = q[head];
+        head = head + 1;
+        for (i = 0; i < 26; i = i + 1) {
+            int idx = u * 26 + i;
+            int child = c[idx];
+            if (child != 0) {
+                fail[child] = c[fail[u] * 26 + i];
+                q[tail] = child;
+                tail = tail + 1;
+            } else {
+                c[idx] = c[fail[u] * 26 + i];
+            }
+        }
+    }
+}
+
+int query_text(int len) {
+    int u = 0;
+    int ans = 0;
+    int i = 0;
+    for (i = 0; i < len; i = i + 1) {
+        int v = getint();
+        u = c[u * 26 + v];
+        int t = u;
+        for (; t != 0 && val[t] != -1; t = fail[t]) {
+            ans = ans + val[t];
+            val[t] = -1;
+        }
+    }
+    return ans;
+}
+
+int main() {
+    int n = getint();
+    int i = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        int len = getint();
+        insert_pattern(len);
+    }
+    build_ac();
+    int m = getint();
+    int ans = query_text(m);
+    printf("%d", ans);
+    return 0;
+}

@@ -1,0 +1,7 @@
+/* This is a comment. */
+
+int main() {
+  // This is also a comment.
+    printf("%d", 3);
+  return 0;
+}

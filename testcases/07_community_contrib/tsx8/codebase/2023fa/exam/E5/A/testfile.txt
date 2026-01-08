@@ -1,0 +1,51 @@
+/* Description:
+ * Converted from `codes/2023fa/exam/E5/A.c`.
+ *
+ * Original program reads pairs (a, b) until EOF and prints |a^b - b^a|.
+ * Strict SysY has no EOF handling, so this testcase uses a leading T.
+ */
+
+int pow_int(int base, int exp) {
+    int res;
+    int i;
+    res = 1;
+    for (i = 0; i < exp; i = i + 1) {
+        res = res * base;
+    }
+    return res;
+}
+
+int abs_int(int x) {
+    if (x < 0) {
+        return 0 - x;
+    }
+    return x;
+}
+
+int main() {
+    int t;
+    int i;
+    int a;
+    int b;
+    int x1;
+    int x2;
+    int diff;
+
+    t = getint();
+    for (i = 0; i < t; i = i + 1) {
+        a = getint();
+        b = getint();
+
+        if (a == b) {
+            diff = 0;
+        } else {
+            x1 = pow_int(a, b);
+            x2 = pow_int(b, a);
+            diff = abs_int(x1 - x2);
+        }
+
+        printf("%d\n", diff);
+    }
+
+    return 0;
+}

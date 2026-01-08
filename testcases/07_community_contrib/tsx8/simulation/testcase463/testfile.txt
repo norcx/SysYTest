@@ -1,0 +1,169 @@
+/* Description:
+ *   Converted from C++ "magnet" source into strict SysY (int-only).
+ */
+const int MAXN = 2100;
+
+int n;
+int x[MAXN];
+int y[MAXN];
+int need[MAXN];
+int power[MAXN];
+int rad[MAXN];
+int dis[MAXN];
+
+int q[MAXN];
+int vis[MAXN];
+
+int blk_l[MAXN];
+int blk_r[MAXN];
+int blk_mn[MAXN];
+int blk_mx[MAXN];
+int blk_cnt;
+
+int isqrt(int v) {
+  int t;
+  t = 0;
+  for (; (t + 1) * (t + 1) <= v; ) t = t + 1;
+  return t;
+}
+
+void swap_idx(int i, int j) {
+  int tmp;
+  tmp = x[i]; x[i] = x[j]; x[j] = tmp;
+  tmp = y[i]; y[i] = y[j]; y[j] = tmp;
+  tmp = need[i]; need[i] = need[j]; need[j] = tmp;
+  tmp = power[i]; power[i] = power[j]; power[j] = tmp;
+  tmp = rad[i]; rad[i] = rad[j]; rad[j] = tmp;
+  tmp = dis[i]; dis[i] = dis[j]; dis[j] = tmp;
+}
+
+int main() {
+  int sx;
+  int sy;
+  int sp;
+  int sr;
+  int i;
+  int j;
+
+  sx = getint();
+  sy = getint();
+  sp = getint();
+  sr = getint();
+  n = getint();
+
+  for (i = 1; i <= n; i = i + 1) {
+    x[i] = getint();
+    y[i] = getint();
+    need[i] = getint();
+    power[i] = getint();
+    rad[i] = getint();
+    dis[i] = (x[i] - sx) * (x[i] - sx) + (y[i] - sy) * (y[i] - sy);
+  }
+
+  for (i = 1; i <= n; i = i + 1) {
+    for (j = i + 1; j <= n; j = j + 1) {
+      if (dis[j] < dis[i]) swap_idx(i, j);
+    }
+  }
+
+  {
+    int msz;
+    int blk;
+    int start;
+    int end;
+
+    msz = isqrt(n);
+    if (msz < 1) msz = 1;
+    blk_cnt = 0;
+
+    for (blk = 1; ; blk = blk + 1) {
+      start = (blk - 1) * msz + 1;
+      if (start > n) break;
+      end = blk * msz;
+      if (end > n) end = n;
+
+      blk_cnt = blk_cnt + 1;
+      blk_l[blk_cnt] = start;
+      blk_r[blk_cnt] = end;
+      blk_mn[blk_cnt] = dis[start];
+      blk_mx[blk_cnt] = dis[end];
+
+      for (i = start; i <= end; i = i + 1) {
+        for (j = i + 1; j <= end; j = j + 1) {
+          if (need[j] < need[i]) swap_idx(i, j);
+        }
+      }
+    }
+  }
+
+  x[n + 1] = sx;
+  y[n + 1] = sy;
+  need[n + 1] = 0;
+  power[n + 1] = sp;
+  rad[n + 1] = sr;
+  dis[n + 1] = 0;
+
+  {
+    int head;
+    int tail;
+    int ans;
+
+    head = 0;
+    tail = 0;
+    q[tail] = n + 1;
+    tail = tail + 1;
+    vis[n + 1] = 1;
+    ans = -1;
+
+    for (head = 0; head < tail; head = head + 1) {
+      int idx;
+      int now_p;
+      int now_r2;
+      int b;
+
+      idx = q[head];
+      ans = ans + 1;
+      now_p = power[idx];
+      now_r2 = rad[idx] * rad[idx];
+
+      for (b = 1; b <= blk_cnt; b = b + 1) {
+        if (blk_mn[b] <= now_r2) {
+          if (blk_mx[b] <= now_r2) {
+            int k;
+            for (k = blk_l[b]; k <= blk_r[b]; k = k + 1) {
+              if (need[k] <= now_p) {
+                if (vis[k] == 0) {
+                  vis[k] = 1;
+                  q[tail] = k;
+                  tail = tail + 1;
+                }
+                blk_l[b] = blk_l[b] + 1;
+              } else {
+                break;
+              }
+            }
+          } else {
+            int k;
+            for (k = blk_l[b]; k <= blk_r[b]; k = k + 1) {
+              if (need[k] <= now_p) {
+                if (vis[k] == 0 && dis[k] <= now_r2) {
+                  vis[k] = 1;
+                  q[tail] = k;
+                  tail = tail + 1;
+                }
+              } else {
+                break;
+              }
+            }
+          }
+        } else {
+          break;
+        }
+      }
+    }
+
+    printf("%d\n", ans);
+  }
+
+  return 0;
+}

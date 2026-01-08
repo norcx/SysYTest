@@ -1,0 +1,52 @@
+/* Description:
+ *   Deterministic data generator (SysY): emits a random-looking edge list.
+ *   Converted from a C++ generator that used srand(time(0)) + rand().
+ *
+ *   Input:
+ *     seed (int)  - RNG seed, one integer per line in in.txt.
+ *
+ *   Output:
+ *     k n m
+ *     k lines: x y w, with 1 <= x < y <= n and 1 <= w <= m
+ */
+
+int seed;
+
+int myrand() {
+    seed = seed * 1103 + 12345;
+    seed = seed % 1000000;
+    return seed;
+}
+
+int main() {
+    int k;
+    int n;
+    int m;
+    int i;
+
+    seed = getint();
+    if (seed < 0) seed = 0 - seed;
+    seed = seed % 1000000;
+    if (seed == 0) seed = 1;
+
+    k = 5000;
+    n = 2000;
+    m = 100;
+
+    printf("%d %d %d\n", k, n, m);
+
+    for (i = 0; i < k; i = i + 1) {
+        int x;
+        int y;
+        int w;
+
+        for (;;) {
+            x = myrand() % n + 1;
+            y = myrand() % n + 1;
+            if (x < y) break;
+        }
+        w = myrand() % m + 1;
+        printf("%d %d %d\n", x, y, w);
+    }
+    return 0;
+}

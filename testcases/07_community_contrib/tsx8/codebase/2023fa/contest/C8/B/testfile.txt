@@ -1,0 +1,46 @@
+/* Description:
+ *   Read t testcases, each containing a, b, c; output (a xor b xor c).
+ *   Bitwise operators are disallowed, so xor is simulated with /2 and %2.
+ */
+int xor2(int x, int y) {
+    int res;
+    int pow2;
+    int i;
+    int xb;
+    int yb;
+    int bit;
+    res = 0;
+    pow2 = 1;
+    for (i = 0; i < 31; i = i + 1) {
+        xb = x % 2;
+        yb = y % 2;
+        bit = (xb + yb) % 2;
+        res = res + bit * pow2;
+        x = x / 2;
+        y = y / 2;
+        if (i < 30) {
+            pow2 = pow2 * 2;
+        }
+    }
+    return res;
+}
+
+int main() {
+    int t;
+    int i;
+    int a;
+    int b;
+    int c;
+    int ab;
+    int abc;
+    t = getint();
+    for (i = 0; i < t; i = i + 1) {
+        a = getint();
+        b = getint();
+        c = getint();
+        ab = xor2(a, b);
+        abc = xor2(ab, c);
+        printf("%d\n", abc);
+    }
+    return 0;
+}

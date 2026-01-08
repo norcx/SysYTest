@@ -1,0 +1,9 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C6/A.c`.
+ *   No input; prints a fixed two-line message.
+ */
+
+int main() {
+    printf("Where is there dignity unless there is honesty? - Cicero\nI promise I won't cheat in the exam.\n");
+    return 0;
+}

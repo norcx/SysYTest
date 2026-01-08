@@ -1,0 +1,246 @@
+/*
+  Converted to Strict SysY from the given C source.
+
+  Input format:
+  - Repeated blocks: <fa> then up to 3 children numbers, terminated by -1
+  - A final -1 ends the blocks
+  - Then tot pairs: (id, score), where tot is the number of children < 100 seen above
+
+  Output:
+  - After sorting pairs by score desc, id asc, assign them to leaf nodes (<100)
+    in BFS order and print "id->leaf\n" for each leaf.
+*/
+
+const int MAXNODE = 2048;
+const int MAXPAIR = 1024;
+
+int nodeNum[MAXNODE];
+int child0[MAXNODE];
+int child1[MAXNODE];
+int child2[MAXNODE];
+int nodeCount;
+
+int pairId[MAXPAIR];
+int pairScore[MAXPAIR];
+int tot;
+
+int rootIdx;
+
+int newNode(int num) {
+    int idx;
+    idx = nodeCount;
+    nodeNum[idx] = num;
+    child0[idx] = -1;
+    child1[idx] = -1;
+    child2[idx] = -1;
+    nodeCount = nodeCount + 1;
+    return idx;
+}
+
+int findNodeByNumGE100(int num) {
+    int i;
+    for (i = 0; i < nodeCount; i = i + 1) {
+        if (nodeNum[i] == num && nodeNum[i] >= 100) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int getOrCreateNodeGE100(int num) {
+    int idx;
+    idx = findNodeByNumGE100(num);
+    if (idx == -1) {
+        idx = newNode(num);
+    } else {
+        nodeNum[idx] = num;
+        child0[idx] = -1;
+        child1[idx] = -1;
+        child2[idx] = -1;
+    }
+    return idx;
+}
+
+int pairBefore(int id1, int sc1, int id2, int sc2) {
+    if (sc1 > sc2) {
+        return 1;
+    }
+    if (sc1 < sc2) {
+        return 0;
+    }
+    if (id1 < id2) {
+        return 1;
+    }
+    return 0;
+}
+
+void quicksort(int l, int r) {
+    int i;
+    int j;
+    int pivotId;
+    int pivotScore;
+    int tmpId;
+    int tmpScore;
+
+    i = l;
+    j = r;
+    pivotId = pairId[(l + r) / 2];
+    pivotScore = pairScore[(l + r) / 2];
+
+    for (; i <= j;) {
+        for (; pairBefore(pairId[i], pairScore[i], pivotId, pivotScore);) {
+            i = i + 1;
+        }
+        for (; pairBefore(pivotId, pivotScore, pairId[j], pairScore[j]);) {
+            j = j - 1;
+        }
+        if (i <= j) {
+            tmpId = pairId[i];
+            pairId[i] = pairId[j];
+            pairId[j] = tmpId;
+
+            tmpScore = pairScore[i];
+            pairScore[i] = pairScore[j];
+            pairScore[j] = tmpScore;
+
+            i = i + 1;
+            j = j - 1;
+        }
+    }
+
+    if (l < j) {
+        quicksort(l, j);
+    }
+    if (i < r) {
+        quicksort(i, r);
+    }
+    return;
+}
+
+int main() {
+    int fa;
+    int parentIdx;
+    int ch;
+    int childCount;
+    int childIdx;
+    int i;
+
+    nodeCount = 0;
+    tot = 0;
+    rootIdx = -1;
+
+    for (;;) {
+        fa = getint();
+        if (fa == -1) {
+            break;
+        }
+
+        if (fa >= 100) {
+            parentIdx = getOrCreateNodeGE100(fa);
+        } else {
+            parentIdx = newNode(fa);
+        }
+
+        childCount = 0;
+        for (;;) {
+            ch = getint();
+            if (ch == -1) {
+                break;
+            }
+
+            if (childCount < 3) {
+                if (ch >= 100) {
+                    childIdx = findNodeByNumGE100(ch);
+                    if (childIdx == -1) {
+                        childIdx = newNode(ch);
+                    }
+                } else {
+                    childIdx = newNode(ch);
+                    tot = tot + 1;
+                }
+
+                if (childCount == 0) {
+                    child0[parentIdx] = childIdx;
+                }
+                if (childCount == 1) {
+                    child1[parentIdx] = childIdx;
+                }
+                if (childCount == 2) {
+                    child2[parentIdx] = childIdx;
+                }
+                childCount = childCount + 1;
+            } else {
+                if (ch < 100) {
+                    tot = tot + 1;
+                }
+            }
+        }
+
+        if (rootIdx == -1) {
+            rootIdx = parentIdx;
+        }
+    }
+
+    for (i = 0; i < tot; i = i + 1) {
+        pairId[i] = getint();
+        pairScore[i] = getint();
+    }
+    if (tot > 0) {
+        quicksort(0, tot - 1);
+    }
+
+    {
+        int q[MAXNODE];
+        int head;
+        int tail;
+        int pairIndex;
+        int p;
+        int c;
+
+        head = 0;
+        tail = 0;
+        q[tail] = rootIdx;
+        tail = tail + 1;
+
+        pairIndex = 0;
+        for (; pairIndex < tot;) {
+            p = q[head];
+            head = (head + 1) % MAXNODE;
+
+            c = child0[p];
+            if (c != -1) {
+                if (nodeNum[c] >= 100) {
+                    q[tail] = c;
+                    tail = (tail + 1) % MAXNODE;
+                } else {
+                    printf("%d->%d\n", pairId[pairIndex], nodeNum[c]);
+                    pairIndex = pairIndex + 1;
+                }
+            }
+
+            c = child1[p];
+            if (c != -1) {
+                if (nodeNum[c] >= 100) {
+                    q[tail] = c;
+                    tail = (tail + 1) % MAXNODE;
+                } else {
+                    printf("%d->%d\n", pairId[pairIndex], nodeNum[c]);
+                    pairIndex = pairIndex + 1;
+                }
+            }
+
+            c = child2[p];
+            if (c != -1) {
+                if (nodeNum[c] >= 100) {
+                    q[tail] = c;
+                    tail = (tail + 1) % MAXNODE;
+                } else {
+                    printf("%d->%d\n", pairId[pairIndex], nodeNum[c]);
+                    pairIndex = pairIndex + 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}

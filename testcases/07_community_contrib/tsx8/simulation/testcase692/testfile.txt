@@ -1,0 +1,75 @@
+/* Description:
+ * Converts the original string-keyed map queries into integer-keyed queries.
+ *
+ * Input (all integers, 1 per line):
+ *   n
+ *   key value            (repeated n times)
+ *   m
+ *   x                   (for each query)
+ *   key                 (repeated x times)
+ *
+ * Output:
+ *   If all queried keys exist: print the sum of their values.
+ *   Otherwise: print -1.
+ */
+
+const int MAXN = 1000;
+
+int keys[MAXN];
+int vals[MAXN];
+
+int find_idx(int key, int n) {
+  int i;
+  for (i = 0; i < n; i = i + 1) {
+    if (keys[i] == key) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+int main() {
+  int n;
+  int m;
+  int i;
+  int key;
+  int value;
+  int x;
+  int j;
+  int q;
+  int idx;
+  int ans;
+  int missing;
+
+  n = getint();
+  for (i = 0; i < n; i = i + 1) {
+    key = getint();
+    value = getint();
+    keys[i] = key;
+    vals[i] = value;
+  }
+
+  m = getint();
+  for (i = 0; i < m; i = i + 1) {
+    x = getint();
+    ans = 0;
+    missing = 0;
+    for (j = 0; j < x; j = j + 1) {
+      q = getint();
+      idx = find_idx(q, n);
+      if (idx < 0) {
+        missing = 1;
+      } else {
+        if (missing == 0) {
+          ans = ans + vals[idx];
+        }
+      }
+    }
+    if (missing != 0) {
+      printf("-1\n");
+    } else {
+      printf("%d\n", ans);
+    }
+  }
+  return 0;
+}

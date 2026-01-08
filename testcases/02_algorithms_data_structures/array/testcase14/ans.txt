@@ -1,0 +1,6 @@
+Copied arr3[0]=1, arr3[19]=20
+Sum of additions: 420
+result[0]=21, result[10]=21, result[19]=21
+Dot product (first 10): 770
+Before swap: arr1[0]=1, arr2[0]=20
+After swap: arr1[0]=20, arr2[0]=1

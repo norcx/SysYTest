@@ -1,0 +1,130 @@
+/* Description:
+ * Quadratic equation solver converted from `codes/2023fa/contest/C2/G.c`.
+ * Input: 3 integers a, b, c (one per line).
+ * Output:
+ * - If a==0: solve linear equation bx + c = 0 (or special cases).
+ * - Else: solve ax^2 + bx + c = 0 (real roots only).
+ *
+ * Notes:
+ * - Strict SysY: int-only, no math library.
+ * - Roots are printed with 2 decimals using fixed-point (x_scaled = round(x*100)).
+ * - Test input is chosen so delta is a perfect square (exact sqrt at 2 decimals).
+ */
+
+int abs_int(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+int div_round(int numer, int denom) {
+    int half;
+    if (denom < 0) {
+        denom = 0 - denom;
+        numer = 0 - numer;
+    }
+    if (denom == 0) return 0;
+    half = denom / 2;
+    if (numer >= 0) return (numer + half) / denom;
+    return 0 - ((0 - numer + half) / denom);
+}
+
+int isqrt(int n) {
+    int l;
+    int r;
+    int i;
+    int m;
+    int sq;
+    if (n <= 0) return 0;
+    l = 0;
+    if (n < 46340) r = n;
+    else r = 46340;
+    for (i = 0; i < 32; i = i + 1) {
+        m = (l + r + 1) / 2;
+        sq = m * m;
+        if (sq <= n) l = m;
+        else r = m - 1;
+    }
+    return l;
+}
+
+void print_fixed2_inline(int x_scaled) {
+    int neg;
+    int ip;
+    int frac;
+    int tens;
+    int ones;
+    neg = 0;
+    if (x_scaled < 0) {
+        neg = 1;
+        x_scaled = 0 - x_scaled;
+    }
+    ip = x_scaled / 100;
+    frac = x_scaled - ip * 100;
+    tens = frac / 10;
+    ones = frac - tens * 10;
+    if (neg) printf("-");
+    printf("%d.%d%d", ip, tens, ones);
+}
+
+void print_fixed2(int x_scaled) {
+    print_fixed2_inline(x_scaled);
+    printf("\n");
+}
+
+int main() {
+    int a;
+    int b;
+    int c;
+    a = getint();
+    b = getint();
+    c = getint();
+
+    if (a == 0) {
+        if (b != 0) {
+            int x_scaled;
+            if (c == 0) {
+                print_fixed2(0);
+            } else {
+                x_scaled = div_round((0 - c) * 100, b);
+                if (x_scaled == 0) x_scaled = 0;
+                print_fixed2(x_scaled);
+            }
+        } else {
+            if (c == 0) printf("infinite solutions\n");
+            else printf("No real root\n");
+        }
+    } else {
+        int delta;
+        delta = b * b - 4 * a * c;
+        if (delta == 0) {
+            int x_scaled;
+            x_scaled = div_round((0 - b) * 100, 2 * a);
+            if (x_scaled == 0) x_scaled = 0;
+            print_fixed2(x_scaled);
+        } else if (delta < 0) {
+            printf("No real root\n");
+        } else {
+            int sqrt_scaled;
+            int x1_scaled;
+            int x2_scaled;
+            int denom;
+            denom = 2 * a;
+            sqrt_scaled = isqrt(delta * 10000);
+            x1_scaled = div_round((0 - b) * 100 - sqrt_scaled, denom);
+            x2_scaled = div_round((0 - b) * 100 + sqrt_scaled, denom);
+            if (abs_int(x1_scaled) == 0) x1_scaled = 0;
+            if (abs_int(x2_scaled) == 0) x2_scaled = 0;
+            if (x1_scaled > x2_scaled) {
+                int tmp;
+                tmp = x1_scaled;
+                x1_scaled = x2_scaled;
+                x2_scaled = tmp;
+            }
+            print_fixed2_inline(x1_scaled);
+            printf(" ");
+            print_fixed2(x2_scaled);
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,114 @@
+const int MAXN = 50010;
+const int MAXE = 100020;
+const int MAXQ = 100020;
+
+int n;
+int m;
+int s;
+
+int head[MAXN];
+int toV[MAXE];
+int nextE[MAXE];
+int ecnt;
+
+int qhead[MAXN];
+int qto[MAXQ];
+int qnext[MAXQ];
+int qid[MAXQ];
+int qcnt;
+
+int fa[MAXN];
+int visited[MAXN];
+int ans[MAXN];
+
+int findFa(int x) {
+    if (fa[x] == x) return x;
+    fa[x] = findFa(fa[x]);
+    return fa[x];
+}
+
+void addEdge(int u, int v) {
+    ecnt = ecnt + 1;
+    toV[ecnt] = v;
+    nextE[ecnt] = head[u];
+    head[u] = ecnt;
+}
+
+void addQuery(int u, int v, int id) {
+    qcnt = qcnt + 1;
+    qto[qcnt] = v;
+    qid[qcnt] = id;
+    qnext[qcnt] = qhead[u];
+    qhead[u] = qcnt;
+
+    qcnt = qcnt + 1;
+    qto[qcnt] = u;
+    qid[qcnt] = id;
+    qnext[qcnt] = qhead[v];
+    qhead[v] = qcnt;
+}
+
+void tarjan(int u, int parent) {
+    int i;
+    int v;
+    int r;
+    fa[u] = u;
+
+    for (i = head[u]; i != 0; i = nextE[i]) {
+        v = toV[i];
+        if (v != parent) {
+            tarjan(v, u);
+            r = findFa(v);
+            fa[r] = u;
+        }
+    }
+
+    visited[u] = 1;
+    for (i = qhead[u]; i != 0; i = qnext[i]) {
+        v = qto[i];
+        if (visited[v] != 0) {
+            ans[qid[i]] = findFa(v);
+        }
+    }
+}
+
+int main() {
+    int i;
+    int u;
+    int v;
+
+    n = getint();
+    m = getint();
+    s = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        head[i] = 0;
+        qhead[i] = 0;
+        fa[i] = i;
+        visited[i] = 0;
+    }
+    for (i = 1; i <= m; i = i + 1) ans[i] = 0;
+
+    ecnt = 0;
+    qcnt = 0;
+
+    for (i = 1; i < n; i = i + 1) {
+        u = getint();
+        v = getint();
+        addEdge(u, v);
+        addEdge(v, u);
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        u = getint();
+        v = getint();
+        addQuery(u, v, i);
+    }
+
+    tarjan(s, 0);
+
+    for (i = 1; i <= m; i = i + 1) {
+        printf("%d\n", ans[i]);
+    }
+    return 0;
+}

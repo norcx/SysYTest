@@ -1,0 +1,120 @@
+/* Description:
+ * Converted from a word-frequency BST program.
+ * Strings/characters are mapped to integer "word ids".
+ *
+ * Input (one integer per line):
+ *   n
+ *   w1
+ *   w2
+ *   ...
+ *   wn
+ *
+ * Output:
+ *   root, root->right, root->right->right (if present)
+ *   then in-order traversal lines: "<word_id> <count>"
+ */
+
+const int MAXN = 1024;
+
+int keyArr[1024];
+int cntArr[1024];
+int leftArr[1024];
+int rightArr[1024];
+int root;
+int tot;
+
+void insert(int key) {
+    if (root == 0) {
+        tot = 1;
+        root = 1;
+        keyArr[1] = key;
+        cntArr[1] = 1;
+        leftArr[1] = 0;
+        rightArr[1] = 0;
+        return;
+    }
+
+    int cur;
+    int parent;
+    int dir;
+    cur = root;
+    parent = 0;
+    dir = 0;
+    for (;;) {
+        if (cur == 0) break;
+        parent = cur;
+        if (key < keyArr[cur]) {
+            cur = leftArr[cur];
+            dir = 0;
+        } else if (key > keyArr[cur]) {
+            cur = rightArr[cur];
+            dir = 1;
+        } else {
+            cntArr[cur] = cntArr[cur] + 1;
+            return;
+        }
+    }
+
+    if (tot + 1 >= MAXN) return;
+    tot = tot + 1;
+    keyArr[tot] = key;
+    cntArr[tot] = 1;
+    leftArr[tot] = 0;
+    rightArr[tot] = 0;
+    if (dir == 1) rightArr[parent] = tot;
+    else leftArr[parent] = tot;
+    return;
+}
+
+void traversal(int start) {
+    int stackArr[1024];
+    int top;
+    int cur;
+    top = 0;
+    cur = start;
+    for (;;) {
+        if (cur != 0) {
+            stackArr[top] = cur;
+            top = top + 1;
+            cur = leftArr[cur];
+        } else {
+            if (top == 0) break;
+            top = top - 1;
+            cur = stackArr[top];
+            printf("%d %d\n", keyArr[cur], cntArr[cur]);
+            cur = rightArr[cur];
+        }
+    }
+    return;
+}
+
+int main() {
+    int n;
+    int i;
+    int x;
+
+    root = 0;
+    tot = 0;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        x = getint();
+        insert(x);
+    }
+
+    if (root != 0) {
+        int r1;
+        int r2;
+        printf("%d", keyArr[root]);
+        r1 = rightArr[root];
+        if (r1 != 0) {
+            printf(" %d", keyArr[r1]);
+            r2 = rightArr[r1];
+            if (r2 != 0) printf(" %d", keyArr[r2]);
+        }
+    }
+    printf("\n");
+
+    if (root != 0) traversal(root);
+    return 0;
+}

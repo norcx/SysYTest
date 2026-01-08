@@ -1,0 +1,77 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C4/G.c`.
+ *   Performs arithmetic on rational numbers a/b and c/d with op:
+ *     1:add 2:sub 3:mul 4:div
+ *   Input format (Strict SysY): first T, then for each case 5 integers:
+ *     a, b, c, d, op (one integer per line).
+ */
+
+int gcd(int a, int b) {
+    if (a < 0) a = 0 - a;
+    if (b < 0) b = 0 - b;
+    if (a == 0) return b;
+    if (b == 0) return a;
+
+    for (; b != 0;) {
+        int t = a % b;
+        a = b;
+        b = t;
+    }
+    return a;
+}
+
+int main() {
+    int t;
+    int i;
+    int a, b, c, d, op;
+    int p, q, r;
+
+    t = getint();
+    for (i = 0; i < t; i = i + 1) {
+        a = getint();
+        b = getint();
+        c = getint();
+        d = getint();
+        op = getint();
+
+        p = 0;
+        q = 1;
+        if (op == 1) {
+            p = a * d + b * c;
+            q = b * d;
+        } else if (op == 2) {
+            p = a * d - b * c;
+            q = b * d;
+        } else if (op == 3) {
+            p = a * c;
+            q = b * d;
+        } else {
+            p = a * d;
+            q = b * c;
+        }
+
+        if (q < 0) {
+            p = 0 - p;
+            q = 0 - q;
+        }
+
+        if (q != 0 && p % q == 0) {
+            printf("%d\n", p / q);
+        } else {
+            if (q == 0) {
+                printf("0\n");
+            } else {
+                r = gcd(p, q);
+                p = p / r;
+                q = q / r;
+                if (q < 0) {
+                    p = 0 - p;
+                    q = 0 - q;
+                }
+                printf("%d/%d\n", p, q);
+            }
+        }
+    }
+
+    return 0;
+}

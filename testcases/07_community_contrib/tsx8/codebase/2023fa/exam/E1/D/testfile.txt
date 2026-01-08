@@ -1,0 +1,37 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E1/D.c`.
+ *   Reads 7 integers (a1,b1,a2,b2,a3,b3,op) and prints an expression based on op.
+ */
+
+int main() {
+    int a1;
+    int b1;
+    int a2;
+    int b2;
+    int a3;
+    int b3;
+    int op;
+    int ans;
+
+    a1 = getint();
+    b1 = getint();
+    a2 = getint();
+    b2 = getint();
+    a3 = getint();
+    b3 = getint();
+    op = getint();
+
+    ans = 0;
+    if (op == 1) {
+        ans = a1 * (b1 + b2 + b3) + a2 * (b2 + b3) + a3 * b3;
+        printf("%d\n", ans);
+    } else if (op == 2) {
+        ans = a2 * (b1 + b2 + b3) + a3 * (b1 + b3) + a1 * b1;
+        printf("%d\n", ans);
+    } else if (op == 3) {
+        ans = a3 * (b1 + b2 + b3) + a2 * (b1 + b2) + a1 * b1;
+        printf("%d\n", ans);
+    }
+
+    return 0;
+}

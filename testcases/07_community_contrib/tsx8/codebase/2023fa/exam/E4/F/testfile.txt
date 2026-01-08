@@ -1,0 +1,43 @@
+/* Description:
+ * Range add via difference array; count positions >= lim.
+ * Input: n, m, lim, then m lines (l, r, x).
+ * Output: count.
+ */
+
+const int MAXN = 200010;
+int sum[MAXN + 5];
+int delta[MAXN + 5];
+
+int main() {
+    int n;
+    int m;
+    int lim;
+    int l;
+    int r;
+    int x;
+    int cnt;
+    int i;
+
+    n = getint();
+    m = getint();
+    lim = getint();
+
+    cnt = 0;
+    for (i = 0; i < m; i = i + 1) {
+        l = getint();
+        r = getint();
+        x = getint();
+        delta[l] = delta[l] + x;
+        delta[r + 1] = delta[r + 1] - x;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        sum[i] = sum[i - 1] + delta[i];
+        if (sum[i] >= lim) {
+            cnt = cnt + 1;
+        }
+    }
+
+    printf("%d\n", cnt);
+    return 0;
+}

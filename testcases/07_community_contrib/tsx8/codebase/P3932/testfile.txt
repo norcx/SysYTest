@@ -1,0 +1,99 @@
+const int MOD = 19260817;
+const int MAXN = 200010;
+
+int n;
+int m;
+int d[MAXN];
+int a[MAXN];
+int c[MAXN];
+
+int norm(int x) {
+    x = x % MOD;
+    if (x < 0) x = x + MOD;
+    return x;
+}
+
+int addmod(int x, int y) {
+    int r = x + y;
+    r = r % MOD;
+    if (r < 0) r = r + MOD;
+    return r;
+}
+
+int submod(int x, int y) {
+    int r = x - y;
+    r = r % MOD;
+    if (r < 0) r = r + MOD;
+    return r;
+}
+
+int mulmod(int x, int y) {
+    x = norm(x);
+    y = norm(y);
+    int res = 0;
+    for (; y > 0; y = y / 2) {
+        if (y % 2 == 1) {
+            res = res + x;
+            if (res >= MOD) res = res - MOD;
+        }
+        x = x + x;
+        if (x >= MOD) x = x - MOD;
+    }
+    return res;
+}
+
+int main() {
+    n = getint();
+    m = getint();
+
+    d[0] = 0;
+    a[0] = 0;
+    c[0] = 0;
+
+    int i;
+    for (i = 1; i < n; i = i + 1) {
+        int v = getint();
+        v = norm(v);
+        d[i] = d[i - 1] + v;
+        d[i] = d[i] % MOD;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        int v = getint();
+        int vmod = norm(v);
+        c[i] = c[i - 1] + mulmod(vmod, d[i - 1]);
+        c[i] = c[i] % MOD;
+        a[i] = a[i - 1] + vmod;
+        a[i] = a[i] % MOD;
+    }
+
+    int q;
+    for (q = 0; q < m; q = q + 1) {
+        int x = getint();
+        int l = getint();
+        int r = getint();
+
+        int res;
+        if (x < l) {
+            int part1 = submod(c[r], c[l - 1]);
+            int part2 = mulmod(d[x - 1], submod(a[r], a[l - 1]));
+            res = submod(part1, part2);
+        } else if (x > r) {
+            int part1 = mulmod(d[x - 1], submod(a[r], a[l - 1]));
+            int part2 = submod(c[l - 1], c[r]);
+            res = addmod(part1, part2);
+        } else {
+            int inner = (a[x] + a[x]) % MOD;
+            inner = submod(inner, a[l - 1]);
+            inner = submod(inner, a[r]);
+            int part1 = mulmod(d[x - 1], inner);
+            int part2 = (c[x] + c[x]) % MOD;
+            int temp = submod(part1, part2);
+            temp = addmod(temp, c[l - 1]);
+            res = addmod(temp, c[r]);
+        }
+
+        printf("%d\n", res);
+    }
+    return 0;
+}

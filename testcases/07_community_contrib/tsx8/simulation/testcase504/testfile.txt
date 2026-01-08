@@ -1,0 +1,119 @@
+/*
+  BFS reachability with time-blocked cells.
+  Input integers are newline-separated.
+*/
+
+const int MAXN = 310;
+const int MAXV = MAXN * MAXN;
+
+int vis[MAXV];
+int bo[MAXV];
+int dis[MAXV];
+int qx[MAXV];
+int qy[MAXV];
+int dx[4];
+int dy[4];
+
+int idx(int x, int y) {
+    return (x - 1) * MAXN + (y - 1);
+}
+
+int main() {
+    int T;
+    int tc;
+    int n;
+    int i;
+    int j;
+    int x;
+    int y;
+    int id;
+    int head;
+    int tail;
+    int nowx;
+    int nowy;
+    int base;
+    int step;
+    int k;
+    int nx;
+    int ny;
+    int bid;
+
+    dx[0] = 1;
+    dy[0] = 0;
+    dx[1] = 0;
+    dy[1] = -1;
+    dx[2] = -1;
+    dy[2] = 0;
+    dx[3] = 0;
+    dy[3] = 1;
+
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        n = getint();
+        for (i = 1; i <= n; i = i + 1) {
+            for (j = 1; j <= n; j = j + 1) {
+                id = idx(i, j);
+                vis[id] = 0;
+                bo[id] = 0;
+                dis[id] = -1;
+            }
+        }
+
+        for (i = 1; i <= 2 * n - 2; i = i + 1) {
+            x = getint();
+            y = getint();
+            id = idx(x, y);
+            bo[id] = i;
+        }
+
+        head = 0;
+        tail = 0;
+        qx[tail] = 1;
+        qy[tail] = 1;
+        tail = tail + 1;
+        id = idx(1, 1);
+        vis[id] = 1;
+        dis[id] = 0;
+
+        for (; head < tail;) {
+            nowx = qx[head];
+            nowy = qy[head];
+            head = head + 1;
+
+            if (nowx == n && nowy == n) {
+                head = tail;
+            } else {
+                base = dis[idx(nowx, nowy)];
+                step = base + 1;
+
+                for (k = 0; k < 4; k = k + 1) {
+                    nx = nowx + dx[k];
+                    ny = nowy + dy[k];
+                    if (nx < 1 || ny < 1 || nx > n || ny > n) {
+                    } else {
+                        id = idx(nx, ny);
+                        if (vis[id] != 0) {
+                        } else {
+                            bid = bo[id];
+                            if (bid != 0 && bid <= step) {
+                            } else {
+                                dis[id] = step;
+                                qx[tail] = nx;
+                                qy[tail] = ny;
+                                tail = tail + 1;
+                                vis[id] = 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (dis[idx(n, n)] == -1) {
+            printf("No\n");
+        } else {
+            printf("Yes\n");
+        }
+    }
+    return 0;
+}

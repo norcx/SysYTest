@@ -1,0 +1,45 @@
+/* Description:
+ *   Deterministic version of the given C++ random-data generator.
+ *   Reads 1 integer seed from input, then prints:
+ *     T 10 q
+ *     q integers (space-separated, trailing space)
+ *     T integers (one per line)
+ */
+
+int seed;
+
+int myrand() {
+    seed = seed * 25173 + 13849;
+    seed = seed % 65536;
+    if (seed < 0) seed = seed + 65536;
+    return seed;
+}
+
+int main() {
+    int T;
+    int q;
+    int i;
+
+    seed = getint();
+    seed = seed % 65536;
+    if (seed < 0) seed = seed + 65536;
+
+    T = myrand() + myrand();
+    T = T % 2000;
+
+    q = myrand() + myrand();
+    q = q % 20;
+    q = q + 1;
+
+    printf("%d %d %d \n", T, 10, q);
+
+    for (i = 1; i <= q; i = i + 1) {
+        printf("%d ", (myrand() % 20 + myrand() % 20 + 3) % 20 + 1);
+    }
+
+    for (i = 1; i <= T; i = i + 1) {
+        printf("%d\n", myrand() * 30 + myrand() * 2 + myrand() * 66 + myrand() * 34 + 12);
+    }
+
+    return 0;
+}

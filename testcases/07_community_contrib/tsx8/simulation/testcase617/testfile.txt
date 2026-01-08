@@ -1,0 +1,66 @@
+/* Description:
+ *   [Add description here]
+ */
+const int MAXN = 20005;
+
+int n;
+int p1;
+int p2;
+int a[MAXN];
+int s[MAXN];
+
+int main() {
+  int i;
+  int ch;
+
+  n = 0;
+  for (i = 1; i < MAXN; i = i + 1) {
+    ch = getint();
+    if (ch == 0) break;
+    n = n + 1;
+    s[n] = ch;
+  }
+
+  if (n == 0) return 0;
+
+  if (s[1] != 45) {
+    for (i = 1; i <= n; i = i + 1) a[n - i + 1] = s[i] - 48;
+    a[0] = n;
+
+    p1 = 0;
+    p2 = 0;
+    for (i = 1; i <= a[0]; i = i + 1) {
+      if (a[i] <= 7 && p1 == 0) p1 = i;
+      if (a[i] >= 1 && p2 == 0 || a[i] >= 1 && p2 <= p1) p2 = i;
+    }
+
+    if (p1 != 0 && p2 != 0 && p1 != p2) {
+      for (i = a[0]; i > 0; i = i - 1) {
+        if (i == p1) printf("%d", a[i] + 2);
+        else if (i == p2) printf("%d", a[i] - 1);
+        else printf("%d", a[i]);
+      }
+      printf("\n");
+    } else {
+      p1 = 0;
+      for (i = 1; i <= a[0]; i = i + 1) {
+        if (a[i] < 9) {
+          p1 = i;
+          break;
+        }
+      }
+
+      printf("-");
+      for (i = a[0]; i > 0; i = i - 1) {
+        if (i == p1) printf("%d", a[i] + 1);
+        else printf("%d", a[i]);
+      }
+      printf("\n");
+    }
+  } else {
+    for (i = 2; i <= n; i = i + 1) a[n - i + 1] = s[i] - 48;
+    a[0] = n - 1;
+  }
+
+  return 0;
+}

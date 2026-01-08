@@ -1,0 +1,64 @@
+/* Description:
+ *   Converted from C++: compute max over all substrings of (max char freq - min nonzero char freq).
+ *   Input: n, then n integers in [0,25] representing letters a..z.
+ *   Output: the maximum difference.
+ */
+
+const int MAXN = 4000;
+const int INF = 2147483647;
+
+int n;
+int ans;
+int s[MAXN];
+int c[26];
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int mx;
+    int mn;
+    int idx;
+    int diff;
+
+    n = getint();
+
+    i = 1;
+    for (i = 1; i <= n; i = i + 1) {
+        s[i] = getint();
+    }
+
+    ans = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        for (k = 0; k < 26; k = k + 1) {
+            c[k] = 0;
+        }
+        mx = 0;
+        mn = INF;
+
+        for (j = i; j <= n; j = j + 1) {
+            idx = s[j];
+            c[idx] = c[idx] + 1;
+            if (c[idx] > mx) {
+                mx = c[idx];
+            }
+
+            mn = INF;
+            for (k = 0; k < 26; k = k + 1) {
+                if (c[k] != 0) {
+                    if (c[k] < mn) {
+                        mn = c[k];
+                    }
+                }
+            }
+
+            diff = mx - mn;
+            if (diff > ans) {
+                ans = diff;
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

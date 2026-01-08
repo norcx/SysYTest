@@ -1,0 +1,9 @@
+/* Description:
+ *   Converted from an incomplete C/C++ snippet containing only banned
+ *   preprocessor directives (#include/#define) and no executable logic.
+ *   This Strict SysY testcase is therefore a no-op program.
+ */
+
+int main() {
+    return 0;
+}

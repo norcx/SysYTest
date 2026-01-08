@@ -1,0 +1,14 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C1/B.c`.
+ *   Reads `n`, then prints '+' exactly `n` times.
+ */
+
+int main() {
+    int n;
+    int i;
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        printf("+");
+    }
+    return 0;
+}

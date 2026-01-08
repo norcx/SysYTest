@@ -1,0 +1,99 @@
+/* P2224 product processing DP translated to SysY: minimize the maximum load of two machines
+ * while honoring the original transition structure (x-shift, y-add, z-shift-add) with only for-loops.
+ */
+const int MAX_ITEMS = 8;
+const int CAPACITY_LIMIT = 128;
+const int INF_VALUE = 1061109567;
+
+int xs[MAX_ITEMS];
+int ys[MAX_ITEMS];
+int zs[MAX_ITEMS];
+int dp_prev[CAPACITY_LIMIT + 1];
+int dp_curr[CAPACITY_LIMIT + 1];
+
+int max_value(int a, int b) {
+    if (a > b) {
+        return a;
+    }
+    return b;
+}
+
+int main() {
+    int n = getint();
+    int i = 0;
+    for (i = 0; i < n; i = i + 1) {
+        xs[i] = getint();
+        ys[i] = getint();
+        zs[i] = getint();
+    }
+    int total_span = 0;
+    for (i = 0; i < n; i = i + 1) {
+        int block = xs[i];
+        block = max_value(block, ys[i]);
+        block = max_value(block, zs[i]);
+        total_span = total_span + block;
+    }
+    if (total_span > CAPACITY_LIMIT) {
+        total_span = CAPACITY_LIMIT;
+    }
+    for (i = 0; i <= total_span; i = i + 1) {
+        dp_prev[i] = INF_VALUE;
+        dp_curr[i] = INF_VALUE;
+    }
+    dp_prev[0] = 0;
+    int processed_span = 0;
+    for (i = 0; i < n; i = i + 1) {
+        int x = xs[i];
+        int y = ys[i];
+        int z = zs[i];
+        int block = x;
+        block = max_value(block, y);
+        block = max_value(block, z);
+        processed_span = processed_span + block;
+        if (processed_span > total_span) {
+            processed_span = total_span;
+        }
+        int j;
+        for (j = 0; j <= processed_span; j = j + 1) {
+            dp_curr[j] = INF_VALUE;
+        }
+        for (j = 0; j <= processed_span; j = j + 1) {
+            int best = dp_curr[j];
+            if (y > 0) {
+                int candidate = dp_prev[j] + y;
+                if (candidate < best) {
+                    best = candidate;
+                }
+            }
+            if (x > 0 && j >= x) {
+                int alt = dp_prev[j - x];
+                if (alt < best) {
+                    best = alt;
+                }
+            }
+            if (z > 0 && j >= z) {
+                int alt2 = dp_prev[j - z] + z;
+                if (alt2 < best) {
+                    best = alt2;
+                }
+            }
+            dp_curr[j] = best;
+        }
+        for (j = 0; j <= processed_span; j = j + 1) {
+            dp_prev[j] = dp_curr[j];
+        }
+    }
+    int answer = INF_VALUE;
+    int j2;
+    for (j2 = 0; j2 <= processed_span; j2 = j2 + 1) {
+        int bigger = j2;
+        if (dp_prev[j2] > bigger) {
+            bigger = dp_prev[j2];
+        }
+        if (bigger < answer) {
+            answer = bigger;
+        }
+    }
+    printf("%d\n", answer);
+    return 0;
+}

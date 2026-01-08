@@ -1,0 +1,130 @@
+/*
+  Converted to Strict SysY from the provided C++ source.
+
+  Input (newline-separated integers):
+    n
+    w1
+    h1
+    ...
+    wn
+    hn
+
+  Output:
+    ans
+*/
+
+const int MAXN = 30;
+const int MAXM = 16;
+const int MAXH = 64;
+const int INF = 1047483647;
+
+int n;
+int ans;
+int H;
+int w[MAXN + 1];
+int h[MAXN + 1];
+int f[2 * MAXM * MAXH];
+
+int idx(int j, int k) {
+    return j * MAXH + k;
+}
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int l;
+    int t;
+    int now;
+    int pre;
+    int size;
+    int curIndex;
+    int preIndex;
+    int curVal;
+    int cand;
+
+    ans = INF;
+    H = 0;
+    size = MAXM * MAXH;
+
+    n = getint();
+
+    i = 1;
+    for (i = 1; i <= n; i = i + 1) {
+        w[i] = getint();
+        h[i] = getint();
+        if (w[i] > H) H = w[i];
+        if (h[i] > H) H = h[i];
+    }
+
+    for (t = 0; t < 2 * size; t = t + 1) {
+        f[t] = INF;
+    }
+    f[idx(0, 0)] = 0;
+
+    now = 1;
+    for (i = 1; i <= n; i = i + 1) {
+        pre = 1 - now;
+        for (j = n / 2; j >= 0; j = j - 1) {
+            for (k = H; k >= 0; k = k - 1) {
+                curIndex = now * size + idx(j, k);
+                f[curIndex] = INF;
+
+                if (k > h[i]) {
+                    preIndex = pre * size + idx(j, k);
+                    curVal = f[preIndex];
+                    if (curVal != INF) {
+                        cand = curVal + w[i];
+                        if (cand < f[curIndex]) f[curIndex] = cand;
+                    }
+                }
+
+                if (k > w[i] && j) {
+                    preIndex = pre * size + idx(j - 1, k);
+                    curVal = f[preIndex];
+                    if (curVal != INF) {
+                        cand = curVal + h[i];
+                        if (cand < f[curIndex]) f[curIndex] = cand;
+                    }
+                }
+
+                if (k == h[i]) {
+                    for (l = 0; l <= k; l = l + 1) {
+                        preIndex = pre * size + idx(j, l);
+                        curVal = f[preIndex];
+                        if (curVal != INF) {
+                            cand = curVal + w[i];
+                            if (cand < f[curIndex]) f[curIndex] = cand;
+                        }
+                    }
+                }
+
+                if (k == w[i] && j) {
+                    for (l = 0; l <= k; l = l + 1) {
+                        preIndex = pre * size + idx(j - 1, l);
+                        curVal = f[preIndex];
+                        if (curVal != INF) {
+                            cand = curVal + h[i];
+                            if (cand < f[curIndex]) f[curIndex] = cand;
+                        }
+                    }
+                }
+            }
+        }
+        now = 1 - now;
+    }
+
+    now = 1 - now;
+    for (i = 0; i <= n / 2; i = i + 1) {
+        for (j = 0; j <= H; j = j + 1) {
+            curVal = f[now * size + idx(i, j)];
+            if (curVal != INF) {
+                cand = curVal * j;
+                if (cand < ans) ans = cand;
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

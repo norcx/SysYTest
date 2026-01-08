@@ -1,0 +1,107 @@
+/* Luogu P1197-inspired SysY testcase: rebuild destroyed planets via DSU while obeying for-loop + printf only rules. */
+
+int parent_arr[32];
+int removed[32];
+int head_idx[32];
+int neighbor_to[128];
+int neighbor_next[128];
+int destroyed_order[32];
+int answers[32];
+int edge_count = 0;
+
+int find_root(int x) {
+    if (parent_arr[x] == x) {
+        return x;
+    }
+    parent_arr[x] = find_root(parent_arr[x]);
+    return parent_arr[x];
+}
+
+int unite_nodes(int a, int b) {
+    int root_a = find_root(a);
+    int root_b = find_root(b);
+    if (root_a != root_b) {
+        parent_arr[root_a] = root_b;
+        return 1;
+    }
+    return 0;
+}
+
+void add_edge(int u, int v) {
+    neighbor_to[edge_count] = v;
+    neighbor_next[edge_count] = head_idx[u];
+    head_idx[u] = edge_count;
+    edge_count = edge_count + 1;
+}
+
+int main() {
+    int n = getint();
+    int m = getint();
+    int i = 0;
+    int u = 0;
+    int v = 0;
+    int k = 0;
+    int edge_iter = -1;
+    int neighbor = -1;
+    int alive = 0;
+    int components = 0;
+    for (i = 0; i < 32; i = i + 1) {
+        parent_arr[i] = i;
+        removed[i] = 0;
+        head_idx[i] = -1;
+    }
+    edge_count = 0;
+    for (i = 0; i < m; i = i + 1) {
+        u = getint();
+        v = getint();
+        add_edge(u, v);
+        add_edge(v, u);
+    }
+    k = getint();
+    for (i = 0; i < k; i = i + 1) {
+        destroyed_order[i] = getint();
+        removed[destroyed_order[i]] = 1;
+    }
+    alive = 0;
+    for (i = 0; i < n; i = i + 1) {
+        parent_arr[i] = i;
+        if (removed[i] == 0) {
+            alive = alive + 1;
+        }
+    }
+    components = alive;
+    for (i = 0; i < n; i = i + 1) {
+        if (removed[i] == 0) {
+            edge_iter = head_idx[i];
+            for (edge_iter = head_idx[i]; edge_iter != -1; edge_iter = neighbor_next[edge_iter]) {
+                neighbor = neighbor_to[edge_iter];
+                if (removed[neighbor] == 0) {
+                    if (unite_nodes(i, neighbor) == 1) {
+                        components = components - 1;
+                    }
+                }
+            }
+        }
+    }
+    answers[k] = components;
+    for (i = k - 1; i >= 0; i = i - 1) {
+        u = destroyed_order[i];
+        removed[u] = 0;
+        parent_arr[u] = u;
+        components = components + 1;
+        edge_iter = head_idx[u];
+        for (edge_iter = head_idx[u]; edge_iter != -1; edge_iter = neighbor_next[edge_iter]) {
+            neighbor = neighbor_to[edge_iter];
+            if (removed[neighbor] == 0) {
+                if (unite_nodes(u, neighbor) == 1) {
+                    components = components - 1;
+                }
+            }
+        }
+        answers[i] = components;
+    }
+    for (i = 0; i <= k; i = i + 1) {
+        printf("%d\n", answers[i]);
+    }
+    return 0;
+}

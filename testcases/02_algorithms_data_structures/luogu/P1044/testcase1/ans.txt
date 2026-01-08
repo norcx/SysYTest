@@ -1,0 +1,2 @@
+Input n: 12
+Catalan Result: 208012

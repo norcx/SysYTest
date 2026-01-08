@@ -1,0 +1,133 @@
+/*
+ * Converted from the given C source:
+ * - Removes file I/O and strings (Strict SysY).
+ * - Stations are encoded as integers [0..V-1].
+ * - Input format (one integer per line):
+ *   V
+ *   L
+ *   For each line k in [1..L]:
+ *     line_id
+ *     nn
+ *     nn station indices (in order)
+ *   st
+ *   ed
+ * Output (integers only, one per line):
+ *   st
+ *   For each maximal same-line segment along the shortest path:
+ *     line_id
+ *     count_edges_in_segment
+ *     end_station_of_segment
+ */
+
+const int MAXV = 64;
+const int INF = 1000000000;
+
+int graph[MAXV * MAXV];
+int dis[MAXV];
+int pre[MAXV];
+int vis[MAXV];
+int way[MAXV];
+
+int main() {
+    int i;
+    int j;
+
+    int tot;
+    int lines;
+    tot = getint();
+    lines = getint();
+
+    for (i = 0; i < MAXV * MAXV; i = i + 1) {
+        graph[i] = 0;
+    }
+
+    for (i = 0; i < lines; i = i + 1) {
+        int id;
+        int nn;
+        int u;
+        int t;
+
+        id = getint();
+        nn = getint();
+        u = getint();
+        for (j = 1; j < nn; j = j + 1) {
+            t = getint();
+            graph[u * MAXV + t] = id;
+            graph[t * MAXV + u] = id;
+            u = t;
+        }
+    }
+
+    int st;
+    int ed;
+    st = getint();
+    ed = getint();
+
+    for (i = 0; i < tot; i = i + 1) {
+        dis[i] = INF;
+        pre[i] = i;
+        vis[i] = 0;
+    }
+    dis[st] = 0;
+    pre[st] = st;
+
+    for (i = 0; i < tot; i = i + 1) {
+        int u;
+        int mn;
+        u = -1;
+        mn = INF;
+        for (j = 0; j < tot; j = j + 1) {
+            if (vis[j] == 0) {
+                if (dis[j] < mn) {
+                    mn = dis[j];
+                    u = j;
+                }
+            }
+        }
+        if (u < 0) {
+            i = tot;
+        } else {
+            vis[u] = 1;
+            for (j = 0; j < tot; j = j + 1) {
+                int eid;
+                eid = graph[u * MAXV + j];
+                if (vis[j] == 0) {
+                    if (eid != 0) {
+                        if (dis[u] + 1 < dis[j]) {
+                            dis[j] = dis[u] + 1;
+                            pre[j] = u;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    int pos;
+    pos = 0;
+    i = ed;
+    for (; i != st; ) {
+        way[pos] = i;
+        pos = pos + 1;
+        i = pre[i];
+    }
+
+    printf("%d\n", st);
+    i = pos - 1;
+    j = st;
+    for (; i >= 0; ) {
+        int seg_id;
+        int cnt;
+        seg_id = graph[j * MAXV + way[i]];
+        cnt = 0;
+        for (; i >= 0 && graph[j * MAXV + way[i]] == seg_id; ) {
+            j = way[i];
+            i = i - 1;
+            cnt = cnt + 1;
+        }
+        printf("%d\n", seg_id);
+        printf("%d\n", cnt);
+        printf("%d\n", j);
+    }
+    return 0;
+}

@@ -1,0 +1,85 @@
+/* Description:
+ *   Convert from C++: apply m rectangle updates on an n*n grid, then print
+ *   coverage counts. Implemented as a Fenwick tree per row, flattened to 1D.
+ */
+
+const int MAXN = 210;
+const int STRIDE = 212;
+
+int n;
+int m;
+int t[44944];
+int lb[212];
+
+int lowbit(int x) {
+    return lb[x];
+}
+
+void init_lowbit() {
+    int i;
+    lb[0] = 0;
+    lb[1] = 1;
+    for (i = 2; i < STRIDE; i = i + 1) {
+        if (i % 2 == 1) {
+            lb[i] = 1;
+        } else {
+            lb[i] = 2 * lb[i / 2];
+        }
+    }
+    return;
+}
+
+void add(int x, int y, int z) {
+    int i;
+    int base;
+    base = x * STRIDE;
+    for (i = y; i <= n; i = i + lowbit(i)) {
+        t[base + i] = t[base + i] + z;
+    }
+    return;
+}
+
+int query(int x, int y) {
+    int tmp;
+    int i;
+    int base;
+    tmp = 0;
+    base = x * STRIDE;
+    for (i = y; i > 0; i = i - lowbit(i)) {
+        tmp = tmp + t[base + i];
+    }
+    return tmp;
+}
+
+int main() {
+    int i;
+    int j;
+    int x1;
+    int y1;
+    int x2;
+    int y2;
+
+    init_lowbit();
+
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= m; i = i + 1) {
+        x1 = getint();
+        y1 = getint();
+        x2 = getint();
+        y2 = getint();
+        for (j = x1; j <= x2; j = j + 1) {
+            add(j, y1, 1);
+            add(j, y2 + 1, -1);
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= n; j = j + 1) {
+            printf("%d ", query(i, j));
+        }
+        printf("\n");
+    }
+    return 0;
+}

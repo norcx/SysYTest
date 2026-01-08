@@ -1,0 +1,90 @@
+/* Description:
+ *   Strict SysY conversion of the given C++ grid-checking program.
+ *
+ *   Input encoding (SysY-compatible):
+ *     n
+ *     a11
+ *     a12
+ *     ...
+ *     ann
+ *   where aij is 0 for '.' and 1 for '#'.
+ */
+
+const int MAXN = 64;
+
+int n;
+int pd;
+int s[MAXN * MAXN];
+
+int idx(int x, int y) {
+    return (x - 1) * n + (y - 1);
+}
+
+int judge(int x, int y) {
+    int p;
+    if (x < 1 || y < 1 || x > n || y > n) {
+        return 0;
+    }
+    p = idx(x, y);
+    if (s[p] == 0) {
+        return 0;
+    }
+    s[p] = 0;
+    return 1;
+}
+
+int main() {
+    int i;
+    int j;
+    int p;
+    int ok;
+
+    n = getint();
+
+    i = 1;
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= n; j = j + 1) {
+            p = idx(i, j);
+            s[p] = getint();
+        }
+    }
+
+    pd = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= n; j = j + 1) {
+            p = idx(i, j);
+            if (s[p] == 0) {
+                continue;
+            }
+            s[p] = 0;
+
+            ok = judge(i + 1, j);
+            if (ok) {
+                ok = judge(i + 2, j);
+            }
+            if (ok) {
+                ok = judge(i + 1, j - 1);
+            }
+            if (ok) {
+                ok = judge(i + 1, j + 1);
+            }
+
+            if (ok) {
+                continue;
+            }
+
+            pd = 1;
+            break;
+        }
+        if (pd) {
+            break;
+        }
+    }
+
+    if (pd == 0) {
+        printf("YES\n");
+    } else {
+        printf("NO\n");
+    }
+    return 0;
+}

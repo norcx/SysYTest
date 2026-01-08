@@ -1,0 +1,5 @@
+i=0, partial_res=316
+i=5, partial_res=1911
+i=10, partial_res=3531
+i=15, partial_res=5176
+Total Result: 6510

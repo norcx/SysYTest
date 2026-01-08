@@ -1,0 +1,51 @@
+/* Description:
+ *   Compute max over edges of (a[x]+a[y])/z, where a[i] and z are scaled by 100.
+ */
+const int MAXN = 10005;
+
+int n;
+int m;
+int a[MAXN];
+int ans100;
+
+int main() {
+  int i;
+  int x;
+  int y;
+  int z;
+  int sum;
+  int cand100;
+  int ip;
+  int fp;
+
+  n = getint();
+  m = getint();
+
+  for (i = 1; i <= n; i = i + 1) {
+    a[i] = getint();
+  }
+
+  for (i = 1; i <= m; i = i + 1) {
+    x = getint();
+    y = getint();
+    z = getint();
+    if (z != 0) {
+      sum = a[x] + a[y];
+      if (z > 0) {
+        cand100 = (sum * 100 + z / 2) / z;
+      } else {
+        cand100 = (sum * 100 - z / 2) / z;
+      }
+      if (cand100 > ans100) ans100 = cand100;
+    }
+  }
+
+  ip = ans100 / 100;
+  fp = ans100 - ip * 100;
+  if (fp < 10) {
+    printf("%d.0%d\n", ip, fp);
+  } else {
+    printf("%d.%d\n", ip, fp);
+  }
+  return 0;
+}

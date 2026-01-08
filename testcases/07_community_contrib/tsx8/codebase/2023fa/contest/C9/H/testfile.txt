@@ -1,0 +1,38 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C9/H.c`.
+ *
+ *   Original program reads C integer-literal strings (decimal/octal/hex with
+ *   optional suffix u/ll/ull) and prints the inferred type plus the value.
+ *
+ *   Strict SysY has no strings/chars, so this testcase uses integer-coded input:
+ *     n
+ *     base(0=dec,1=oct,2=hex)  suffix(0=u,1=ll,2=ull,3=none)  value(non-negative)
+ *
+ *   Values are scaled to fit 32-bit signed `int` (<= 2147483647).
+ */
+
+int main() {
+    int n;
+    int i;
+    int suffix;
+    int value;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        getint(); /* base: 0=dec,1=oct,2=hex (kept for fidelity to original) */
+        suffix = getint();
+        value = getint();
+
+        if (suffix == 1) {
+            printf("long long %d\n", value);
+        } else if (suffix == 2) {
+            printf("unsigned long long %d\n", value);
+        } else if (suffix == 0) {
+            printf("unsigned int %d\n", value);
+        } else {
+            printf("int %d\n", value);
+        }
+    }
+
+    return 0;
+}

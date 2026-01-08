@@ -1,0 +1,116 @@
+/* Description:
+ * Segment tree update/query ported to Strict SysY.
+ * Input:
+ *   n
+ *   m
+ *   a1 b1
+ *   ...
+ *   an bn
+ *   For each operation:
+ *     x
+ *     y
+ *     z
+ * Output:
+ *   After each operation, print sum[1].
+ */
+
+const int MAXN = 2005;
+const int MAXM = 8020;
+
+int n;
+int m;
+int sum[MAXM];
+int add[MAXM];
+int del[MAXM];
+int a[MAXN];
+int b[MAXN];
+
+int query(int o, int tar) {
+    int lch;
+    int rch;
+    if (tar == 0) return sum[o];
+    lch = o * 2;
+    rch = lch + 1;
+    if (tar == add[rch]) return sum[o] - sum[rch];
+    if (tar < add[rch]) return sum[o] - sum[rch] + query(rch, tar);
+    return query(lch, tar - add[rch] + del[rch]);
+}
+
+void push_up(int o) {
+    int lch;
+    int rch;
+    lch = o * 2;
+    rch = lch + 1;
+    if (del[rch] >= add[lch]) {
+        del[o] = del[rch] + del[lch] - add[lch];
+        add[o] = add[rch];
+        sum[o] = sum[rch];
+    } else {
+        del[o] = del[lch];
+        add[o] = add[lch] + add[rch] - del[rch];
+        sum[o] = sum[rch] + query(lch, del[rch]);
+    }
+}
+
+void build(int l, int r, int o) {
+    int mid;
+    if (l == r) {
+        add[o] = 0;
+        sum[o] = 0;
+        del[o] = 0;
+        if (a[l] != 0) {
+            del[o] = b[l];
+        } else {
+            add[o] = 1;
+            sum[o] = b[l];
+        }
+        return;
+    }
+    mid = (l + r) / 2;
+    build(l, mid, o * 2);
+    build(mid + 1, r, o * 2 + 1);
+    push_up(o);
+}
+
+void updata(int l, int r, int o, int x) {
+    int mid;
+    if (l == r) {
+        int y;
+        int z;
+        y = getint();
+        z = getint();
+        add[o] = 0;
+        sum[o] = 0;
+        del[o] = 0;
+        if (y != 0) {
+            del[o] = z;
+        } else {
+            add[o] = 1;
+            sum[o] = z;
+        }
+        return;
+    }
+    mid = (l + r) / 2;
+    if (x <= mid) updata(l, mid, o * 2, x);
+    else updata(mid + 1, r, o * 2 + 1, x);
+    push_up(o);
+}
+
+int main() {
+    int i;
+    int x;
+    int op;
+    n = getint();
+    m = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        b[i] = getint();
+    }
+    build(1, n, 1);
+    for (op = 0; op < m; op = op + 1) {
+        x = getint();
+        updata(1, n, 1, x);
+        printf("%d\n", sum[1]);
+    }
+    return 0;
+}

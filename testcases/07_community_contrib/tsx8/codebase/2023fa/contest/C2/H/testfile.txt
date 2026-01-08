@@ -1,0 +1,63 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C2/H.c` into Strict SysY (int-only).
+ *
+ *   Original logic uses floating-point and formatted output:
+ *     acc = (a + 0.65*b) / (a+b+c+d)
+ *     if acc > 0.7: rks = ((acc-0.55)/0.45)^2 * m
+ *
+ *   Since Strict SysY only supports `int` and `printf("%d\\n", ...)`, this
+ *   testcase prints scaled integers:
+ *     acc_scaled = floor(acc * 1_000_000)
+ *     rks_scaled = floor(rks * 10_000)
+ */
+
+int main() {
+    int t;
+    t = getint();
+
+    int i;
+    for (i = 0; i < t; i = i + 1) {
+        int m;
+        int a;
+        int b;
+        int c;
+        int d;
+        m = getint();
+        a = getint();
+        b = getint();
+        c = getint();
+        d = getint();
+
+        int sum;
+        sum = a + b + c + d;
+
+        int acc_num;
+        acc_num = 100 * a + 65 * b; /* numerator of (acc * 100) */
+
+        int acc_scaled;
+        acc_scaled = (acc_num * 10000) / sum; /* acc * 1,000,000 */
+
+        int rks_scaled;
+        rks_scaled = 0;
+
+        if (acc_scaled > 700000) {
+            int diff;
+            diff = acc_scaled - 550000; /* (acc - 0.55) * 1,000,000 */
+
+            /* x = (acc - 0.55) / 0.45, scaled by 1000 to avoid overflow */
+            int x_scaled;
+            x_scaled = (diff * 1000) / 450000;
+
+            int x2;
+            x2 = x_scaled * x_scaled; /* x^2 scaled by 1,000,000 */
+
+            /* rks_scaled = rks * 10,000 = m * x^2 * 10,000 */
+            rks_scaled = (m * x2) / 100;
+        }
+
+        printf("%d\n", acc_scaled);
+        printf("%d\n", rks_scaled);
+    }
+
+    return 0;
+}

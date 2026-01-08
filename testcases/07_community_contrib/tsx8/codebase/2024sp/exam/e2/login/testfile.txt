@@ -1,0 +1,91 @@
+/* Description:
+ * Input (newline-separated integers):
+ * n
+ * then n records: num, name_id, num2, time_id
+ *
+ * Output:
+ * For each hash bucket that observes a new num2 after first seen,
+ * print (num, name_id) of the first such record per bucket, sorted by num.
+ */
+const int MAXN = 10;
+const int BUCKET = 10;
+const int MAXREC = 20;
+
+int err_num[MAXREC];
+int err_name[MAXREC];
+
+int hasht[MAXN * BUCKET];
+int top2[MAXN];
+int vis[MAXN];
+int vis2[MAXN];
+
+int main() {
+  int n;
+  int i;
+  int j;
+  int num;
+  int name;
+  int num2;
+  int time;
+  int res;
+  int top;
+
+  n = getint();
+  top = 0;
+
+  for (i = 0; i < n; i = i + 1) {
+    num = getint();
+    name = getint();
+    num2 = getint();
+    time = getint();
+
+    res = name % MAXN;
+
+    if (vis[res] != 0) {
+      int flag;
+      flag = 0;
+      for (j = 0; j < top2[res]; j = j + 1) {
+        if (hasht[res * BUCKET + j] == num2) {
+          flag = 1;
+        }
+      }
+
+      if (flag == 0) {
+        hasht[res * BUCKET + top2[res]] = num2;
+        top2[res] = top2[res] + 1;
+
+        if (vis2[res] == 0) {
+          err_num[top] = num;
+          err_name[top] = name;
+          top = top + 1;
+          vis2[res] = 1;
+        }
+      }
+    } else {
+      vis[res] = 1;
+      hasht[res * BUCKET + top2[res]] = num2;
+      top2[res] = top2[res] + 1;
+    }
+  }
+
+  for (i = 0; i < top; i = i + 1) {
+    for (j = i + 1; j < top; j = j + 1) {
+      if (err_num[j] < err_num[i]) {
+        int t;
+        t = err_num[i];
+        err_num[i] = err_num[j];
+        err_num[j] = t;
+
+        t = err_name[i];
+        err_name[i] = err_name[j];
+        err_name[j] = t;
+      }
+    }
+  }
+
+  for (i = 0; i < top; i = i + 1) {
+    printf("%d %d\n", err_num[i], err_name[i]);
+  }
+
+  return 0;
+}

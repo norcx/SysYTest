@@ -1,0 +1,57 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E3/F.c`.
+ *   Given integers a, b, c written as digit strings in an unknown base B (m+1..16),
+ *   find the smallest B such that value(a,B) * value(b,B) == value(c,B); else print 0.
+ */
+
+int f(int x, int B) {
+    int base;
+    int ans;
+    base = 1;
+    ans = 0;
+    for (; x != 0; x = x / 10) {
+        ans = ans + (x % 10) * base;
+        base = base * B;
+    }
+    return ans;
+}
+
+int main() {
+    int a;
+    int b;
+    int c;
+    int B;
+    int m;
+    int t;
+    int a1;
+    int b1;
+    int c1;
+
+    a = getint();
+    b = getint();
+    c = getint();
+
+    m = 1;
+    t = a;
+    for (; t > 0; t = t / 10) {
+        if (m < (t % 10)) m = t % 10;
+    }
+    t = b;
+    for (; t > 0; t = t / 10) {
+        if (m < (t % 10)) m = t % 10;
+    }
+    t = c;
+    for (; t > 0; t = t / 10) {
+        if (m < (t % 10)) m = t % 10;
+    }
+
+    for (B = m + 1; B <= 16; B = B + 1) {
+        a1 = f(a, B);
+        b1 = f(b, B);
+        c1 = f(c, B);
+        if (a1 * b1 == c1) break;
+    }
+    if (B == 17) B = 0;
+    printf("%d\n", B);
+    return 0;
+}

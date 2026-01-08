@@ -1,0 +1,69 @@
+/* Description:
+ * Converted from C++ to Strict SysY.
+ * Notes: keeps original debug prints.
+ */
+
+const int MAXN = 20000;
+
+int T;
+int n;
+int m;
+int D;
+int L;
+int ans;
+int h;
+int t;
+
+int f[MAXN];
+int q[MAXN];
+int a[MAXN];
+
+int main() {
+  T = getint();
+
+  int case_id;
+  case_id = 0;
+  for (case_id = 0; case_id < T; case_id = case_id + 1) {
+    h = 1;
+    t = 1;
+    q[1] = 0;
+    ans = 1;
+    f[0] = 1;
+
+    n = getint();
+    m = getint();
+    D = getint();
+    L = getint();
+
+    int i;
+    i = 1;
+    for (i = 1; i <= n; i = i + 1) {
+      a[i] = getint();
+
+      for (; h <= t && a[q[h]] + D < a[i];) {
+        ans = ans - f[q[h]];
+        h = h + 1;
+      }
+
+      if (ans != 0) {
+        f[i] = 1;
+        ans = ans + 1;
+      }
+
+      h = h + 1;
+      ans = ans - 1;
+      t = t + 1;
+      q[t] = i;
+
+      printf("i = %d  ans = %d %d \n", i, ans, f[i]);
+    }
+
+    for (; h <= t && a[q[h]] + D < L;) {
+      ans = ans - f[q[h]];
+      h = h + 1;
+    }
+    printf("%d\n", ans);
+  }
+
+  return 0;
+}

@@ -1,0 +1,148 @@
+/* Description:
+ *   Strict SysY conversion of the given C++ source.
+ *
+ * Input (one integer per line):
+ *   n
+ *   a1
+ *   b1
+ *   ...
+ *   an
+ *   bn
+ *   T
+ *
+ * Output:
+ *   round(ans * 100) as an integer (i.e. two decimal digits, without a dot).
+ */
+
+const int MAXN = 10010;
+
+int n;
+int a[MAXN];
+int b[MAXN];
+int sa1[MAXN];
+int sa2[MAXN];
+int sb1[MAXN];
+int sb2[MAXN];
+
+int best_num;
+int best_den;
+
+int frac_less(int a_num, int a_den, int b_num, int b_den) {
+    int flip;
+    int iter;
+    int q1;
+    int q2;
+    int r1;
+    int r2;
+
+    flip = 0;
+    for (iter = 0; iter < 64; iter = iter + 1) {
+        q1 = a_num / a_den;
+        q2 = b_num / b_den;
+
+        if (q1 < q2) {
+            if (flip == 0) return 1;
+            return 0;
+        }
+        if (q1 > q2) {
+            if (flip == 0) return 0;
+            return 1;
+        }
+
+        r1 = a_num % a_den;
+        r2 = b_num % b_den;
+
+        if (r1 == 0 && r2 == 0) return 0;
+        if (r1 == 0) {
+            if (flip == 0) return 1;
+            return 0;
+        }
+        if (r2 == 0) {
+            if (flip == 0) return 0;
+            return 1;
+        }
+
+        a_num = a_den;
+        a_den = r1;
+        b_num = b_den;
+        b_den = r2;
+        flip = 1 - flip;
+    }
+    return 0;
+}
+
+void update_best(int num, int den) {
+    if (frac_less(num, den, best_num, best_den) == 1) {
+        best_num = num;
+        best_den = den;
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int T;
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        b[i] = getint();
+        sa1[i] = sa1[i - 1] + a[i];
+        sb1[i] = sb1[i - 1] + b[i];
+    }
+    T = getint();
+
+    for (i = n; i >= 1; i = i - 1) {
+        sa2[i] = sa2[i + 1] + a[i];
+        sb2[i] = sb2[i + 1] + b[i];
+    }
+
+    best_num = 2147483647;
+    best_den = 1;
+
+    for (i = 0; i <= n; i = i + 1) {
+        int den;
+        int sbtot;
+        int tmp;
+        int num;
+
+        if (i < n) {
+            den = sa2[i + 1] + sb2[i + 1];
+            sbtot = sb1[i] + sb2[i + 1];
+            if (sbtot >= den) {
+                num = T * sb1[i];
+                update_best(num, 1);
+            } else {
+                tmp = sb1[i] * den + sb2[i + 1] * (den - sbtot);
+                num = T * tmp;
+                update_best(num, den);
+            }
+        }
+
+        if (i > 0) {
+            den = sa1[i] + sb1[i];
+            sbtot = sb1[i] + sb2[i + 1];
+            if (sbtot >= den) {
+                num = sb2[i + 1] * T;
+                update_best(num, 1);
+            } else {
+                tmp = sb1[i] * (den - sbtot) + sb2[i + 1] * den;
+                num = T * tmp;
+                update_best(num, den);
+            }
+        }
+    }
+
+    {
+        int q;
+        int r;
+        int cents;
+
+        q = best_num / best_den;
+        r = best_num % best_den;
+        cents = q * 100 + (r * 100 + best_den / 2) / best_den;
+        printf("%d\n", cents);
+    }
+
+    return 0;
+}

@@ -1,0 +1,6 @@
+deep_sum(10) = 55
+max_depth = 11
+deep_sum(50) = 1275
+max_depth = 51
+sum_of_sums(5) = 35
+max_depth = 6

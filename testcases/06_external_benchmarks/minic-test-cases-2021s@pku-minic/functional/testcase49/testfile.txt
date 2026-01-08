@@ -1,0 +1,7 @@
+//test getint()
+int main(){
+    int a;
+    a = getint();
+        printf("%d", a);
+    return 0;
+}

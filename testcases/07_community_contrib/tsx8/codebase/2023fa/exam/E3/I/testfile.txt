@@ -1,0 +1,78 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E3/I.c`.
+ *
+ *   Base conversion without strings/chars (Strict SysY).
+ *
+ *   Input format (all newline-separated integers):
+ *     T
+ *     repeat T times:
+ *       M
+ *       N
+ *       L
+ *       d0..d(L-1)  (most-significant first, each 0 <= di < abs(M))
+ *
+ *   Output format (per test case, all newline-separated integers):
+ *     out_len
+ *     out_digits (most-significant first, each 0 <= digit < abs(N))
+ */
+
+int digits[64];
+int out_digits[128];
+
+int main() {
+    int T;
+    int case_id;
+    int M;
+    int N;
+    int L;
+    int i;
+    int num;
+    int base;
+    int out_len;
+    int rem;
+
+    T = getint();
+    for (case_id = 0; case_id < T; case_id = case_id + 1) {
+        M = getint();
+        N = getint();
+        L = getint();
+
+        for (i = 0; i < L; i = i + 1) {
+            digits[i] = getint();
+        }
+
+        num = 0;
+        base = 1;
+        for (i = L - 1; i >= 0; i = i - 1) {
+            num = num + digits[i] * base;
+            base = base * M;
+        }
+
+        if (num == 0) {
+            printf("%d\n", 1);
+            printf("%d\n", 0);
+            continue;
+        }
+
+        out_len = 0;
+        for (; num != 0;) {
+            rem = num % N;
+            num = num / N;
+            if (rem < 0) {
+                rem = rem - N;
+                num = num + 1;
+            }
+            out_digits[out_len] = rem;
+            out_len = out_len + 1;
+            if (out_len >= 128) {
+                num = 0;
+            }
+        }
+
+        printf("%d\n", out_len);
+        for (i = out_len - 1; i >= 0; i = i - 1) {
+            printf("%d\n", out_digits[i]);
+        }
+    }
+    return 0;
+}

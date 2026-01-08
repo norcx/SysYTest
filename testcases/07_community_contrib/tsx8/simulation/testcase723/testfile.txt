@@ -1,0 +1,83 @@
+/* Description:
+ *   Converted from C++ source (puzzle).
+ *   Input: n, m, p, followed by n*m integers (matrix a), all 1 per line.
+ *   Output: a single integer (ans).
+ */
+
+const int STR = 340;
+const int INF = 2047483647;
+
+int n;
+int m;
+int p;
+int ans;
+
+int a[115600];
+int b[340];
+int l[340];
+int r[340];
+int mn[340];
+
+int max2(int x, int y) {
+    if (x < y) return y;
+    return x;
+}
+
+int min2(int x, int y) {
+    if (x < y) return x;
+    return y;
+}
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int t;
+
+    n = getint();
+    m = getint();
+    p = getint();
+
+    ans = p;
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            a[i * STR + j] = getint();
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 0; j <= m + 1; j = j + 1) {
+            b[j] = 0;
+            mn[j] = INF;
+        }
+        for (j = i; j <= n; j = j + 1) {
+            for (k = 1; k <= m; k = k + 1) {
+                b[k] = b[k] + a[j * STR + k];
+                l[k] = 0;
+                r[k] = 0;
+                mn[k] = min2(mn[k], a[j * STR + k]);
+            }
+
+            l[0] = 0;
+            r[m + 1] = 0;
+            b[0] = 0;
+            b[m + 1] = 0;
+
+            for (k = 1; k <= m; k = k + 1) {
+                l[k] = max2(l[k], l[k - 1] + b[k - 1]);
+            }
+            for (k = m; k >= 1; k = k - 1) {
+                r[k] = max2(r[k], r[k + 1] + b[k + 1]);
+            }
+
+            for (k = 1; k <= m; k = k + 1) {
+                t = 0;
+                if (-mn[k] + p > 0) t = -mn[k] + p;
+                ans = max2(ans, l[k] + r[k] + b[k] + t);
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

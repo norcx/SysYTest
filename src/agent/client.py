@@ -91,7 +91,7 @@ class AgentClient:
 - 支持 `static` 修饰 int 和 int[]
 
 ### 输入文件格式
-- input 文件中每行一个整数，供 getint() 读取
+- `in.txt` 中每行一个整数，供 `getint()` 读取
 
 ## 可用工具
 

@@ -1,0 +1,28 @@
+/* Description:
+ *   Deterministic bracket generator (1000 chars).
+ *   Refactors away time/rand/srand into a small bounded PRNG.
+ */
+
+int seed = 1;
+
+int next_rand() {
+    seed = seed * 17 + 5;
+    seed = seed % 1000000;
+    return seed;
+}
+
+int main() {
+    int n;
+    int i;
+    int r;
+    n = 1000;
+    for (i = 1; i <= n; i = i + 1) {
+        r = next_rand();
+        if (r % 2 == 1) {
+            printf("(");
+        } else {
+            printf(")");
+        }
+    }
+    return 0;
+}

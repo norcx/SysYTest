@@ -1,0 +1,49 @@
+/* Description:
+ *   Deterministic translation of a C generator that wrote 10 input files.
+ *   This SysY program prints the 10 generated cases to stdout.
+ */
+
+const int limitn[10] = {5, 10, 12, 400, 500, 600, 700, 800, 900, 1000};
+const int T[10] = {1, 2, 5, 10, 10, 10, 10, 10, 10, 10};
+
+int seed = 12345;
+
+int min2(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+int next_rand() {
+    seed = (seed * 25173 + 13849) % 65536;
+    return seed;
+}
+
+int rand_mod(int m) {
+    int r;
+    r = next_rand();
+    return r % m;
+}
+
+int main() {
+    int i;
+    int j;
+    int n;
+    int m;
+    int maxm;
+
+    i = 0;
+    for (i = 0; i <= 9; i = i + 1) {
+        printf("%d\n", T[i]);
+        j = 1;
+        for (j = 1; j <= T[i]; j = j + 1) {
+            n = rand_mod(limitn[i]) + 1;
+            if (n <= 1) n = 2;
+            maxm = n * (n - 1) / 2;
+            maxm = min2(maxm, 1000);
+            m = rand_mod(maxm) + 1;
+            printf("%d %d\n", n, m);
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,127 @@
+const int MOD = 1000000007;
+
+const int MAXN = 205;
+const int MAXJ = 210;
+const int MAXK = 1005;
+const int SIZE = 211050;
+
+int n;
+int kava;
+int a[205];
+int f[422100];
+
+int addmod(int x, int y) {
+    int s;
+    s = x + y;
+    if (s >= MOD) s = s - MOD;
+    return s;
+}
+
+int mul_mod_small(int x, int y) {
+    int res;
+    int a0;
+    int b;
+    int i;
+    res = 0;
+    a0 = x;
+    b = y;
+    for (i = 0; i < 10; i = i + 1) {
+        if (b % 2 == 1) res = addmod(res, a0);
+        a0 = addmod(a0, a0);
+        b = b / 2;
+    }
+    return res;
+}
+
+int calc_extra(int diff, int j, int limit) {
+    int res;
+    int p;
+    if (j == 0) return 0;
+    if (diff == 0) return 0;
+    if (diff > limit) return limit + 1;
+    res = 0;
+    for (p = 0; p < j; p = p + 1) {
+        if (res > limit - diff) return limit + 1;
+        res = res + diff;
+    }
+    return res;
+}
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int x;
+    int y;
+    int mi;
+    int tmp;
+    int cur;
+    int nxt;
+    int basecur;
+    int basenxt;
+    int diff;
+    int limit;
+    int extra;
+    int t;
+    int v;
+    int mul;
+    int ans;
+    int idx;
+
+    n = getint();
+    kava = getint();
+    for (i = 0; i < n; i = i + 1) a[i] = getint();
+
+    for (x = 0; x < n; x = x + 1) {
+        mi = x;
+        for (y = x + 1; y < n; y = y + 1) {
+            if (a[y] < a[mi]) mi = y;
+        }
+        tmp = a[x];
+        a[x] = a[mi];
+        a[mi] = tmp;
+    }
+
+    cur = 0;
+    nxt = 1;
+    f[cur * SIZE + 0 * MAXK + 0] = 1;
+    f[cur * SIZE + 1 * MAXK + 0] = 1;
+
+    for (i = 1; i < n; i = i + 1) {
+        basecur = cur * SIZE;
+        basenxt = nxt * SIZE;
+        diff = a[i] - a[i - 1];
+        for (j = 0; j <= i + 1; j = j + 1) {
+            for (k = 0; k <= kava; k = k + 1) {
+                idx = basecur + j * MAXK + k;
+                v = f[idx];
+                f[idx] = 0;
+                if (v != 0) {
+                    limit = kava - k;
+                    extra = calc_extra(diff, j, limit);
+                    if (extra <= limit) {
+                        t = k + extra;
+
+                        f[basenxt + j * MAXK + t] = addmod(f[basenxt + j * MAXK + t], v);
+                        f[basenxt + (j + 1) * MAXK + t] = addmod(f[basenxt + (j + 1) * MAXK + t], v);
+
+                        mul = mul_mod_small(v, j);
+                        f[basenxt + j * MAXK + t] = addmod(f[basenxt + j * MAXK + t], mul);
+                        if (j != 0) {
+                            f[basenxt + (j - 1) * MAXK + t] = addmod(f[basenxt + (j - 1) * MAXK + t], mul);
+                        }
+                    }
+                }
+            }
+        }
+        tmp = cur;
+        cur = nxt;
+        nxt = tmp;
+    }
+
+    ans = 0;
+    basecur = cur * SIZE;
+    for (i = 0; i <= kava; i = i + 1) ans = addmod(ans, f[basecur + 0 * MAXK + i]);
+    printf("%d", ans);
+    return 0;
+}

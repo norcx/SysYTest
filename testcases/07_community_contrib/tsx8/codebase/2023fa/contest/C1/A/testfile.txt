@@ -1,0 +1,11 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C1/A.c
+ *   Prints three fixed lines.
+ */
+
+int main() {
+    printf("FoR rIFt ENergY uNnecEsSary iT iS?\n");
+    printf("oUtPut mAXimiZeD,BUg mAss pROducti0n...\n");
+    printf("hEll0,WOrlD!?\n");
+    return 0;
+}

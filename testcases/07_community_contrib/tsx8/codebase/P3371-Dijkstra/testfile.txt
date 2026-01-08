@@ -1,0 +1,146 @@
+const int INF = 2147483647;
+const int MAXN = 1010;
+const int MAXM = 50010;
+const int HEAPMAX = 100010;
+
+int n;
+int m;
+int s;
+
+int head[MAXN];
+int to[MAXM];
+int wt[MAXM];
+int nxt[MAXM];
+int edge_cnt;
+
+int dista[MAXN];
+
+int heap_dist[HEAPMAX];
+int heap_node[HEAPMAX];
+int heap_size;
+
+int pop_u;
+int pop_d;
+
+void add_edge(int u, int v, int w) {
+    edge_cnt = edge_cnt + 1;
+    to[edge_cnt] = v;
+    wt[edge_cnt] = w;
+    nxt[edge_cnt] = head[u];
+    head[u] = edge_cnt;
+}
+
+void heap_push(int d, int u) {
+    int i = heap_size + 1;
+    heap_size = i;
+    for (; i > 1;) {
+        int p = i / 2;
+        if (heap_dist[p] <= d) {
+            break;
+        }
+        heap_dist[i] = heap_dist[p];
+        heap_node[i] = heap_node[p];
+        i = p;
+    }
+    heap_dist[i] = d;
+    heap_node[i] = u;
+}
+
+void heap_pop() {
+    pop_d = heap_dist[1];
+    pop_u = heap_node[1];
+
+    heap_size = heap_size - 1;
+    if (heap_size <= 0) {
+        return;
+    }
+
+    int last_d = heap_dist[heap_size + 1];
+    int last_u = heap_node[heap_size + 1];
+    int i = 1;
+    for (;;) {
+        int l = i * 2;
+        if (l > heap_size) {
+            break;
+        }
+        int r = l + 1;
+        int c = l;
+        if (r <= heap_size && heap_dist[r] < heap_dist[l]) {
+            c = r;
+        }
+        if (heap_dist[c] >= last_d) {
+            break;
+        }
+        heap_dist[i] = heap_dist[c];
+        heap_node[i] = heap_node[c];
+        i = c;
+    }
+    heap_dist[i] = last_d;
+    heap_node[i] = last_u;
+}
+
+void dijkstra(int src) {
+    int i = 1;
+    for (; i <= n;) {
+        dista[i] = INF;
+        i = i + 1;
+    }
+    dista[src] = 0;
+
+    heap_size = 0;
+    heap_push(0, src);
+
+    for (; heap_size > 0;) {
+        heap_pop();
+        int u = pop_u;
+        int du = pop_d;
+        if (du == dista[u]) {
+            int e = head[u];
+            for (; e != 0;) {
+                int v = to[e];
+                int w = wt[e];
+                int nd = du + w;
+                if (dista[v] > nd) {
+                    dista[v] = nd;
+                    heap_push(nd, v);
+                }
+                e = nxt[e];
+            }
+        }
+    }
+}
+
+int main() {
+    n = getint();
+    m = getint();
+    s = getint();
+
+    edge_cnt = 0;
+    int i = 1;
+    for (; i <= n;) {
+        head[i] = 0;
+        i = i + 1;
+    }
+
+    i = 1;
+    for (; i <= m;) {
+        int u = getint();
+        int v = getint();
+        int w = getint();
+        add_edge(u, v, w);
+        i = i + 1;
+    }
+
+    dijkstra(s);
+
+    i = 1;
+    for (; i <= n;) {
+        if (i == n) {
+            printf("%d\n", dista[i]);
+        } else {
+            printf("%d ", dista[i]);
+        }
+        i = i + 1;
+    }
+    return 0;
+}

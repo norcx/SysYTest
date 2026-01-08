@@ -1,0 +1,70 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E3/C.c`.
+ *   Input: two non-negative integers a, b (one per line), both < 2^31.
+ *   Output:
+ *     - 5 lines: 32-bit binary of a, b, (a&b), (a^b), a+b
+ *     - last: decimal a+b (no trailing newline required)
+ */
+
+void print_bin32_nonneg(int x) {
+    int i;
+    int pow;
+    int bit;
+
+    /* x is constrained to be non-negative, so sign bit is always 0. */
+    printf("0");
+
+    pow = 1073741824; /* 2^30 */
+    for (i = 30; i >= 0; i = i - 1) {
+        bit = (x / pow) % 2;
+        printf("%d", bit);
+        pow = pow / 2;
+    }
+    printf("\n");
+    return;
+}
+
+int main() {
+    int a;
+    int b;
+    int c;
+    int d;
+    int e;
+    int i;
+    int pow;
+    int abit;
+    int bbit;
+    int xbit;
+
+    a = getint();
+    b = getint();
+
+    /* Compute (a&b) and (a^b) without bitwise operators. */
+    c = 0;
+    d = 0;
+    pow = 1;
+    for (i = 0; i <= 30; i = i + 1) {
+        abit = (a / pow) % 2;
+        bbit = (b / pow) % 2;
+
+        c = c + (abit * bbit) * pow;
+
+        xbit = (abit + bbit) % 2;
+        d = d + xbit * pow;
+
+        if (i < 30) {
+            pow = pow * 2;
+        }
+    }
+
+    /* (c<<1) + d == a + b for non-negative ints without overflow. */
+    e = c * 2 + d;
+
+    print_bin32_nonneg(a);
+    print_bin32_nonneg(b);
+    print_bin32_nonneg(c);
+    print_bin32_nonneg(d);
+    print_bin32_nonneg(e);
+    printf("%d", e);
+    return 0;
+}

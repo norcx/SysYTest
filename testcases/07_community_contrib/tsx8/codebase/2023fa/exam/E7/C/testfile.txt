@@ -1,0 +1,103 @@
+/* Description:
+ * Converted from `codes/2023fa/exam/E7/C.c`.
+ *
+ * Original program reads text lines and outputs a C program that prints them,
+ * escaping characters: backslash, single-quote, double-quote, question-mark.
+ *
+ * Strict SysY cannot use `char`/strings/gets, so this testcase encodes the
+ * input as integers:
+ *   p
+ *   len_0, then len_0 ASCII codes
+ *   len_1, then len_1 ASCII codes
+ *   ...
+ *
+ * The program simulates the exact output byte stream of the original program,
+ * but prints only a rolling hash (mod 1e8) as the observable output.
+ */
+
+const int MOD = 100000000;
+const int BASE = 911382;
+
+int hash;
+
+int s0[17] = {35,105,110,99,108,117,100,101,60,115,116,100,105,111,46,104,62};
+int s1[10] = {105,110,116,32,109,97,105,110,40,41};
+int s2[1] = {123};
+int s3[10] = {32,32,32,32,112,117,116,115,40,34};
+int s4[3] = {34,41,59};
+int s5[13] = {32,32,32,32,114,101,116,117,114,110,32,48,59};
+int s6[1] = {125};
+
+int mul_mod(int a, int b) {
+    int res;
+    res = 0;
+    for (;b > 0;) {
+        if (b % 2 == 1) {
+            res = (res + a) % MOD;
+        }
+        a = (a + a) % MOD;
+        b = b / 2;
+    }
+    return res;
+}
+
+void push_char(int c) {
+    hash = (mul_mod(hash, BASE) + c) % MOD;
+}
+
+void emit_seq(int a[], int n) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        push_char(a[i]);
+    }
+}
+
+int main() {
+    int lens[10];
+    int data[800];
+    int p;
+    int i;
+    int j;
+    int len;
+    int c;
+
+    p = getint();
+    if (p < 0) p = 0;
+    if (p > 10) p = 10;
+
+    for (i = 0; i < p; i = i + 1) {
+        len = getint();
+        if (len < 0) len = 0;
+        if (len > 80) len = 80;
+        lens[i] = len;
+        for (j = 0; j < len; j = j + 1) {
+            data[i * 80 + j] = getint();
+        }
+    }
+
+    hash = 0;
+
+    emit_seq(s0, 17); push_char(10);
+    emit_seq(s1, 10); push_char(10);
+    emit_seq(s2, 1); push_char(10);
+
+    for (i = 0; i < p; i = i + 1) {
+        emit_seq(s3, 10);
+        for (j = 0; j < lens[i]; j = j + 1) {
+            c = data[i * 80 + j];
+            if (c == 92 || c == 39 || c == 34 || c == 63) {
+                push_char(92);
+            }
+            push_char(c);
+        }
+        emit_seq(s4, 3);
+        push_char(10);
+    }
+
+    emit_seq(s5, 13);
+    push_char(10);
+    emit_seq(s6, 1);
+
+    printf("%d\n", hash);
+    return 0;
+}

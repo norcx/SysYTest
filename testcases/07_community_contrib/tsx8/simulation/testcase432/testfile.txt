@@ -1,0 +1,173 @@
+/* Description:
+ *   DSU + offline queries with edge thresholds.
+ *   Strict SysY adaptation of the provided C++ source.
+ */
+
+const int MAXN = 100;
+const int MAXM = 200;
+const int MAXQ = 100;
+const int MAXQV = 1000;
+
+int n;
+int m;
+int q;
+
+int a[MAXN];
+int b[MAXN];
+
+int ex[MAXM];
+int ey[MAXM];
+int ez[MAXM];
+
+int c[MAXQ];
+int d[MAXQ];
+int id[MAXQ];
+
+int qStart[MAXQ];
+int qLen[MAXQ];
+int qv[MAXQV];
+
+int fa[MAXN];
+int vis[MAXN];
+
+int sum[MAXN];
+int mx[MAXN];
+int mx_c[MAXN];
+
+int an1[MAXQ];
+int an2[MAXQ];
+
+int s;
+
+int find(int x) {
+    if (fa[x] == x) return x;
+    fa[x] = find(fa[x]);
+    return fa[x];
+}
+
+void swap_edge(int i, int j) {
+    int t;
+    t = ex[i]; ex[i] = ex[j]; ex[j] = t;
+    t = ey[i]; ey[i] = ey[j]; ey[j] = t;
+    t = ez[i]; ez[i] = ez[j]; ez[j] = t;
+}
+
+void swap_id(int i, int j) {
+    int t;
+    t = id[i];
+    id[i] = id[j];
+    id[j] = t;
+}
+
+int main() {
+    int i;
+    int j;
+    int pos;
+
+    n = getint();
+    m = getint();
+    q = getint();
+
+    for (i = 1; i <= n; i = i + 1) a[i] = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        b[i] = getint();
+        s = s + b[i];
+        mx[i] = a[i];
+        mx_c[i] = 1;
+        sum[i] = b[i];
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        ex[i] = getint();
+        ey[i] = getint();
+        ez[i] = getint();
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        for (j = i + 1; j <= m; j = j + 1) {
+            if (ez[i] > ez[j]) swap_edge(i, j);
+        }
+    }
+
+    pos = 1;
+    for (i = 1; i <= q; i = i + 1) {
+        c[i] = getint();
+        d[i] = getint();
+        qStart[i] = pos;
+        qLen[i] = c[i];
+        for (j = 1; j <= c[i]; j = j + 1) {
+            qv[pos] = getint();
+            pos = pos + 1;
+        }
+    }
+
+    for (i = 1; i <= q; i = i + 1) id[i] = i;
+    for (i = 1; i <= q; i = i + 1) {
+        for (j = i + 1; j <= q; j = j + 1) {
+            if (d[id[i]] > d[id[j]]) swap_id(i, j);
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) fa[i] = i;
+
+    {
+        int P;
+        P = 1;
+        for (i = 1; i <= q; i = i + 1) {
+            int qi;
+            int ansMax;
+            int ansCount;
+            int ansRemain;
+
+            qi = id[i];
+
+            for (; P <= m; P = P + 1) {
+                int fax;
+                int fay;
+                if (ez[P] > d[qi]) break;
+                fax = find(ex[P]);
+                fay = find(ey[P]);
+                if (fax == fay) {
+                } else {
+                    fa[fax] = fay;
+                    sum[fay] = sum[fay] + sum[fax];
+                    sum[fax] = 0;
+                    if (mx[fax] == mx[fay]) mx_c[fay] = mx_c[fay] + mx_c[fax];
+                    if (mx[fax] > mx[fay]) {
+                        mx[fay] = mx[fax];
+                        mx_c[fay] = mx_c[fax];
+                    }
+                    mx[fax] = 0;
+                    mx_c[fax] = 0;
+                }
+            }
+
+            ansMax = 0;
+            ansCount = 0;
+            ansRemain = s;
+
+            for (j = 0; j < qLen[qi]; j = j + 1) {
+                int x;
+                int root;
+                x = qv[qStart[qi] + j];
+                root = find(x);
+                if (vis[root] == i) {
+                } else {
+                    vis[root] = i;
+                    if (ansMax == mx[root]) ansCount = ansCount + mx_c[root];
+                    if (ansMax < mx[root]) {
+                        ansMax = mx[root];
+                        ansCount = mx_c[root];
+                    }
+                    ansRemain = ansRemain - sum[root];
+                }
+            }
+
+            an1[qi] = ansMax * ansCount;
+            an2[qi] = ansRemain;
+        }
+    }
+
+    for (i = 1; i <= q; i = i + 1) printf("%d %d\n", an1[i], an2[i]);
+    return 0;
+}

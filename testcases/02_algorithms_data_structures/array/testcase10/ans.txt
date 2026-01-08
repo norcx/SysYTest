@@ -1,0 +1,4 @@
+Result: 25955
+Max depth reached: 50
+Result: 101905
+Max depth reached: 100

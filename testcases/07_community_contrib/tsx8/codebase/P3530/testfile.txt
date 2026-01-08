@@ -1,0 +1,155 @@
+const int MAXN = 610;
+const int MAXNN = 611;
+const int MAXM = 100010;
+const int MAXE = 200020;
+const int INF = 1061109567;
+
+int n;
+int m1;
+int m2;
+int res;
+
+int fst[MAXNN];
+int to[MAXE];
+int wt[MAXE];
+int nxt[MAXE];
+int e;
+
+int low[MAXNN];
+int dfn[MAXNN];
+int belong[MAXNN];
+int bIndex;
+int scc;
+
+int stk[MAXNN];
+int top;
+int inStack[MAXNN];
+
+int dp[373321];
+
+int id(int i, int j) {
+    return i * MAXNN + j;
+}
+
+void add(int u, int v, int w) {
+    e = e + 1;
+    to[e] = v;
+    wt[e] = w;
+    nxt[e] = fst[u];
+    fst[u] = e;
+}
+
+int min2(int x, int y) {
+    if (x < y) return x;
+    return y;
+}
+
+int max2(int x, int y) {
+    if (x > y) return x;
+    return y;
+}
+
+void tarjan(int u) {
+    int v;
+    bIndex = bIndex + 1;
+    dfn[u] = bIndex;
+    low[u] = bIndex;
+    top = top + 1;
+    stk[top] = u;
+    inStack[u] = 1;
+
+    int i;
+    for (i = fst[u]; i != 0; i = nxt[i]) {
+        v = to[i];
+        if (dfn[v] == 0) {
+            tarjan(v);
+            low[u] = min2(low[u], low[v]);
+        } else {
+            if (inStack[v] != 0) low[u] = min2(low[u], dfn[v]);
+        }
+    }
+
+    if (dfn[u] == low[u]) {
+        scc = scc + 1;
+        for (;;) {
+            v = stk[top];
+            top = top - 1;
+            belong[v] = scc;
+            inStack[v] = 0;
+            if (v == u) break;
+        }
+    }
+}
+
+int main() {
+    int i;
+    for (i = 0; i < 373321; i = i + 1) dp[i] = INF;
+
+    n = getint();
+    m1 = getint();
+    m2 = getint();
+
+    for (i = 1; i <= m1; i = i + 1) {
+        int u = getint();
+        int v = getint();
+        add(u, v, 1);
+        add(v, u, -1);
+        dp[id(u, v)] = min2(dp[id(u, v)], 1);
+        dp[id(v, u)] = min2(dp[id(v, u)], -1);
+    }
+    for (i = 1; i <= m2; i = i + 1) {
+        int u = getint();
+        int v = getint();
+        add(v, u, 0);
+        dp[id(v, u)] = min2(dp[id(v, u)], 0);
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (dfn[i] == 0) tarjan(i);
+        dp[id(i, i)] = min2(dp[id(i, i)], 0);
+    }
+
+    int c, j, k;
+    for (c = 1; c <= scc; c = c + 1) {
+        int mx = 0;
+        for (k = 1; k <= n; k = k + 1) {
+            if (belong[k] == c) {
+                for (i = 1; i <= n; i = i + 1) {
+                    if (belong[i] == c) {
+                        int dik = dp[id(i, k)];
+                        if (dik != INF) {
+                            for (j = 1; j <= n; j = j + 1) {
+                                if (belong[j] == c) {
+                                    int dkj = dp[id(k, j)];
+                                    if (dkj != INF) {
+                                        int ij = id(i, j);
+                                        int nv = dik + dkj;
+                                        if (dp[ij] > nv) dp[ij] = nv;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (i = 1; i <= n; i = i + 1) {
+            if (belong[i] == c) {
+                for (j = 1; j <= n; j = j + 1) {
+                    if (belong[j] == c) mx = max2(mx, dp[id(i, j)]);
+                }
+            }
+        }
+        res = res + mx + 1;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (dp[id(i, i)] < 0) {
+            printf("NIE\n");
+            return 0;
+        }
+    }
+
+    printf("%d\n", res);
+    return 0;
+}

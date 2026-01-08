@@ -1,0 +1,33 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C8/H.c
+ *   Task: print the disk number moved at step n in a classic Hanoi process with m disks.
+ */
+
+int i;
+int n;
+
+void hanoi(int m) {
+    if (m == 1) {
+        i = i + 1;
+        if (i == n) {
+            printf("%d\n", m);
+        }
+        return;
+    }
+    hanoi(m - 1);
+    i = i + 1;
+    if (i == n) {
+        printf("%d\n", m);
+    }
+    hanoi(m - 1);
+    return;
+}
+
+int main() {
+    int m;
+    m = getint();
+    n = getint();
+    i = 0;
+    hanoi(m);
+    return 0;
+}

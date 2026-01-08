@@ -1,0 +1,121 @@
+/*
+  Converted to Strict SysY from the given C++ source.
+
+  Input format (newline-separated integers only):
+    len1
+    a1
+    a2
+    ...
+    a_len1
+    len2
+    b1
+    b2
+    ...
+    b_len2
+
+  Where `a` and `b` are digit sequences (0..9). `b` is right-aligned to length `len1`.
+*/
+
+const int MOD = 12345647;
+
+int dp[240024];
+int a[10005];
+int b[10005];
+int tmp[10005];
+
+int idx5(int i, int j, int k, int l, int t) {
+    return (((i * 3 + j) * 2 + k) * 2 + l) * 2 + t;
+}
+
+void adddp(int index, int val) {
+    int x;
+    x = dp[index] + val;
+    if (x >= MOD) x = x - MOD;
+    dp[index] = x;
+    return;
+}
+
+int main() {
+    int len1;
+    int len2;
+    int i;
+    int j;
+    int k;
+    int l;
+    int t;
+    int s1;
+    int s2;
+    int s3;
+    int I;
+    int J;
+    int K;
+    int L;
+    int T;
+    int bi;
+    int cur;
+    int ans;
+    int start;
+
+    len1 = getint();
+    for (i = 1; i <= len1; i = i + 1) a[i] = getint();
+
+    len2 = getint();
+    for (i = 1; i <= len2; i = i + 1) tmp[i] = getint();
+
+    for (i = 1; i <= len1; i = i + 1) b[i] = 0;
+    start = 1 + len1 - len2;
+    for (i = 1; i <= len2; i = i + 1) b[start + i - 1] = tmp[i];
+
+    dp[idx5(0, 0, 0, 0, 0)] = 1;
+
+    for (i = 0; i < len1; i = i + 1) {
+        bi = b[i + 1];
+        for (j = 0; j <= 2; j = j + 1)
+            for (k = 0; k <= 1; k = k + 1)
+                for (l = 0; l <= 1; l = l + 1)
+                    for (t = 0; t <= 1; t = t + 1) {
+                        cur = dp[idx5(i, j, k, l, t)];
+                        if (cur) {
+                            for (s1 = 0; s1 <= 9; s1 = s1 + 1)
+                                if (s1 != 3) {
+                                    if (k != 0 || s1 >= bi) {
+                                        for (s2 = 0; s2 <= 9; s2 = s2 + 1)
+                                            if (s2 != 3) {
+                                                if (l != 0 || s2 >= bi) {
+                                                    for (s3 = 0; s3 <= 9; s3 = s3 + 1)
+                                                        if (s3 != 3) {
+                                                            if (t != 0 || s3 >= bi) {
+                                                                I = i + 1;
+                                                                J = j * 10 + a[i + 1] - s1 - s2 - s3;
+                                                                if (J >= 0) {
+                                                                    if (J <= 2) {
+                                                                        K = k;
+                                                                        if (K == 0 && s1 > bi) K = 1;
+                                                                        L = l;
+                                                                        if (L == 0 && s2 > bi) L = 1;
+                                                                        T = t;
+                                                                        if (T == 0 && s3 > bi) T = 1;
+                                                                        adddp(idx5(I, J, K, L, T), cur);
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                }
+                                            }
+                                    }
+                                }
+                        }
+                    }
+    }
+
+    ans = 0;
+    for (k = 0; k <= 1; k = k + 1)
+        for (l = 0; l <= 1; l = l + 1)
+            for (t = 0; t <= 1; t = t + 1) {
+                ans = ans + dp[idx5(len1, 0, k, l, t)];
+                if (ans >= MOD) ans = ans - MOD;
+            }
+
+    printf("%d\n", ans);
+    return 0;
+}

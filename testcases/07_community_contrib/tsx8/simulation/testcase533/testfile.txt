@@ -1,0 +1,173 @@
+/* Description:
+ *   Converted from a C++ DP solution (group counting).
+ *   Input: n, m, then n integers a[i].
+ *   Output: answer modulo 1000000007.
+ */
+
+const int MOD = 1000000007;
+const int STRIDE = 1112; /* MAXM + 1, where MAXM = 1111 */
+
+int n;
+int m;
+int ans;
+int now;
+
+int a[234];
+int dp0[235 * 1112];
+int dp1[235 * 1112];
+
+int addmod(int x, int y) {
+    int s;
+    s = x + y;
+    if (s >= MOD) s = s - MOD;
+    return s;
+}
+
+int mul_small(int times, int value) {
+    int res;
+    int i;
+    res = 0;
+    i = 0;
+    for (i = 0; i < times; i = i + 1) {
+        res = res + value;
+        if (res >= MOD) res = res - MOD;
+    }
+    return res;
+}
+
+int idx(int j, int k) {
+    return j * STRIDE + k;
+}
+
+void sort_a() {
+    int i;
+    int j;
+    int t;
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = i + 1; j <= n; j = j + 1) {
+            if (a[i] > a[j]) {
+                t = a[i];
+                a[i] = a[j];
+                a[j] = t;
+            }
+        }
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int last;
+    int diff;
+    int kk;
+    int rem;
+    int t;
+    int id;
+
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        a[i] = a[i] % MOD;
+        if (a[i] < 0) a[i] = a[i] + MOD;
+    }
+
+    sort_a();
+
+    dp0[idx(1, 0)] = 1;
+    dp0[idx(0, 0)] = 1;
+    now = 0;
+
+    for (i = 2; i <= n; i = i + 1) {
+        diff = a[i] - a[i - 1];
+        if (diff < 0) diff = diff + MOD;
+
+        if (now == 0) {
+            for (j = 0; j <= n; j = j + 1) {
+                for (k = 0; k <= m; k = k + 1) {
+                    id = idx(j, k);
+                    last = dp0[id];
+                    if (last == 0) {
+                    } else {
+                        dp0[id] = 0;
+
+                        if (j == 0) {
+                            kk = k;
+                        } else {
+                            rem = m - k;
+                            if (diff > rem / j) kk = -1;
+                            else kk = diff * j + k;
+                        }
+
+                        if (kk < 0) {
+                        } else {
+                            t = mul_small(j, last);
+
+                            id = idx(j, kk);
+                            dp1[id] = addmod(dp1[id], last);
+                            dp1[id] = addmod(dp1[id], t);
+
+                            id = idx(j + 1, kk);
+                            dp1[id] = addmod(dp1[id], last);
+
+                            if (j > 0) {
+                                id = idx(j - 1, kk);
+                                dp1[id] = addmod(dp1[id], t);
+                            }
+                        }
+                    }
+                }
+            }
+            now = 1;
+        } else {
+            for (j = 0; j <= n; j = j + 1) {
+                for (k = 0; k <= m; k = k + 1) {
+                    id = idx(j, k);
+                    last = dp1[id];
+                    if (last == 0) {
+                    } else {
+                        dp1[id] = 0;
+
+                        if (j == 0) {
+                            kk = k;
+                        } else {
+                            rem = m - k;
+                            if (diff > rem / j) kk = -1;
+                            else kk = diff * j + k;
+                        }
+
+                        if (kk < 0) {
+                        } else {
+                            t = mul_small(j, last);
+
+                            id = idx(j, kk);
+                            dp0[id] = addmod(dp0[id], last);
+                            dp0[id] = addmod(dp0[id], t);
+
+                            id = idx(j + 1, kk);
+                            dp0[id] = addmod(dp0[id], last);
+
+                            if (j > 0) {
+                                id = idx(j - 1, kk);
+                                dp0[id] = addmod(dp0[id], t);
+                            }
+                        }
+                    }
+                }
+            }
+            now = 0;
+        }
+    }
+
+    ans = 0;
+    for (k = 0; k <= m; k = k + 1) {
+        if (now == 0) ans = addmod(ans, dp0[idx(0, k)]);
+        else ans = addmod(ans, dp1[idx(0, k)]);
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

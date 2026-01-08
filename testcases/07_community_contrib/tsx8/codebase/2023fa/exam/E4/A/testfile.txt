@@ -1,0 +1,35 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E4/A.c`.
+ *
+ *   Original program reads a character `c` and an integer `n`, then prints
+ *   `n+1` lines: line `i` has `i` spaces followed by `n-i` copies of `c`.
+ *
+ *   Strict SysY input is integers only, so this testcase reads `c_code`
+ *   (ASCII-like code) and maps a small set of codes to printable symbols.
+ */
+
+void print_symbol(int c_code) {
+    if (c_code == 35) { printf("#"); return; }
+    if (c_code == 42) { printf("*"); return; }
+    if (c_code == 43) { printf("+"); return; }
+    if (c_code == 64) { printf("@"); return; }
+    if (c_code == 88) { printf("X"); return; }
+    printf("?");
+}
+
+int main() {
+    int c_code = getint();
+    int n = getint();
+    int i;
+    int j;
+    for (i = 0; i <= n; i = i + 1) {
+        for (j = 1; j <= i; j = j + 1) {
+            printf(" ");
+        }
+        for (j = 1; j <= n - i; j = j + 1) {
+            print_symbol(c_code);
+        }
+        printf("\n");
+    }
+    return 0;
+}

@@ -1,0 +1,89 @@
+/* Description:
+ *   Translated from a C++ program that maintains an array a[1..2^n] and,
+ *   after each point update, computes an alternating OR/XOR adjacent-reduction
+ *   down to b[1].
+ *
+ *   Bitwise operators are emulated using arithmetic on base-2 digits.
+ */
+
+const int MAXN = 4096;
+const int BITLIM = 20;
+
+int n_exp, m;
+int a[MAXN], b[MAXN];
+
+int bit_or(int x, int y) {
+    int i;
+    int result;
+    int pow2;
+    int sum;
+    int bit;
+    result = 0;
+    pow2 = 1;
+    for (i = 0; i < BITLIM; i = i + 1) {
+        sum = x % 2 + y % 2;
+        bit = 0;
+        if (sum > 0) bit = 1;
+        result = result + bit * pow2;
+        pow2 = pow2 * 2;
+        x = x / 2;
+        y = y / 2;
+    }
+    return result;
+}
+
+int bit_xor(int x, int y) {
+    int i;
+    int result;
+    int pow2;
+    int sum;
+    int bit;
+    result = 0;
+    pow2 = 1;
+    for (i = 0; i < BITLIM; i = i + 1) {
+        sum = x % 2 + y % 2;
+        bit = 0;
+        if (sum == 1) bit = 1;
+        result = result + bit * pow2;
+        pow2 = pow2 * 2;
+        x = x / 2;
+        y = y / 2;
+    }
+    return result;
+}
+
+int main() {
+    int i, j, t;
+    int size;
+    int x, y;
+    int len;
+    int parity;
+
+    n_exp = getint();
+    m = getint();
+
+    size = 1;
+    for (i = 0; i < n_exp; i = i + 1) size = size * 2;
+
+    for (i = 1; i <= size; i = i + 1) a[i] = getint();
+
+    for (t = 0; t < m; t = t + 1) {
+        x = getint();
+        y = getint();
+        a[x] = y;
+
+        for (i = 1; i <= size; i = i + 1) b[i] = a[i];
+
+        for (len = size - 1; len >= 1; len = len - 1) {
+            parity = (size - len) % 2;
+            for (j = 1; j <= len; j = j + 1) {
+                if (parity == 1) b[j] = bit_or(b[j], b[j + 1]);
+                else b[j] = bit_xor(b[j], b[j + 1]);
+            }
+        }
+
+        printf("%d\n", b[1]);
+    }
+
+    return 0;
+}

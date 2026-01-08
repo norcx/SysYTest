@@ -1,0 +1,45 @@
+/*
+  Deterministic translation of the given C++ random graph generator.
+  Uses a small arithmetic-only PRNG (no time/rand/srand).
+*/
+
+int vis[121];
+int n;
+int m;
+int seed = 12345;
+
+int myrand() {
+  seed = seed * 1009 + 97;
+  seed = seed % 1000000;
+  return seed;
+}
+
+int main() {
+  int i;
+  int x;
+  int y;
+  int z;
+  int attempt;
+  int idx;
+
+  n = 10;
+  m = myrand() % n + 2;
+  printf("%d %d\n", n, m);
+
+  for (i = 1; i <= m; i = i + 1) {
+    for (attempt = 0; attempt < 1000000; attempt = attempt + 1) {
+      x = myrand() % (n - 2) + 3;
+      y = myrand() % (x - 2) + 1;
+      idx = x * 11 + y;
+      if (vis[idx] != 0) {
+        continue;
+      }
+      vis[idx] = 1;
+      vis[y * 11 + x] = 1;
+      z = myrand();
+      printf("%d %d %d\n", x, y, z);
+      break;
+    }
+  }
+  return 0;
+}

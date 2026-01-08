@@ -1,0 +1,55 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E4/G.c`.
+ *   Prints the decimal expansion of a / b with repeating part in parentheses,
+ *   matching the original program's behavior (including printing "(0)" for
+ *   terminating decimals).
+ */
+
+int vis[3010];
+int stk[3010];
+
+int main() {
+    int a;
+    int b;
+    int r;
+    int top;
+    int i;
+
+    a = getint();
+    b = getint();
+
+    top = 0;
+
+    for (;;) {
+        r = a % b;
+        stk[top] = a / b;
+        top = top + 1;
+        a = r * 10;
+
+        if (vis[r] != 0) {
+            break;
+        }
+        vis[r] = top;
+        if (r == 0) {
+            break;
+        }
+    }
+
+    for (i = 0; i < top; i = i + 1) {
+        if (i == vis[r] && vis[r] != top) {
+            printf("(");
+        }
+        printf("%d", stk[i]);
+        if (i == 0) {
+            printf(".");
+        }
+    }
+
+    if (vis[r] == top) {
+        printf("(0)");
+    } else {
+        printf(")");
+    }
+
+    return 0;
+}

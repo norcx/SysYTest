@@ -1,0 +1,11 @@
+modify_and_return: 10 30 60
+conditional_return: 10 6 0
+loop_return(10): 55
+loop_return(20): 105
+nested_return(3,4): 7
+nested_return(3,-4): 7
+nested_return(-3,4): 7
+nested_return(-3,-4): 7
+find 8: 2
+find 0: 9
+find 99: -1

@@ -1,0 +1,130 @@
+/* Description: Naive CF786B-style graph with range edges expanded explicitly and solved by Dijkstra.
+ */
+const int MAXV = 32;
+const int MAXE = 256;
+const int INF = 1000000000;
+
+int head[MAXV];
+int to[MAXE];
+int weight[MAXE];
+int nxt[MAXE];
+int dist[MAXV];
+int used[MAXV];
+int edge_cnt;
+
+void add_edge(int u, int v, int w) {
+    if (edge_cnt < MAXE) {
+        to[edge_cnt] = v;
+        weight[edge_cnt] = w;
+        nxt[edge_cnt] = head[u];
+        head[u] = edge_cnt;
+        edge_cnt = edge_cnt + 1;
+    }
+}
+
+void run_dijkstra(int n, int source) {
+    int i;
+    i = 1;
+    for (; i <= n; i = i + 1) {
+        used[i] = 0;
+        dist[i] = INF;
+    }
+    dist[source] = 0;
+    int step;
+    step = 0;
+    for (; step < n; step = step + 1) {
+        int node;
+        int best;
+        node = 0;
+        best = INF;
+        i = 1;
+        for (; i <= n; i = i + 1) {
+            if (used[i] == 0 && dist[i] < best) {
+                best = dist[i];
+                node = i;
+            }
+        }
+        if (node == 0) {
+            break;
+        }
+        used[node] = 1;
+        int eidx;
+        eidx = head[node];
+        for (; eidx != -1; eidx = nxt[eidx]) {
+            int v;
+            v = to[eidx];
+            int nd;
+            nd = dist[node] + weight[eidx];
+            if (nd < dist[v]) {
+                dist[v] = nd;
+            }
+        }
+    }
+}
+
+int main() {
+    int n;
+    int q;
+    int s;
+    n = getint();
+    q = getint();
+    s = getint();
+    int i;
+    i = 0;
+    for (; i < MAXV; i = i + 1) {
+        head[i] = -1;
+    }
+    edge_cnt = 0;
+    int step;
+    step = 0;
+    for (; step < MAXV; step = step + 1) {
+        dist[step] = INF;
+        used[step] = 0;
+    }
+    int op;
+    int v;
+    int u;
+    int w;
+    int l;
+    int r;
+    int j;
+    step = 0;
+    for (; step < q; step = step + 1) {
+        op = getint();
+        if (op == 1) {
+            v = getint();
+            u = getint();
+            w = getint();
+            add_edge(v, u, w);
+        } else if (op == 2) {
+            v = getint();
+            l = getint();
+            r = getint();
+            w = getint();
+            j = l;
+            for (; j <= r; j = j + 1) {
+                add_edge(v, j, w);
+            }
+        } else {
+            v = getint();
+            l = getint();
+            r = getint();
+            w = getint();
+            j = l;
+            for (; j <= r; j = j + 1) {
+                add_edge(j, v, w);
+            }
+        }
+    }
+    run_dijkstra(n, s);
+    i = 1;
+    for (; i <= n; i = i + 1) {
+        if (dist[i] >= INF / 2) {
+            printf("-1 ");
+        } else {
+            printf("%d ", dist[i]);
+        }
+    }
+    printf("\n");
+    return 0;
+}

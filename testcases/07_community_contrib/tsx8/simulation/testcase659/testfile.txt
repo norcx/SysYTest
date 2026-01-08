@@ -1,0 +1,21 @@
+/* Description:
+ *   Converted from a Windows differential-testing harness.
+ *   SysY has no system()/file-compare APIs, so we keep the deterministic
+ *   observable behavior: print an increasing counter.
+ *   The original code hints at a bounded run (t=200), so we print 1..200.
+ */
+
+int main() {
+    int t;
+    int cnt;
+
+    t = 200;
+    cnt = 0;
+
+    for (; t > 0; t = t - 1) {
+        cnt = cnt + 1;
+        printf("%d\n", cnt);
+    }
+
+    return 0;
+}

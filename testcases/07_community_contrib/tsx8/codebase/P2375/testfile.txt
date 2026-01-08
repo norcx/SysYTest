@@ -1,0 +1,57 @@
+/* Description: Recreates the prefix-function chain counting from Luogu P2375 using SysY-friendly arrays and for-loops only. */
+
+const int MAX_LEN = 64;
+
+int text[MAX_LEN];
+int nxt[MAX_LEN];
+int num_arr[MAX_LEN];
+
+int main() {
+    int len;
+    int idx;
+    len = getint();
+    for (idx = 0; idx < len; idx = idx + 1) {
+        text[idx] = getint();
+    }
+    for (idx = 0; idx <= len; idx = idx + 1) {
+        nxt[idx] = 0;
+        num_arr[idx] = 0;
+    }
+    if (len <= 0) {
+        printf("0\n");
+        return 0;
+    }
+    num_arr[0] = 0;
+    if (len >= 1) {
+        num_arr[1] = 1;
+    }
+    int j;
+    j = 0;
+    for (idx = 1; idx < len; idx = idx + 1) {
+        for (; j > 0 && text[idx] != text[j]; ) {
+            j = nxt[j];
+        }
+        if (text[idx] == text[j]) {
+            j = j + 1;
+        }
+        nxt[idx + 1] = j;
+        num_arr[idx + 1] = num_arr[j] + 1;
+    }
+    int ans;
+    ans = 1;
+    j = 0;
+    for (idx = 1; idx < len; idx = idx + 1) {
+        for (; j > 0 && text[idx] != text[j]; ) {
+            j = nxt[j];
+        }
+        if (text[idx] == text[j]) {
+            j = j + 1;
+        }
+        for (; (j + j) > (idx + 1); ) {
+            j = nxt[j];
+        }
+        ans = ans * (num_arr[j] + 1);
+    }
+    printf("%d\n", ans);
+    return 0;
+}

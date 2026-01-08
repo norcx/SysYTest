@@ -1,0 +1,26 @@
+/* Description:
+ *   Converted from a C++ program that prints rand()+rand()+rand()+rand().
+ *   Since Strict SysY has no time()/rand()/srand(), the seed is provided by input:
+ *     - in.txt: one integer seed (replaces time(0))
+ *   A small LCG is used to generate 4 deterministic pseudo-random ints in [0, 32767].
+ */
+
+int seed;
+
+int myrand() {
+    seed = seed % 32768;
+    if (seed < 0) {
+        seed = seed + 32768;
+    }
+    seed = seed * 25173 + 13849;
+    seed = seed % 32768;
+    return seed;
+}
+
+int main() {
+    int n;
+    seed = getint();
+    n = myrand() + myrand() + myrand() + myrand();
+    printf("%d\n", n);
+    return 0;
+}

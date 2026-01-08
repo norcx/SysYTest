@@ -1,0 +1,91 @@
+int main() {
+    const int STRINGS = 3;
+    const int NAME_LEN = 5;
+    const int STRIDE = 12;
+    int name_seq[5] = {110, 97, 114, 101, 107};
+    int words[36] = {
+        110, 97, 114, 101, 107, 110, 97, 114, 101, 107, -1, -1,
+        110, 97, 114, 120, 120, 97, 101, 114, 107, 107, -1, -1,
+        110, 110, 97, 97, 114, 114, 107, 101, -1, -1, -1, -1
+    };
+    int lens[3] = {10, 10, 8};
+    int pre_gain[15];
+    int pre_state[15];
+    int dp[20];
+    int i = 0;
+    int j = 0;
+    int k = 0;
+    int c = 0;
+    for (i = 0; i < STRINGS; i = i + 1) {
+        for (j = 0; j < NAME_LEN; j = j + 1) {
+            int st = j;
+            int tot1 = 0;
+            int tot2 = 0;
+            int len = lens[i];
+            for (k = 0; k < len; k = k + 1) {
+                int ch = words[i * STRIDE + k];
+                int flag = 0;
+                for (c = 0; c < NAME_LEN; c = c + 1) {
+                    if (ch == name_seq[c]) {
+                        flag = 1;
+                    }
+                }
+                if (flag == 1) {
+                    tot2 = tot2 + 1;
+                }
+                int exp = 0;
+                if (st < NAME_LEN) {
+                    exp = name_seq[st];
+                }
+                if (ch == exp) {
+                    st = st + 1;
+                    if (st == NAME_LEN) {
+                        tot1 = tot1 + 1;
+                        st = 0;
+                    }
+                }
+            }
+            pre_gain[i * NAME_LEN + j] = 10 * tot1 - tot2 - st;
+            pre_state[i * NAME_LEN + j] = st;
+        }
+    }
+    for (i = 0; i <= STRINGS; i = i + 1) {
+        for (j = 0; j < NAME_LEN; j = j + 1) {
+            dp[i * NAME_LEN + j] = -1000;
+        }
+    }
+    dp[0] = 0;
+    for (i = 1; i <= STRINGS; i = i + 1) {
+        int x = -10000;
+        for (j = 0; j < NAME_LEN; j = j + 1) {
+            int prev = dp[(i - 1) * NAME_LEN + j];
+            if (x < prev) {
+                x = prev;
+            }
+        }
+        if (dp[i * NAME_LEN] < x) {
+            dp[i * NAME_LEN] = x;
+        }
+        for (j = 0; j < NAME_LEN; j = j + 1) {
+            int prev = dp[(i - 1) * NAME_LEN + j];
+            if (prev != -1000) {
+                int idx = (i - 1) * NAME_LEN + j;
+                int next_state = pre_state[idx];
+                int cand = prev + pre_gain[idx];
+                int dst = i * NAME_LEN + next_state;
+                if (dp[dst] < cand) {
+                    dp[dst] = cand;
+                }
+            }
+        }
+    }
+    int res = -10000;
+    for (j = 0; j < NAME_LEN; j = j + 1) {
+        int val = dp[STRINGS * NAME_LEN + j];
+        if (val > res) {
+            res = val;
+        }
+    }
+    printf("%d\n", res);
+    return 0;
+}

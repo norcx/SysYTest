@@ -1,0 +1,38 @@
+/* Description:
+ *   Deterministically generates the same-shaped output as the given C++ generator:
+ *   prints "-7" followed by 97890 pseudo-random digits (0..9), with no trailing newline.
+ *
+ * Notes:
+ * - Strict SysY has no time()/rand(), so this uses an overflow-safe Park–Miller LCG
+ *   seeded with a fixed constant to make `ans.txt` reproducible.
+ */
+
+int seed = 1;
+
+int next_rand() {
+    const int a = 48271;
+    const int m = 2147483647;
+    const int q = 44488;
+    const int r = 3399;
+    int hi;
+    int lo;
+    int test;
+    hi = seed / q;
+    lo = seed - hi * q;
+    test = a * lo - r * hi;
+    if (test > 0) seed = test;
+    else seed = test + m;
+    return seed;
+}
+
+int main() {
+    int i;
+    int x;
+    printf("%d", -7);
+    for (i = 1; i <= 97890; i = i + 1) {
+        x = next_rand();
+        x = x % 10;
+        printf("%d", x);
+    }
+    return 0;
+}

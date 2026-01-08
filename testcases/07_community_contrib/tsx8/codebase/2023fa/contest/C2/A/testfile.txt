@@ -1,0 +1,19 @@
+/* Description:
+ *   Converted from: codes/2023fa/contest/C2/A.c
+ *   Original behavior reads integers until EOF and prints them as characters.
+ *   Strict SysY has no %c output, so this testcase prints the integers directly.
+ *   Input format: first line is m, followed by m integers (one per line).
+ */
+
+int main() {
+    int m;
+    int i;
+    int x;
+
+    m = getint();
+    for (i = 0; i < m; i = i + 1) {
+        x = getint();
+        printf("%d\n", x);
+    }
+    return 0;
+}

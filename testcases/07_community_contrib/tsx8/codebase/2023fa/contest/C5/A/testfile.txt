@@ -1,0 +1,169 @@
+/* Description:
+ *   Converted from: codes/2023fa/contest/C5/A.c
+ *
+ *   Original program reads floating-point x and prints:
+ *     exp(cos(atan(x))) / log(cosh(x) + 1)
+ *   with 3 decimals.
+ *
+ *   Strict SysY only supports int I/O, so this testcase uses fixed-point:
+ *     - Input x is given as an integer scaled by 1000 (i.e. x = xin / 1000).
+ *     - Output prints the computed value with 3 decimals.
+ *   The math is approximated with short integer Taylor series, restricted to
+ *   small |x| (see in.txt).
+ */
+
+const int SCALE = 1000; /* 3 decimal fixed-point */
+const int LN2 = 693;    /* ln(2) * 1000 */
+
+int isqrt(int n) {
+    int lo;
+    int hi;
+    int i;
+    lo = 0;
+    hi = 46340;
+    for (i = 0; i < 31; i = i + 1) {
+        int mid;
+        int sq;
+        mid = (lo + hi + 1) / 2;
+        sq = mid * mid;
+        if (sq <= n) {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return lo;
+}
+
+/* sqrt(value), where value is fixed-point scaled by SCALE, returns fixed-point */
+int sqrt_fixed(int value_scaled) {
+    int n;
+    if (value_scaled <= 0) return 0;
+    n = value_scaled * SCALE;
+    return isqrt(n);
+}
+
+/* exp(x), where x is fixed-point scaled by SCALE, returns fixed-point */
+int exp_fixed(int x_scaled) {
+    int sum;
+    int term;
+    int k;
+    sum = SCALE;
+    term = SCALE;
+    for (k = 1; k <= 12; k = k + 1) {
+        int tmp;
+        tmp = (term * x_scaled) / SCALE;
+        term = tmp / k;
+        sum = sum + term;
+    }
+    return sum;
+}
+
+/* cosh(x), where x is fixed-point scaled by SCALE, returns fixed-point */
+int cosh_fixed(int x_scaled) {
+    int x2;
+    int sum;
+    int term;
+    int k;
+    x2 = (x_scaled * x_scaled) / SCALE;
+    sum = SCALE;
+    term = SCALE;
+    for (k = 1; k <= 6; k = k + 1) {
+        int denom;
+        int tmp;
+        denom = (2 * k - 1) * (2 * k);
+        tmp = (term * x2) / SCALE;
+        term = tmp / denom;
+        sum = sum + term;
+    }
+    return sum;
+}
+
+/* ln(1+u), where u is fixed-point scaled by SCALE and |u| < 1, returns fixed-point */
+int ln1p_fixed(int u_scaled) {
+    int sum;
+    int term;
+    int k;
+    sum = 0;
+    term = u_scaled;
+    for (k = 1; k <= 12; k = k + 1) {
+        int add;
+        add = term / k;
+        if (k % 2 == 1) sum = sum + add;
+        else sum = sum - add;
+        term = (term * u_scaled) / SCALE;
+    }
+    return sum;
+}
+
+int compute_value_scaled(int x_scaled) {
+    int ax;
+    int x2;
+    int one_plus_x2;
+    int sqrt1;
+    int inv_sqrt;
+    int exponent;
+    int numerator;
+    int cosh_x;
+    int arg;
+    int u;
+    int logv;
+    int result;
+
+    ax = x_scaled;
+    if (ax < 0) ax = -ax;
+
+    x2 = (ax * ax) / SCALE;
+    one_plus_x2 = SCALE + x2;
+    sqrt1 = sqrt_fixed(one_plus_x2);
+    if (sqrt1 == 0) sqrt1 = 1;
+    inv_sqrt = (SCALE * SCALE) / sqrt1; /* ~cos(atan(x)) */
+
+    exponent = inv_sqrt;
+    numerator = exp_fixed(exponent);
+
+    cosh_x = cosh_fixed(ax);
+    arg = cosh_x + SCALE; /* cosh(x) + 1 */
+
+    /* ln(arg) where arg ~= 2*(1+u), u = (arg-2)/2 */
+    u = (arg - 2 * SCALE) / 2;
+    logv = LN2 + ln1p_fixed(u);
+    if (logv <= 0) logv = 1;
+
+    result = (numerator * SCALE) / logv;
+    return result;
+}
+
+void print_fixed3(int v_scaled) {
+    int sign;
+    int ip;
+    int fp;
+    sign = 1;
+    if (v_scaled < 0) {
+        sign = -1;
+        v_scaled = -v_scaled;
+    }
+    ip = v_scaled / SCALE;
+    fp = v_scaled - ip * SCALE;
+    if (sign < 0) ip = -ip;
+    printf("%d.", ip);
+    if (fp < 10) printf("00");
+    else if (fp < 100) printf("0");
+    printf("%d\n", fp);
+}
+
+int main() {
+    int t;
+    int i;
+    t = getint();
+    for (i = 0; i < t; i = i + 1) {
+        int xin;
+        int x_scaled;
+        int out_scaled;
+        xin = getint();
+        x_scaled = xin;
+        out_scaled = compute_value_scaled(x_scaled);
+        print_fixed3(out_scaled);
+    }
+    return 0;
+}

@@ -1,0 +1,251 @@
+/*
+  Range affine transforms on 2D points via lazy segment tree.
+  Input encoding (all integers, 1 per line):
+    n
+    x1 y1
+    ...
+    xn yn
+    m
+    op x y [args...]
+  op:
+    1: translate by (dx, dy)
+    2: reflect X axis (y = -y)
+    3: reflect Y axis (x = -x)
+    4: swap x/y
+    5: rotate by deg (must be multiple of 90)
+  Output:
+    xi yi per line after all operations.
+*/
+
+const int MAXN = 2048;
+const int MAXP = 2055;
+const int MAXT = 8200;          /* >= 4*MAXN + small */
+const int MAT_STRIDE = 9;
+const int TREE_ARR = (MAXT + 1) * MAT_STRIDE;
+
+int n;
+int m;
+int px[MAXP];
+int py[MAXP];
+
+int tree[TREE_ARR];
+int tmat[MAT_STRIDE];
+int tmp[MAT_STRIDE];
+
+void set_identity_mat(int a[]) {
+    int i;
+    for (i = 0; i < 9; i = i + 1) a[i] = 0;
+    a[0] = 1;
+    a[4] = 1;
+    a[8] = 1;
+}
+
+void set_identity_tree(int o) {
+    int base;
+    int i;
+    base = o * 9;
+    for (i = 0; i < 9; i = i + 1) tree[base + i] = 0;
+    tree[base + 0] = 1;
+    tree[base + 4] = 1;
+    tree[base + 8] = 1;
+}
+
+void mul_to_tmp(int leftArr[], int leftOff, int rightArr[], int rightOff) {
+    int i;
+    int j;
+    int k;
+    int sum;
+    for (i = 0; i < 3; i = i + 1) {
+        for (j = 0; j < 3; j = j + 1) {
+            sum = 0;
+            for (k = 0; k < 3; k = k + 1) {
+                sum = sum + leftArr[leftOff + i * 3 + k] * rightArr[rightOff + k * 3 + j];
+            }
+            tmp[i * 3 + j] = sum;
+        }
+    }
+}
+
+void write_tmp_to_tree(int o) {
+    int base;
+    int i;
+    base = o * 9;
+    for (i = 0; i < 9; i = i + 1) tree[base + i] = tmp[i];
+}
+
+void apply_t_to_tree(int o) {
+    int base;
+    base = o * 9;
+    mul_to_tmp(tree, base, tmat, 0);
+    write_tmp_to_tree(o);
+}
+
+void apply_parent_to_child(int child, int parent) {
+    int childBase;
+    int parentBase;
+    childBase = child * 9;
+    parentBase = parent * 9;
+    mul_to_tmp(tree, childBase, tree, parentBase);
+    write_tmp_to_tree(child);
+}
+
+void push_down(int o) {
+    int lch;
+    int rch;
+    lch = o * 2;
+    rch = lch + 1;
+    apply_parent_to_child(lch, o);
+    apply_parent_to_child(rch, o);
+    set_identity_tree(o);
+}
+
+void build(int l, int r, int o) {
+    int mid;
+    set_identity_tree(o);
+    if (l == r) return;
+    mid = (l + r) / 2;
+    build(l, mid, o * 2);
+    build(mid + 1, r, o * 2 + 1);
+}
+
+void update(int l, int r, int o, int x, int y) {
+    int mid;
+    if (x <= l && r <= y) {
+        apply_t_to_tree(o);
+        return;
+    }
+    push_down(o);
+    mid = (l + r) / 2;
+    if (x <= mid) update(l, mid, o * 2, x, y);
+    if (y > mid) update(mid + 1, r, o * 2 + 1, x, y);
+}
+
+void dfs(int l, int r, int o) {
+    int mid;
+    int base;
+    int x0;
+    int y0;
+    int x1;
+    int y1;
+    if (l == r) {
+        base = o * 9;
+        x0 = px[l];
+        y0 = py[l];
+        x1 = x0 * tree[base + 0] + y0 * tree[base + 3] + tree[base + 6];
+        y1 = x0 * tree[base + 1] + y0 * tree[base + 4] + tree[base + 7];
+        printf("%d %d\n", x1, y1);
+        return;
+    }
+    push_down(o);
+    mid = (l + r) / 2;
+    dfs(l, mid, o * 2);
+    dfs(mid + 1, r, o * 2 + 1);
+}
+
+void make_translate(int dx, int dy) {
+    set_identity_mat(tmat);
+    tmat[6] = dx;
+    tmat[7] = dy;
+}
+
+void make_reflect_x() {
+    set_identity_mat(tmat);
+    tmat[4] = -1;
+}
+
+void make_reflect_y() {
+    set_identity_mat(tmat);
+    tmat[0] = -1;
+}
+
+void make_swap() {
+    int i;
+    for (i = 0; i < 9; i = i + 1) tmat[i] = 0;
+    tmat[1] = 1;
+    tmat[3] = 1;
+    tmat[8] = 1;
+}
+
+void make_rotate90(int deg) {
+    int d;
+    set_identity_mat(tmat);
+    d = deg % 360;
+    if (d < 0) d = d + 360;
+    if (d == 0) return;
+    if (d == 90) {
+        tmat[0] = 0;
+        tmat[1] = 1;
+        tmat[3] = -1;
+        tmat[4] = 0;
+        return;
+    }
+    if (d == 180) {
+        tmat[0] = -1;
+        tmat[4] = -1;
+        return;
+    }
+    if (d == 270) {
+        tmat[0] = 0;
+        tmat[1] = -1;
+        tmat[3] = 1;
+        tmat[4] = 0;
+        return;
+    }
+    set_identity_mat(tmat);
+}
+
+int main() {
+    int i;
+    int op;
+    int x;
+    int y;
+    int dx;
+    int dy;
+    int deg;
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        px[i] = getint();
+        py[i] = getint();
+    }
+    build(1, n, 1);
+    m = getint();
+    for (i = 0; i < m; i = i + 1) {
+        op = getint();
+        x = getint();
+        y = getint();
+        if (x > y) {
+            dx = x;
+            x = y;
+            y = dx;
+        }
+        if (op == 1) {
+            dx = getint();
+            dy = getint();
+            make_translate(dx, dy);
+            update(1, n, 1, x, y);
+        } else {
+            if (op == 2) {
+                make_reflect_x();
+                update(1, n, 1, x, y);
+            } else {
+                if (op == 3) {
+                    make_reflect_y();
+                    update(1, n, 1, x, y);
+                } else {
+                    if (op == 4) {
+                        make_swap();
+                        update(1, n, 1, x, y);
+                    } else {
+                        if (op == 5) {
+                            deg = getint();
+                            make_rotate90(deg);
+                            update(1, n, 1, x, y);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    dfs(1, n, 1);
+    return 0;
+}

@@ -1,0 +1,115 @@
+/* Description:
+ *   String rewrite with circular wrap-around, translated to Strict SysY by
+ *   encoding characters as integer ASCII codes.
+ */
+const int MAXN = 10;
+const int MAXA = 32;
+const int MAXL = 128;
+
+int sArr[MAXL];
+int tmpArr[MAXL];
+int aChars[MAXN * MAXA];
+int aLenArr[MAXN + 1];
+int bFirst[MAXN + 1];
+int bLenArr[MAXN + 1];
+
+int findChar(int arr[], int len, int ch) {
+  int i;
+  for (i = 0; i < len; i = i + 1) {
+    if (arr[i] == ch) return i;
+  }
+  return -1;
+}
+
+int main() {
+  int n;
+  int sLen;
+  int i;
+  int j;
+
+  n = getint();
+  sLen = getint();
+  for (i = 0; i < sLen; i = i + 1) {
+    sArr[i] = getint();
+  }
+
+  for (i = 1; i <= n; i = i + 1) {
+    int aLen;
+    int bLen;
+    aLen = getint();
+    aLenArr[i] = aLen;
+    for (j = 0; j < aLen; j = j + 1) {
+      aChars[(i - 1) * MAXA + j] = getint();
+    }
+
+    bLen = getint();
+    bLenArr[i] = bLen;
+    for (j = 0; j < bLen; j = j + 1) {
+      int x;
+      x = getint();
+      if (j == 0) bFirst[i] = x;
+    }
+  }
+
+  for (i = n; i >= 1; i = i - 1) {
+    int now;
+    int l;
+    int k;
+
+    now = findChar(sArr, sLen, bFirst[i]);
+    l = bLenArr[i];
+    k = 0;
+
+    if (now + l <= sLen) {
+      for (j = 0; j < now; j = j + 1) {
+        tmpArr[k] = sArr[j];
+        k = k + 1;
+      }
+      for (j = 0; j < aLenArr[i]; j = j + 1) {
+        tmpArr[k] = aChars[(i - 1) * MAXA + j];
+        k = k + 1;
+      }
+      for (j = now + l; j < sLen; j = j + 1) {
+        tmpArr[k] = sArr[j];
+        k = k + 1;
+      }
+    } else {
+      int start;
+      start = now + l - sLen;
+      for (j = start; j < now; j = j + 1) {
+        tmpArr[k] = sArr[j];
+        k = k + 1;
+      }
+      for (j = 0; j < aLenArr[i]; j = j + 1) {
+        tmpArr[k] = aChars[(i - 1) * MAXA + j];
+        k = k + 1;
+      }
+    }
+
+    sLen = k;
+    for (j = 0; j < sLen; j = j + 1) {
+      sArr[j] = tmpArr[j];
+    }
+  }
+
+  int pos;
+  int ch;
+  pos = -1;
+  for (ch = 65; ch <= 90; ch = ch + 1) {
+    pos = findChar(sArr, sLen, ch);
+    if (pos >= 0) break;
+  }
+  if (pos < 0) {
+    for (ch = 97; ch <= 122; ch = ch + 1) {
+      pos = findChar(sArr, sLen, ch);
+      if (pos >= 0) break;
+    }
+  }
+
+  int out;
+  for (i = 0; i < sLen; i = i + 1) {
+    out = sArr[(pos + i) % sLen];
+    printf("%d\n", out);
+  }
+  return 0;
+}

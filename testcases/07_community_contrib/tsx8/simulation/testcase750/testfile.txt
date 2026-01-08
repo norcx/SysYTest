@@ -1,0 +1,151 @@
+/* Description:
+ *   Strict SysY translation of the given C++ program.
+ */
+const int MAXN = 20005;
+
+int n;
+int m;
+int ans;
+
+int fa[MAXN];
+
+int ha_l[MAXN];
+int ha_r[MAXN];
+int ha_z[MAXN];
+
+int t_l[MAXN];
+int t_r[MAXN];
+int t_z[MAXN];
+
+int father(int x) {
+  if (fa[x] == x) {
+    return x;
+  }
+  int root;
+  root = father(fa[x]);
+  fa[x] = root;
+  return root;
+}
+
+void sort_t(int len) {
+  int i;
+  int j;
+  for (i = 1; i <= len; i = i + 1) {
+    int max_idx;
+    max_idx = i;
+    for (j = i + 1; j <= len; j = j + 1) {
+      if (t_z[j] > t_z[max_idx]) {
+        max_idx = j;
+      }
+    }
+    if (max_idx != i) {
+      int tmp;
+      tmp = t_l[i];
+      t_l[i] = t_l[max_idx];
+      t_l[max_idx] = tmp;
+
+      tmp = t_r[i];
+      t_r[i] = t_r[max_idx];
+      t_r[max_idx] = tmp;
+
+      tmp = t_z[i];
+      t_z[i] = t_z[max_idx];
+      t_z[max_idx] = tmp;
+    }
+  }
+}
+
+int judge(int mid) {
+  int i;
+  for (i = 1; i <= n + 1; i = i + 1) {
+    fa[i] = i;
+  }
+  for (i = 1; i <= mid; i = i + 1) {
+    t_l[i] = ha_l[i];
+    t_r[i] = ha_r[i];
+    t_z[i] = ha_z[i];
+  }
+  sort_t(mid);
+
+  int minl;
+  int maxl;
+  int minr;
+  int maxr;
+  minl = t_l[1];
+  maxl = t_l[1];
+  minr = t_r[1];
+  maxr = t_r[1];
+
+  for (i = 2; i <= mid; i = i + 1) {
+    if (t_z[i] < t_z[i - 1]) {
+      if (father(maxl) > minr) {
+        return 0;
+      }
+      int j;
+      int start;
+      start = father(minl);
+      for (j = start; j <= maxr; j = j + 1) {
+        int fj;
+        fj = father(j);
+        fa[fj] = father(maxr + 1);
+      }
+
+      minl = t_l[i];
+      maxl = t_l[i];
+      minr = t_r[i];
+      maxr = t_r[i];
+    } else {
+      if (t_l[i] < minl) {
+        minl = t_l[i];
+      }
+      if (t_l[i] > maxl) {
+        maxl = t_l[i];
+      }
+      if (t_r[i] < minr) {
+        minr = t_r[i];
+      }
+      if (t_r[i] > maxr) {
+        maxr = t_r[i];
+      }
+      if (father(maxl) > minr) {
+        return 0;
+      }
+    }
+  }
+
+  if (father(maxl) > minr) {
+    return 0;
+  }
+  return 1;
+}
+
+int main() {
+  n = getint();
+  m = getint();
+
+  int i;
+  for (i = 1; i <= m; i = i + 1) {
+    ha_l[i] = getint();
+    ha_r[i] = getint();
+    ha_z[i] = getint();
+  }
+
+  int l;
+  int r;
+  int mid;
+  l = 1;
+  r = n;
+  ans = n + 1;
+  for (; l <= r;) {
+    mid = (l + r) / 2;
+    if (judge(mid) == 0) {
+      ans = mid;
+      r = mid - 1;
+    } else {
+      l = mid + 1;
+    }
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

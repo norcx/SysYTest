@@ -1,0 +1,157 @@
+const int MAXN = 64;
+const int MAXNODE = 4096;
+
+int t_v[MAXNODE];
+int t_lc[MAXNODE];
+int t_rc[MAXNODE];
+int rt[MAXN];
+int a[MAXN];
+int nodev[MAXN];
+int n;
+int m;
+int tot;
+int cnt;
+
+void qsort_a(int l, int r) {
+    int i;
+    int j;
+    int pivot;
+    int tmp;
+    i = l;
+    j = r;
+    pivot = a[(l + r) / 2];
+    for (; i <= j;) {
+        for (; a[i] < pivot;) i = i + 1;
+        for (; a[j] > pivot;) j = j - 1;
+        if (i <= j) {
+            tmp = a[i];
+            a[i] = a[j];
+            a[j] = tmp;
+            i = i + 1;
+            j = j - 1;
+        }
+    }
+    if (l < j) qsort_a(l, j);
+    if (i < r) qsort_a(i, r);
+}
+
+int unique_a(int len) {
+    int i;
+    int k;
+    i = 1;
+    k = 0;
+    for (; i <= len;) {
+        if (i == 1) {
+            k = k + 1;
+            a[k] = a[i];
+        } else {
+            if (a[i] != a[i - 1]) {
+                k = k + 1;
+                a[k] = a[i];
+            }
+        }
+        i = i + 1;
+    }
+    return k;
+}
+
+int lower_bound_a(int len, int x) {
+    int l;
+    int r;
+    int ans;
+    int mid;
+    l = 1;
+    r = len;
+    ans = len + 1;
+    for (; l <= r;) {
+        mid = (l + r) / 2;
+        if (a[mid] >= x) {
+            ans = mid;
+            r = mid - 1;
+        } else {
+            l = mid + 1;
+        }
+    }
+    return ans;
+}
+
+int newnode_from(int from) {
+    cnt = cnt + 1;
+    t_v[cnt] = t_v[from];
+    t_lc[cnt] = t_lc[from];
+    t_rc[cnt] = t_rc[from];
+    return cnt;
+}
+
+int change(int lsto, int l, int r, int q, int v) {
+    int o;
+    int mid;
+    int lc;
+    int rc;
+    o = newnode_from(lsto);
+    if (l == r) {
+        t_v[o] = t_v[o] + v;
+        return o;
+    }
+    mid = (l + r) / 2;
+    if (q <= mid) {
+        lc = change(t_lc[lsto], l, mid, q, v);
+        t_lc[o] = lc;
+    } else {
+        rc = change(t_rc[lsto], mid + 1, r, q, v);
+        t_rc[o] = rc;
+    }
+    t_v[o] = t_v[t_lc[o]] + t_v[t_rc[o]];
+    return o;
+}
+
+int query(int o1, int o2, int l, int r, int q) {
+    int mid;
+    int leftCount;
+    if (l == r) return l;
+    mid = (l + r) / 2;
+    leftCount = t_v[t_lc[o2]] - t_v[t_lc[o1]];
+    if (leftCount >= q) return query(t_lc[o1], t_lc[o2], l, mid, q);
+    return query(t_rc[o1], t_rc[o2], mid + 1, r, q - leftCount);
+}
+
+int main() {
+    int i;
+    int l;
+    int r;
+    int q;
+    int pos;
+    int idx;
+
+    n = getint();
+    m = getint();
+
+    i = 1;
+    for (; i <= n;) {
+        nodev[i] = getint();
+        a[i] = nodev[i];
+        i = i + 1;
+    }
+
+    if (n > 0) qsort_a(1, n);
+    tot = unique_a(n);
+
+    rt[0] = 0;
+    i = 1;
+    for (; i <= n;) {
+        idx = lower_bound_a(tot, nodev[i]);
+        rt[i] = change(rt[i - 1], 1, tot, idx, 1);
+        i = i + 1;
+    }
+
+    i = 1;
+    for (; i <= m;) {
+        l = getint();
+        r = getint();
+        q = getint();
+        pos = query(rt[l - 1], rt[r], 1, tot, q);
+        printf("%d\n", a[pos]);
+        i = i + 1;
+    }
+    return 0;
+}

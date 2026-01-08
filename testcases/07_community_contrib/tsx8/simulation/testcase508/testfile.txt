@@ -1,0 +1,51 @@
+/* Description:
+ *   Deterministic data generator converted from C version using rand()/time()/argv.
+ *   Input (newline-separated integers):
+ *     n
+ *     m
+ *     seed
+ *   Output format matches the original generator:
+ *     n m
+ *     n random numbers (1..1000)
+ *     m commands: "A x y" or "C x v"
+ */
+
+int seed;
+
+int ra() {
+    const int MOD = 1000000;
+    seed = seed % MOD;
+    seed = (seed * 1009 + 97) % MOD;
+    return seed % 1000 + 1;
+}
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int cmd;
+    int x;
+
+    n = getint();
+    m = getint();
+    seed = getint();
+
+    printf("%d %d\n", n, m);
+
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d ", ra());
+    }
+    printf("\n");
+
+    for (i = 0; i < m; i = i + 1) {
+        cmd = ra() % 2;
+        x = ra() % n + 1;
+        if (cmd == 0) {
+            printf("A %d %d\n", x, ra() % x);
+        } else {
+            printf("C %d %d\n", x, ra());
+        }
+    }
+
+    return 0;
+}

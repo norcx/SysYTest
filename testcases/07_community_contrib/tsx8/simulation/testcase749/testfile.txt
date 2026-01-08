@@ -1,0 +1,61 @@
+/* Description:
+ *   For each query integer n:
+ *     delta = 12*n - 3
+ *     print "YES" iff delta is a perfect square and (sqrt(delta) - 3) is divisible by 6,
+ *     else print "NO".
+ *
+ *   (This matches the original C/C++ logic but is refactored to Strict SysY:
+ *    int-only, for-loops only, getint() input.)
+ */
+
+int sqrt_if_square(int x) {
+    int l;
+    int r;
+    int mid;
+    int sq;
+    l = 0;
+    r = 46340;
+    for (;; ) {
+        if (l > r) break;
+        mid = (l + r) / 2;
+        sq = mid * mid;
+        if (sq == x) return mid;
+        if (sq < x) l = mid + 1;
+        else r = mid - 1;
+    }
+    return -1;
+}
+
+int judge(int delta) {
+    int ans;
+    int tmp;
+    ans = sqrt_if_square(delta);
+    if (ans < 0) return 0;
+    ans = ans - 3;
+    tmp = ans / 6;
+    if (tmp * 6 != ans) return 0;
+    return 1;
+}
+
+int main() {
+    int T;
+    int i;
+    int n;
+    int delta;
+    int p;
+    T = getint();
+    for (i = 0; i < T; i = i + 1) {
+        n = getint();
+        p = 0;
+        delta = 12 * n - 3;
+        if (delta < 0) {
+            printf("NO\n");
+        } else {
+            if (judge(delta) == 1) p = 1;
+            else p = 0;
+            if (p == 1) printf("YES\n");
+            else printf("NO\n");
+        }
+    }
+    return 0;
+}

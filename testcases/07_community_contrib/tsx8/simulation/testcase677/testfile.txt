@@ -1,0 +1,13 @@
+/* Description:
+ * Echoes 204 integers from stdin (one per line).
+ */
+
+int main() {
+    int i;
+    int x;
+    for (i = 0; i < 204; i = i + 1) {
+        x = getint();
+        printf("%d\n", x);
+    }
+    return 0;
+}

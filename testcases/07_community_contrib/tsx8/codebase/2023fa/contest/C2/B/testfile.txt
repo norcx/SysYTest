@@ -1,0 +1,19 @@
+/* Description:
+ *   Converted from `codes/2023fa/contest/C2/B.c`.
+ *   Reads `n` then `n` integers (ASCII codes); prints codes except 'C'(67), 'B'(66), 'V'(86).
+ *   Output format: one integer per line.
+ */
+
+int main() {
+    int n;
+    int i;
+    int x;
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        x = getint();
+        if (x != 67 && x != 66 && x != 86) {
+            printf("%d\n", x);
+        }
+    }
+    return 0;
+}

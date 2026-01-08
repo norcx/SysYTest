@@ -1,0 +1,71 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C5/C.c
+ *
+ *   Original logic:
+ *     Read integers a, b, then read x until EOF.
+ *     For each x: apply f(x) three times and print the result.
+ *       f(x) = ((a*x*x + x) % b + b) % b
+ *
+ *   Strict SysY adaptation:
+ *     Use `getint()` only. Input becomes:
+ *       a
+ *       b
+ *       n
+ *       x1
+ *       ...
+ *       xn
+ */
+
+int mul_mod(int u, int v, int mod) {
+    int res;
+    int uu;
+    int vv;
+    int i;
+    res = 0;
+    uu = u % mod;
+    if (uu < 0) uu = uu + mod;
+    vv = v;
+    if (vv < 0) vv = -vv;
+    for (i = 0; i < 31; i = i + 1) {
+        if (vv % 2 == 1) res = (res + uu) % mod;
+        uu = (uu + uu) % mod;
+        vv = vv / 2;
+    }
+    return res;
+}
+
+int f(int x, int a, int b) {
+    int xm;
+    int x2;
+    int ax2;
+    int sum;
+    xm = x % b;
+    if (xm < 0) xm = xm + b;
+    x2 = mul_mod(xm, xm, b);
+    ax2 = mul_mod(a % b, x2, b);
+    sum = (ax2 + xm) % b;
+    if (sum < 0) sum = sum + b;
+    return sum;
+}
+
+int main() {
+    int a;
+    int b;
+    int n;
+    int idx;
+    int x;
+    int j;
+
+    a = getint();
+    b = getint();
+    n = getint();
+
+    for (idx = 0; idx < n; idx = idx + 1) {
+        x = getint();
+        for (j = 0; j < 3; j = j + 1) {
+            x = f(x, a, b);
+        }
+        printf("%d\n", x);
+    }
+    return 0;
+}

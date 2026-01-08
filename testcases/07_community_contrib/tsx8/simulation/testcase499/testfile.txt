@@ -1,0 +1,55 @@
+/* Description:
+ *   2D rectangle add on an n*n grid.
+ *   Input: n, m, then m rectangles (x1,y1,x2,y2), 1-indexed.
+ *   Output: resulting grid counts.
+ */
+
+const int STRIDE = 210;
+int diff[44100];
+
+int id(int x, int y) {
+    return x * STRIDE + y;
+}
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int j;
+    int x1;
+    int y1;
+    int x2;
+    int y2;
+    int cur;
+
+    n = getint();
+    m = getint();
+
+    for (i = 0; i < m; i = i + 1) {
+        x1 = getint();
+        y1 = getint();
+        x2 = getint();
+        y2 = getint();
+
+        diff[id(x1, y1)] = diff[id(x1, y1)] + 1;
+        diff[id(x2 + 1, y1)] = diff[id(x2 + 1, y1)] - 1;
+        diff[id(x1, y2 + 1)] = diff[id(x1, y2 + 1)] - 1;
+        diff[id(x2 + 1, y2 + 1)] = diff[id(x2 + 1, y2 + 1)] + 1;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= n; j = j + 1) {
+            cur = diff[id(i, j)] + diff[id(i - 1, j)] + diff[id(i, j - 1)] - diff[id(i - 1, j - 1)];
+            diff[id(i, j)] = cur;
+
+            printf("%d", cur);
+            if (j < n) {
+                printf(" ");
+            } else {
+                printf("\n");
+            }
+        }
+    }
+
+    return 0;
+}

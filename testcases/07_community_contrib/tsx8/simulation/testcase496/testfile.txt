@@ -1,0 +1,25 @@
+/* Description:
+ *   Converted from a C++ Windows stress-testing harness.
+ *   SysY has no system/file/exec, so this testcase simulates the same
+ *   control-flow (repeat -> compare -> break) with a stubbed system().
+ */
+
+int system(int cmd) {
+    if (cmd == 4) return 1;
+    return 0;
+}
+
+int main() {
+    int i;
+    int cnt;
+    cnt = 0;
+    for (i = 0; i < 100; i = i + 1) {
+        system(1);
+        system(2);
+        system(3);
+        cnt = cnt + 1;
+        if (system(4) != 0) break;
+    }
+    printf("%d\n", cnt);
+    return 0;
+}

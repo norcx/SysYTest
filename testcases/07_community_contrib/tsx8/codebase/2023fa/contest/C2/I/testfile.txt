@@ -1,0 +1,46 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C2/I.c to Strict SysY.
+ *   Input: n (one integer).
+ *   Output: n and a permutation, one integer per line.
+ */
+
+int main() {
+    int n;
+    int l;
+    int r;
+    int start;
+
+    n = getint();
+    if (n == 1) {
+        printf("1\n");
+        printf("1\n");
+    } else if (n <= 3) {
+        printf("-1\n");
+    } else if (n == 4) {
+        printf("4\n");
+        printf("2\n");
+        printf("4\n");
+        printf("1\n");
+        printf("3\n");
+    } else {
+        printf("%d\n", n);
+
+        start = n;
+        if (n % 2 == 0) {
+            start = n - 1;
+        }
+        for (l = start; l >= 5; l = l - 2) {
+            printf("%d\n", l);
+        }
+
+        printf("2\n");
+        printf("4\n");
+        printf("1\n");
+        printf("3\n");
+
+        for (r = 6; r <= n; r = r + 2) {
+            printf("%d\n", r);
+        }
+    }
+    return 0;
+}

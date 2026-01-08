@@ -1,0 +1,123 @@
+/* Description:
+ *   Best-fit allocator simulation (array-based linked list).
+ *   Converted from C code using malloc/struct/dowhile into Strict SysY.
+ */
+
+const int MAXN = 128;
+
+int pos_arr[MAXN];
+int len_arr[MAXN];
+int nxt_arr[MAXN];
+int pre_arr[MAXN];
+
+void insert_after(int pre_idx, int new_idx, int posv, int lenv) {
+    pos_arr[new_idx] = posv;
+    len_arr[new_idx] = lenv;
+    nxt_arr[new_idx] = nxt_arr[pre_idx];
+    if (nxt_arr[pre_idx] != -1) {
+        pre_arr[nxt_arr[pre_idx]] = new_idx;
+    }
+    pre_arr[new_idx] = pre_idx;
+    nxt_arr[pre_idx] = new_idx;
+    return;
+}
+
+void delete_node(int idx) {
+    int pre_idx;
+    int nxt_idx;
+    pre_idx = pre_arr[idx];
+    nxt_idx = nxt_arr[idx];
+    nxt_arr[pre_idx] = nxt_idx;
+    pre_arr[nxt_idx] = pre_idx;
+    return;
+}
+
+int main() {
+    int cnt;
+    int L;
+    int P;
+    int i;
+    int posv;
+    int lenv;
+    int ask;
+
+    cnt = getint();
+
+    L = 0;
+    nxt_arr[L] = -1;
+    pre_arr[L] = -1;
+    pos_arr[L] = -1;
+    len_arr[L] = -1;
+
+    P = L;
+    for (i = 1; i <= cnt; i = i + 1) {
+        posv = getint();
+        lenv = getint();
+        insert_after(P, i, posv, lenv);
+        P = nxt_arr[P];
+    }
+
+    if (cnt == 0) {
+        nxt_arr[L] = L;
+        pre_arr[L] = L;
+        P = L;
+    } else {
+        pre_arr[L] = P;
+        nxt_arr[P] = L;
+        P = nxt_arr[L];
+    }
+
+    for (ask = getint(); ask != -1; ask = getint()) {
+        int p;
+        int tmp;
+        int best;
+        int first;
+
+        p = P;
+        tmp = -1;
+        best = -1;
+        first = 1;
+        for (; first == 1 || p != P; ) {
+            first = 0;
+            if (p == L) {
+                p = nxt_arr[p];
+                continue;
+            }
+            if (len_arr[p] >= ask) {
+                if (best == -1 || len_arr[p] < best) {
+                    best = len_arr[p];
+                    tmp = p;
+                }
+            }
+            p = nxt_arr[p];
+        }
+
+        if (best != -1) {
+            if (best == ask) {
+                P = nxt_arr[tmp];
+                delete_node(tmp);
+            } else {
+                P = tmp;
+                len_arr[tmp] = len_arr[tmp] - ask;
+            }
+        }
+    }
+
+    {
+        int p;
+        int first;
+        p = P;
+        first = 1;
+        for (; first == 1 || p != P; ) {
+            first = 0;
+            if (p == L) {
+                p = nxt_arr[p];
+                continue;
+            }
+            printf("%d %d\n", pos_arr[p], len_arr[p]);
+            p = nxt_arr[p];
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,66 @@
+/* Description:
+ * Converted from C++ to Strict SysY.
+ * Computes max over all submatrices: sum(submatrix) + p - min(submatrix).
+ */
+
+const int MAX = 340;
+const int W = 340;
+const int INF = 2047483647;
+
+int n;
+int m;
+int p;
+int ans;
+
+int a[MAX * MAX];
+int pre[MAX * MAX];
+
+int get_sum(int x, int y, int z, int w) {
+    int res;
+    res = pre[z * W + w] - pre[z * W + (y - 1)] - pre[(x - 1) * W + w] + pre[(x - 1) * W + (y - 1)];
+    return res;
+}
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int l;
+    int o;
+    int idx;
+    int aa;
+    int v;
+    int s;
+
+    n = getint();
+    m = getint();
+    p = getint();
+    ans = p;
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            idx = i * W + j;
+            a[idx] = getint();
+            pre[idx] = pre[(i - 1) * W + j] + pre[i * W + (j - 1)] - pre[(i - 1) * W + (j - 1)] + a[idx];
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            for (k = i; k <= n; k = k + 1) {
+                aa = -INF;
+                for (l = j; l <= m; l = l + 1) {
+                    for (o = i; o <= k; o = o + 1) {
+                        v = p - a[o * W + l];
+                        if (v > aa) aa = v;
+                    }
+                    s = get_sum(i, j, k, l) + aa;
+                    if (s > ans) ans = s;
+                }
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

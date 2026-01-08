@@ -1,0 +1,32 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E2/H.c`.
+ *   Input format (Strict SysY): n, then for each word 4 integers in [0,25] representing letters a..z.
+ *   Output matches the original messages for first-time vs repeated words.
+ */
+
+int ma[456976];
+
+int main() {
+    int n;
+    int t;
+    n = getint();
+    for (t = 0; t < n; t = t + 1) {
+        int a;
+        int b;
+        int c;
+        int d;
+        int idx;
+        a = getint();
+        b = getint();
+        c = getint();
+        d = getint();
+        idx = (((a * 26) + b) * 26 + c) * 26 + d;
+        if (ma[idx] == 0) {
+            printf("Moca memorized a new word!\n");
+            ma[idx] = 1;
+        } else {
+            printf("Moca has already memorized this word!\n");
+        }
+    }
+    return 0;
+}

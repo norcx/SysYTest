@@ -1,0 +1,6 @@
+alpha:2
+beta:97
+gamma:-10
+alpha:4
+beta:94
+gamma:-20

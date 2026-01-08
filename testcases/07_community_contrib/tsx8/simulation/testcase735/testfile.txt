@@ -1,0 +1,30 @@
+/* Description:
+ *   Converted from a C++ random bracket generator.
+ *   - Removes file I/O and time-based randomness.
+ *   - Scales n from 100000 to 10000 for faster execution.
+ *   - Uses a deterministic pseudo-random generator to choose '(' or ')'.
+ */
+
+int seed;
+
+int next_rand() {
+    seed = seed * 21 + 17;
+    seed = seed % 100000000;
+    return seed;
+}
+
+int main() {
+    int n;
+    int i;
+    seed = 1;
+    n = 10000;
+    printf("%d\n", n);
+    for (i = 1; i <= n; i = i + 1) {
+        if (next_rand() % 100000 < 50000) {
+            printf("(");
+        } else {
+            printf(")");
+        }
+    }
+    return 0;
+}

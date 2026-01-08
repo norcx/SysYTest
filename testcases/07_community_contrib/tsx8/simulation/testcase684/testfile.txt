@@ -1,0 +1,65 @@
+/* Description:
+ * Convert the original C++ program into Strict SysY:
+ * - Replace character parsing of "[tot:...]" blocks with integer-only input.
+ * - Input format:
+ *   A B C D E (5 integers, unused by the logic)
+ *   Then for i=1..6, j=1..6:
+ *     tot(i,j) followed by tot(i,j) integers as the payload list.
+ * - Output format matches the original printing loop:
+ *   print all payload integers with a trailing ',' then a space per cell, newline per row.
+ */
+
+const int N = 7;          /* original MAXN */
+const int CELLS = 49;     /* 7 * 7 (use indices 1..6) */
+
+int A;
+int B;
+int C;
+int D;
+int E;
+
+int tot_arr[CELLS];
+int val_arr[CELLS * N];
+
+int idx(int i, int j) {
+    return i * N + j;
+}
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int t;
+    int base;
+
+    A = getint();
+    B = getint();
+    C = getint();
+    D = getint();
+    E = getint();
+
+    for (i = 1; i <= 6; i = i + 1) {
+        for (j = 1; j <= 6; j = j + 1) {
+            t = getint();
+            tot_arr[idx(i, j)] = t;
+            base = idx(i, j) * N;
+            for (k = 1; k <= t; k = k + 1) {
+                val_arr[base + k] = getint();
+            }
+        }
+    }
+
+    for (i = 1; i <= 6; i = i + 1) {
+        for (j = 1; j <= 6; j = j + 1) {
+            t = tot_arr[idx(i, j)];
+            base = idx(i, j) * N;
+            for (k = 1; k <= t; k = k + 1) {
+                printf("%d,", val_arr[base + k]);
+            }
+            printf(" ");
+        }
+        printf("\n");
+    }
+
+    return 0;
+}

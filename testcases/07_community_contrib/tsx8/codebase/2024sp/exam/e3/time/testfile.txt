@@ -1,0 +1,122 @@
+/* Description:
+ *   [Add description here]
+ */
+const int TYPE_COUNT = 3;
+const int MAX_STU = 64;
+
+int nums[TYPE_COUNT * MAX_STU];
+int cnts[TYPE_COUNT * MAX_STU];
+int times100[TYPE_COUNT * MAX_STU];
+int tops[TYPE_COUNT];
+
+void swap3(int i, int j) {
+    int t;
+    t = nums[i];
+    nums[i] = nums[j];
+    nums[j] = t;
+
+    t = cnts[i];
+    cnts[i] = cnts[j];
+    cnts[j] = t;
+
+    t = times100[i];
+    times100[i] = times100[j];
+    times100[j] = t;
+}
+
+int main() {
+    int n;
+    int rec;
+    int type;
+    int num;
+    int sthh;
+    int stmm;
+    int stss;
+    int edhh;
+    int edmm;
+    int edss;
+    int startSec;
+    int endSec;
+    int diffSec;
+    int time100;
+    int base;
+    int i;
+    int j;
+    int k;
+    int best;
+    int tcount;
+
+    i = 0;
+    for (i = 0; i < TYPE_COUNT; i = i + 1) {
+        tops[i] = 0;
+    }
+
+    n = getint();
+    for (rec = 0; rec < n; rec = rec + 1) {
+        type = getint();
+        num = getint();
+        sthh = getint();
+        stmm = getint();
+        stss = getint();
+        edhh = getint();
+        edmm = getint();
+        edss = getint();
+
+        startSec = sthh * 3600 + stmm * 60 + stss;
+        endSec = edhh * 3600 + edmm * 60 + edss;
+        diffSec = endSec - startSec;
+
+        time100 = (diffSec * 100 + 1800) / 3600;
+
+        base = type * MAX_STU;
+        k = 0;
+        for (i = 0; i < tops[type]; i = i + 1) {
+            if (nums[base + i] == num) {
+                k = 1;
+                j = i;
+            }
+        }
+
+        if (k == 0) {
+            i = tops[type];
+            nums[base + i] = num;
+            cnts[base + i] = 1;
+            times100[base + i] = time100;
+            tops[type] = tops[type] + 1;
+        } else {
+            cnts[base + j] = cnts[base + j] + 1;
+            times100[base + j] = times100[base + j] + time100;
+        }
+    }
+
+    for (type = 0; type < TYPE_COUNT; type = type + 1) {
+        base = type * MAX_STU;
+        tcount = tops[type];
+        for (i = 0; i < tcount; i = i + 1) {
+            best = i;
+            for (j = i + 1; j < tcount; j = j + 1) {
+                if (times100[base + j] > times100[base + best]) {
+                    best = j;
+                } else {
+                    if (times100[base + j] == times100[base + best]) {
+                        if (nums[base + j] < nums[base + best]) {
+                            best = j;
+                        }
+                    }
+                }
+            }
+            if (best != i) {
+                swap3(base + i, base + best);
+            }
+        }
+
+        for (i = 0; i < tcount; i = i + 1) {
+            printf("%d\n", type);
+            printf("%d\n", nums[base + i]);
+            printf("%d\n", cnts[base + i]);
+            printf("%d\n", times100[base + i]);
+        }
+    }
+
+    return 0;
+}

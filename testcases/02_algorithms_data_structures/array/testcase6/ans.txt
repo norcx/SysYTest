@@ -1,0 +1,12 @@
+g_arr[i + j] = 100
+g_arr[i * j] = 210
+g_arr[i * j + 5] = 260
+g_arr[g_idx] = 50
+g_arr[g_idx * 2] = 100
+g_arr[get_offset(3)] = 70
+g_arr[get_offset(i)] = 70
+g_arr[local_arr[0]] = 100
+g_arr[local_arr[1]] = 200
+g_arr[local_arr[local_arr[2]]] = 50
+g_arr[17] = 12345
+local_arr[5] = 6789

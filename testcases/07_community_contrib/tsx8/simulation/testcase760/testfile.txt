@@ -1,0 +1,118 @@
+/*
+  Deterministic rewrite of the provided C++ input generator.
+  - No input (in.txt can be empty).
+  - Prints T then T integers, each intended to be prime.
+*/
+
+const int T = 100;
+const int P = 50000;
+const int Q = 50;
+
+int seed = 123456789;
+
+int myrand() {
+    int a;
+    int m;
+    int q;
+    int r;
+    int t;
+    a = 48271;
+    m = 2147483647;
+    q = 44488;
+    r = 3399;
+    t = a * (seed - (seed / q) * q) - r * (seed / q);
+    if (t > 0) seed = t;
+    else seed = t + m;
+    return seed;
+}
+
+int abs_i(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+int cube(int x) {
+    return x * x * x;
+}
+
+int R() {
+    int x;
+    int y;
+    int v;
+    x = myrand();
+    y = myrand();
+    v = (x - (x / 40000) * 40000) * 100 + (y - (y / 100) * 100);
+    v = v - (v / 40000) * 40000;
+    return v;
+}
+
+int is_prime(int x) {
+    int i;
+    if (x < 2) return 0;
+    if (x == 2) return 1;
+    if (x - (x / 2) * 2 == 0) return 0;
+    i = 3;
+    for (i = 3; i * i <= x; i = i + 2) {
+        if (x - (x / i) * i == 0) return 0;
+    }
+    return 1;
+}
+
+int main() {
+    int t;
+    printf("%d\n", T);
+    for (t = 0; t < T; t = t + 1) {
+        int r;
+        r = myrand();
+        if (r - (r / 2) * 2 == 0) {
+            int tries;
+            int x;
+            x = 2;
+            for (tries = 0; tries < 100000; tries = tries + 1) {
+                int a;
+                int a2;
+                int a3;
+                a = R();
+                a2 = a * a;
+                a3 = a2 * a;
+                x = a3 - (a3 / P) * P;
+                x = x + 1;
+                if (is_prime(x) == 1) {
+                    printf("%d\n", x);
+                    break;
+                }
+            }
+            if (tries == 100000) printf("%d\n", 2);
+        } else {
+            int tries;
+            int diff;
+            diff = 2;
+            for (tries = 0; tries < 200000; tries = tries + 1) {
+                int x;
+                int y;
+                int dx;
+                int dy;
+                int rx;
+                int ry;
+                rx = R();
+                ry = R();
+                x = rx - (rx / Q) * Q + 1;
+                y = ry - (ry / Q) * Q + 1;
+                if (x == y) {
+                } else {
+                    dx = cube(x);
+                    dy = cube(y);
+                    diff = abs_i(dx - dy);
+                    if (diff <= P) {
+                        if (is_prime(diff) == 1) {
+                            printf("%d\n", diff);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (tries == 200000) printf("%d\n", 2);
+        }
+    }
+    return 0;
+}

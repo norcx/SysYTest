@@ -1,0 +1,8 @@
+int f(int f) {
+  return f * 2;
+}
+
+int main() {
+    printf("%d", f(10));
+  return 0;
+}

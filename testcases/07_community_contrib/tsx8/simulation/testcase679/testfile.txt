@@ -1,0 +1,317 @@
+const int MAXN = 2100;
+const int MAXM = 4200;
+const int LOG = 19;
+const int HEAPN = 2100;
+
+int n;
+int m;
+int cnt;
+int ans;
+
+int head[MAXN];
+int to[MAXM];
+int w[MAXM];
+int nxt[MAXM];
+
+int depth[MAXN];
+int sum[MAXN];
+int fa[MAXN * LOG];
+int pow2[LOG];
+
+int heap[HEAPN];
+int heapSize;
+
+int max_int(int a, int b) {
+    if (a < b) return b;
+    return a;
+    return 0;
+}
+
+int abs_int(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+    return 0;
+}
+
+void heap_clear() {
+    heapSize = 0;
+}
+
+void heap_push(int x) {
+    int i;
+    int p;
+    int t;
+    heapSize = heapSize + 1;
+    heap[heapSize] = x;
+    i = heapSize;
+    for (; i > 1; ) {
+        p = i / 2;
+        if (heap[p] < heap[i]) {
+            t = heap[p];
+            heap[p] = heap[i];
+            heap[i] = t;
+            i = p;
+        } else {
+            i = 1;
+        }
+    }
+}
+
+int heap_pop() {
+    int ret;
+    int i;
+    int l;
+    int r;
+    int best;
+    int t;
+    ret = heap[1];
+    heap[1] = heap[heapSize];
+    heapSize = heapSize - 1;
+    i = 1;
+    for (; heapSize > 0; ) {
+        l = i * 2;
+        if (l > heapSize) return ret;
+        r = l + 1;
+        best = l;
+        if (r <= heapSize) {
+            if (heap[r] > heap[l]) best = r;
+        }
+        if (heap[best] > heap[i]) {
+            t = heap[best];
+            heap[best] = heap[i];
+            heap[i] = t;
+            i = best;
+        } else {
+            return ret;
+        }
+    }
+    return ret;
+    return 0;
+}
+
+void add_edge(int x, int y, int z) {
+    cnt = cnt + 1;
+    to[cnt] = y;
+    w[cnt] = z;
+    nxt[cnt] = head[x];
+    head[x] = cnt;
+}
+
+void dfs(int now, int fat, int now_depth) {
+    int i;
+    int e;
+    int nn;
+    depth[now] = now_depth;
+    fa[now * LOG + 0] = fat;
+    for (i = 1; i < LOG; i = i + 1) {
+        if (pow2[i] + 1 <= now_depth) {
+            fa[now * LOG + i] = fa[fa[now * LOG + (i - 1)] * LOG + (i - 1)];
+        }
+    }
+    for (e = head[now]; e != 0; e = nxt[e]) {
+        nn = to[e];
+        if (nn != fat) {
+            dfs(nn, now, now_depth + 1);
+            sum[now] = sum[now] + sum[nn] + w[e];
+        }
+    }
+}
+
+int get_lca(int x, int y) {
+    int i;
+    int anc;
+    if (depth[x] < depth[y]) {
+        for (i = LOG - 1; i >= 0; i = i - 1) {
+            anc = fa[y * LOG + i];
+            if (depth[anc] >= depth[x]) y = anc;
+        }
+    }
+    if (depth[x] > depth[y]) {
+        for (i = LOG - 1; i >= 0; i = i - 1) {
+            anc = fa[x * LOG + i];
+            if (depth[anc] >= depth[y]) x = anc;
+        }
+    }
+    if (x == y) return x;
+    for (i = LOG - 1; i >= 0; i = i - 1) {
+        if (fa[x * LOG + i] != fa[y * LOG + i]) {
+            x = fa[x * LOG + i];
+            y = fa[y * LOG + i];
+        }
+    }
+    return fa[x * LOG + 0];
+    return 0;
+}
+
+int get_z(int x, int y) {
+    int i;
+    for (i = 0; i < LOG; i = i + 1) {
+        if ((y / pow2[i]) % 2 == 1) x = fa[x * LOG + i];
+    }
+    return x;
+    return 0;
+}
+
+void get_ans(int x, int y, int z, int p, int pp) {
+    int i;
+    int nn;
+    int tmp;
+    int parentz;
+    int v;
+    heap_clear();
+    ans = 0;
+    parentz = fa[z * LOG + 0];
+    if (x == parentz) ans = sum[1] - sum[z];
+    for (i = head[z]; i != 0; i = nxt[i]) {
+        nn = to[i];
+        if (nn == x && x != parentz) ans = ans + sum[x] + w[i];
+        if (nn != x) {
+            if (nn != y) {
+                if (nn == parentz) heap_push(sum[1] - sum[z]);
+                if (nn != parentz) heap_push(w[i] + sum[nn]);
+            }
+        }
+    }
+    tmp = 1 - p;
+    for (; heapSize > 0; ) {
+        tmp = tmp + 1;
+        v = heap_pop();
+        if (tmp % 2 == 1) ans = ans + v;
+    }
+}
+
+void get_ans_2(int x, int y, int z, int p) {
+    int i;
+    int nn;
+    int tmp;
+    int v;
+    heap_clear();
+    ans = 0;
+    for (i = head[z]; i != 0; i = nxt[i]) {
+        nn = to[i];
+        if (nn == x) {
+            ans = ans + w[i] + sum[nn];
+        } else {
+            if (nn != y) {
+                if (nn != fa[z * LOG + 0]) heap_push(w[i] + sum[nn]);
+            }
+        }
+    }
+    heap_push(sum[1] - sum[z]);
+    tmp = 1 - p;
+    for (; heapSize > 0; ) {
+        tmp = tmp + 1;
+        v = heap_pop();
+        if (tmp % 2 == 1) ans = ans + v;
+    }
+}
+
+void get_ans_3(int z) {
+    int i;
+    int nn;
+    int tmp;
+    int v;
+    int alt;
+    heap_clear();
+    ans = 0;
+    for (i = head[z]; i != 0; i = nxt[i]) {
+        nn = to[i];
+        heap_push(w[i] + sum[nn]);
+    }
+    tmp = 1;
+    for (; heapSize > 0; ) {
+        tmp = tmp + 1;
+        v = heap_pop();
+        if (tmp % 2 == 1) ans = ans + v;
+    }
+    alt = sum[1] - ans;
+    if (ans < alt) ans = alt;
+}
+
+int main() {
+    int i;
+    int x;
+    int y;
+    int z;
+    int qi;
+    int lca;
+    int dt;
+    int p;
+    int dd;
+
+    pow2[0] = 1;
+    for (i = 1; i < LOG; i = i + 1) pow2[i] = pow2[i - 1] * 2;
+
+    n = getint();
+    m = getint();
+    for (i = 1; i < n; i = i + 1) {
+        x = getint();
+        y = getint();
+        z = getint();
+        add_edge(x, y, z);
+        add_edge(y, x, z);
+    }
+
+    dfs(1, 0, 1);
+
+    for (qi = 0; qi < m; qi = qi + 1) {
+        x = getint();
+        y = getint();
+        lca = get_lca(x, y);
+        dt = abs_int(depth[y] - depth[x]);
+
+        if (x == y) {
+            get_ans_3(x);
+        } else {
+            if (lca == x) {
+                z = get_z(y, dt / 2);
+                p = (dt + 1) % 2;
+                x = fa[z * LOG + 0];
+                y = get_z(y, max_int(dt / 2 - 1, 0));
+                get_ans(x, y, z, p, 1);
+            } else {
+                if (lca == y) {
+                    z = get_z(x, (dt + 1) / 2);
+                    p = (dt + 1) % 2;
+                    x = get_z(x, max_int((dt + 1) / 2 - 1, 0));
+                    if (z != y) y = fa[z * LOG + 0];
+                    get_ans(x, y, z, p, 0);
+                } else {
+                    if (dt == 0) {
+                        z = lca;
+                        p = 1;
+                        x = get_z(x, max_int(depth[x] - depth[lca] - 1, 0));
+                        y = get_z(y, max_int(depth[y] - depth[lca] - 1, 0));
+                        get_ans_2(x, y, z, p);
+                    }
+                    if (depth[x] < depth[y]) {
+                        dd = depth[x] - depth[lca];
+                        dt = depth[y] - depth[lca] - dd;
+                        z = get_z(y, dt / 2 + dd);
+                        p = (dt + 1) % 2;
+                        x = fa[z * LOG + 0];
+                        y = get_z(y, max_int(dt / 2 + dd - 1, 0));
+                        get_ans(x, y, z, p, 1);
+                    }
+                    if (depth[x] > depth[y]) {
+                        dd = depth[y] - depth[lca];
+                        dt = depth[x] - depth[lca] - dd;
+                        z = get_z(x, (dt + 1) / 2 + dd);
+                        p = (dt + 1) % 2;
+                        if (depth[x] - depth[y] == 1) {
+                            y = get_z(y, max_int(dd - 1, 0));
+                            x = get_z(x, max_int(depth[x] - depth[lca] - 1, 0));
+                            get_ans_2(x, y, z, p);
+                        } else {
+                            x = get_z(x, max_int((dt + 1) / 2 + dd - 1, 0));
+                            y = fa[z * LOG + 0];
+                            get_ans(x, y, z, p, 0);
+                        }
+                    }
+                }
+            }
+        }
+        printf("%d\n", ans);
+    }
+    return 0;
+}

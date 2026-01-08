@@ -1,0 +1,26 @@
+/* Description:
+ *   From `codes/2023fa/contest/C4/F.c`.
+ *   Prints the quotient sequence produced by the Euclidean algorithm.
+ */
+
+int main() {
+    int p;
+    int q;
+    int r;
+    int quo;
+
+    p = getint();
+    q = getint();
+
+    for (;;) {
+        quo = p / q;
+        printf("%d\n", quo);
+        r = p % q;
+        if (r == 0) {
+            break;
+        }
+        p = q;
+        q = r;
+    }
+    return 0;
+}

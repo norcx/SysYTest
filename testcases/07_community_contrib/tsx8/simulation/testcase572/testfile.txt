@@ -1,0 +1,127 @@
+const int MAXN = 1024;
+const int MAXT = MAXN * 4 + 5;
+
+int tr_l[MAXT];
+int tr_r[MAXT];
+int tr_add[MAXT];
+int tr_cnt[MAXT];
+int tr_del[MAXT];
+
+int arr[MAXN + 5];
+int op[MAXN + 5];
+
+int query_tree(int i, int target) {
+  int lchild;
+  int rchild;
+  lchild = i * 2;
+  rchild = lchild + 1;
+  if (target == tr_add[rchild]) {
+    return tr_cnt[i] - tr_cnt[rchild];
+  }
+  if (target < tr_add[rchild]) {
+    return tr_cnt[i] - tr_cnt[rchild] + query_tree(rchild, target);
+  }
+  return query_tree(lchild, target - tr_add[rchild] + tr_del[rchild]);
+}
+
+void push_up(int i) {
+  int lchild;
+  int rchild;
+  lchild = i * 2;
+  rchild = lchild + 1;
+
+  if (tr_del[rchild] >= tr_add[lchild]) {
+    tr_del[i] = tr_del[lchild] + tr_del[rchild] - tr_add[lchild];
+    tr_add[i] = tr_add[rchild];
+    tr_cnt[i] = tr_cnt[rchild];
+    return;
+  }
+  if (tr_del[rchild] == 0) {
+    tr_add[i] = tr_add[lchild] + tr_add[rchild];
+    tr_cnt[i] = tr_cnt[lchild] + tr_cnt[rchild];
+    tr_del[i] = tr_del[lchild];
+    return;
+  }
+  tr_del[i] = tr_del[lchild];
+  tr_add[i] = tr_add[lchild] + tr_add[rchild] - tr_del[rchild];
+  tr_cnt[i] = tr_cnt[rchild] + query_tree(lchild, tr_del[rchild]);
+  return;
+}
+
+void build_tree(int x, int y, int i) {
+  int mid;
+  tr_l[i] = x;
+  tr_r[i] = y;
+  tr_add[i] = 0;
+  tr_cnt[i] = 0;
+  tr_del[i] = 0;
+
+  if (x == y) {
+    if (op[x] != 0) {
+      tr_del[i] = arr[x];
+    } else {
+      tr_add[i] = 1;
+      tr_cnt[i] = arr[x];
+    }
+    return;
+  }
+
+  mid = (x + y) / 2;
+  build_tree(x, mid, i * 2);
+  build_tree(mid + 1, y, i * 2 + 1);
+  push_up(i);
+  return;
+}
+
+void update_tree(int i, int target) {
+  int mid;
+  int t;
+  if (tr_l[i] == tr_r[i]) {
+    tr_add[i] = 0;
+    tr_cnt[i] = 0;
+    tr_del[i] = 0;
+    t = getint();
+    if (t != 0) {
+      tr_del[i] = getint();
+    } else {
+      tr_cnt[i] = getint();
+      tr_add[i] = 1;
+    }
+    return;
+  }
+
+  mid = (tr_l[i] + tr_r[i]) / 2;
+  if (target > mid) {
+    update_tree(i * 2 + 1, target);
+  } else {
+    update_tree(i * 2, target);
+  }
+  push_up(i);
+  return;
+}
+
+int main() {
+  int n;
+  int q;
+  int i;
+  int tmp;
+
+  n = getint();
+  q = getint();
+
+  i = 1;
+  for (i = 1; i <= n; i = i + 1) {
+    op[i] = getint();
+    arr[i] = getint();
+  }
+
+  build_tree(1, n, 1);
+
+  for (; q > 0; q = q - 1) {
+    tmp = getint();
+    update_tree(1, tmp);
+    printf("%d\n", tr_cnt[1]);
+  }
+
+  return 0;
+}

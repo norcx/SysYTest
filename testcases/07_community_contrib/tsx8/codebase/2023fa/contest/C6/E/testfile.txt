@@ -1,0 +1,69 @@
+/* Description:
+ *   Sort an integer array, then answer queries with the 1-based position
+ *   of the first occurrence (or -1 if not found).
+ */
+
+int arr[110];
+
+void sort_arr(int n) {
+    int i;
+    int j;
+    int tmp;
+    for (i = 0; i < n; i = i + 1) {
+        for (j = 0; j < n - 1 - i; j = j + 1) {
+            if (arr[j] > arr[j + 1]) {
+                tmp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = tmp;
+            }
+        }
+    }
+}
+
+int lower_bound_arr(int n, int x) {
+    int l;
+    int r;
+    int mid;
+    l = 0;
+    r = n;
+    for (; l < r;) {
+        mid = (l + r) / 2;
+        if (arr[mid] < x) {
+            l = mid + 1;
+        } else {
+            r = mid;
+        }
+    }
+    return l;
+}
+
+int find_first_pos(int n, int x) {
+    int idx;
+    idx = lower_bound_arr(n, x);
+    if (idx < n && arr[idx] == x) {
+        return idx + 1;
+    }
+    return -1;
+}
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int x;
+    int pos;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        arr[i] = getint();
+    }
+    sort_arr(n);
+
+    m = getint();
+    for (i = 0; i < m; i = i + 1) {
+        x = getint();
+        pos = find_first_pos(n, x);
+        printf("%d\n", pos);
+    }
+    return 0;
+}

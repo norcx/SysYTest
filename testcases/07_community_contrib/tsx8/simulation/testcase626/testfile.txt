@@ -1,0 +1,93 @@
+/* Description:
+ *   Deterministic, scaled-down version of the original C++ generator.
+ *   Prints:
+ *     n m
+ *     n integers (one line, space-separated)
+ *     m lines of directed edges: A B
+ */
+
+int seed;
+
+int table[50021];
+
+int sysy_rand() {
+    int hi;
+    int lo;
+    int test;
+    hi = seed / 44488;
+    lo = seed - hi * 44488;
+    test = 48271 * lo - 3399 * hi;
+    if (test <= 0) test = test + 2147483647;
+    seed = test;
+    return seed % 32768;
+}
+
+int R() {
+    int a;
+    int b;
+    a = sysy_rand();
+    b = sysy_rand();
+    return a * 30000 + b % 30000;
+}
+
+int has_key(int key) {
+    int idx;
+    idx = key % 50021;
+    for (;table[idx] != 0;) {
+        if (table[idx] == key) return 1;
+        idx = idx + 1;
+        if (idx == 50021) idx = 0;
+    }
+    return 0;
+}
+
+void add_key(int key) {
+    int idx;
+    idx = key % 50021;
+    for (;table[idx] != 0;) {
+        if (table[idx] == key) return;
+        idx = idx + 1;
+        if (idx == 50021) idx = 0;
+    }
+    table[idx] = key;
+    return;
+}
+
+int main() {
+    int n;
+    int m;
+    int base;
+    int i;
+    int A;
+    int B;
+    int key;
+    int val;
+
+    seed = 12345;
+    n = 2000;
+    m = 1995;
+    base = n + 5;
+
+    printf("%d %d\n", n, m);
+
+    for (i = 1; i <= n; i = i + 1) {
+        val = R() % 50000 + 50000;
+        printf("%d ", val);
+    }
+    printf("\n");
+
+    for (i = 1; i <= m; i = i + 1) {
+        A = R() % n + 1;
+        B = R() % n + 1;
+        key = A * base + B;
+        for (;A == B || has_key(key);) {
+            A = R() % n + 1;
+            B = R() % n + 1;
+            key = A * base + B;
+        }
+        add_key(key);
+        printf("%d %d \n", A, B);
+    }
+
+    return 0;
+}

@@ -1,0 +1,235 @@
+/* Description:
+ *   Segment-tree range affine transforms on 2D integer points.
+ *   Ops are encoded as integers (no strings).
+ *
+ *   Input (all integers, one per line):
+ *     n
+ *     x1 y1
+ *     ...
+ *     xn yn
+ *     m
+ *     Then m operations:
+ *       op l r [params...]
+ *
+ *   op codes:
+ *     1: translate (dx, dy)
+ *     2: reflect over X axis (y = -y)
+ *     3: reflect over Y axis (x = -x)
+ *     4: swap x and y
+ *     5: rotate by ang degrees, ang in {0,90,180,270,-90,-180,-270}
+ */
+
+int ax[70];
+int ay[70];
+
+int tree[3000];
+int t[9];
+int tmp[9];
+
+int node_base(int o) {
+    return (o - 1) * 9;
+}
+
+void set_identity_arr(int a[]) {
+    int i;
+    for (i = 0; i < 9; i = i + 1) a[i] = 0;
+    a[0] = 1;
+    a[4] = 1;
+    a[8] = 1;
+}
+
+void set_identity_tree(int o) {
+    int b;
+    int i;
+    b = node_base(o);
+    for (i = 0; i < 9; i = i + 1) tree[b + i] = 0;
+    tree[b + 0] = 1;
+    tree[b + 4] = 1;
+    tree[b + 8] = 1;
+}
+
+void mul_tree_by_arr(int o, int mat[]) {
+    int b;
+    int i;
+    int j;
+    int k;
+    b = node_base(o);
+    for (i = 0; i < 3; i = i + 1) {
+        for (j = 0; j < 3; j = j + 1) {
+            int sum;
+            sum = 0;
+            for (k = 0; k < 3; k = k + 1) {
+                sum = sum + tree[b + i * 3 + k] * mat[k * 3 + j];
+            }
+            tmp[i * 3 + j] = sum;
+        }
+    }
+    for (i = 0; i < 9; i = i + 1) tree[b + i] = tmp[i];
+}
+
+void mul_tree_by_tree(int o, int p) {
+    int bo;
+    int bp;
+    int i;
+    int j;
+    int k;
+    bo = node_base(o);
+    bp = node_base(p);
+    for (i = 0; i < 3; i = i + 1) {
+        for (j = 0; j < 3; j = j + 1) {
+            int sum;
+            sum = 0;
+            for (k = 0; k < 3; k = k + 1) {
+                sum = sum + tree[bo + i * 3 + k] * tree[bp + k * 3 + j];
+            }
+            tmp[i * 3 + j] = sum;
+        }
+    }
+    for (i = 0; i < 9; i = i + 1) tree[bo + i] = tmp[i];
+}
+
+void build(int o, int l, int r) {
+    int mid;
+    set_identity_tree(o);
+    if (l == r) return;
+    mid = (l + r) / 2;
+    build(o * 2, l, mid);
+    build(o * 2 + 1, mid + 1, r);
+}
+
+void push_down(int o) {
+    int lch;
+    int rch;
+    lch = o * 2;
+    rch = o * 2 + 1;
+    mul_tree_by_tree(lch, o);
+    mul_tree_by_tree(rch, o);
+    set_identity_tree(o);
+}
+
+void update(int o, int l, int r, int ql, int qr) {
+    int mid;
+    if (ql <= l && r <= qr) {
+        mul_tree_by_arr(o, t);
+        return;
+    }
+    push_down(o);
+    mid = (l + r) / 2;
+    if (ql <= mid) update(o * 2, l, mid, ql, qr);
+    if (qr > mid) update(o * 2 + 1, mid + 1, r, ql, qr);
+}
+
+void dfs(int o, int l, int r) {
+    int mid;
+    if (l == r) {
+        int b;
+        int x;
+        int y;
+        b = node_base(o);
+        x = ax[l] * tree[b + 0] + ay[l] * tree[b + 3] + tree[b + 6];
+        y = ax[l] * tree[b + 1] + ay[l] * tree[b + 4] + tree[b + 7];
+        printf("%d %d\n", x, y);
+        return;
+    }
+    push_down(o);
+    mid = (l + r) / 2;
+    dfs(o * 2, l, mid);
+    dfs(o * 2 + 1, mid + 1, r);
+}
+
+void make_translate(int dx, int dy) {
+    set_identity_arr(t);
+    t[6] = dx;
+    t[7] = dy;
+}
+
+void make_reflect_x() {
+    set_identity_arr(t);
+    t[4] = -1;
+}
+
+void make_reflect_y() {
+    set_identity_arr(t);
+    t[0] = -1;
+}
+
+void make_swap() {
+    int i;
+    for (i = 0; i < 9; i = i + 1) t[i] = 0;
+    t[1] = 1;
+    t[3] = 1;
+    t[8] = 1;
+}
+
+void make_rotate(int ang) {
+    int c;
+    int s;
+    c = 1;
+    s = 0;
+    if (ang == 90 || ang == -270) {
+        c = 0;
+        s = 1;
+    }
+    if (ang == 180 || ang == -180) {
+        c = -1;
+        s = 0;
+    }
+    if (ang == 270 || ang == -90) {
+        c = 0;
+        s = -1;
+    }
+    set_identity_arr(t);
+    t[0] = c;
+    t[1] = s;
+    t[3] = -s;
+    t[4] = c;
+}
+
+int main() {
+    int n;
+    int m;
+    int i;
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        ax[i] = getint();
+        ay[i] = getint();
+    }
+    build(1, 1, n);
+    m = getint();
+    for (i = 0; i < m; i = i + 1) {
+        int op;
+        int l;
+        int r;
+        op = getint();
+        l = getint();
+        r = getint();
+        if (op == 1) {
+            int dx;
+            int dy;
+            dx = getint();
+            dy = getint();
+            make_translate(dx, dy);
+            update(1, 1, n, l, r);
+        }
+        if (op == 2) {
+            make_reflect_x();
+            update(1, 1, n, l, r);
+        }
+        if (op == 3) {
+            make_reflect_y();
+            update(1, 1, n, l, r);
+        }
+        if (op == 4) {
+            make_swap();
+            update(1, 1, n, l, r);
+        }
+        if (op == 5) {
+            int ang;
+            ang = getint();
+            make_rotate(ang);
+            update(1, 1, n, l, r);
+        }
+    }
+    dfs(1, 1, n);
+    return 0;
+}

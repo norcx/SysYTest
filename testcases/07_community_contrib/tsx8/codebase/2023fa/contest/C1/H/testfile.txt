@@ -1,0 +1,31 @@
+/* Description:
+ *   Converted from codes/2023fa/contest/C1/H.c
+ *   For each test case (a, b):
+ *     - if b == 0: output "0 0"
+ *     - else if b == a: output "b a"
+ *     - else: output "b ceil(b / (a - b + 1))"
+ */
+
+int main() {
+    int T;
+    int t;
+    T = getint();
+    for (t = 0; t < T; t = t + 1) {
+        int a;
+        int b;
+        a = getint();
+        b = getint();
+        if (b == 0) {
+            printf("%d %d\n", 0, 0);
+        } else if (b == a) {
+            printf("%d %d\n", b, a);
+        } else {
+            int denom;
+            int res;
+            denom = a - b + 1;
+            res = (b + denom - 1) / denom;
+            printf("%d %d\n", b, res);
+        }
+    }
+    return 0;
+}

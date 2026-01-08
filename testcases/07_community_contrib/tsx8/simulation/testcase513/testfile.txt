@@ -1,0 +1,47 @@
+/* Description:
+ *   Greedy packing after sorting descending.
+ */
+const int MAXN = 6666;
+
+int n;
+int mn;
+int ans;
+int a[MAXN + 5];
+
+int min_int(int x, int y) {
+  if (x < y) return x;
+  return y;
+}
+
+void sort_desc(int arr[], int len) {
+  int i;
+  int j;
+  int max_idx;
+  int tmp;
+  for (i = 1; i <= len; i = i + 1) {
+    max_idx = i;
+    for (j = i + 1; j <= len; j = j + 1) {
+      if (arr[j] > arr[max_idx]) max_idx = j;
+    }
+    tmp = arr[i];
+    arr[i] = arr[max_idx];
+    arr[max_idx] = tmp;
+  }
+}
+
+int main() {
+  int i;
+  n = getint();
+  for (i = 1; i <= n; i = i + 1) a[i] = getint();
+  sort_desc(a, n);
+  for (i = 1; i <= n; i = i + 1) {
+    if (mn - 1 >= 0) {
+      mn = min_int(mn - 1, a[i]);
+    } else {
+      mn = a[i];
+      ans = ans + 1;
+    }
+  }
+  printf("%d\n", ans);
+  return 0;
+}

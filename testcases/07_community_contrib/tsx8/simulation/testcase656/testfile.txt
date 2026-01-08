@@ -1,0 +1,66 @@
+/* Description:
+ *   Deterministic data generator converted from a C++ program.
+ *   Prints: n k, then n pseudo-random integers in [1, 1e9].
+ */
+
+int seed = 1;
+
+int pm_next() {
+    int a;
+    int m;
+    int q;
+    int r;
+    int hi;
+    int lo;
+    int test;
+
+    a = 48271;
+    m = 2147483647;
+    q = 44488;
+    r = 3399;
+
+    hi = seed / q;
+    lo = seed % q;
+    test = a * lo - r * hi;
+    if (test > 0) {
+        seed = test;
+    } else {
+        seed = test + m;
+    }
+    return seed;
+}
+
+int sysy_rand() {
+    int x;
+    x = pm_next();
+    x = x % 32768;
+    return x;
+}
+
+int R() {
+    int x;
+    int y;
+    x = sysy_rand();
+    y = sysy_rand();
+    return x * 30000 + y;
+}
+
+int main() {
+    int n;
+    int k;
+    int i;
+    int v;
+
+    n = 10000;
+    k = 1890;
+
+    printf("%d %d\n", n, k);
+    for (i = 1; i <= n; i = i + 1) {
+        v = R();
+        v = v % 1000000000;
+        v = v + 1;
+        printf("%d ", v);
+    }
+    printf("\n");
+    return 0;
+}

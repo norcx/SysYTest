@@ -1,0 +1,43 @@
+/* Description:
+ *   Converted from `codes/2023fa/exam/E2/A.c`.
+ *   Original computes (r*cos(theta), r*sin(theta)) using doubles.
+ *
+ *   Strict SysY has no floating point or math library, so this testcase uses
+ *   scaled integers and special angles.
+ *
+ *   Input:
+ *     r10        (r * 10, i.e., one decimal digit kept as an integer)
+ *     theta_deg  (0, 90, 180, or 270)
+ *
+ *   Output:
+ *     x10 y10  (x * 10 and y * 10 as integers)
+ */
+
+int main() {
+    int r10;
+    int theta_deg;
+    int x10;
+    int y10;
+
+    r10 = getint();
+    theta_deg = getint();
+
+    x10 = 0;
+    y10 = 0;
+    if (theta_deg == 0) {
+        x10 = r10;
+        y10 = 0;
+    } else if (theta_deg == 90) {
+        x10 = 0;
+        y10 = r10;
+    } else if (theta_deg == 180) {
+        x10 = 0 - r10;
+        y10 = 0;
+    } else if (theta_deg == 270) {
+        x10 = 0;
+        y10 = 0 - r10;
+    }
+
+    printf("%d %d\n", x10, y10);
+    return 0;
+}

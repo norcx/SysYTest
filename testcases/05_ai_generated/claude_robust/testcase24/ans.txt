@@ -1,0 +1,7 @@
+get_next sequence: 10 20 30 40 50 10 20 30 40 50 10 20 
+Accumulate test:
+Sum so far: 1
+Sum so far: 3
+Sum so far: 6
+Sum so far: 10
+Sum so far: 15

@@ -1,0 +1,59 @@
+/* CF280C-style harmonic depth sum on a small rooted tree. The SysY variant keeps
+ * the adjacency list iterative (for-loops only) and prints the reciprocal depth sum
+ * with 7 digits after the decimal point using integer arithmetic.
+ */
+int head[16];
+int to[32];
+int nxt[32];
+int depth_values[16];
+int edge_count = 0;
+
+void add_edge(int u, int v) {
+    edge_count = edge_count + 1;
+    to[edge_count] = v;
+    nxt[edge_count] = head[u];
+    head[u] = edge_count;
+}
+
+void dfs(int node, int parent, int current_depth) {
+    depth_values[node] = current_depth;
+    int iterator = head[node];
+    for (; iterator != 0; iterator = nxt[iterator]) {
+        int next_node = to[iterator];
+        if (next_node != parent) {
+            dfs(next_node, node, current_depth + 1);
+        }
+    }
+}
+
+int main() {
+    int n = getint();
+    int i = 0;
+    int u = 0;
+    int v = 0;
+    for (i = 0; i < n - 1; i = i + 1) {
+        u = getint();
+        v = getint();
+        add_edge(u, v);
+        add_edge(v, u);
+    }
+    dfs(1, 0, 1);
+    int lcm = 60;
+    int sum_scaled = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        sum_scaled = sum_scaled + (lcm / depth_values[i]);
+    }
+    int integer_part = sum_scaled / lcm;
+    int remainder = sum_scaled - integer_part * lcm;
+    int digits = 0;
+    int digit_value = 0;
+    printf("%d.", integer_part);
+    for (digits = 0; digits < 7; digits = digits + 1) {
+        remainder = remainder * 10;
+        digit_value = remainder / lcm;
+        remainder = remainder - digit_value * lcm;
+        printf("%d", digit_value);
+    }
+    printf("\n");
+    return 0;
+}
