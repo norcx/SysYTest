@@ -1,0 +1,150 @@
+/* Description:
+ *   SCC condensation (Network of Schools style).
+ *   Input: n, then for each 1..n a list of outgoing neighbors ended by 0.
+ *   Output:
+ *     1) number of SCCs with zero indegree in condensed graph
+ *     2) minimal edges to add to make it strongly connected (max(sources, sinks), or 0 if already 1 SCC)
+ */
+
+const int MAXN = 1111;
+const int MAXM = 21111;
+
+int n;
+int cnt1;
+int cnt2;
+int scc;
+int top;
+int ans;
+int indx;
+
+int ind[MAXN];
+int dfn[MAXN];
+int low[MAXN];
+int st[MAXN];
+int head1[MAXN];
+int head2[MAXN];
+int belong[MAXN];
+int ru[MAXN];
+int chu[MAXN];
+
+int to1[MAXM];
+int next1[MAXM];
+int to2[MAXM];
+int next2[MAXM];
+
+void add_edge_1(int x, int y) {
+    cnt1 = cnt1 + 1;
+    to1[cnt1] = y;
+    next1[cnt1] = head1[x];
+    head1[x] = cnt1;
+}
+
+void add_edge_2(int x, int y) {
+    cnt2 = cnt2 + 1;
+    to2[cnt2] = y;
+    next2[cnt2] = head2[x];
+    head2[x] = cnt2;
+}
+
+void tarjan(int now) {
+    int i;
+    int nn;
+    ind[now] = 1;
+    top = top + 1;
+    st[top] = now;
+    indx = indx + 1;
+    dfn[now] = indx;
+    low[now] = indx;
+
+    for (i = head1[now]; i != 0; i = next1[i]) {
+        nn = to1[i];
+        if (dfn[nn] == 0) {
+            tarjan(nn);
+            if (low[nn] < low[now]) {
+                low[now] = low[nn];
+            }
+        } else {
+            if (ind[nn] != 0) {
+                if (dfn[nn] < low[now]) {
+                    low[now] = dfn[nn];
+                }
+            }
+        }
+    }
+
+    if (dfn[now] == low[now]) {
+        int tmp;
+        int t;
+        scc = scc + 1;
+        tmp = 0;
+        t = 0;
+        for (; tmp != now; ) {
+            tmp = st[top];
+            top = top - 1;
+            belong[tmp] = scc;
+            ind[tmp] = 0;
+            t = t + 1;
+        }
+    }
+}
+
+int main() {
+    int i;
+    int j;
+    int x;
+    int nn;
+    int t1;
+    int t2;
+    int maxv;
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        x = getint();
+        for (; x != 0; ) {
+            add_edge_1(i, x);
+            x = getint();
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (dfn[i] == 0) {
+            tarjan(i);
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = head1[i]; j != 0; j = next1[j]) {
+            nn = to1[j];
+            if (belong[i] != belong[nn]) {
+                add_edge_2(belong[i], belong[nn]);
+                ru[belong[nn]] = ru[belong[nn]] + 1;
+                chu[belong[i]] = chu[belong[i]] + 1;
+            }
+        }
+    }
+
+    ans = 0;
+    t1 = 0;
+    t2 = 0;
+    for (i = 1; i <= scc; i = i + 1) {
+        if (ru[i] == 0) {
+            ans = ans + 1;
+            t1 = t1 + 1;
+        }
+        if (chu[i] == 0) {
+            t2 = t2 + 1;
+        }
+    }
+
+    printf("%d\n", ans);
+    if (scc == 1) {
+        t1 = 0;
+        t2 = 0;
+    }
+    maxv = t1;
+    if (t2 > maxv) {
+        maxv = t2;
+    }
+    printf("%d\n", maxv);
+    return 0;
+}

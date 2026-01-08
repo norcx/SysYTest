@@ -1,0 +1,71 @@
+/* Description:
+ *   Minimum flips to turn a bracket sequence into a valid parentheses sequence.
+ *
+ * Input format (strict SysY):
+ *   n
+ *   a1
+ *   a2
+ *   ...
+ *   an
+ *
+ * Where ai is 0 for '(' and 1 for ')'. One integer per line.
+ */
+
+const int MAXN = 512;
+const int INF = 707406378;
+
+int a[MAXN + 5];
+int dp[MAXN + 5];
+int ndp[MAXN + 5];
+
+int main() {
+    int n;
+    int i;
+    int j;
+    int now;
+    int v;
+
+    n = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+
+    for (i = 0; i <= n + 2; i = i + 1) {
+        dp[i] = INF;
+    }
+
+    v = a[1];
+    dp[1] = v;
+
+    for (i = 1; i <= n - 1; i = i + 1) {
+        for (j = 0; j <= n + 2; j = j + 1) {
+            ndp[j] = INF;
+        }
+
+        v = a[i + 1];
+        for (j = 0; j <= i; j = j + 1) {
+            now = dp[j];
+            if (now != INF) {
+                if (v == 0) {
+                    if (ndp[j + 1] > now) ndp[j + 1] = now;
+                    if (j > 0) {
+                        if (ndp[j - 1] > now + 1) ndp[j - 1] = now + 1;
+                    }
+                } else {
+                    if (ndp[j + 1] > now + 1) ndp[j + 1] = now + 1;
+                    if (j > 0) {
+                        if (ndp[j - 1] > now) ndp[j - 1] = now;
+                    }
+                }
+            }
+        }
+
+        for (j = 0; j <= n + 2; j = j + 1) {
+            dp[j] = ndp[j];
+        }
+    }
+
+    printf("%d\n", dp[0]);
+    return 0;
+}

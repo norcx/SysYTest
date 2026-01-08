@@ -1,0 +1,107 @@
+/* Description:
+ * Converted from a C++ tree/DFS counting program to Strict SysY.
+ * Notes:
+ * - Uses only int + 1D arrays (flattened DP table).
+ * - Scaled-down constants to fit <4MB total.
+ */
+
+const int MAXN = 205;
+const int MAXM = 405;
+const int MAXDEP = 64;
+const int MAXS = (MAXN + 1) * MAXDEP;
+
+int n;
+int m;
+int mm;
+int cnt;
+int mx;
+
+int head[MAXN];
+int to[MAXM];
+int nxt[MAXM];
+
+int c[MAXN];
+int depth[MAXN];
+
+int f[MAXN];
+int s[MAXS];
+int ans;
+
+void add_edge(int x, int y) {
+    cnt = cnt + 1;
+    to[cnt] = y;
+    nxt[cnt] = head[x];
+    head[x] = cnt;
+    return;
+}
+
+void dfs(int now, int fat) {
+    int i;
+    int nn;
+    int j;
+    int k;
+    int kstart;
+    int t;
+    int base_now;
+    int base_nn;
+
+    depth[now] = depth[fat] + 1;
+    if (depth[now] > mx) {
+        mx = depth[now];
+    }
+
+    base_now = now * MAXDEP;
+    s[base_now + 0] = c[now];
+
+    for (i = head[now]; i != 0; i = nxt[i]) {
+        nn = to[i];
+        if (nn != fat) {
+            dfs(nn, now);
+
+            if (c[now] > mm) {
+                base_nn = nn * MAXDEP;
+                for (j = 0; j <= mx; j = j + 1) {
+                    kstart = m - j + 1;
+                    if (kstart < 1) {
+                        kstart = 1;
+                    }
+                    for (k = kstart; k <= mx; k = k + 1) {
+                        f[now] = f[now] + s[base_now + j] * s[base_nn + (k - 1)];
+                    }
+                }
+            }
+
+            base_nn = nn * MAXDEP;
+            for (t = 0; t <= mx; t = t + 1) {
+                s[base_now + (t + 1)] = s[base_now + (t + 1)] + s[base_nn + t];
+            }
+        }
+    }
+
+    ans = ans + f[now];
+    return;
+}
+
+int main() {
+    int i;
+    int x;
+    int y;
+
+    n = getint();
+    m = getint();
+    mm = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        c[i] = getint();
+    }
+
+    for (i = 1; i < n; i = i + 1) {
+        x = getint();
+        y = getint();
+        add_edge(x, y);
+    }
+
+    dfs(1, 0);
+    printf("%d\n", ans);
+    return 0;
+}

@@ -1,0 +1,93 @@
+/* Description:
+ *   Paint on a framed canvas using (a,b)->(c,d) steps.
+ *   Converted from C++ to Strict SysY:
+ *   - int only, 1D array, for-loops only
+ *   - input is newline-separated integers (including ASCII codes for "chars")
+ */
+
+const int STRIDE = 64;
+int mp[64 * 64];
+
+int abs_i(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+int max_i(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+void print_cell(int v) {
+    if (v == 32) printf(" ");
+    else if (v == 35) printf("#");
+    else if (v == 65) printf("A");
+    else if (v == 66) printf("B");
+    else if (v == 67) printf("C");
+    else printf("?");
+}
+
+int main() {
+    int n;
+    int m;
+    int t;
+    int i;
+    int j;
+    int k;
+    int a;
+    int b;
+    int c;
+    int d;
+    int s;
+    int x;
+    int y;
+    int w;
+
+    n = getint();
+    m = getint();
+    t = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            mp[i * STRIDE + j] = 32;
+        }
+    }
+    for (i = 0; i <= n + 1; i = i + 1) {
+        mp[i * STRIDE + 0] = 35;
+        mp[i * STRIDE + (m + 1)] = 35;
+    }
+    for (j = 0; j <= m + 1; j = j + 1) {
+        mp[0 * STRIDE + j] = 35;
+        mp[(n + 1) * STRIDE + j] = 35;
+    }
+
+    for (k = 0; k < t; k = k + 1) {
+        a = getint();
+        b = getint();
+        c = getint();
+        d = getint();
+        w = getint();
+
+        s = max_i(abs_i(a - c), abs_i(b - d));
+        if (s == 0) {
+            mp[a * STRIDE + b] = w;
+        } else {
+            x = (c - a) / s;
+            y = (d - b) / s;
+            for (; ; ) {
+                mp[a * STRIDE + b] = w;
+                if (a == c && b == d) break;
+                a = a + x;
+                b = b + y;
+            }
+        }
+    }
+
+    for (i = 0; i <= n + 1; i = i + 1) {
+        for (j = 0; j <= m + 1; j = j + 1) {
+            print_cell(mp[i * STRIDE + j]);
+        }
+        printf("\n");
+    }
+    return 0;
+}

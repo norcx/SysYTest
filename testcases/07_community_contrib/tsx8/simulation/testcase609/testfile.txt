@@ -1,0 +1,55 @@
+/* Description:
+ *   Deterministic translation of a C++ input generator:
+ *     n Q
+ *     2^n numbers on one line
+ *     Q lines: idx value
+ *
+ *   Differences from original:
+ *   - Uses a simple safe LCG (no rand()/time()).
+ *   - Scales down Q for runtime stability.
+ *   - Reads an optional seed from stdin (getint); EOF -> 0.
+ */
+
+const int MOD = 536870912; /* 2^29, keeps seed*3 within signed int */
+int seed;
+
+int R() {
+    seed = seed * 3 + 12345;
+    seed = seed % MOD;
+    if (seed < 0) seed = seed + MOD;
+    return seed * 2;
+}
+
+int main() {
+    int n;
+    int Q;
+    int limit;
+    int i;
+    int idx;
+    int val;
+
+    seed = getint();
+
+    n = 14;
+    Q = 20000;
+
+    limit = 1;
+    for (i = 0; i < n; i = i + 1) {
+        limit = limit * 2;
+    }
+
+    printf("%d %d\n", n, Q);
+
+    for (i = 1; i <= limit; i = i + 1) {
+        printf("%d ", R());
+    }
+    printf("\n");
+
+    for (i = 1; i <= Q; i = i + 1) {
+        idx = R() % limit + 1;
+        val = R();
+        printf("%d %d\n", idx, val);
+    }
+
+    return 0;
+}

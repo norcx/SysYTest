@@ -1,0 +1,83 @@
+/* Description:
+ *   Deterministic translation of a C++ random input generator.
+ *   Scaled-down sizes to fit Strict SysY memory limits.
+ */
+
+const int N = 5000;
+const int M = 5000;
+const int MAXM = 5010;
+
+int A[MAXM];
+int B[MAXM];
+int C[MAXM];
+int ord[MAXM];
+
+int seed = 1;
+
+int rng_next() {
+    int hi;
+    int lo;
+    int test;
+    hi = seed / 127773;
+    lo = seed - hi * 127773;
+    test = 16807 * lo - 2836 * hi;
+    if (test > 0) seed = test;
+    else seed = test + 2147483647;
+    return seed;
+}
+
+int ran(int x) {
+    int v;
+    v = rng_next();
+    v = v % x;
+    return v + 1;
+}
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int j;
+    int x;
+    int tmp;
+
+    n = N;
+    m = M;
+
+    printf("%d %d\n", n, m);
+
+    for (i = 1; i <= m; i = i + 1) ord[i] = i;
+
+    for (i = m; i >= 2; i = i - 1) {
+        j = ran(i);
+        tmp = ord[i];
+        ord[i] = ord[j];
+        ord[j] = tmp;
+    }
+
+    A[1] = ran(n);
+    B[m] = A[1];
+    C[m] = ran(n);
+
+    for (i = 1; i < m; i = i + 1) {
+        x = ran(n);
+        for (j = 0; x == A[i]; j = j + 1) x = ran(n);
+        A[i + 1] = x;
+        B[i] = x;
+        C[i] = ran(n);
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        if (ran(2) == 1) {
+            tmp = B[i];
+            B[i] = C[i];
+            C[i] = tmp;
+        }
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        printf("%d %d %d\n", A[ord[i]], B[ord[i]], C[ord[i]]);
+    }
+
+    return 0;
+}

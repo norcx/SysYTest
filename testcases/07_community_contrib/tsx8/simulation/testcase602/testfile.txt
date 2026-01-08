@@ -1,0 +1,60 @@
+/* Description:
+ * Convert C++ max ratio with 2-decimal output into Strict SysY.
+ * Output uses integer arithmetic; prints with "%d" only.
+ */
+
+int n;
+int m;
+int a[1000];
+int i;
+int A;
+int B;
+int C;
+int bestP;
+int bestQ;
+int p;
+int scaled;
+int quo;
+int rem;
+int integerPart;
+int fracPart;
+
+int main() {
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+
+    bestP = 0;
+    bestQ = 1;
+    for (i = 1; i <= m; i = i + 1) {
+        A = getint();
+        B = getint();
+        C = getint();
+        p = a[A] + a[B];
+        if (p * bestQ > bestP * C) {
+            bestP = p;
+            bestQ = C;
+        }
+    }
+
+    scaled = bestP * 100;
+    quo = scaled / bestQ;
+    rem = scaled - quo * bestQ;
+    if (rem * 2 >= bestQ) {
+        quo = quo + 1;
+    }
+
+    integerPart = quo / 100;
+    fracPart = quo - integerPart * 100;
+
+    printf("%d.", integerPart);
+    if (fracPart < 10) {
+        printf("0%d\n", fracPart);
+    } else {
+        printf("%d\n", fracPart);
+    }
+    return 0;
+}

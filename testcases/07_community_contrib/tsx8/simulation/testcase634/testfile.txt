@@ -1,0 +1,33 @@
+/* Description:
+ *   SysY-adapted version of a Windows-only differential testing loop.
+ *
+ *   Original program:
+ *     - prints an increasing counter each iteration
+ *     - runs external programs and breaks when `fc` reports a mismatch
+ *
+ *   SysY restrictions disallow system/file/OS calls, so this testcase
+ *   simulates `fc` return codes via stdin:
+ *     - first integer: n (max iterations to attempt)
+ *     - then n integers: fc_ret for each iteration (0 = continue, nonzero = break)
+ */
+
+int main() {
+    int cnt;
+    int n;
+    int i;
+    int fc_ret;
+
+    cnt = 0;
+    n = getint();
+
+    for (i = 0; i < n; i = i + 1) {
+        cnt = cnt + 1;
+        printf("%d\n", cnt);
+        fc_ret = getint();
+        if (fc_ret != 0) {
+            break;
+        }
+    }
+
+    return 0;
+}

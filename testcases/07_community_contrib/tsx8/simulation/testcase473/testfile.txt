@@ -1,0 +1,49 @@
+/* Description:
+ *   DP over positions and open transactions; input ends with sentinel n=0.
+ */
+const int MAXN = 1200;
+const int NEG = -1000000000;
+
+int n;
+int cnt;
+int a[MAXN];
+int dp[MAXN];
+int ndp[MAXN];
+
+int max2(int x, int y) {
+  if (x > y) return x;
+  return y;
+}
+
+int main() {
+  int i;
+  int j;
+
+  cnt = 0;
+  for (;;) {
+    n = getint();
+    if (n == 0) break;
+
+    cnt = cnt + 1;
+    for (i = 1; i <= n; i = i + 1) {
+      a[i] = getint();
+    }
+
+    for (j = 0; j <= n + 1; j = j + 1) dp[j] = NEG;
+    dp[0] = 0;
+
+    for (i = 1; i <= n; i = i + 1) {
+      for (j = 0; j <= n + 1; j = j + 1) ndp[j] = NEG;
+      for (j = 0; j <= i; j = j + 1) {
+        ndp[j] = max2(ndp[j], dp[j]);
+        if (j > 0) ndp[j] = max2(ndp[j], dp[j - 1] - a[i]);
+        ndp[j] = max2(ndp[j], dp[j + 1] + a[i]);
+      }
+      for (j = 0; j <= n + 1; j = j + 1) dp[j] = ndp[j];
+    }
+
+    printf("Case #%d: %d\n", cnt, dp[0]);
+  }
+
+  return 0;
+}

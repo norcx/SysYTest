@@ -1,0 +1,137 @@
+/* Description:
+ *   Converted from C++ (SPFA on 2-layer graph).
+ *   Scaled-down constants to fit strict SysY memory limits.
+ */
+
+const int INF = 1000000000;
+const int MAXN = 2000;
+const int MAXV = 4005;
+const int MAXE = 20000;
+const int MAXQ = 20000;
+
+int N;
+int M;
+
+int col[MAXN + 5];
+int w[MAXN + 5];
+int s_cost[MAXN + 5];
+
+int Node[MAXE + 5];
+int Cost[MAXE + 5];
+int Root[MAXV + 5];
+int Next[MAXE + 5];
+
+int dis[MAXV + 5];
+int inq[MAXV + 5];
+int que[MAXQ + 5];
+int cnt;
+
+int read() {
+    int x;
+    x = getint();
+    return x;
+}
+
+int iabs(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+void addedge(int u, int v, int w_cost) {
+    cnt = cnt + 1;
+    Node[cnt] = v;
+    Cost[cnt] = w_cost;
+    Next[cnt] = Root[u];
+    Root[u] = cnt;
+}
+
+int spfa(int start, int target) {
+    int i;
+    int head;
+    int tail;
+    int u;
+    int e;
+    int v;
+    int nd;
+    int s2;
+    int ans;
+
+    s2 = start;
+    if (col[s2] == 1) s2 = N + 1;
+    nd = N + N;
+
+    for (i = 1; i <= nd; i = i + 1) {
+        dis[i] = INF;
+        inq[i] = 0;
+    }
+
+    dis[s2] = 0;
+    inq[s2] = 1;
+    tail = 1;
+    que[1] = s2;
+
+    for (head = 1; head <= tail; head = head + 1) {
+        u = que[head];
+        for (e = Root[u]; e != 0; e = Next[e]) {
+            v = Node[e];
+            if (dis[v] > dis[u] + Cost[e]) {
+                dis[v] = dis[u] + Cost[e];
+                if (inq[v] == 0) {
+                    inq[v] = 1;
+                    tail = tail + 1;
+                    que[tail] = v;
+                }
+            }
+        }
+        inq[u] = 0;
+    }
+
+    ans = dis[target];
+    if (dis[target + N] < ans) ans = dis[target + N];
+    return ans;
+}
+
+int main() {
+    int i;
+    int u;
+    int v;
+    int k;
+    int tmp;
+    int cost1;
+    int nd;
+
+    N = read();
+    M = read();
+
+    nd = N + N;
+    for (i = 1; i <= nd; i = i + 1) Root[i] = 0;
+    cnt = 0;
+
+    for (i = 1; i <= N; i = i + 1) col[i] = read();
+    for (i = 1; i <= N; i = i + 1) w[i] = read();
+    for (i = 1; i <= N; i = i + 1) s_cost[i] = read();
+
+    for (i = 1; i <= M; i = i + 1) {
+        u = read();
+        v = read();
+        k = read();
+        if (col[u] == col[v]) {
+            addedge(u, v + N, k);
+            addedge(u + N, v, k);
+        } else {
+            tmp = iabs(w[u] - w[v]);
+            addedge(u + N, v + N, k + tmp);
+            cost1 = k - tmp;
+            if (cost1 < 0) cost1 = 0;
+            addedge(u, v, cost1);
+        }
+    }
+
+    for (i = 1; i <= N; i = i + 1) {
+        addedge(i, i + N, 0);
+        addedge(i + N, i, s_cost[i]);
+    }
+
+    printf("%d\n", spfa(1, N));
+    return 0;
+}

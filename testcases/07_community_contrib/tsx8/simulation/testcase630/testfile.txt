@@ -1,0 +1,59 @@
+/* Deterministic rewrite of the original randomized generator. */
+const int MAXN = 12;
+const int VISN = 144;
+
+int vis[144];
+int seed = 123456789;
+
+int next_rand() {
+    int hi;
+    int lo;
+    int test;
+    hi = seed / 44488;
+    lo = seed - hi * 44488;
+    test = 48271 * lo - 3399 * hi;
+    if (test <= 0) test = test + 2147483647;
+    seed = test;
+    return seed;
+}
+
+int main() {
+    int n;
+    int m;
+    int mmax;
+    int i;
+    int x;
+    int y;
+    int idx;
+    int v;
+
+    for (i = 0; i < VISN; i = i + 1) vis[i] = 0;
+
+    n = 10 + (next_rand() % 2);
+    mmax = n * (n - 2) / 2;
+    m = next_rand() % mmax + 1;
+
+    printf("%d %d\n", n, m);
+
+    for (i = 1; i <= n; i = i + 1) {
+        v = (next_rand() % 1000000000) + (next_rand() % 1000000000) + 1;
+        printf("%d ", v);
+    }
+    printf("\n");
+
+    for (i = 1; i <= m; i = i + 1) {
+        x = next_rand() % n + 1;
+        y = next_rand() % n + 1;
+        idx = x * MAXN + y;
+        for (; vis[idx] != 0 || x == y;) {
+            x = next_rand() % n + 1;
+            y = next_rand() % n + 1;
+            idx = x * MAXN + y;
+        }
+        vis[idx] = 1;
+        vis[y * MAXN + x] = 1;
+        printf("%d %d\n", x, y);
+    }
+
+    return 0;
+}

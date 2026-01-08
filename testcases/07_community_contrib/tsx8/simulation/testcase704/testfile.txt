@@ -1,0 +1,136 @@
+/* Description:
+ *   Deterministic downscaled version of the given C++ random data generator.
+ *   - Removes file I/O and time-based seeding.
+ *   - Uses a fixed PRNG and prints fixed-point decimals with 2 digits.
+ *   - Scales n/m down to keep runtime/output reasonable for the runner.
+ */
+
+const int N = 2000;
+const int M = 2000;
+
+const int PRNG_A = 16807;
+const int PRNG_MOD = 2147483647;
+const int PRNG_Q = 127773;
+const int PRNG_R = 2836;
+
+int seed = 123456789;
+
+int iabs(int x) {
+    if (x < 0) return -x;
+    return x;
+}
+
+int next_rand() {
+    int k;
+    k = seed / PRNG_Q;
+    seed = PRNG_A * (seed - k * PRNG_Q) - PRNG_R * k;
+    if (seed <= 0) seed = seed + PRNG_MOD;
+    return seed;
+}
+
+int ran(int x) {
+    return next_rand() % x + 1;
+}
+
+int rad_scaled(int x) {
+    return ran(x * 100 + 1) - 1;
+}
+
+void print_fixed2(int scaled) {
+    int v;
+    int ip;
+    int frac;
+    v = scaled;
+    if (v < 0) {
+        printf("-");
+        v = -v;
+    }
+    ip = v / 100;
+    frac = v - ip * 100;
+    printf("%d", ip);
+    printf(".");
+    if (frac < 10) printf("0");
+    printf("%d", frac);
+}
+
+int main() {
+    int n;
+    int m;
+    int t1;
+    int t2;
+    int t3;
+    int i;
+    int o;
+    int x;
+    int y;
+    int half;
+    int a;
+    int b;
+    int ang;
+    int tmp;
+
+    n = N;
+    m = M;
+    t1 = 0;
+    t2 = 0;
+    t3 = 0;
+
+    printf("%d\n", n);
+    for (i = 1; i <= n; i = i + 1) {
+        a = rad_scaled(200) - 10000;
+        b = rad_scaled(200) - 10000;
+        print_fixed2(a);
+        printf(" ");
+        print_fixed2(b);
+        printf("\n");
+    }
+
+    printf("%d\n", m);
+    half = n / 2;
+    for (i = 0; i < m; i = i + 1) {
+        if (t2 == 1) o = ran(3);
+        else if (t3 == 1) o = ran(4);
+        else o = ran(5);
+
+        if (t1 == 1) {
+            x = 1;
+            y = n;
+        } else {
+            x = ran(n);
+            y = ran(n);
+            for (;;) {
+                if (iabs(y - x) > half) break;
+                y = ran(n);
+                x = ran(n);
+            }
+            if (x > y) {
+                tmp = x;
+                x = y;
+                y = tmp;
+            }
+        }
+
+        if (o == 1) {
+            a = rad_scaled(200) - 10000;
+            b = rad_scaled(200) - 10000;
+            printf("M %d %d ", x, y);
+            print_fixed2(a);
+            printf(" ");
+            print_fixed2(b);
+            printf("\n");
+        } else if (o == 2) {
+            printf("X %d %d\n", x, y);
+        } else if (o == 3) {
+            printf("Y %d %d\n", x, y);
+        } else if (o == 4) {
+            printf("O %d %d\n", x, y);
+        } else {
+            ang = rad_scaled(360);
+            printf("R %d %d ", x, y);
+            print_fixed2(ang);
+            printf("\n");
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,223 @@
+/* Description:
+ *   DSU + offline queries:
+ *   - Sort edges by weight z descending.
+ *   - Sort queries by threshold w descending.
+ *   - Union edges with z >= w, then update component state.
+ *
+ *   Scaled down for Strict SysY (int-only, small limits).
+ */
+
+const int MAXN = 1000;
+const int MAXM = 1000;
+const int MAXQ = 1000;
+
+int n, m, q;
+
+int fa[MAXN + 5];
+int a[MAXN + 5];
+int s[MAXN + 5];
+int c[MAXN + 5];
+
+int ex[MAXM + 5];
+int ey[MAXM + 5];
+int ez[MAXM + 5];
+
+int pos[MAXQ + 5];
+int wq[MAXQ + 5];
+int vq[MAXQ + 5];
+int flag[MAXQ + 5];
+int id[MAXQ + 5];
+
+int father(int x) {
+    if (fa[x] == x) {
+        return x;
+    }
+    fa[x] = father(fa[x]);
+    return fa[x];
+}
+
+void sort_edges(int l, int r) {
+    int i;
+    int j;
+    int pivot;
+    if (l >= r) {
+        return;
+    }
+    i = l;
+    j = r;
+    pivot = ez[(l + r) / 2];
+    for (;;) {
+        for (;;) {
+            if (ez[i] > pivot) {
+                i = i + 1;
+            } else {
+                break;
+            }
+        }
+        for (;;) {
+            if (ez[j] < pivot) {
+                j = j - 1;
+            } else {
+                break;
+            }
+        }
+        if (i <= j) {
+            int tx;
+            int ty;
+            int tz;
+            tx = ex[i];
+            ex[i] = ex[j];
+            ex[j] = tx;
+            ty = ey[i];
+            ey[i] = ey[j];
+            ey[j] = ty;
+            tz = ez[i];
+            ez[i] = ez[j];
+            ez[j] = tz;
+            i = i + 1;
+            j = j - 1;
+        } else {
+            break;
+        }
+    }
+    if (l < j) {
+        sort_edges(l, j);
+    }
+    if (i < r) {
+        sort_edges(i, r);
+    }
+    return;
+}
+
+void sort_ids(int l, int r) {
+    int i;
+    int j;
+    int pivot;
+    if (l >= r) {
+        return;
+    }
+    i = l;
+    j = r;
+    pivot = wq[id[(l + r) / 2]];
+    for (;;) {
+        for (;;) {
+            if (wq[id[i]] > pivot) {
+                i = i + 1;
+            } else {
+                break;
+            }
+        }
+        for (;;) {
+            if (wq[id[j]] < pivot) {
+                j = j - 1;
+            } else {
+                break;
+            }
+        }
+        if (i <= j) {
+            int t;
+            t = id[i];
+            id[i] = id[j];
+            id[j] = t;
+            i = i + 1;
+            j = j - 1;
+        } else {
+            break;
+        }
+    }
+    if (l < j) {
+        sort_ids(l, j);
+    }
+    if (i < r) {
+        sort_ids(i, r);
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int ans;
+    int P;
+    int ii;
+
+    n = getint();
+    m = getint();
+    q = getint();
+
+    ans = 0;
+    i = 1;
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        fa[i] = i;
+        s[i] = 0;
+        c[i] = a[i];
+        ans = ans + a[i];
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        ex[i] = getint();
+        ey[i] = getint();
+        ez[i] = getint();
+    }
+
+    for (i = 1; i <= q; i = i + 1) {
+        pos[i] = getint();
+        wq[i] = getint();
+        vq[i] = getint();
+        flag[i] = getint();
+        id[i] = i;
+    }
+
+    if (m > 1) {
+        sort_edges(1, m);
+    }
+    if (q > 1) {
+        sort_ids(1, q);
+    }
+
+    P = 1;
+    for (ii = 1; ii <= q; ii = ii + 1) {
+        int qi;
+        int now;
+        qi = id[ii];
+
+        for (;;) {
+            if (P <= m && ez[P] >= wq[qi]) {
+                int fax;
+                int fay;
+                fax = father(ex[P]);
+                fay = father(ey[P]);
+                P = P + 1;
+                if (fax == fay) {
+                } else {
+                    fa[fax] = fay;
+                    c[fay] = c[fay] + c[fax];
+                    c[fax] = 0;
+                    s[fay] = s[fay] + s[fax];
+                    s[fax] = 0;
+                }
+            } else {
+                break;
+            }
+        }
+
+        now = father(pos[qi]);
+        if (s[now] == 0 && vq[qi] < c[now]) {
+            s[now] = vq[qi];
+            ans = ans + vq[qi];
+            ans = ans - c[now];
+            c[now] = 0;
+        } else {
+            if (s[now] + c[now] > vq[qi]) {
+                ans = ans - s[now];
+                ans = ans + vq[qi];
+                s[now] = vq[qi];
+                ans = ans - c[now];
+                c[now] = 0;
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

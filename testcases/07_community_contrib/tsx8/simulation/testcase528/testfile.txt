@@ -1,0 +1,300 @@
+const int MAXN = 128;
+const int BITS = 21;
+const int MAXM = MAXN * BITS + 5;
+const int LIMIT = 64;
+const int THRESH_N = 20;
+
+int T;
+int n;
+int m;
+int ans;
+
+int a[MAXN + 5];
+int b[BITS + 5];
+int c[LIMIT + 5];
+
+int trie_cnt;
+int trie_ch[MAXM * 2];
+int trie_s[MAXM];
+
+int max2(int x, int y) {
+    if (x > y) return x;
+    return y;
+}
+
+void fill_bits(int v) {
+    int i;
+    int t;
+    t = v;
+    for (i = BITS - 1; i >= 0; i = i - 1) {
+        b[i] = t % 2;
+        t = t / 2;
+    }
+}
+
+int bit_and(int x, int y) {
+    int i;
+    int xi;
+    int yi;
+    int res;
+    int pow2;
+    xi = x;
+    yi = y;
+    res = 0;
+    pow2 = 1;
+    for (i = 0; i < BITS; i = i + 1) {
+        int xb;
+        int yb;
+        int bit;
+        xb = xi % 2;
+        yb = yi % 2;
+        bit = 0;
+        if (xb == 1 && yb == 1) bit = 1;
+        res = res + bit * pow2;
+        xi = xi / 2;
+        yi = yi / 2;
+        pow2 = pow2 * 2;
+    }
+    return res;
+}
+
+int bit_or(int x, int y) {
+    int i;
+    int xi;
+    int yi;
+    int res;
+    int pow2;
+    xi = x;
+    yi = y;
+    res = 0;
+    pow2 = 1;
+    for (i = 0; i < BITS; i = i + 1) {
+        int xb;
+        int yb;
+        int bit;
+        xb = xi % 2;
+        yb = yi % 2;
+        bit = 0;
+        if (xb == 1 || yb == 1) bit = 1;
+        res = res + bit * pow2;
+        xi = xi / 2;
+        yi = yi / 2;
+        pow2 = pow2 * 2;
+    }
+    return res;
+}
+
+int bit_xor(int x, int y) {
+    int i;
+    int xi;
+    int yi;
+    int res;
+    int pow2;
+    xi = x;
+    yi = y;
+    res = 0;
+    pow2 = 1;
+    for (i = 0; i < BITS; i = i + 1) {
+        int xb;
+        int yb;
+        int bit;
+        xb = xi % 2;
+        yb = yi % 2;
+        bit = 0;
+        if (xb != yb) bit = 1;
+        res = res + bit * pow2;
+        xi = xi / 2;
+        yi = yi / 2;
+        pow2 = pow2 * 2;
+    }
+    return res;
+}
+
+void trie_init() {
+    trie_cnt = 0;
+    trie_ch[0] = 0;
+    trie_ch[1] = 0;
+    trie_s[0] = 0;
+}
+
+void trie_insert(int v) {
+    int i;
+    int now;
+    now = 0;
+    fill_bits(v);
+    for (i = 0; i < BITS; i = i + 1) {
+        int bit;
+        int idx;
+        int nxt;
+        bit = b[i];
+        idx = now * 2 + bit;
+        nxt = trie_ch[idx];
+        if (nxt == 0) {
+            trie_cnt = trie_cnt + 1;
+            nxt = trie_cnt;
+            trie_ch[idx] = nxt;
+            trie_ch[nxt * 2] = 0;
+            trie_ch[nxt * 2 + 1] = 0;
+            trie_s[nxt] = 0;
+        }
+        now = nxt;
+        trie_s[now] = trie_s[now] + 1;
+    }
+}
+
+int trie_found_xor(int v) {
+    int i;
+    int now;
+    int tmp;
+    now = 0;
+    tmp = 0;
+    fill_bits(v);
+    for (i = 0; i < BITS; i = i + 1) {
+        int bit;
+        int want;
+        int nxt;
+        int nxt_same;
+        bit = b[i];
+        want = 1 - bit;
+        nxt = trie_ch[now * 2 + want];
+        nxt_same = trie_ch[now * 2 + bit];
+        tmp = tmp * 2;
+        if (nxt != 0 && trie_s[nxt] > 0) {
+            tmp = tmp + 1;
+            now = nxt;
+        } else {
+            now = nxt_same;
+        }
+    }
+    return tmp;
+}
+
+int pd() {
+    int i;
+    for (i = 1; i <= n; i = i + 1) {
+        if (a[i] > LIMIT) return 0;
+    }
+    return 1;
+}
+
+void sort_a() {
+    int i;
+    for (i = 2; i <= n; i = i + 1) {
+        int key;
+        int j;
+        key = a[i];
+        for (j = i - 1; j >= 1 && a[j] > key; j = j - 1) {
+            a[j + 1] = a[j];
+        }
+        a[j + 1] = key;
+    }
+}
+
+void work_0() {
+    int i;
+    for (i = 1; i <= n; i = i + 1) {
+        int j;
+        for (j = i + 1; j <= n; j = j + 1) {
+            int v;
+            v = 0;
+            if (m == 1) v = bit_and(a[i], a[j]);
+            if (m == 2) v = bit_xor(a[i], a[j]);
+            if (m == 3) v = bit_or(a[i], a[j]);
+            ans = max2(ans, v);
+        }
+    }
+    printf("%d\n", ans);
+}
+
+void work_1() {
+    int i;
+    sort_a();
+    for (i = 1; i <= n; i = i + 1) {
+        int lim;
+        int j;
+        lim = i + 11;
+        if (lim > n) lim = n;
+        for (j = i + 1; j <= lim; j = j + 1) {
+            int v;
+            v = bit_and(a[i], a[j]);
+            ans = max2(ans, v);
+        }
+    }
+    printf("%d\n", ans);
+}
+
+void work_2() {
+    int i;
+    for (i = 1; i <= n; i = i + 1) {
+        int v;
+        v = trie_found_xor(a[i]);
+        ans = max2(ans, v);
+    }
+    printf("%d\n", ans);
+}
+
+void work_3() {
+    int i;
+    sort_a();
+    for (i = 1; i <= n; i = i + 1) {
+        int lim;
+        int j;
+        lim = i + 11;
+        if (lim > n) lim = n;
+        for (j = i + 1; j <= lim; j = j + 1) {
+            int v;
+            v = bit_or(a[i], a[j]);
+            ans = max2(ans, v);
+        }
+    }
+    printf("%d\n", ans);
+}
+
+void work_4() {
+    int i;
+    for (i = 0; i <= LIMIT; i = i + 1) c[i] = 0;
+    for (i = 1; i <= n; i = i + 1) c[a[i]] = c[a[i]] + 1;
+    for (i = 0; i <= LIMIT; i = i + 1) {
+        if (c[i] > 0) {
+            int j;
+            for (j = i; j <= LIMIT; j = j + 1) {
+                if (i == j && c[i] < 2) {
+                } else if (i != j && c[j] == 0) {
+                } else {
+                    int v;
+                    v = 0;
+                    if (m == 1) v = bit_and(i, j);
+                    if (m == 2) v = bit_xor(i, j);
+                    if (m == 3) v = bit_or(i, j);
+                    ans = max2(ans, v);
+                }
+            }
+        }
+    }
+    printf("%d\n", ans);
+}
+
+int main() {
+    int tc;
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        int i;
+        trie_init();
+        ans = 0;
+        n = getint();
+        m = getint();
+        for (i = 1; i <= n; i = i + 1) a[i] = getint();
+
+        if (n <= THRESH_N) {
+            work_0();
+        } else if (pd() == 1) {
+            work_4();
+        } else {
+            for (i = 1; i <= n; i = i + 1) trie_insert(a[i]);
+            if (m == 1) work_1();
+            if (m == 2) work_2();
+            if (m == 3) work_3();
+        }
+    }
+    return 0;
+}

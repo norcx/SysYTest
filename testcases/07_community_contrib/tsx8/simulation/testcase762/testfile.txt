@@ -1,0 +1,137 @@
+/* Description:
+ * Converted from a C++ program with sorting + DSU checks.
+ * Outputs the smallest prefix length k (1..q) that triggers inconsistency, else 0.
+ */
+
+const int LIM = 20005;
+
+int n;
+int q;
+int ans;
+
+int f[LIM];
+int px[LIM];
+int py[LIM];
+int pz[LIM];
+int tx[LIM];
+int ty[LIM];
+int tz[LIM];
+
+int find(int x) {
+    int root;
+    if (f[x] == x) return x;
+    root = find(f[x]);
+    f[x] = root;
+    return root;
+}
+
+void swap_node(int a, int b) {
+    int tmp;
+    tmp = tx[a];
+    tx[a] = tx[b];
+    tx[b] = tmp;
+    tmp = ty[a];
+    ty[a] = ty[b];
+    ty[b] = tmp;
+    tmp = tz[a];
+    tz[a] = tz[b];
+    tz[b] = tmp;
+    return;
+}
+
+void qsort_desc(int l, int r) {
+    int i;
+    int j;
+    int pivot;
+    int mid;
+    if (l >= r) return;
+    i = l;
+    j = r;
+    mid = (l + r) / 2;
+    pivot = tz[mid];
+    for (; i <= j; ) {
+        for (; tz[i] > pivot; ) i = i + 1;
+        for (; tz[j] < pivot; ) j = j - 1;
+        if (i <= j) {
+            swap_node(i, j);
+            i = i + 1;
+            j = j - 1;
+        }
+    }
+    if (l < j) qsort_desc(l, j);
+    if (i < r) qsort_desc(i, r);
+    return;
+}
+
+int check(int k) {
+    int i;
+    int j;
+    int lmin;
+    int lmax;
+    int rmin;
+    int rmax;
+
+    for (i = 1; i <= n + 1; i = i + 1) f[i] = i;
+    for (i = 1; i <= k; i = i + 1) {
+        tx[i] = px[i];
+        ty[i] = py[i];
+        tz[i] = pz[i];
+    }
+    if (k > 1) qsort_desc(1, k);
+
+    lmin = tx[1];
+    lmax = tx[1];
+    rmin = ty[1];
+    rmax = ty[1];
+
+    for (i = 2; i <= k; i = i + 1) {
+        if (tz[i] < tz[i - 1]) {
+            if (find(lmax) > rmin) return 1;
+            for (j = find(lmin); j <= rmax; j = j + 1) f[find(j)] = find(rmax + 1);
+            lmin = tx[i];
+            lmax = tx[i];
+            rmin = ty[i];
+            rmax = ty[i];
+        } else {
+            if (tx[i] < lmin) lmin = tx[i];
+            if (tx[i] > lmax) lmax = tx[i];
+            if (ty[i] < rmin) rmin = ty[i];
+            if (ty[i] > rmax) rmax = ty[i];
+            if (lmax > rmin) return 1;
+        }
+    }
+
+    if (find(lmax) > rmin) return 1;
+    return 0;
+}
+
+int main() {
+    int i;
+    int l;
+    int r;
+    int mid;
+
+    n = getint();
+    q = getint();
+    for (i = 1; i <= q; i = i + 1) {
+        px[i] = getint();
+        py[i] = getint();
+        pz[i] = getint();
+    }
+
+    ans = 0;
+    l = 1;
+    r = q;
+    for (; l <= r; ) {
+        mid = (l + r) / 2;
+        if (check(mid) == 1) {
+            ans = mid;
+            r = mid - 1;
+        } else {
+            l = mid + 1;
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

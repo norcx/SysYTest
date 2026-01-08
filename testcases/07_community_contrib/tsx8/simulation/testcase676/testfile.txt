@@ -1,0 +1,371 @@
+/* Description:
+ *   Converted from C++ to Strict SysY.
+ */
+const int GRID = 6;
+const int CELLS = 36;
+const int MAXV = 10;
+const int DELTA_V = 40;
+
+const int DP_T = 31;
+const int DP_B = 6;
+const int DP_C = 6;
+const int DP_D = 6;
+const int DP_E = 6;
+const int DP_S = 2;
+const int DP_SIZE = 642816;
+
+const int INF = 1061109567;
+
+int num[CELLS];
+int value_arr[CELLS * MAXV];
+int delta_arr[CELLS * DELTA_V];
+int dp[DP_SIZE];
+int pair_used[GRID * GRID * GRID * GRID];
+
+int abs_int(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+int cell_idx(int row, int col) {
+    return row * GRID + col;
+}
+
+int value_idx(int cell, int k) {
+    return cell * MAXV + k;
+}
+
+int delta_idx(int row, int col, int v) {
+    return (row * GRID + col) * DELTA_V + v;
+}
+
+int map_idx(int a, int b, int c, int d) {
+    return (((a * GRID + b) * GRID + c) * GRID + d);
+}
+
+int dis(int a, int b, int c, int d) {
+    return abs_int(a - c) + abs_int(b - d);
+}
+
+int dp_idx(int t, int b, int c, int d, int e, int s1, int s2, int s3, int s4) {
+    int idx;
+    idx = t;
+    idx = idx * DP_B + b;
+    idx = idx * DP_C + c;
+    idx = idx * DP_D + d;
+    idx = idx * DP_E + e;
+    idx = idx * DP_S + s1;
+    idx = idx * DP_S + s2;
+    idx = idx * DP_S + s3;
+    idx = idx * DP_S + s4;
+    return idx;
+}
+
+int main() {
+    int A;
+    int B;
+    int C;
+    int D;
+    int E;
+
+    int row;
+    int col;
+    int k;
+    int n;
+
+    int i;
+    int j;
+
+    int base;
+
+    int other_row;
+    int other_col;
+    int dist;
+    int same_cell;
+
+    int cell1;
+    int cell2;
+    int e1;
+    int e2;
+    int v1;
+    int v2;
+    int diff;
+
+    int center_r;
+    int center_c;
+    int center_dist;
+
+    int t;
+    int b_cnt;
+    int c_cnt;
+    int d_cnt;
+    int e_cnt;
+    int s1;
+    int s2;
+    int s3;
+    int s4;
+    int sx1;
+    int sx2;
+    int sx3;
+    int sx4;
+    int lim1;
+    int lim2;
+    int lim3;
+    int lim4;
+    int wmt;
+    int cur_idx;
+    int nxt_idx;
+    int cur_val;
+    int new_val;
+
+    int num22;
+    int num23;
+    int num32;
+    int num33;
+
+    int ans;
+    int final_val;
+
+    A = getint();
+    B = getint();
+    C = getint();
+    D = getint();
+    E = getint();
+
+    row = 0;
+    for (row = 0; row < GRID; row = row + 1) {
+        col = 0;
+        for (col = 0; col < GRID; col = col + 1) {
+            n = getint();
+            num[cell_idx(row, col)] = n;
+            k = 1;
+            for (k = 1; k <= n; k = k + 1) {
+                value_arr[value_idx(cell_idx(row, col), k)] = getint();
+            }
+        }
+    }
+
+    i = 0;
+    for (i = 0; i < DP_SIZE; i = i + 1) {
+        dp[i] = INF;
+    }
+
+    i = 0;
+    for (i = 0; i < CELLS * DELTA_V; i = i + 1) {
+        delta_arr[i] = 0;
+    }
+
+    i = 0;
+    for (i = 0; i < GRID * GRID * GRID * GRID; i = i + 1) {
+        pair_used[i] = 0;
+    }
+
+    for (row = 0; row < GRID; row = row + 1) {
+        for (col = 0; col < GRID; col = col + 1) {
+            printf("%d:", num[cell_idx(row, col)]);
+            for (k = 1; k <= num[cell_idx(row, col)]; k = k + 1) {
+                printf("%d, ", value_arr[value_idx(cell_idx(row, col), k)]);
+            }
+            printf("]]");
+        }
+        printf("\n");
+    }
+
+    base = 0;
+
+    for (row = 0; row < GRID; row = row + 1) {
+        for (col = 0; col < GRID; col = col + 1) {
+            if (row >= 2 && row <= 3 && col >= 2 && col <= 3) {
+            } else {
+                cell1 = cell_idx(row, col);
+                n = num[cell1];
+
+                i = 1;
+                for (i = 1; i <= n; i = i + 1) {
+                    j = i + 1;
+                    for (j = i + 1; j <= n; j = j + 1) {
+                        v1 = value_arr[value_idx(cell1, i)];
+                        v2 = value_arr[value_idx(cell1, j)];
+                        if (v1 > v2) {
+                            value_arr[value_idx(cell1, i)] = v2;
+                            value_arr[value_idx(cell1, j)] = v1;
+                        }
+                    }
+                }
+
+                for (i = 2; i <= n; i = i + 1) {
+                    v1 = value_arr[value_idx(cell1, i)];
+                    v2 = value_arr[value_idx(cell1, i - 1)];
+                    if (v1 - v2 == 1) base = base + A;
+                }
+
+                center_r = 2;
+                for (center_r = 2; center_r <= 3; center_r = center_r + 1) {
+                    center_c = 2;
+                    for (center_c = 2; center_c <= 3; center_c = center_c + 1) {
+                        center_dist = dis(row, col, center_r, center_c);
+                        if (center_dist == 1) {
+                            for (i = 1; i <= n; i = i + 1) {
+                                v1 = value_arr[value_idx(cell1, i)];
+                                delta_arr[delta_idx(center_r, center_c, v1)] = delta_arr[delta_idx(center_r, center_c, v1)] + B;
+                                delta_arr[delta_idx(center_r, center_c, v1 - 1)] = delta_arr[delta_idx(center_r, center_c, v1 - 1)] + C;
+                                delta_arr[delta_idx(center_r, center_c, v1 + 1)] = delta_arr[delta_idx(center_r, center_c, v1 + 1)] + C;
+                            }
+                        }
+                        if (center_dist == 2) {
+                            for (i = 1; i <= n; i = i + 1) {
+                                v1 = value_arr[value_idx(cell1, i)];
+                                delta_arr[delta_idx(center_r, center_c, v1)] = delta_arr[delta_idx(center_r, center_c, v1)] + D;
+                                delta_arr[delta_idx(center_r, center_c, v1 - 1)] = delta_arr[delta_idx(center_r, center_c, v1 - 1)] + E;
+                                delta_arr[delta_idx(center_r, center_c, v1 + 1)] = delta_arr[delta_idx(center_r, center_c, v1 + 1)] + E;
+                            }
+                        }
+                    }
+                }
+
+                for (other_row = 0; other_row < GRID; other_row = other_row + 1) {
+                    for (other_col = 0; other_col < GRID; other_col = other_col + 1) {
+                        dist = dis(row, col, other_row, other_col);
+                        same_cell = 0;
+                        if (other_row == row) {
+                            if (other_col == col) same_cell = 1;
+                        }
+                        if (dist <= 2 && same_cell == 0) {
+                            if (pair_used[map_idx(row, col, other_row, other_col)] == 0) {
+                                pair_used[map_idx(row, col, other_row, other_col)] = 1;
+                                pair_used[map_idx(other_row, other_col, row, col)] = 1;
+
+                                if (other_row >= 2 && other_row <= 3 && other_col >= 2 && other_col <= 3) {
+                                } else {
+                                    cell2 = cell_idx(other_row, other_col);
+                                    for (e1 = 1; e1 <= num[cell1]; e1 = e1 + 1) {
+                                        for (e2 = 1; e2 <= num[cell2]; e2 = e2 + 1) {
+                                            v1 = value_arr[value_idx(cell1, e1)];
+                                            v2 = value_arr[value_idx(cell2, e2)];
+                                            diff = v1 - v2;
+                                            if (diff < 0) diff = 0 - diff;
+                                            if (diff == 0) {
+                                                if (dist == 1) base = base + B;
+                                                else base = base + D;
+                                            }
+                                            if (diff == 1) {
+                                                if (dist == 1) base = base + C;
+                                                else base = base + E;
+                                            }
+                                        }
+                                    }
+                                    printf("a = %d b = %d c = %d d = %d base = %d \n", row, col, other_row, other_col, base);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    printf("base = %d\n", base);
+
+    dp[dp_idx(0, 0, 0, 0, 0, 0, 0, 0, 0)] = base;
+
+    num22 = num[cell_idx(2, 2)];
+    num23 = num[cell_idx(2, 3)];
+    num32 = num[cell_idx(3, 2)];
+    num33 = num[cell_idx(3, 3)];
+
+    for (t = 0; t < 30; t = t + 1) {
+        for (b_cnt = 0; b_cnt <= num22; b_cnt = b_cnt + 1) {
+            for (c_cnt = 0; c_cnt <= num23; c_cnt = c_cnt + 1) {
+                for (d_cnt = 0; d_cnt <= num32; d_cnt = d_cnt + 1) {
+                    for (e_cnt = 0; e_cnt <= num33; e_cnt = e_cnt + 1) {
+                        for (s1 = 0; s1 <= 1; s1 = s1 + 1) {
+                            for (s2 = 0; s2 <= 1; s2 = s2 + 1) {
+                                for (s3 = 0; s3 <= 1; s3 = s3 + 1) {
+                                    for (s4 = 0; s4 <= 1; s4 = s4 + 1) {
+                                        cur_idx = dp_idx(t, b_cnt, c_cnt, d_cnt, e_cnt, s1, s2, s3, s4);
+                                        cur_val = dp[cur_idx];
+                                        if (cur_val != INF) {
+                                            lim1 = 0;
+                                            if (b_cnt != num22) lim1 = 1;
+                                            lim2 = 0;
+                                            if (c_cnt != num23) lim2 = 1;
+                                            lim3 = 0;
+                                            if (d_cnt != num32) lim3 = 1;
+                                            lim4 = 0;
+                                            if (e_cnt != num33) lim4 = 1;
+
+                                            for (sx1 = 0; sx1 <= lim1; sx1 = sx1 + 1) {
+                                                for (sx2 = 0; sx2 <= lim2; sx2 = sx2 + 1) {
+                                                    for (sx3 = 0; sx3 <= lim3; sx3 = sx3 + 1) {
+                                                        for (sx4 = 0; sx4 <= lim4; sx4 = sx4 + 1) {
+                                                            wmt = 0;
+
+                                                            if (sx1 == 1) {
+                                                                wmt = wmt + delta_arr[delta_idx(2, 2, t + 1)];
+                                                                if (s1 == 1) wmt = wmt + A;
+                                                                if (s2 == 1) wmt = wmt + C;
+                                                                if (s3 == 1) wmt = wmt + C;
+                                                                if (s4 == 1) wmt = wmt + E;
+                                                            }
+                                                            if (sx2 == 1) {
+                                                                wmt = wmt + delta_arr[delta_idx(2, 3, t + 1)];
+                                                                if (s1 == 1) wmt = wmt + C;
+                                                                if (s2 == 1) wmt = wmt + A;
+                                                                if (s3 == 1) wmt = wmt + E;
+                                                                if (s4 == 1) wmt = wmt + C;
+                                                            }
+                                                            if (sx3 == 1) {
+                                                                wmt = wmt + delta_arr[delta_idx(3, 2, t + 1)];
+                                                                if (s1 == 1) wmt = wmt + C;
+                                                                if (s2 == 1) wmt = wmt + E;
+                                                                if (s3 == 1) wmt = wmt + A;
+                                                                if (s4 == 1) wmt = wmt + C;
+                                                            }
+                                                            if (sx4 == 1) {
+                                                                wmt = wmt + delta_arr[delta_idx(3, 3, t + 1)];
+                                                                if (s1 == 1) wmt = wmt + E;
+                                                                if (s2 == 1) wmt = wmt + C;
+                                                                if (s3 == 1) wmt = wmt + C;
+                                                                if (s4 == 1) wmt = wmt + A;
+                                                            }
+
+                                                            if (sx1 == 1 && sx2 == 1) wmt = wmt + B;
+                                                            if (sx1 == 1 && sx3 == 1) wmt = wmt + B;
+                                                            if (sx1 == 1 && sx4 == 1) wmt = wmt + D;
+                                                            if (sx2 == 1 && sx3 == 1) wmt = wmt + D;
+                                                            if (sx2 == 1 && sx4 == 1) wmt = wmt + B;
+                                                            if (sx3 == 1 && sx4 == 1) wmt = wmt + B;
+
+                                                            nxt_idx = dp_idx(t + 1, b_cnt + sx1, c_cnt + sx2, d_cnt + sx3, e_cnt + sx4, sx1, sx2, sx3, sx4);
+                                                            new_val = cur_val + wmt;
+                                                            if (dp[nxt_idx] > new_val) dp[nxt_idx] = new_val;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    ans = INF;
+    for (s1 = 0; s1 <= 1; s1 = s1 + 1) {
+        for (s2 = 0; s2 <= 1; s2 = s2 + 1) {
+            for (s3 = 0; s3 <= 1; s3 = s3 + 1) {
+                for (s4 = 0; s4 <= 1; s4 = s4 + 1) {
+                    final_val = dp[dp_idx(30, num22, num23, num32, num33, s1, s2, s3, s4)];
+                    if (final_val < ans) ans = final_val;
+                }
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

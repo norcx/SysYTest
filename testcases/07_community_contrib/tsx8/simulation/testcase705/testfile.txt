@@ -1,0 +1,11 @@
+/* Description:
+ *   Converted from a C++ snippet that seeds RNG and computes a random length.
+ *   The original program has no I/O and no observable output; Strict SysY
+ *   version is therefore an empty program that exits immediately.
+ */
+
+int main() {
+    int len;
+    len = 0;
+    return 0;
+}

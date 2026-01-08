@@ -1,0 +1,78 @@
+/* Description:
+ * Input format (Strict SysY, integers only):
+ *   l
+ *   s1
+ *   s2
+ *   ...
+ *   sl
+ *   n
+ *
+ * Where si encodes a move:
+ *   1 = E, 2 = S, 3 = W, 4 = N
+ *
+ * Output:
+ *   final_x final_y
+ */
+
+const int MAXL = 1000;
+int steps[MAXL + 5];
+
+int l;
+int n;
+int base_x;
+int base_y;
+int ans_x;
+int ans_y;
+
+int main() {
+    int i;
+    int t;
+
+    l = getint();
+
+    for (i = 1; i <= l; i = i + 1) {
+        steps[i] = getint();
+        if (steps[i] == 1) {
+            base_x = base_x + 1;
+        } else {
+            if (steps[i] == 2) {
+                base_y = base_y - 1;
+            } else {
+                if (steps[i] == 3) {
+                    base_x = base_x - 1;
+                } else {
+                    if (steps[i] == 4) {
+                        base_y = base_y + 1;
+                    }
+                }
+            }
+        }
+    }
+
+    n = getint();
+
+    ans_x = (n / l) * base_x;
+    ans_y = (n / l) * base_y;
+
+    t = n % l;
+    for (i = 1; i <= t; i = i + 1) {
+        if (steps[i] == 1) {
+            ans_x = ans_x + 1;
+        } else {
+            if (steps[i] == 2) {
+                ans_y = ans_y - 1;
+            } else {
+                if (steps[i] == 3) {
+                    ans_x = ans_x - 1;
+                } else {
+                    if (steps[i] == 4) {
+                        ans_y = ans_y + 1;
+                    }
+                }
+            }
+        }
+    }
+
+    printf("%d %d\n", ans_x, ans_y);
+    return 0;
+}

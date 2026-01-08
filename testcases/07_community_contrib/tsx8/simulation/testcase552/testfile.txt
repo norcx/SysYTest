@@ -1,0 +1,86 @@
+/* Description:
+ *   op=1 add, op=2 del, op=3 count.
+ *   x encodes (pre, suf) as x = pre*256 + suf.
+ */
+const int MASKN = 256;
+const int BITN = 8;
+
+int pow2[8];
+int include_table[65536];
+int a[65536];
+
+void init() {
+  int i;
+  pow2[0] = 1;
+  for (i = 1; i < BITN; i = i + 1) {
+    pow2[i] = pow2[i - 1] * 2;
+  }
+
+  int suf;
+  int mask;
+  int b;
+  int ok;
+  int sufb;
+  int maskb;
+  for (suf = 0; suf < MASKN; suf = suf + 1) {
+    for (mask = 0; mask < MASKN; mask = mask + 1) {
+      ok = 1;
+      for (b = 0; b < BITN; b = b + 1) {
+        sufb = suf / pow2[b];
+        sufb = sufb % 2;
+        maskb = mask / pow2[b];
+        maskb = maskb % 2;
+        if (sufb == 1 && maskb == 0) {
+          ok = 0;
+        }
+      }
+      include_table[suf * MASKN + mask] = ok;
+    }
+  }
+}
+
+int main() {
+  init();
+
+  int q;
+  q = getint();
+
+  int i;
+  for (i = 0; i < q; i = i + 1) {
+    int op;
+    int x;
+    op = getint();
+    x = getint();
+
+    int pre;
+    int suf;
+    pre = x / MASKN;
+    suf = x % MASKN;
+
+    if (op == 3) {
+      int ans;
+      ans = 0;
+      int y;
+      for (y = 0; y < MASKN; y = y + 1) {
+        if (include_table[y * MASKN + pre] == 1) {
+          ans = ans + a[y * MASKN + suf];
+        }
+      }
+      printf("%d\n", ans);
+    } else {
+      int w;
+      w = 1;
+      if (op == 2) {
+        w = 0 - 1;
+      }
+      int mask;
+      for (mask = 0; mask < MASKN; mask = mask + 1) {
+        if (include_table[suf * MASKN + mask] == 1) {
+          a[pre * MASKN + mask] = a[pre * MASKN + mask] + w;
+        }
+      }
+    }
+  }
+
+  return 0;
+}

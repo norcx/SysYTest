@@ -1,0 +1,79 @@
+/* Description:
+ *   Integer-only rewrite of a floating-point DP/minimization snippet.
+ *   Input format (1 integer per line):
+ *     n, then n pairs (a[i], b[i]), then T.
+ *   Output:
+ *     ans as an integer.
+ */
+
+const int MAXN = 10005;
+
+int n;
+int a[MAXN], b[MAXN];
+int sa1[MAXN], sa2[MAXN], sb1[MAXN], sb2[MAXN];
+
+int min_int(int x, int y) {
+    if (x < y) return x;
+    return y;
+}
+
+int main() {
+    int i;
+    int ans;
+    int den;
+    int den2;
+    int sb;
+    int T;
+    int x;
+    int xx;
+    int tmp;
+    int cost;
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        b[i] = getint();
+        sa1[i] = sa1[i - 1] + a[i];
+        sb1[i] = sb1[i - 1] + b[i];
+    }
+    T = getint();
+
+    for (i = n; i >= 1; i = i - 1) {
+        sa2[i] = sa2[i + 1] + a[i];
+        sb2[i] = sb2[i + 1] + b[i];
+    }
+
+    ans = 1000000000;
+    for (i = 0; i <= n; i = i + 1) {
+        if (i < n) {
+            den = sa2[i + 1] + sb2[i + 1];
+            den2 = sa1[i] + sb1[i];
+            if (den != 0 && den2 != 0) {
+                sb = sb1[i] + sb2[i + 1];
+                xx = sb * T / den;
+                if (xx > T) xx = T;
+                tmp = sb * T - den * xx;
+                x = tmp / den2;
+                cost = sa1[i] * x + sa2[i + 1] * xx;
+                ans = min_int(ans, cost);
+            }
+        }
+
+        if (i != 0) {
+            den = sa2[i + 1] + sb2[i + 1];
+            den2 = sa1[i] + sb1[i];
+            if (den != 0 && den2 != 0) {
+                sb = sb1[i] + sb2[i + 1];
+                x = sb * T / den2;
+                if (x > T) x = T;
+                tmp = sb * T - den2 * x;
+                xx = tmp / den;
+                cost = sa1[i] * x + sa2[i + 1] * xx;
+                ans = min_int(ans, cost);
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

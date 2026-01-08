@@ -1,0 +1,80 @@
+/* Strict SysY testcase */
+const int MAXN = 64;
+const int MAXM = 128;
+
+int n;
+int m;
+int ans;
+int fa[2 * MAXN + 5];
+int ex[MAXM];
+int ey[MAXM];
+int ez[MAXM];
+
+int find(int x) {
+    if (fa[x] == x) return x;
+    fa[x] = find(fa[x]);
+    return fa[x];
+}
+
+int judge(int idx) {
+    int fax;
+    int fay;
+    fax = find(ex[idx]);
+    fay = find(ey[idx] + n);
+    if (fax == fay) return 0;
+    fa[fax] = fay;
+    fax = find(ex[idx] + n);
+    fay = find(ey[idx]);
+    if (fax == fay) return 0;
+    fa[fax] = fay;
+    return 1;
+}
+
+void sort_edges_desc() {
+    int i;
+    int j;
+    int tx;
+    int ty;
+    int tz;
+    for (i = 1; i <= m; i = i + 1) {
+        for (j = i + 1; j <= m; j = j + 1) {
+            if (ez[j] > ez[i]) {
+                tx = ex[i];
+                ty = ey[i];
+                tz = ez[i];
+                ex[i] = ex[j];
+                ey[i] = ey[j];
+                ez[i] = ez[j];
+                ex[j] = tx;
+                ey[j] = ty;
+                ez[j] = tz;
+            }
+        }
+    }
+}
+
+int main() {
+    int i;
+    n = getint();
+    m = getint();
+    for (i = 1; i <= m; i = i + 1) {
+        ex[i] = getint();
+        ey[i] = getint();
+        ez[i] = getint();
+    }
+
+    sort_edges_desc();
+
+    for (i = 1; i <= 2 * n; i = i + 1) fa[i] = i;
+    ans = 0;
+    for (i = 1; i <= m; i = i + 1) {
+        if (judge(i) == 1) {
+            if (i < m) ans = ez[i + 1];
+            else ans = 0;
+        } else {
+            break;
+        }
+    }
+    printf("%d\n", ans);
+    return 0;
+}

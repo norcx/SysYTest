@@ -1,0 +1,41 @@
+/* Description:
+ * Count a value derived from n using divisor enumeration.
+ * Input: n (one integer)
+ * Output: ans (one integer + newline)
+ */
+
+int main() {
+    int n;
+    int ans;
+    int tmp;
+    int i;
+    int j;
+    int t;
+
+    n = getint();
+    ans = 0;
+
+    tmp = 0;
+    for (i = 1; i <= n / i / i; i = i + 1) {
+        for (j = i + 1; j <= n / i / j; j = j + 1) {
+            t = n / i / j - j;
+            if (t > 0) {
+                tmp = tmp + t;
+            }
+        }
+    }
+    ans = ans + tmp * 6;
+
+    tmp = 0;
+    for (i = 1; i <= n / i; i = i + 1) {
+        tmp = tmp + n / i / i;
+        if (i <= n / i / i) {
+            tmp = tmp - 1;
+            ans = ans + 1;
+        }
+    }
+    ans = ans + tmp * 3;
+
+    printf("%d\n", ans);
+    return 0;
+}

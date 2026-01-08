@@ -1,0 +1,65 @@
+/*
+  Deterministic version of the given C generator:
+  - Reads n, m, seed (each on its own line)
+  - Prints n m, then m lines: x1 y1 x2 y2
+  - Uses an int-only RNG (Lehmer/Schrage) to avoid overflow.
+*/
+
+int n;
+int m;
+int seed;
+
+int next_rand() {
+    int a;
+    int q;
+    int r;
+    int hi;
+    int lo;
+    int test;
+
+    a = 48271;
+    q = 44488;
+    r = 3399;
+
+    hi = seed / q;
+    lo = seed - hi * q;
+    test = a * lo - r * hi;
+    if (test <= 0) {
+        test = test + 2147483647;
+    }
+    seed = test;
+    return seed;
+}
+
+int ra() {
+    int t;
+    t = next_rand();
+    t = t % n;
+    t = t + 1;
+    return t;
+}
+
+int main() {
+    int x1;
+    int x2;
+    int y1;
+    int y2;
+    int i;
+
+    n = getint();
+    m = getint();
+    seed = getint();
+    if (seed <= 0) {
+        seed = 1 - seed;
+    }
+
+    printf("%d %d\n", n, m);
+    for (i = 0; i < m; i = i + 1) {
+        x2 = ra();
+        y2 = ra();
+        x1 = ra() % x2 + 1;
+        y1 = ra() % y2 + 1;
+        printf("%d %d %d %d\n", x1, y1, x2, y2);
+    }
+    return 0;
+}

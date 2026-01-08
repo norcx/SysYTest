@@ -1,0 +1,150 @@
+/* Description:
+ *   Converted from C++ to Strict SysY.
+ *   Input: n, a[1..n], edges[1..n-1], q[1..n-1]
+ *   Output: an[1..n], one per line.
+ */
+
+const int MAXN = 2000;
+const int MAXE = 4000;
+const int MOD = 1000000007;
+
+int n;
+int cnt;
+
+int q[MAXN];
+int head[MAXN];
+int fa[MAXN];
+int an[MAXN];
+int val[MAXN];
+int a[MAXN];
+
+int ha_x[MAXN];
+int ha_y[MAXN];
+
+int e_y[MAXE];
+int e_next[MAXE];
+
+int max2(int x, int y) {
+    if (x > y) return x;
+    return y;
+}
+
+int mul_mod(int x, int y) {
+    int a0;
+    int b0;
+    int res;
+    a0 = x % MOD;
+    b0 = y % MOD;
+    if (a0 < 0) a0 = a0 + MOD;
+    if (b0 < 0) b0 = b0 + MOD;
+    res = 0;
+    for (; b0 > 0; b0 = b0 / 2) {
+        if (b0 % 2 == 1) {
+            res = res + a0;
+            if (res >= MOD) res = res - MOD;
+        }
+        a0 = a0 + a0;
+        if (a0 >= MOD) a0 = a0 - MOD;
+    }
+    return res;
+}
+
+void add_edge(int x, int y) {
+    cnt = cnt + 1;
+    e_y[cnt] = y;
+    e_next[cnt] = head[x];
+    head[x] = cnt;
+
+    cnt = cnt + 1;
+    e_y[cnt] = x;
+    e_next[cnt] = head[y];
+    head[y] = cnt;
+}
+
+int dfs(int now, int fat) {
+    int tmp;
+    int i;
+    int child;
+    tmp = 0;
+    for (i = head[now]; i != 0; i = e_next[i]) {
+        child = e_y[i];
+        if (child == fat) continue;
+        tmp = max2(tmp, dfs(child, now));
+    }
+    tmp = tmp + a[now];
+    tmp = tmp % MOD;
+    return tmp;
+}
+
+int father(int x) {
+    int f;
+    if (fa[x] == x) return x;
+    f = father(fa[x]);
+    fa[x] = f;
+    return f;
+}
+
+int main() {
+    int i;
+    int j;
+    int ii;
+    int x;
+    int y;
+    int ans0;
+    int tmp1;
+    int tmp2;
+    int fax;
+    int fay;
+    int root;
+
+    n = getint();
+    ans0 = 1;
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        a[i] = a[i] % MOD;
+        if (a[i] < 0) a[i] = a[i] + MOD;
+        ans0 = mul_mod(ans0, a[i]);
+        fa[i] = i;
+        val[i] = a[i];
+    }
+
+    for (i = 1; i < n; i = i + 1) {
+        ha_x[i] = getint();
+        ha_y[i] = getint();
+    }
+    for (i = 1; i < n; i = i + 1) {
+        q[i] = getint();
+    }
+
+    an[n] = ans0;
+    for (i = n - 1; i > 0; i = i - 1) {
+        ii = q[i];
+        x = ha_x[ii];
+        y = ha_y[ii];
+
+        tmp1 = dfs(x, 0);
+        tmp2 = dfs(y, 0);
+        tmp1 = tmp1 + tmp2;
+        if (tmp1 >= MOD) tmp1 = tmp1 - MOD;
+
+        fax = father(x);
+        fay = father(y);
+        fa[fay] = fax;
+        val[fax] = max2(val[fax], tmp1);
+
+        add_edge(x, y);
+
+        an[i] = 1;
+        for (j = 1; j <= n; j = j + 1) {
+            root = father(j);
+            if (j == root) {
+                an[i] = mul_mod(an[i], val[j]);
+            }
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        printf("%d\n", an[i]);
+    }
+    return 0;
+}

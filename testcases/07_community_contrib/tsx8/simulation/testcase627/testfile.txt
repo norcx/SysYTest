@@ -1,0 +1,51 @@
+/* Description:
+ *   Deterministic variant of a random data generator:
+ *   prints n, then 2^n integers in [1, 2^n], then Q, then Q integers in [0, n].
+ *   Scaled down to run within the runner timeout.
+ */
+
+int seed = 1;
+
+int nextRand() {
+    seed = (seed * 25173 + 13849) % 50000;
+    return seed;
+}
+
+int R() {
+    int a;
+    int b;
+    a = nextRand();
+    b = nextRand();
+    return a * 30000 + b;
+}
+
+int main() {
+    int n;
+    int Q;
+    int pow2;
+    int i;
+    int v;
+
+    n = 10;
+    Q = 5000;
+
+    pow2 = 1;
+    for (i = 0; i < n; i = i + 1) {
+        pow2 = pow2 * 2;
+    }
+
+    printf("%d\n", n);
+    for (i = 1; i <= pow2; i = i + 1) {
+        v = R() % pow2 + 1;
+        printf("%d ", v);
+    }
+    printf("\n");
+
+    printf("%d\n", Q);
+    for (i = 1; i <= Q; i = i + 1) {
+        v = R() % (n + 1);
+        printf("%d ", v);
+    }
+
+    return 0;
+}

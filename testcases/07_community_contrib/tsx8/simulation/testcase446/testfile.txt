@@ -1,0 +1,90 @@
+/* Description:
+ *   Converted from C++ to Strict SysY.
+ *   Notes: scaled-down constants; flattened 2D arrays; int-only arithmetic.
+ */
+
+const int MAXN = 5000;
+const int MAXM = 10000;
+const int MAXD = 40;
+const int STRIDE = 42;
+const int SSIZE = (MAXN + 1) * STRIDE;
+
+int n, m, mm;
+int cnt, mx;
+int head[MAXN + 1];
+int to[MAXM + 1];
+int nxt[MAXM + 1];
+int c[MAXN + 1];
+int depth[MAXN + 1];
+int f[MAXN + 1];
+int ans;
+int s[SSIZE];
+int ss[SSIZE];
+
+int idx(int node, int d) {
+    return node * STRIDE + d;
+}
+
+void add_edge(int x, int y) {
+    cnt = cnt + 1;
+    to[cnt] = y;
+    nxt[cnt] = head[x];
+    head[x] = cnt;
+}
+
+void dfs(int now, int fat) {
+    int i;
+    int nn;
+    int j;
+    int d;
+    int t;
+
+    depth[now] = depth[fat] + 1;
+    if (depth[now] > mx) mx = depth[now];
+
+    s[idx(now, 0)] = c[now];
+    ss[idx(now, 0)] = c[now];
+
+    for (i = head[now]; i != 0; i = nxt[i]) {
+        nn = to[i];
+        if (nn == fat) continue;
+        dfs(nn, now);
+
+        if (c[now] > mm) {
+            for (j = 1; j <= mx; j = j + 1) {
+                t = m - j + 1;
+                if (t < 0) t = 0;
+                f[now] = f[now] + ss[idx(now, t)] * s[idx(nn, j - 1)];
+            }
+        }
+
+        for (d = 0; d <= mx; d = d + 1) {
+            s[idx(now, d + 1)] = s[idx(now, d + 1)] + s[idx(nn, d)];
+            ss[idx(now, d + 1)] = s[idx(now, d + 1)];
+        }
+        for (d = mx; d >= 0; d = d - 1) {
+            ss[idx(now, d)] = ss[idx(now, d)] + ss[idx(now, d + 1)];
+        }
+    }
+
+    ans = ans + f[now];
+}
+
+int main() {
+    int i;
+    int x;
+    int y;
+
+    n = getint();
+    m = getint();
+    mm = getint();
+    for (i = 1; i <= n; i = i + 1) c[i] = getint();
+    for (i = 1; i < n; i = i + 1) {
+        x = getint();
+        y = getint();
+        add_edge(x, y);
+    }
+    dfs(1, 0);
+    printf("%d\n", ans);
+    return 0;
+}

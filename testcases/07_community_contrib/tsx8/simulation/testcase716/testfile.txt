@@ -1,0 +1,97 @@
+/* Description:
+ *   Converted from C++: DP over commands with up to n changes.
+ *   Input format (integers, 1 per line):
+ *     len
+ *     cmd[1]..cmd[len]   (1 = 'F', 0 = 'T')
+ *     n
+ */
+const int MAXN = 211;
+const int INF = 1061109567;
+const int SIZE = 211 * 211 * 2;
+
+int n;
+int ans;
+int len;
+int f[SIZE];
+int cmd[MAXN];
+
+int abs_int(int x) {
+  if (x < 0) return 0 - x;
+  return x;
+}
+
+int idx(int i, int j, int k) { return (i * MAXN + j) * 2 + k; }
+
+int main() {
+  int i;
+  int j;
+  int k;
+  int t;
+  int now;
+  int isF;
+  int newv;
+  int oldv;
+
+  len = getint();
+  i = 1;
+  for (i = 1; i <= len; i = i + 1) cmd[i] = getint();
+  n = getint();
+
+  for (t = 0; t < SIZE; t = t + 1) f[t] = INF;
+  f[idx(0, 0, 1)] = 0;
+
+  for (i = 0; i <= len; i = i + 1) {
+    for (j = 0; j <= n; j = j + 1) {
+      for (k = 0; k <= 1; k = k + 1) {
+        now = f[idx(i, j, k)];
+        if (now != INF) {
+          isF = 0;
+          if (i + 1 <= len) isF = cmd[i + 1];
+
+          if (isF == 1) {
+            if (k == 1) {
+              newv = now + 1;
+              oldv = f[idx(i + 1, j, k)];
+              if (abs_int(newv) > abs_int(oldv) || oldv == INF)
+                f[idx(i + 1, j, k)] = newv;
+            } else {
+              newv = now - 1;
+              oldv = f[idx(i + 1, j, k)];
+              if (abs_int(newv) > abs_int(oldv) || oldv == INF)
+                f[idx(i + 1, j, k)] = newv;
+            }
+
+            oldv = f[idx(i + 1, j + 1, 1 - k)];
+            if (abs_int(now) > abs_int(oldv) || oldv == INF)
+              f[idx(i + 1, j + 1, 1 - k)] = now;
+          } else {
+            if (k == 1) {
+              newv = now + 1;
+              oldv = f[idx(i + 1, j + 1, k)];
+              if (abs_int(newv) > abs_int(oldv) || oldv == INF)
+                f[idx(i + 1, j + 1, k)] = newv;
+            } else {
+              newv = now - 1;
+              oldv = f[idx(i + 1, j + 1, k)];
+              if (abs_int(newv) > abs_int(oldv) || oldv == INF)
+                f[idx(i + 1, j + 1, k)] = newv;
+            }
+
+            oldv = f[idx(i + 1, j, 1 - k)];
+            if (abs_int(now) > abs_int(oldv) || oldv == INF)
+              f[idx(i + 1, j, 1 - k)] = now;
+          }
+        }
+      }
+    }
+  }
+
+  ans = 0;
+  oldv = f[idx(len, n, 0)];
+  if (oldv != INF) ans = oldv;
+  oldv = f[idx(len, n, 1)];
+  if (oldv != INF && abs_int(oldv) > abs_int(ans)) ans = oldv;
+
+  printf("%d\n", abs_int(ans));
+  return 0;
+}

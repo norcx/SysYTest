@@ -1,0 +1,119 @@
+/* Description:
+ *   Segment tree with alternating OR/XOR per level (CF 339D style),
+ *   rewritten into Strict SysY (no bitwise ops, getint input).
+ */
+
+int a[2048];
+int sum[8192];
+
+int bit_or(int x, int y) {
+    int res;
+    int p;
+    int i;
+    int xi;
+    int yi;
+    int bit;
+    res = 0;
+    p = 1;
+    for (i = 0; i < 31; i = i + 1) {
+        xi = x % 2;
+        yi = y % 2;
+        bit = 0;
+        if (xi + yi > 0) bit = 1;
+        res = res + bit * p;
+        x = x / 2;
+        y = y / 2;
+        p = p * 2;
+    }
+    return res;
+}
+
+int bit_xor(int x, int y) {
+    int res;
+    int p;
+    int i;
+    int xi;
+    int yi;
+    int s;
+    int bit;
+    res = 0;
+    p = 1;
+    for (i = 0; i < 31; i = i + 1) {
+        xi = x % 2;
+        yi = y % 2;
+        s = xi + yi;
+        bit = s % 2;
+        res = res + bit * p;
+        x = x / 2;
+        y = y / 2;
+        p = p * 2;
+    }
+    return res;
+}
+
+void push_up(int o, int p) {
+    int lch;
+    int rch;
+    lch = o * 2;
+    rch = lch + 1;
+    if (p % 2 == 1) sum[o] = bit_or(sum[lch], sum[rch]);
+    else sum[o] = bit_xor(sum[lch], sum[rch]);
+    return;
+}
+
+void build(int l, int r, int o, int p) {
+    int mid;
+    int lch;
+    int rch;
+    if (l == r) {
+        sum[o] = a[l];
+        return;
+    }
+    mid = (l + r) / 2;
+    lch = o * 2;
+    rch = lch + 1;
+    build(l, mid, lch, p - 1);
+    build(mid + 1, r, rch, p - 1);
+    push_up(o, p);
+    return;
+}
+
+void update(int l, int r, int o, int pos, int p) {
+    int mid;
+    int lch;
+    int rch;
+    if (l == r) {
+        sum[o] = a[l];
+        return;
+    }
+    mid = (l + r) / 2;
+    lch = o * 2;
+    rch = lch + 1;
+    if (pos <= mid) update(l, mid, lch, pos, p - 1);
+    else update(mid + 1, r, rch, pos, p - 1);
+    push_up(o, p);
+    return;
+}
+
+int main() {
+    int n;
+    int m;
+    int size;
+    int i;
+    n = getint();
+    m = getint();
+    size = 1;
+    for (i = 0; i < n; i = i + 1) size = size * 2;
+    for (i = 1; i <= size; i = i + 1) a[i] = getint();
+    build(1, size, 1, n);
+    for (i = 0; i < m; i = i + 1) {
+        int x;
+        int y;
+        x = getint();
+        y = getint();
+        a[x] = y;
+        update(1, size, 1, x, n);
+        printf("%d\n", sum[1]);
+    }
+    return 0;
+}

@@ -1,0 +1,98 @@
+/* Description:
+ *   Deterministic rewrite of the given C++ random-graph generator.
+ *   Reads one integer seed from stdin, then prints:
+ *     n m
+ *     x y z   (m lines)
+ *   with unique undirected edges (x,y).
+ */
+
+const int WIDTH = 201;         /* max node id is 200 */
+const int VIS_SIZE = 40401;    /* WIDTH * WIDTH */
+
+int vis[40401];
+int rng_seed;
+
+int next_rand() {
+    /* Park–Miller RNG with Schrage method (no overflow). */
+    int a;
+    int m;
+    int q;
+    int r;
+    int hi;
+    int lo;
+    int t;
+    a = 48271;
+    m = 2147483647;
+    q = 44488;
+    r = 3399;
+    hi = rng_seed / q;
+    lo = rng_seed - hi * q;
+    t = a * lo - r * hi;
+    if (t > 0) rng_seed = t;
+    else rng_seed = t + m;
+    return rng_seed;
+}
+
+int idx(int x, int y) {
+    return x * WIDTH + y;
+}
+
+int main() {
+    int seed;
+    int n;
+    int m;
+    int max_edges;
+    int i;
+    int attempt;
+    int x;
+    int y;
+    int z;
+    int found;
+    int a;
+    int b;
+
+    seed = getint();
+    if (seed == 0) seed = 1;
+    if (seed < 0) seed = -seed;
+    rng_seed = seed;
+
+    n = next_rand() % 200 + 1;
+    max_edges = n * (n - 1) / 2;
+    m = next_rand() % (max_edges + 1);
+    if (m > 2000) m = 2000;
+
+    printf("%d %d\n", n, m);
+
+    for (i = 0; i < m; i = i + 1) {
+        found = 0;
+        for (attempt = 0; attempt < 10000; attempt = attempt + 1) {
+            if (n == 1) break;
+            x = next_rand() % (n - 1) + 2;
+            y = next_rand() % (x - 1) + 1;
+            if (vis[idx(x, y)] == 0) {
+                vis[idx(x, y)] = 1;
+                vis[idx(y, x)] = 1;
+                z = next_rand();
+                printf("%d %d %d\n", x, y, z);
+                found = 1;
+                break;
+            }
+        }
+        if (found == 0) {
+            for (a = 2; a <= n; a = a + 1) {
+                for (b = 1; b < a; b = b + 1) {
+                    if (vis[idx(a, b)] == 0) {
+                        vis[idx(a, b)] = 1;
+                        vis[idx(b, a)] = 1;
+                        z = next_rand();
+                        printf("%d %d %d\n", a, b, z);
+                        found = 1;
+                        break;
+                    }
+                }
+                if (found == 1) break;
+            }
+        }
+    }
+    return 0;
+}

@@ -1,0 +1,53 @@
+/*
+  Generates deterministic random-like test data.
+  Input: 1 integer seed (one per line).
+  Output format matches the original generator:
+    n A B C D
+    A numbers
+    B numbers
+    C numbers
+    D numbers
+*/
+
+int seed;
+
+int next_seed() {
+    seed = seed % 700000000;
+    seed = seed * 3 + 7;
+    seed = seed % 700000000;
+    return seed;
+}
+
+int rand_mod(int m) {
+    return next_seed() % m;
+}
+
+int main() {
+    int n;
+    int A;
+    int B;
+    int C;
+    int D;
+    int i;
+
+    seed = getint();
+
+    n = rand_mod(500) + 500;
+    A = rand_mod(3000) + 2000;
+    B = rand_mod(3000) + 2000;
+    C = rand_mod(3000) + 2000;
+    D = rand_mod(3000) + 2000;
+
+    printf("%d %d %d %d %d\n", n, A, B, C, D);
+
+    for (i = 0; i < A; i = i + 1) printf("%d ", rand_mod(1001));
+    printf("\n");
+    for (i = 0; i < B; i = i + 1) printf("%d ", rand_mod(1001));
+    printf("\n");
+    for (i = 0; i < C; i = i + 1) printf("%d ", rand_mod(1001));
+    printf("\n");
+    for (i = 0; i < D; i = i + 1) printf("%d ", rand_mod(1001));
+    printf("\n");
+
+    return 0;
+}

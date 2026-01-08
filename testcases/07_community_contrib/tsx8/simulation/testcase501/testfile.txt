@@ -1,0 +1,118 @@
+/* Description:
+ *   BFS on a grid with time-activated blocked cells.
+ */
+const int MAXN = 20;
+const int LIM = 21;
+const int GRID = 441;
+const int QMAX = 1000;
+
+int n;
+int T;
+
+int vis[441];
+int bo[441];
+int dis[441];
+
+int qx[1000];
+int qy[1000];
+
+int f[6] = {0, 1, 0, -1, 0, 1};
+
+int idx(int x, int y) {
+  return x * LIM + y;
+}
+
+int main() {
+  T = getint();
+
+  int tc;
+  for (tc = 0; tc < T; tc = tc + 1) {
+    n = getint();
+
+    int i;
+    int j;
+    for (i = 1; i <= n; i = i + 1) {
+      for (j = 1; j <= n; j = j + 1) {
+        int p;
+        p = idx(i, j);
+        vis[p] = 0;
+        bo[p] = 0;
+        dis[p] = -1;
+      }
+    }
+
+    for (i = 1; i <= 2 * n - 2; i = i + 1) {
+      int x;
+      int y;
+      x = getint();
+      y = getint();
+      bo[idx(x, y)] = i;
+    }
+
+    int h;
+    int t;
+    h = 0;
+    t = 0;
+
+    int start;
+    start = idx(1, 1);
+    vis[start] = 1;
+    dis[start] = 0;
+    qx[t] = 1;
+    qy[t] = 1;
+    t = t + 1;
+
+    for (; h < t;) {
+      int nowx;
+      int nowy;
+      nowx = qx[h];
+      nowy = qy[h];
+      h = h + 1;
+
+      if (nowx == n && nowy == n) {
+        break;
+      }
+
+      int cur;
+      int curd;
+      cur = idx(nowx, nowy);
+      curd = dis[cur];
+
+      int d;
+      for (d = 1; d <= 4; d = d + 1) {
+        int nx;
+        int ny;
+        nx = nowx + f[d];
+        ny = nowy + f[d + 1];
+
+        if (nx < 1 || ny < 1 || nx > n || ny > n) {
+        } else {
+          int np;
+          np = idx(nx, ny);
+
+          if (vis[np] != 0) {
+          } else {
+            int nd;
+            nd = curd + 1;
+            if (bo[np] != 0 && bo[np] <= nd) {
+            } else {
+              dis[np] = nd;
+              vis[np] = 1;
+              qx[t] = nx;
+              qy[t] = ny;
+              t = t + 1;
+            }
+          }
+        }
+      }
+    }
+
+    if (dis[idx(n, n)] == -1) {
+      printf("No\n");
+    } else {
+      printf("Yes\n");
+    }
+  }
+
+  return 0;
+}

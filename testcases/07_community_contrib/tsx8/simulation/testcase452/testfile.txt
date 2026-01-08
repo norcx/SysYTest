@@ -1,0 +1,137 @@
+/* Description:
+ *   Converted from C++ to Strict SysY.
+ *   Directed rooted tree DP with heavy-child layout.
+ */
+
+int n;
+int K;
+int l;
+
+int head[2050];
+int to[2050];
+int nxt[2050];
+int ecnt;
+
+int fa[2050];
+int dep[2050];
+int mx[2050];
+int cho[2050];
+int val[2050];
+
+int p[2050];
+int timer;
+
+int f[4105];
+int ans;
+
+void add(int a, int b) {
+    ecnt = ecnt + 1;
+    to[ecnt] = b;
+    nxt[ecnt] = head[a];
+    head[a] = ecnt;
+    return;
+}
+
+void dfs_init(int i) {
+    int e;
+    int child;
+    dep[i] = dep[fa[i]] + 1;
+    mx[i] = dep[i];
+    for (e = head[i]; e != 0; e = nxt[e]) {
+        child = to[e];
+        fa[child] = i;
+        dfs_init(child);
+        if (mx[child] > mx[i]) {
+            mx[i] = mx[child];
+            cho[i] = child;
+        }
+    }
+    return;
+}
+
+int max2(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+void dfs_make(int i) {
+    int e;
+    int child;
+    int type;
+    int Di;
+    int Dk;
+    int start;
+    int j;
+
+    timer = timer + 1;
+    p[i] = timer;
+
+    if (cho[i] != 0) {
+        dfs_make(cho[i]);
+
+        for (e = head[i]; e != 0; e = nxt[e]) {
+            child = to[e];
+            if (p[child] == 0) dfs_make(child);
+        }
+
+        type = 0;
+        if (val[i] > l) type = 1;
+        Di = mx[i] - dep[i];
+
+        p[cho[i]] = 0;
+
+        f[p[i]] = val[i] + f[p[i] + 1];
+        if (type != 0 && K < Di) ans = ans + val[i] * f[p[i] + K + 1];
+
+        for (e = head[i]; e != 0; e = nxt[e]) {
+            child = to[e];
+            if (p[child] != 0) {
+                Dk = mx[child] - dep[child];
+                if (type != 0) {
+                    start = 0;
+                    if (K - Di > 0) start = K - Di;
+                    j = start;
+                    for (j = start; j <= Dk && j < K; j = j + 1) {
+                        ans = ans + (f[p[child] + j] - f[p[child] + j + 1]) * f[p[i] + K - j];
+                    }
+                    if (K <= Dk) ans = ans + f[p[child] + K] * f[p[i]];
+                }
+                for (j = 0; j <= Dk; j = j + 1) {
+                    f[p[i] + j + 1] = f[p[i] + j + 1] + f[p[child] + j];
+                }
+                f[p[i]] = f[p[i]] + f[p[child]];
+            }
+        }
+        return;
+    }
+
+    f[p[i]] = val[i];
+    timer = timer + 1;
+    return;
+}
+
+int main() {
+    int i;
+    int x;
+    int y;
+
+    n = getint();
+    K = getint();
+    l = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        val[i] = getint();
+    }
+
+    for (i = 2; i <= n; i = i + 1) {
+        x = getint();
+        y = getint();
+        add(x, y);
+    }
+
+    dfs_init(1);
+    dfs_make(1);
+
+    printf("%d\n", ans);
+    return 0;
+}

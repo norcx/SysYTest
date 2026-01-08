@@ -1,0 +1,43 @@
+/* Description:
+ *   Deterministic generator converted from a C++ rand/time-based input writer.
+ *   Prints T=100 and then 100 cube values (scaled to fit 32-bit int).
+ */
+
+int seed = 123456;
+
+int myrand() {
+    seed = (seed * 37 + 10007) % 1000000;
+    return seed;
+}
+
+int R() {
+    int a = myrand();
+    int b = myrand();
+    int r = (a * 100 + b % 100) % 1000;
+    return r;
+}
+
+int main() {
+    int T = 100;
+    int t;
+    int p = 1000000000;
+    int q = 1000;
+    printf("%d\n", T);
+    for (t = 0; t < T; t = t + 1) {
+        if (myrand() % 2 == 0) {
+            int r = R();
+            int val = r * r;
+            val = val * r;
+            val = val % p;
+            val = val + 1;
+            printf("%d\n", val);
+        } else {
+            int x = R() % q;
+            x = x + 1;
+            int val2 = x * x;
+            val2 = val2 * x;
+            printf("%d\n", val2);
+        }
+    }
+    return 0;
+}

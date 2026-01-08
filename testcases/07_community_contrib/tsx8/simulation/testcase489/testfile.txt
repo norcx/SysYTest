@@ -1,0 +1,221 @@
+/* Description:
+ *   Converted from a C++ SCC + DAG DP solution into Strict SysY.
+ *   Computes (ans1, ans2) on a directed weighted graph:
+ *     - SCC compression
+ *     - from SCC(1), run DP over reachable SCC-DAG
+ *     - maximize total vertices visited (ans1), tie-break by minimal distance (ans2)
+ *
+ *   Notes for Strict SysY:
+ *     - int/void only, no structs, no STL, no macros
+ *     - scaled-down MAXN/MAXM to fit memory limit
+ */
+
+const int MAXN = 2005;
+const int MAXM = 20005;
+
+int n;
+int m;
+
+int cnt;
+int head[MAXN];
+int to[MAXM];
+int val[MAXM];
+int nxt[MAXM];
+
+int cnt2;
+int head2[MAXN];
+int to2[MAXM];
+int val2[MAXM];
+int nxt2[MAXM];
+
+int dfn[MAXN];
+int low[MAXN];
+int st[MAXN];
+int in_st[MAXN];
+int top;
+int idx;
+
+int scc;
+int belong[MAXN];
+int csz[MAXN];
+
+int ru[MAXN];
+int chu[MAXN];
+
+int dis[MAXN];
+int f[MAXN];
+int vis[MAXN];
+
+int q[MAXN];
+
+int min_int(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+void add_edge(int x, int y, int z) {
+    cnt = cnt + 1;
+    to[cnt] = y;
+    val[cnt] = z;
+    nxt[cnt] = head[x];
+    head[x] = cnt;
+}
+
+void add_edge2(int x, int y, int z) {
+    cnt2 = cnt2 + 1;
+    to2[cnt2] = y;
+    val2[cnt2] = z;
+    nxt2[cnt2] = head2[x];
+    head2[x] = cnt2;
+}
+
+void tarjan(int now) {
+    int i;
+    int nn;
+    int tmp;
+
+    idx = idx + 1;
+    dfn[now] = idx;
+    low[now] = idx;
+
+    top = top + 1;
+    st[top] = now;
+    in_st[now] = 1;
+
+    for (i = head[now]; i != 0; i = nxt[i]) {
+        nn = to[i];
+        if (dfn[nn] == 0) {
+            tarjan(nn);
+            low[now] = min_int(low[now], low[nn]);
+        } else {
+            if (in_st[nn] != 0) {
+                low[now] = min_int(low[now], dfn[nn]);
+            }
+        }
+    }
+
+    if (dfn[now] == low[now]) {
+        scc = scc + 1;
+        for (tmp = 0; tmp != now; tmp = tmp) {
+            tmp = st[top];
+            top = top - 1;
+            in_st[tmp] = 0;
+            belong[tmp] = scc;
+            csz[scc] = csz[scc] + 1;
+        }
+    }
+}
+
+int main() {
+    int i;
+    int j;
+    int x;
+    int y;
+    int z;
+    int nn;
+    int now;
+    int qh;
+    int qt;
+    int cand_f;
+    int cand_dis;
+    int ans1;
+    int ans2;
+
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= m; i = i + 1) {
+        x = getint();
+        y = getint();
+        z = getint();
+        add_edge(x, y, z);
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (dfn[i] == 0) tarjan(i);
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = head[i]; j != 0; j = nxt[j]) {
+            nn = to[j];
+            if (belong[i] != belong[nn]) {
+                add_edge2(belong[i], belong[nn], val[j]);
+                chu[belong[i]] = chu[belong[i]] + 1;
+            }
+        }
+    }
+
+    for (i = 1; i <= scc; i = i + 1) {
+        dis[i] = -1;
+    }
+
+    /* BFS to compute in-degree (ru) in the reachable SCC-DAG from SCC(1). */
+    qh = 0;
+    qt = 0;
+    q[qt] = belong[1];
+    qt = qt + 1;
+    vis[belong[1]] = 1;
+
+    for (qh = 0; qh < qt; qh = qh + 1) {
+        now = q[qh];
+        for (j = head2[now]; j != 0; j = nxt2[j]) {
+            nn = to2[j];
+            ru[nn] = ru[nn] + 1;
+            if (vis[nn] == 0) {
+                q[qt] = nn;
+                qt = qt + 1;
+            }
+            vis[nn] = 1;
+        }
+    }
+
+    /* DP in topological order (Kahn) over the reachable SCC-DAG. */
+    qh = 0;
+    qt = 0;
+    q[qt] = belong[1];
+    qt = qt + 1;
+
+    dis[belong[1]] = csz[belong[1]] - 1;
+    f[belong[1]] = csz[belong[1]];
+
+    for (qh = 0; qh < qt; qh = qh + 1) {
+        now = q[qh];
+        for (j = head2[now]; j != 0; j = nxt2[j]) {
+            nn = to2[j];
+            ru[nn] = ru[nn] - 1;
+
+            cand_f = f[now] + csz[nn];
+            cand_dis = dis[now] + val2[j] + csz[nn] - 1;
+
+            if (f[nn] == cand_f) {
+                if (dis[nn] == -1 || dis[nn] > cand_dis) dis[nn] = cand_dis;
+            } else {
+                if (f[nn] < cand_f) {
+                    f[nn] = cand_f;
+                    dis[nn] = cand_dis;
+                }
+            }
+
+            if (ru[nn] == 0) {
+                q[qt] = nn;
+                qt = qt + 1;
+            }
+        }
+    }
+
+    ans1 = 0;
+    ans2 = 0;
+    for (i = 1; i <= scc; i = i + 1) {
+        if (f[i] > ans1) {
+            ans1 = f[i];
+            ans2 = dis[i];
+        } else {
+            if (f[i] == ans1 && dis[i] != -1 && dis[i] < ans2) {
+                ans2 = dis[i];
+            }
+        }
+    }
+
+    printf("%d %d\n", ans1, ans2);
+    return 0;
+}

@@ -1,0 +1,159 @@
+/* Strict SysY testcase converted from C/C++ source.
+ * Input format (integers, one per line):
+ *   T, k, m, then m values p[i],
+ *   then for each test: nDigits followed by nDigits digits (most-significant first).
+ */
+const int MOD = 64123;
+const int MAXP = 20;
+const int MAXM = 20;
+const int MAXD = 30;
+
+int baseMat[MAXP * MAXP];
+int powMat[MAXP * MAXP];
+int accMat[MAXP * MAXP];
+int tmpMat[MAXP * MAXP];
+
+int vec[MAXP];
+int tmpVec[MAXP];
+int digits[MAXD];
+int pvals[MAXM];
+
+int mul_mod(int a, int b) {
+  int res;
+  int x;
+  int t;
+  res = 0;
+  x = a % MOD;
+  if (x < 0) x = x + MOD;
+  if (b < 0) b = -b;
+  for (t = b; t > 0; t = t / 2) {
+    if (t % 2 == 1) {
+      res = res + x;
+      res = res % MOD;
+    }
+    x = x + x;
+    x = x % MOD;
+  }
+  return res;
+}
+
+void mat_clear(int m[], int n) {
+  int i;
+  for (i = 0; i < n * n; i = i + 1) m[i] = 0;
+}
+
+void vec_clear(int v[], int n) {
+  int i;
+  for (i = 0; i < n; i = i + 1) v[i] = 0;
+}
+
+void mat_copy(int src[], int dst[], int n) {
+  int i;
+  for (i = 0; i < n * n; i = i + 1) dst[i] = src[i];
+}
+
+void vec_copy(int src[], int dst[], int n) {
+  int i;
+  for (i = 0; i < n; i = i + 1) dst[i] = src[i];
+}
+
+void mat_mul(int a[], int b[], int out[], int n) {
+  int i;
+  int j;
+  int k;
+  int sum;
+  mat_clear(out, n);
+  for (i = 0; i < n; i = i + 1) {
+    for (j = 0; j < n; j = j + 1) {
+      sum = 0;
+      for (k = 0; k < n; k = k + 1) {
+        sum = sum + mul_mod(a[i * n + k], b[k * n + j]);
+        sum = sum % MOD;
+      }
+      out[i * n + j] = sum;
+    }
+  }
+}
+
+void vec_mul(int v[], int m[], int out[], int n) {
+  int i;
+  int j;
+  int sum;
+  vec_clear(out, n);
+  for (i = 0; i < n; i = i + 1) {
+    sum = 0;
+    for (j = 0; j < n; j = j + 1) {
+      sum = sum + mul_mod(v[j], m[j * n + i]);
+      sum = sum % MOD;
+    }
+    out[i] = sum;
+  }
+}
+
+void mat_pow_small_k_inplace(int m[], int k, int n) {
+  int t;
+  if (k <= 1) return;
+  mat_copy(m, accMat, n);
+  for (t = 2; t <= k; t = t + 1) {
+    mat_mul(accMat, m, tmpMat, n);
+    mat_copy(tmpMat, accMat, n);
+  }
+  mat_copy(accMat, m, n);
+}
+
+int main() {
+  int T;
+  int k;
+  int m;
+  int mx_p;
+  int i;
+  int row;
+  int nDigits;
+  int caseIdx;
+  int pos;
+  int idx;
+  int digit;
+  int rep;
+
+  T = getint();
+  k = getint();
+  m = getint();
+
+  mx_p = 0;
+  for (i = 0; i < m; i = i + 1) {
+    pvals[i] = getint();
+    if (pvals[i] > mx_p) mx_p = pvals[i];
+  }
+
+  mat_clear(baseMat, mx_p);
+
+  for (i = 0; i < mx_p - 1; i = i + 1) baseMat[(i + 1) * mx_p + i] = 1;
+  for (i = 0; i < m; i = i + 1) {
+    row = mx_p - pvals[i];
+    if (row >= 0 && row < mx_p) baseMat[row * mx_p + (mx_p - 1)] = 1;
+  }
+
+  for (caseIdx = 0; caseIdx < T; caseIdx = caseIdx + 1) {
+    nDigits = getint();
+    for (i = 0; i < nDigits; i = i + 1) digits[i] = getint();
+
+    vec_clear(vec, mx_p);
+    vec[mx_p - 1] = 1;
+
+    mat_copy(baseMat, powMat, mx_p);
+
+    for (pos = 0; pos < nDigits; pos = pos + 1) {
+      idx = nDigits - 1 - pos;
+      digit = digits[idx];
+      for (rep = 0; rep < digit; rep = rep + 1) {
+        vec_mul(vec, powMat, tmpVec, mx_p);
+        vec_copy(tmpVec, vec, mx_p);
+      }
+      if (pos != nDigits - 1) mat_pow_small_k_inplace(powMat, k, mx_p);
+    }
+
+    printf("%d\n", vec[mx_p - 1] % MOD);
+  }
+
+  return 0;
+}

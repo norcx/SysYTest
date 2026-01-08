@@ -1,0 +1,110 @@
+/* Description:
+ *   Strict SysY testcase converted from pair inversion query code.
+ */
+int a[2048];
+int b[2048];
+int c[2048];
+
+int inv[32];
+int shun[32];
+
+void init(int l, int r, int deep) {
+  int mid;
+  int len;
+  int i;
+  int x;
+  int y;
+
+  if (l == r) return;
+
+  mid = (l + r) / 2;
+  len = r - l + 1;
+
+  init(l, mid, deep - 1);
+  init(mid + 1, r, deep - 1);
+
+  for (i = l; i <= r; i = i + 1) b[i] = a[i];
+
+  x = l;
+  y = mid + 1;
+  for (; x <= mid && y <= r;) {
+    if (b[x] > b[y]) {
+      inv[deep] = inv[deep] + (mid - x + 1);
+      y = y + 1;
+    } else {
+      x = x + 1;
+    }
+  }
+
+  for (i = l; i <= r; i = i + 1) b[i] = a[i];
+
+  x = l;
+  y = mid + 1;
+  c[0] = 0;
+  for (; x <= mid && y <= r;) {
+    if (b[x] < b[y]) {
+      c[0] = c[0] + 1;
+      c[c[0]] = b[x];
+      shun[deep] = shun[deep] + (r - y + 1);
+      x = x + 1;
+    } else {
+      c[0] = c[0] + 1;
+      c[c[0]] = b[y];
+      y = y + 1;
+    }
+  }
+
+  for (; x <= mid;) {
+    c[0] = c[0] + 1;
+    c[c[0]] = b[x];
+    x = x + 1;
+  }
+  for (; y <= r;) {
+    c[0] = c[0] + 1;
+    c[c[0]] = b[y];
+    y = y + 1;
+  }
+
+  for (i = 1; i <= len; i = i + 1) a[i + l - 1] = c[i];
+  return;
+}
+
+int main() {
+  int nn;
+  int n;
+  int m;
+  int ans;
+  int i;
+  int j;
+  int x;
+  int tmp;
+
+  nn = getint();
+  n = 1;
+  for (i = 1; i <= nn; i = i + 1) n = n * 2;
+
+  for (i = 1; i <= n; i = i + 1) a[i] = getint();
+
+  for (i = 0; i < 32; i = i + 1) {
+    inv[i] = 0;
+    shun[i] = 0;
+  }
+
+  init(1, n, nn);
+
+  m = getint();
+  for (j = 1; j <= m; j = j + 1) {
+    x = getint();
+    for (i = 1; i <= x; i = i + 1) {
+      tmp = inv[i];
+      inv[i] = shun[i];
+      shun[i] = tmp;
+    }
+
+    ans = 0;
+    for (i = 1; i <= nn; i = i + 1) ans = ans + inv[i];
+    printf("%d\n", ans);
+  }
+
+  return 0;
+}

@@ -1,0 +1,151 @@
+/* Description:
+ *   Strict SysY translation of the given C++ program.
+ *   The original code memoizes a 4D DP with a struct return type and prints
+ *   results for many (n, m) pairs. For Strict SysY, we:
+ *   - scale (n, m) from 100 down to 20 to fit memory limits
+ *   - replace struct memo values with parallel 1D arrays (fx, fy)
+ *   - flatten the 4D state (x, y, s, p) into a single index
+ */
+
+const int NMAX = 20;
+const int MMAX = 20;
+const int SMAX = 40;
+const int XSIZE = 21;
+const int SSIZE = 41;
+const int PSIZE = 2;
+const int TOT = 21 * 21 * 41 * 2;
+
+int vis[TOT];
+int fx[TOT];
+int fy[TOT];
+
+int idx(int x, int y, int s, int p) {
+    return (((x * XSIZE + y) * SSIZE + s) * PSIZE + p);
+}
+
+void dfs(int x, int y, int s, int p) {
+    int id;
+    int nowx;
+    int nowy;
+    int tid;
+    int t1x;
+    int t1y;
+    int t2x;
+    int t2y;
+    int p1;
+    int p2;
+
+    id = idx(x, y, s, p);
+    if (vis[id] == 1) return;
+
+    nowx = 0;
+    nowy = 0;
+
+    if (x == 0 && y == 0) {
+        if (p == 1) nowy = nowy + s;
+        else nowx = nowx + s;
+        fx[id] = nowx;
+        fy[id] = nowy;
+        vis[id] = 1;
+        return;
+    }
+
+    t1x = 0;
+    t1y = 0;
+    t2x = 0;
+    t2y = 0;
+    p1 = 0;
+    p2 = 0;
+
+    if (p == 1) {
+        if (x > 0) {
+            p1 = 1;
+            dfs(x - 1, y, s + 1, 1 - p);
+            tid = idx(x - 1, y, s + 1, 1 - p);
+            t1x = fx[tid];
+            t1y = fy[tid];
+        }
+        if (s > 0 || s == 0 && x == 0) {
+            p2 = 1;
+            dfs(x, y, 0, 1 - p);
+            tid = idx(x, y, 0, 1 - p);
+            t2x = fx[tid];
+            t2y = fy[tid] + s;
+        }
+
+        if (p1 == 1 && p2 == 1) {
+            if (t1x >= t2x) {
+                nowx = t1x;
+                nowy = t1y;
+            } else {
+                nowx = t2x;
+                nowy = t2y;
+            }
+        }
+        if (p1 == 1 && p2 == 0) {
+            nowx = t1x;
+            nowy = t1y;
+        }
+        if (p1 == 0 && p2 == 1) {
+            nowx = t2x;
+            nowy = t2y;
+        }
+    } else {
+        if (y > 0) {
+            p1 = 1;
+            dfs(x, y - 1, s + 1, 1 - p);
+            tid = idx(x, y - 1, s + 1, 1 - p);
+            t1x = fx[tid];
+            t1y = fy[tid];
+        }
+        if (s > 0 || s == 0 && y == 0) {
+            p2 = 1;
+            dfs(x, y, 0, 1 - p);
+            tid = idx(x, y, 0, 1 - p);
+            t2x = fx[tid] + s;
+            t2y = fy[tid];
+        }
+
+        if (p1 == 1 && p2 == 1) {
+            if (t1y >= t2y) {
+                nowx = t1x;
+                nowy = t1y;
+            } else {
+                nowx = t2x;
+                nowy = t2y;
+            }
+        }
+        if (p1 == 1 && p2 == 0) {
+            nowx = t1x;
+            nowy = t1y;
+        }
+        if (p1 == 0 && p2 == 1) {
+            nowx = t2x;
+            nowy = t2y;
+        }
+    }
+
+    fx[id] = nowx;
+    fy[id] = nowy;
+    vis[id] = 1;
+    return;
+}
+
+int main() {
+    int i;
+    int j;
+    int id;
+    int ansx;
+    int ansy;
+
+    for (i = 1; i <= NMAX; i = i + 1) {
+        for (j = 1; j <= MMAX; j = j + 1) {
+            dfs(i, j, 0, 1);
+            id = idx(i, j, 0, 1);
+            ansx = fx[id];
+            ansy = fy[id];
+            printf("f[%d][%d] = %d %d\n", i, j, ansx, ansy);
+        }
+    }
+    return 0;
+}

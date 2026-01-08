@@ -1,0 +1,111 @@
+/* Description:
+ *   Converted from a C++ DP solution.
+ *
+ *   Input format (all integers, one per line):
+ *     len
+ *     n
+ *     s1..slen   (si = 1 means 'F', si = 0 means 'T')
+ *
+ *   Output:
+ *     One integer: maximum absolute position after processing all commands
+ *     with exactly n modifications (flip 'F' <-> 'T').
+ */
+
+const int MAXN = 211;
+const int INF = 1061109567;
+const int NINF = -1044266559;
+const int SIZE = MAXN * MAXN * 2;
+
+int f[SIZE];
+int g[SIZE];
+int s[MAXN];
+
+int idx(int i, int j, int k) {
+    return (i * MAXN + j) * 2 + k;
+}
+
+int myabs(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+void upd(int p, int val) {
+    if (val > f[p]) f[p] = val;
+    if (val < g[p]) g[p] = val;
+    return;
+}
+
+int main() {
+    int len;
+    int n;
+    int i;
+    int j;
+    int k;
+
+    len = getint();
+    n = getint();
+    for (i = 1; i <= len; i = i + 1) s[i] = getint();
+
+    for (i = 0; i < SIZE; i = i + 1) {
+        f[i] = NINF;
+        g[i] = INF;
+    }
+
+    f[idx(0, 0, 1)] = 0;
+    g[idx(0, 0, 1)] = 0;
+
+    for (i = 0; i < len; i = i + 1) {
+        int cmd;
+        cmd = s[i + 1];
+        for (j = 0; j <= n; j = j + 1) {
+            for (k = 0; k <= 1; k = k + 1) {
+                int p;
+                int now;
+                p = idx(i, j, k);
+
+                if (f[p] != NINF) {
+                    now = f[p];
+                    if (cmd == 1) {
+                        if (k == 1) upd(idx(i + 1, j, k), now + 1);
+                        else upd(idx(i + 1, j, k), now - 1);
+                        if (j + 1 <= n) upd(idx(i + 1, j + 1, 1 - k), now);
+                    } else {
+                        if (j + 1 <= n) {
+                            if (k == 1) upd(idx(i + 1, j + 1, k), now + 1);
+                            else upd(idx(i + 1, j + 1, k), now - 1);
+                        }
+                        upd(idx(i + 1, j, 1 - k), now);
+                    }
+                }
+
+                if (g[p] != INF) {
+                    now = g[p];
+                    if (cmd == 1) {
+                        if (k == 1) upd(idx(i + 1, j, k), now + 1);
+                        else upd(idx(i + 1, j, k), now - 1);
+                        if (j + 1 <= n) upd(idx(i + 1, j + 1, 1 - k), now);
+                    } else {
+                        if (j + 1 <= n) {
+                            if (k == 1) upd(idx(i + 1, j + 1, k), now + 1);
+                            else upd(idx(i + 1, j + 1, k), now - 1);
+                        }
+                        upd(idx(i + 1, j, 1 - k), now);
+                    }
+                }
+            }
+        }
+    }
+
+    int ans;
+    int minG;
+    int absMinG;
+    ans = f[idx(len, n, 0)];
+    if (f[idx(len, n, 1)] > ans) ans = f[idx(len, n, 1)];
+    minG = g[idx(len, n, 0)];
+    if (g[idx(len, n, 1)] < minG) minG = g[idx(len, n, 1)];
+    absMinG = myabs(minG);
+    if (absMinG > ans) ans = absMinG;
+
+    printf("%d\n", myabs(ans));
+    return 0;
+}

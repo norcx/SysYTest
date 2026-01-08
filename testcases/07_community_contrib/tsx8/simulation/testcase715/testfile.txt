@@ -1,0 +1,66 @@
+/* Description:
+ *   Converted from C++ (DFS over subsets); input is:
+ *   len, then len integers (0=F, 1=T), then n.
+ */
+const int MAXN = 211;
+
+int n;
+int ans;
+int len;
+int bo[MAXN];
+int s[MAXN];
+
+int iabs(int x) {
+  if (x < 0) return -x;
+  return x;
+}
+
+int imax(int a, int b) {
+  if (a > b) return a;
+  return b;
+}
+
+void dfs(int now, int step) {
+  int tmp;
+  int p;
+  int i;
+  int cur;
+
+  if (now > len) {
+    if (step != n) return;
+    tmp = 0;
+    p = 1;
+    for (i = 1; i <= len; i = i + 1) {
+      cur = s[i];
+      if (cur == 0) {
+        if (bo[i] != 0) p = p * -1;
+        else tmp = tmp + p;
+      } else {
+        if (bo[i] != 0) tmp = tmp + p;
+        else p = p * -1;
+      }
+    }
+    ans = imax(ans, iabs(tmp));
+    return;
+  }
+
+  if (step < n) {
+    bo[now] = 1;
+    dfs(now + 1, step + 1);
+    bo[now] = 0;
+  }
+  dfs(now + 1, step);
+}
+
+int main() {
+  int i;
+  len = getint();
+  for (i = 1; i <= len; i = i + 1) {
+    s[i] = getint();
+  }
+  n = getint();
+  ans = 0;
+  dfs(1, 0);
+  printf("%d\n", ans);
+  return 0;
+}

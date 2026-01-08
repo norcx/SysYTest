@@ -1,0 +1,86 @@
+/* Description:
+ *   Reachability BFS derived from a magnet-activation program.
+ *   Input format (all newline-separated ints):
+ *     x0, y0, p0, r0, n
+ *     then n lines of (x, y, m, p, r)
+ *   Output: number of reachable magnets (excluding the initial one).
+ */
+
+const int MAXN = 1000;
+
+int xs[MAXN + 1];
+int ys[MAXN + 1];
+int ms[MAXN + 1];
+int ps[MAXN + 1];
+int r2s[MAXN + 1];
+int d2s[MAXN + 1];
+int vis[MAXN + 1];
+int q[MAXN + 1];
+
+int main() {
+    int x0;
+    int y0;
+    int n;
+    int i;
+    int dx;
+    int dy;
+    int head;
+    int tail;
+    int cur;
+    int curR2;
+    int curP;
+    int j;
+    int ans;
+
+    x0 = getint();
+    y0 = getint();
+    ps[0] = getint();
+    r2s[0] = getint();
+    n = getint();
+
+    r2s[0] = r2s[0] * r2s[0];
+    d2s[0] = 0;
+    ms[0] = 0;
+    vis[0] = 1;
+
+    for (i = 1; i <= n; i = i + 1) {
+        xs[i] = getint();
+        ys[i] = getint();
+        ms[i] = getint();
+        ps[i] = getint();
+        r2s[i] = getint();
+        r2s[i] = r2s[i] * r2s[i];
+
+        dx = x0 - xs[i];
+        dy = y0 - ys[i];
+        d2s[i] = dx * dx + dy * dy;
+        vis[i] = 0;
+    }
+
+    head = 0;
+    tail = 0;
+    q[0] = 0;
+    ans = 0;
+
+    for (head = 0; head <= tail; head = head + 1) {
+        cur = q[head];
+        curR2 = r2s[cur];
+        curP = ps[cur];
+
+        for (j = 1; j <= n; j = j + 1) {
+            if (vis[j] == 0) {
+                if (d2s[j] <= curR2) {
+                    if (ms[j] <= curP) {
+                        vis[j] = 1;
+                        tail = tail + 1;
+                        q[tail] = j;
+                        ans = ans + 1;
+                    }
+                }
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

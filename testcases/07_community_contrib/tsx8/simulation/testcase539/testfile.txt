@@ -1,0 +1,21 @@
+/* Description:
+ * This source was a Windows-only differential testing harness that repeatedly:
+ *   1) runs external executables (data.exe, T2.exe, T2_3.exe),
+ *   2) redirects I/O via files, and
+ *   3) compares outputs via `fc`.
+ *
+ * Strict SysY has no headers, no `system()`, and no filesystem/process APIs, so
+ * the behavior cannot be represented directly. This testcase keeps only the
+ * control-flow shape: an (otherwise) infinite loop that terminates immediately
+ * on a simulated mismatch.
+ */
+
+int main() {
+    int mismatch;
+    mismatch = 1;
+    for (; 1; ) {
+        if (mismatch) break;
+        mismatch = 1;
+    }
+    return 0;
+}

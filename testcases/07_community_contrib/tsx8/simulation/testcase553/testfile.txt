@@ -1,0 +1,43 @@
+/* Description:
+ *   Deterministic pseudo-random pair generator.
+ *   Reads one integer seed, prints 10 lines of (1..1000) pairs.
+ */
+
+int seed;
+
+int rand_int() {
+    seed = seed * 17 + 23;
+    seed = seed % 46337;
+    return seed;
+}
+
+int main() {
+    int T;
+    int t;
+    int i;
+    int tmp;
+
+    seed = getint();
+    seed = seed % 46337;
+    if (seed < 0) seed = seed + 46337;
+
+    T = 10;
+    printf("%d\n", T);
+
+    for (t = 0; t < T; t = t + 1) {
+        tmp = rand_int();
+        for (i = 1; i <= 7; i = i + 1) {
+            tmp = tmp + rand_int();
+            tmp = tmp % 1000;
+        }
+        printf("%d ", tmp + 1);
+
+        tmp = rand_int();
+        for (i = 1; i <= 7; i = i + 1) {
+            tmp = tmp + rand_int();
+            tmp = tmp % 1000;
+        }
+        printf("%d\n", tmp + 1);
+    }
+    return 0;
+}

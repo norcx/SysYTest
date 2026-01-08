@@ -1,0 +1,52 @@
+/* Description:
+ *   [Add description here]
+ */
+
+const int ALPHA = 26;
+
+int n;
+int ans;
+int c[26];
+int mn[676];
+
+int min_int(int a, int b) {
+  if (a < b) return a;
+  return b;
+}
+
+int main() {
+  int i;
+  int j;
+  int tmp;
+  int idx1;
+  int idx2;
+  int diff;
+
+  n = getint();
+  ans = 0;
+
+  for (i = 0; i < n; i = i + 1) {
+    tmp = getint();
+    c[tmp] = c[tmp] + 1;
+
+    for (j = 0; j < ALPHA; j = j + 1) {
+      if (c[j] != 0) {
+        idx1 = tmp * ALPHA + j;
+        idx2 = j * ALPHA + tmp;
+
+        diff = c[tmp] - c[j];
+        mn[idx1] = min_int(mn[idx1], diff);
+        diff = c[j] - c[tmp];
+        mn[idx2] = min_int(mn[idx2], diff);
+
+        diff = c[tmp] - c[j] - mn[idx1];
+        if (diff > ans) ans = diff;
+        diff = c[j] - c[tmp] - mn[idx2];
+        if (diff > ans) ans = diff;
+      }
+    }
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

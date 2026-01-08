@@ -1,0 +1,308 @@
+/* Description:
+ * Converted from C++ to Strict SysY.
+ * Input format (newline-separated integers):
+ * A, B, C, D, E,
+ * then for each cell (i=0..5, j=0..5) in row-major order:
+ *   num(i,j), followed by num(i,j) values (1..30 suggested).
+ * Note: values in the 2x2 center (2..3, 2..3) are ignored; only their counts matter.
+ */
+
+const int N = 6;
+const int CELL = 36;
+const int MAXV = 7;
+const int PREV = 33;
+const int INF = 1000000000;
+const int DP_SIZE = 7 * 7 * 7 * 7 * 16;
+
+int A, B, C, D, E;
+int num[CELL];
+int val[CELL * MAXV];
+int pre[CELL * PREV];
+int vis[CELL * CELL];
+int dp[DP_SIZE * 2];
+
+int abs_int(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+int get_dis(int x, int y, int z, int w) {
+    return abs_int(x - z) + abs_int(y - w);
+}
+
+int dp_index(int a, int b, int c, int d, int mask) {
+    int idx;
+    idx = a;
+    idx = idx * 7 + b;
+    idx = idx * 7 + c;
+    idx = idx * 7 + d;
+    idx = idx * 16 + mask;
+    return idx;
+}
+
+void sort_cell(int cell) {
+    int n;
+    int i;
+    int j;
+    int base;
+    int idx1;
+    int idx2;
+    int t;
+    n = num[cell];
+    base = cell * MAXV;
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j + i <= n; j = j + 1) {
+            idx1 = base + j;
+            idx2 = base + j + 1;
+            if (val[idx1] > val[idx2]) {
+                t = val[idx1];
+                val[idx1] = val[idx2];
+                val[idx2] = t;
+            }
+        }
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int l;
+    int u;
+    int v;
+    int cell;
+    int cell2;
+    int n22;
+    int n23;
+    int n32;
+    int n33;
+    int base_cost;
+    int dis;
+    int uu;
+    int vv;
+    int diff;
+
+    int cur;
+    int nxt;
+    int idx;
+    int idx2;
+    int a;
+    int b;
+    int c;
+    int d;
+    int mask;
+    int now;
+    int eflag;
+    int fflag;
+    int gflag;
+    int hflag;
+    int da;
+    int db;
+    int dc;
+    int dd;
+    int tmp;
+    int newmask;
+    int ans;
+
+    A = getint();
+    B = getint();
+    C = getint();
+    D = getint();
+    E = getint();
+
+    for (i = 0; i < CELL * PREV; i = i + 1) pre[i] = 0;
+    for (i = 0; i < CELL * CELL; i = i + 1) vis[i] = 0;
+
+    for (i = 0; i < N; i = i + 1) {
+        for (j = 0; j < N; j = j + 1) {
+            cell = i * N + j;
+            num[cell] = getint();
+            for (k = 1; k <= num[cell]; k = k + 1) {
+                val[cell * MAXV + k] = getint();
+            }
+        }
+    }
+
+    base_cost = 0;
+    for (i = 0; i < N; i = i + 1) {
+        for (j = 0; j < N; j = j + 1) {
+            if (i >= 2 && i <= 3 && j >= 2 && j <= 3) continue;
+            cell = i * N + j;
+
+            sort_cell(cell);
+            for (k = 2; k <= num[cell]; k = k + 1) {
+                if (val[cell * MAXV + k] == val[cell * MAXV + k - 1] + 1) base_cost = base_cost + A;
+            }
+
+            for (k = 2; k <= 3; k = k + 1) {
+                for (l = 2; l <= 3; l = l + 1) {
+                    dis = get_dis(i, j, k, l);
+                    if (dis > 2) continue;
+                    cell2 = k * N + l;
+                    for (u = 1; u <= num[cell]; u = u + 1) {
+                        uu = val[cell * MAXV + u];
+                        if (dis == 1) {
+                            pre[cell2 * PREV + uu] = pre[cell2 * PREV + uu] + B;
+                            pre[cell2 * PREV + uu + 1] = pre[cell2 * PREV + uu + 1] + C;
+                            pre[cell2 * PREV + uu - 1] = pre[cell2 * PREV + uu - 1] + C;
+                        }
+                        if (dis == 2) {
+                            pre[cell2 * PREV + uu] = pre[cell2 * PREV + uu] + D;
+                            pre[cell2 * PREV + uu + 1] = pre[cell2 * PREV + uu + 1] + E;
+                            pre[cell2 * PREV + uu - 1] = pre[cell2 * PREV + uu - 1] + E;
+                        }
+                    }
+                }
+            }
+
+            for (k = 0; k < N; k = k + 1) {
+                for (l = 0; l < N; l = l + 1) {
+                    if (k >= 2 && k <= 3 && l >= 2 && l <= 3) continue;
+                    if (k == i && l == j) continue;
+                    cell2 = k * N + l;
+                    if (vis[cell * CELL + cell2] != 0) continue;
+                    vis[cell * CELL + cell2] = 1;
+                    vis[cell2 * CELL + cell] = 1;
+
+                    dis = get_dis(i, j, k, l);
+                    if (dis > 2) continue;
+                    for (u = 1; u <= num[cell]; u = u + 1) {
+                        uu = val[cell * MAXV + u];
+                        for (v = 1; v <= num[cell2]; v = v + 1) {
+                            vv = val[cell2 * MAXV + v];
+                            diff = uu - vv;
+                            if (diff < 0) diff = 0 - diff;
+                            if (dis == 1) {
+                                if (uu == vv) base_cost = base_cost + B;
+                                if (diff == 1) base_cost = base_cost + C;
+                            }
+                            if (dis == 2) {
+                                if (uu == vv) base_cost = base_cost + D;
+                                if (diff == 1) base_cost = base_cost + E;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    n22 = num[2 * N + 2];
+    n23 = num[2 * N + 3];
+    n32 = num[3 * N + 2];
+    n33 = num[3 * N + 3];
+
+    cur = 0;
+    nxt = DP_SIZE;
+    for (a = 0; a <= n22; a = a + 1) {
+        for (b = 0; b <= n23; b = b + 1) {
+            for (c = 0; c <= n32; c = c + 1) {
+                for (d = 0; d <= n33; d = d + 1) {
+                    for (mask = 0; mask < 16; mask = mask + 1) {
+                        idx = dp_index(a, b, c, d, mask);
+                        dp[cur + idx] = INF;
+                        dp[nxt + idx] = INF;
+                    }
+                }
+            }
+        }
+    }
+    dp[cur + dp_index(0, 0, 0, 0, 0)] = base_cost;
+
+    for (i = 0; i < 30; i = i + 1) {
+        for (a = 0; a <= n22; a = a + 1) {
+            for (b = 0; b <= n23; b = b + 1) {
+                for (c = 0; c <= n32; c = c + 1) {
+                    for (d = 0; d <= n33; d = d + 1) {
+                        for (mask = 0; mask < 16; mask = mask + 1) {
+                            idx = dp_index(a, b, c, d, mask);
+                            dp[nxt + idx] = INF;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (a = 0; a <= n22; a = a + 1) {
+            for (b = 0; b <= n23; b = b + 1) {
+                for (c = 0; c <= n32; c = c + 1) {
+                    for (d = 0; d <= n33; d = d + 1) {
+                        for (mask = 0; mask < 16; mask = mask + 1) {
+                            idx = dp_index(a, b, c, d, mask);
+                            now = dp[cur + idx];
+                            if (now == INF) continue;
+
+                            eflag = mask % 2;
+                            fflag = (mask / 2) % 2;
+                            gflag = (mask / 4) % 2;
+                            hflag = (mask / 8) % 2;
+
+                            for (da = 0; da <= 1 && da + a <= n22; da = da + 1) {
+                                for (db = 0; db <= 1 && db + b <= n23; db = db + 1) {
+                                    for (dc = 0; dc <= 1 && dc + c <= n32; dc = dc + 1) {
+                                        for (dd = 0; dd <= 1 && dd + d <= n33; dd = dd + 1) {
+                                            tmp = 0;
+                                            if (da == 1) {
+                                                tmp = tmp + pre[(2 * N + 2) * PREV + (i + 1)];
+                                                if (eflag == 1) tmp = tmp + A;
+                                                if (fflag == 1) tmp = tmp + C;
+                                                if (gflag == 1) tmp = tmp + C;
+                                                if (hflag == 1) tmp = tmp + E;
+                                            }
+                                            if (db == 1) {
+                                                tmp = tmp + pre[(2 * N + 3) * PREV + (i + 1)];
+                                                if (eflag == 1) tmp = tmp + C;
+                                                if (fflag == 1) tmp = tmp + A;
+                                                if (gflag == 1) tmp = tmp + E;
+                                                if (hflag == 1) tmp = tmp + C;
+                                            }
+                                            if (dc == 1) {
+                                                tmp = tmp + pre[(3 * N + 2) * PREV + (i + 1)];
+                                                if (eflag == 1) tmp = tmp + C;
+                                                if (fflag == 1) tmp = tmp + E;
+                                                if (gflag == 1) tmp = tmp + A;
+                                                if (hflag == 1) tmp = tmp + C;
+                                            }
+                                            if (dd == 1) {
+                                                tmp = tmp + pre[(3 * N + 3) * PREV + (i + 1)];
+                                                if (eflag == 1) tmp = tmp + E;
+                                                if (fflag == 1) tmp = tmp + C;
+                                                if (gflag == 1) tmp = tmp + C;
+                                                if (hflag == 1) tmp = tmp + A;
+                                            }
+
+                                            if (da == 1 && db == 1) tmp = tmp + B;
+                                            if (da == 1 && dc == 1) tmp = tmp + B;
+                                            if (da == 1 && dd == 1) tmp = tmp + D;
+                                            if (db == 1 && dc == 1) tmp = tmp + D;
+                                            if (db == 1 && dd == 1) tmp = tmp + B;
+                                            if (dc == 1 && dd == 1) tmp = tmp + B;
+
+                                            newmask = da + db * 2 + dc * 4 + dd * 8;
+                                            idx2 = dp_index(a + da, b + db, c + dc, d + dd, newmask);
+                                            if (now + tmp < dp[nxt + idx2]) dp[nxt + idx2] = now + tmp;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        cur = nxt;
+        if (cur == 0) nxt = DP_SIZE;
+        if (cur != 0) nxt = 0;
+    }
+
+    ans = INF;
+    for (mask = 0; mask < 16; mask = mask + 1) {
+        idx = dp_index(n22, n23, n32, n33, mask);
+        if (dp[cur + idx] < ans) ans = dp[cur + idx];
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

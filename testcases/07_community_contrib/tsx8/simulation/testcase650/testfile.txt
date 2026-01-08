@@ -1,0 +1,178 @@
+/*
+  Counts triples (X,Y,Z) of n-digit base-10 numbers (leading zeros allowed)
+  such that:
+  - X,Y,Z are each >= B (lexicographic by digits, MSB to LSB)
+  - No digit of X,Y,Z equals 3
+  - X + Y + Z == A
+  Output is modulo 12345647.
+*/
+
+const int MOD = 12345647;
+const int MAXN = 128;
+
+int n;
+int m;
+int a[MAXN];
+int b[MAXN];
+int fcur[24];
+int fnxt[24];
+
+int idx(int j, int k, int l, int o) {
+  return (((j * 2 + k) * 2 + l) * 2 + o);
+}
+
+int main() {
+  int i;
+  int j;
+  int k;
+  int l;
+  int o;
+  int t;
+  int pos;
+
+  int kk;
+  int ll;
+  int oo;
+
+  int val;
+  int nj;
+  int nk;
+  int nl;
+  int no;
+
+  int digit;
+  int ans;
+  int id2;
+  int sum;
+
+  n = getint();
+  i = 1;
+  for (i = 1; i <= n; i = i + 1) {
+    a[i] = getint();
+  }
+
+  i = 1;
+  for (i = 1; i <= n; i = i + 1) {
+    b[i] = 0;
+  }
+  m = getint();
+  i = 1;
+  for (i = 1; i <= m; i = i + 1) {
+    digit = getint();
+    b[i + n - m] = digit;
+  }
+
+  t = 0;
+  for (t = 0; t < 24; t = t + 1) {
+    fcur[t] = 0;
+    fnxt[t] = 0;
+  }
+  fcur[idx(0, 0, 0, 0)] = 1;
+
+  i = 0;
+  for (i = 0; i < n; i = i + 1) {
+    t = 0;
+    for (t = 0; t < 24; t = t + 1) {
+      fnxt[t] = 0;
+    }
+
+    pos = i + 1;
+
+    j = 0;
+    for (j = 0; j <= 2; j = j + 1) {
+      k = 0;
+      for (k = 0; k <= 1; k = k + 1) {
+        l = 0;
+        for (l = 0; l <= 1; l = l + 1) {
+          o = 0;
+          for (o = 0; o <= 1; o = o + 1) {
+            val = fcur[idx(j, k, l, o)];
+            if (val == 0) {
+              continue;
+            }
+
+            kk = 0;
+            for (kk = 0; kk <= 9; kk = kk + 1) {
+              if (kk == 3) {
+                continue;
+              }
+              if (k == 0 && kk < b[pos]) {
+                continue;
+              }
+              ll = 0;
+              for (ll = 0; ll <= 9; ll = ll + 1) {
+                if (ll == 3) {
+                  continue;
+                }
+                if (l == 0 && ll < b[pos]) {
+                  continue;
+                }
+                oo = 0;
+                for (oo = 0; oo <= 9; oo = oo + 1) {
+                  if (oo == 3) {
+                    continue;
+                  }
+                  if (o == 0 && oo < b[pos]) {
+                    continue;
+                  }
+
+                  nj = j * 10 + a[pos] - kk - ll - oo;
+                  if (nj < 0) {
+                    continue;
+                  }
+                  if (nj > 2) {
+                    continue;
+                  }
+
+                  nk = k;
+                  if (kk > b[pos]) {
+                    nk = 1;
+                  }
+                  nl = l;
+                  if (ll > b[pos]) {
+                    nl = 1;
+                  }
+                  no = o;
+                  if (oo > b[pos]) {
+                    no = 1;
+                  }
+
+                  id2 = idx(nj, nk, nl, no);
+                  sum = fnxt[id2] + val;
+                  if (sum >= MOD) {
+                    sum = sum - MOD;
+                  }
+                  fnxt[id2] = sum;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    t = 0;
+    for (t = 0; t < 24; t = t + 1) {
+      fcur[t] = fnxt[t];
+    }
+  }
+
+  ans = 0;
+  k = 0;
+  for (k = 0; k <= 1; k = k + 1) {
+    l = 0;
+    for (l = 0; l <= 1; l = l + 1) {
+      o = 0;
+      for (o = 0; o <= 1; o = o + 1) {
+        sum = ans + fcur[idx(0, k, l, o)];
+        if (sum >= MOD) {
+          sum = sum - MOD;
+        }
+        ans = sum;
+      }
+    }
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

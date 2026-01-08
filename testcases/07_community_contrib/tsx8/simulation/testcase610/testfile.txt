@@ -1,0 +1,131 @@
+const int MAXSEG = 262200;
+
+int seg[MAXSEG];
+
+int n;
+int m;
+
+int pow2(int e) {
+  int r;
+  int i;
+  r = 1;
+  for (i = 0; i < e; i = i + 1) {
+    r = r * 2;
+  }
+  return r;
+}
+
+int op_or(int a, int b) {
+  int res;
+  int pow;
+  int i;
+  int abit;
+  int bbit;
+  int bit;
+  res = 0;
+  pow = 1;
+  for (i = 0; i < 31; i = i + 1) {
+    abit = a - (a / 2) * 2;
+    bbit = b - (b / 2) * 2;
+    bit = 0;
+    if (abit == 1) {
+      bit = 1;
+    }
+    if (bbit == 1) {
+      bit = 1;
+    }
+    res = res + bit * pow;
+    a = a / 2;
+    b = b / 2;
+    if (i < 30) {
+      pow = pow * 2;
+    }
+  }
+  return res;
+}
+
+int op_xor(int a, int b) {
+  int res;
+  int pow;
+  int i;
+  int abit;
+  int bbit;
+  int bit;
+  res = 0;
+  pow = 1;
+  for (i = 0; i < 31; i = i + 1) {
+    abit = a - (a / 2) * 2;
+    bbit = b - (b / 2) * 2;
+    bit = 0;
+    if (abit != bbit) {
+      bit = 1;
+    }
+    res = res + bit * pow;
+    a = a / 2;
+    b = b / 2;
+    if (i < 30) {
+      pow = pow * 2;
+    }
+  }
+  return res;
+}
+
+void build(int base) {
+  int level;
+  int p2;
+  int start;
+  int end;
+  int node;
+  for (level = 1; level <= n; level = level + 1) {
+    p2 = pow2(level);
+    start = base / p2;
+    end = start * 2 - 1;
+    for (node = start; node <= end; node = node + 1) {
+      if (level % 2 == 1) {
+        seg[node] = op_or(seg[node * 2], seg[node * 2 + 1]);
+      } else {
+        seg[node] = op_xor(seg[node * 2], seg[node * 2 + 1]);
+      }
+    }
+  }
+}
+
+void update(int base, int pos, int val) {
+  int idx;
+  int level;
+  idx = base + pos - 1;
+  seg[idx] = val;
+  for (level = 1; level <= n; level = level + 1) {
+    idx = idx / 2;
+    if (level % 2 == 1) {
+      seg[idx] = op_or(seg[idx * 2], seg[idx * 2 + 1]);
+    } else {
+      seg[idx] = op_xor(seg[idx * 2], seg[idx * 2 + 1]);
+    }
+  }
+}
+
+int main() {
+  int base;
+  int i;
+  int a;
+  int b;
+
+  n = getint();
+  m = getint();
+  base = pow2(n);
+
+  for (i = 0; i < base; i = i + 1) {
+    seg[base + i] = getint();
+  }
+
+  build(base);
+
+  for (i = 0; i < m; i = i + 1) {
+    a = getint();
+    b = getint();
+    update(base, a, b);
+    printf("%d\n", seg[1]);
+  }
+  return 0;
+}

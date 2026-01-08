@@ -1,0 +1,191 @@
+/*
+  Converted from a C++ matrix-link simulation (drink).
+  Scaled-down for Strict SysY testcase generation.
+*/
+
+const int MAXN = 20;
+const int MAXM = 20;
+const int MAXZ = 10;
+const int MAXNODE = (MAXN + 2) * (MAXM + 2) + 5;
+
+int val[MAXNODE];
+int d[MAXNODE * 4];
+int v_dir[4 * 2 * MAXZ];
+int v_pos[4 * 2 * MAXZ];
+
+int mod4(int x) {
+    x = x % 4;
+    if (x < 0) x = x + 4;
+    return x;
+}
+
+int vidx(int i, int k, int j) {
+    return (i * 2 + k) * MAXZ + j;
+}
+
+int move_state(int state, int j) {
+    int dir;
+    int now;
+    int nxt;
+    int idx;
+    int back_idx;
+
+    dir = state / MAXNODE;
+    now = state - dir * MAXNODE;
+
+    idx = mod4(j - dir + 4);
+    nxt = d[now * 4 + idx];
+
+    back_idx = mod4(j - dir + 6);
+    for (; d[nxt * 4 + back_idx] != now; ) {
+        dir = mod4(dir + 1);
+        back_idx = mod4(j - dir + 6);
+    }
+
+    now = nxt;
+    return dir * MAXNODE + now;
+}
+
+int main() {
+    int n;
+    int m;
+    int Q;
+    int width;
+    int height;
+    int tot;
+    int i;
+    int j;
+    int id;
+    int row;
+    int col;
+    int up;
+    int right;
+    int down;
+    int left;
+
+    n = getint();
+    m = getint();
+    Q = getint();
+
+    width = m + 2;
+    height = n + 2;
+    tot = width * height;
+
+    for (i = 0; i <= tot; i = i + 1) {
+        val[i] = 0;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            id = i * width + j + 1;
+            val[id] = getint();
+        }
+    }
+
+    for (i = 0; i < MAXNODE * 4; i = i + 1) {
+        d[i] = 0;
+    }
+
+    for (id = 1; id <= tot; id = id + 1) {
+        row = (id - 1) / width;
+        col = (id - 1) - row * width;
+
+        up = id;
+        right = id;
+        down = id;
+        left = id;
+
+        if (row > 0) up = id - width;
+        if (col < width - 1) right = id + 1;
+        if (row < height - 1) down = id + width;
+        if (col > 0) left = id - 1;
+
+        d[id * 4 + 0] = up;
+        d[id * 4 + 1] = right;
+        d[id * 4 + 2] = down;
+        d[id * 4 + 3] = left;
+    }
+
+    for (; Q > 0; Q = Q - 1) {
+        int x;
+        int y;
+        int z;
+        int state;
+        int a_dir;
+        int a_pos;
+        int b_pos;
+        int idx_set;
+
+        x = getint();
+        y = getint();
+        z = getint();
+
+        state = 1;
+
+        for (i = 0; i < x; i = i + 1) {
+            state = move_state(state, 2);
+        }
+
+        for (i = 0; i < y; i = i + 1) {
+            state = move_state(state, 1);
+        }
+
+        for (i = 0; i < 4; i = i + 1) {
+            for (j = 0; j < z; j = j + 1) {
+                v_dir[vidx(i, 0, j)] = state / MAXNODE;
+                v_pos[vidx(i, 0, j)] = state - (state / MAXNODE) * MAXNODE;
+
+                state = move_state(state, i);
+
+                v_dir[vidx(i, 1, j)] = state / MAXNODE;
+                v_pos[vidx(i, 1, j)] = state - (state / MAXNODE) * MAXNODE;
+
+                state = move_state(state, mod4(i + 2));
+
+                if (j != z - 1) {
+                    state = move_state(state, mod4(i + 1));
+                }
+            }
+        }
+
+        for (i = 0; i < 4; i = i + 1) {
+            for (j = 0; j < z; j = j + 1) {
+                a_dir = v_dir[vidx(i, 1, j)];
+                a_pos = v_pos[vidx(i, 1, j)];
+                b_pos = v_pos[vidx(mod4(i + 3), 0, j)];
+                idx_set = mod4(i + 6 - a_dir);
+                d[a_pos * 4 + idx_set] = b_pos;
+
+                a_dir = v_dir[vidx(i, 0, j)];
+                a_pos = v_pos[vidx(i, 0, j)];
+                b_pos = v_pos[vidx(mod4(i + 1), 1, j)];
+                idx_set = mod4(i + 4 - a_dir);
+                d[a_pos * 4 + idx_set] = b_pos;
+            }
+        }
+    }
+
+    {
+        int state_out;
+        int state_row;
+        int node;
+        int dir_row;
+
+        state_out = 1;
+        for (i = 1; i <= n; i = i + 1) {
+            state_out = move_state(state_out, 2);
+            dir_row = state_out / MAXNODE;
+            node = state_out - dir_row * MAXNODE;
+            state_row = dir_row * MAXNODE + node;
+
+            for (j = 1; j <= m; j = j + 1) {
+                state_row = move_state(state_row, 1);
+                node = state_row - (state_row / MAXNODE) * MAXNODE;
+                printf("%d ", val[node]);
+            }
+            printf("\n");
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,38 @@
+/* Description:
+ *   Converted from a bracket-fixing C++ program.
+ *   Input encoding (Strict SysY / getint only):
+ *     - First line: n (length)
+ *     - Next n lines: 1 for '(', 0 for ')'
+ *   Output:
+ *     - Minimal number of flips to make the sequence balanced.
+ */
+
+int main() {
+    int n;
+    int i;
+    int x;
+    int sum;
+    int ans;
+    int result;
+
+    n = getint();
+    sum = 0;
+    ans = 0;
+
+    for (i = 1; i <= n; i = i + 1) {
+        x = getint();
+        if (x == 1) {
+            sum = sum + 1;
+        } else {
+            sum = sum - 1;
+        }
+        if (sum < 0) {
+            sum = 1;
+            ans = ans + 1;
+        }
+    }
+
+    result = ans + sum / 2;
+    printf("%d\n", result);
+    return 0;
+}

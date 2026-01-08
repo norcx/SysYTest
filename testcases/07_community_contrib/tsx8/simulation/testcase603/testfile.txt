@@ -1,0 +1,95 @@
+/* Description:
+ * Deterministic graph generator translated from a C++ rand()/time() program.
+ *
+ * Output format:
+ *   Line 1: n m
+ *   Line 2: n node values (1..1000), space-separated
+ *   Next m lines: A B W (unique directed edges, A!=B, W in 500..999)
+ */
+
+int used[40000];
+int seed;
+
+int mul_mod(int a, int b, int mod) {
+    int res;
+    int bb;
+    res = 0;
+    bb = b;
+    for (bb = b; bb > 0; bb = bb / 2) {
+        if (bb % 2 == 1) {
+            res = res + a;
+            if (res >= mod) res = res - mod;
+        }
+        a = a + a;
+        if (a >= mod) a = a - mod;
+    }
+    return res;
+}
+
+int rnd() {
+    int x;
+    x = mul_mod(seed, 48271, 1000000007);
+    x = x + 12345;
+    if (x >= 1000000007) x = x - 1000000007;
+    seed = x;
+    return seed;
+}
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int A;
+    int B;
+    int W;
+    int idx;
+    int found;
+    int attempts;
+    int a2;
+    int b2;
+
+    seed = 123456789;
+    n = 200;
+    m = 2000;
+
+    printf("%d %d\n", n, m);
+
+    for (i = 1; i <= n; i = i + 1) {
+        printf("%d ", rnd() % 1000 + 1);
+    }
+    printf("\n");
+
+    for (i = 1; i <= m; i = i + 1) {
+        attempts = 0;
+        for (found = 0; found == 0; found = found) {
+            A = rnd() % n + 1;
+            B = rnd() % n + 1;
+            if (A != B) {
+                idx = (A - 1) * n + (B - 1);
+                if (used[idx] == 0) {
+                    used[idx] = 1;
+                    found = 1;
+                }
+            }
+            attempts = attempts + 1;
+            if (attempts > 100000) {
+                for (a2 = 1; a2 <= n && found == 0; a2 = a2 + 1) {
+                    for (b2 = 1; b2 <= n && found == 0; b2 = b2 + 1) {
+                        if (a2 != b2) {
+                            idx = (a2 - 1) * n + (b2 - 1);
+                            if (used[idx] == 0) {
+                                used[idx] = 1;
+                                A = a2;
+                                B = b2;
+                                found = 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        W = rnd() % 500 + 500;
+        printf("%d %d %d\n", A, B, W);
+    }
+    return 0;
+}

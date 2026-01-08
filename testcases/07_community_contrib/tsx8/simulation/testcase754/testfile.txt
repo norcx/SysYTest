@@ -1,0 +1,52 @@
+/* Description:
+ *   For each input n, print YES iff (12*n-3) is a perfect square s^2
+ *   and (s-3) is divisible by 6. Otherwise print NO.
+ */
+
+int is_yes(int n) {
+    int delta;
+    int l;
+    int r;
+    int mid;
+    int s;
+    int tmp;
+
+    delta = 12 * n - 3;
+    if (delta < 0) return 0;
+
+    l = 0;
+    r = 46340;
+    s = 0;
+    for (; l <= r; ) {
+        mid = (l + r) / 2;
+        if (mid * mid <= delta) {
+            s = mid;
+            l = mid + 1;
+        } else {
+            r = mid - 1;
+        }
+    }
+
+    if (s * s != delta) return 0;
+
+    s = s - 3;
+    tmp = s / 6;
+    if (tmp * 6 != s) return 0;
+
+    return 1;
+}
+
+int main() {
+    int T;
+    int n;
+    int ok;
+
+    T = getint();
+    for (; T > 0; T = T - 1) {
+        n = getint();
+        ok = is_yes(n);
+        if (ok == 1) printf("YES\n");
+        else printf("NO\n");
+    }
+    return 0;
+}

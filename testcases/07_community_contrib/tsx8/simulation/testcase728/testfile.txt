@@ -1,0 +1,108 @@
+/* Description:
+ *   Longest-distance SPFA on a small directed graph.
+ *   Input:
+ *     K, n, m
+ *     K edges: x, y, z (edge weight is min(z, m))
+ *   Plus edges i -> i+1 with weight 0 for i in [1, n-1].
+ *   Output:
+ *     dis[n] from source 1 (initialized to -1).
+ */
+
+const int MAXN = 64;
+const int MAXE = 256;
+const int QMAX = 512;
+
+int n;
+int m;
+int K;
+int cnt;
+
+int head[MAXN];
+int to[MAXE];
+int w[MAXE];
+int nxt[MAXE];
+
+int dis[MAXN];
+int vis[MAXN];
+int q[QMAX];
+
+int min_int(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+void add_edge(int x, int y, int z) {
+    cnt = cnt + 1;
+    to[cnt] = y;
+    w[cnt] = z;
+    nxt[cnt] = head[x];
+    head[x] = cnt;
+    return;
+}
+
+void spfa() {
+    int i;
+    int front;
+    int back;
+    int now;
+    int eidx;
+    int nn;
+
+    front = 0;
+    back = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        dis[i] = -1;
+        vis[i] = 0;
+    }
+
+    q[back] = 1;
+    back = back + 1;
+    vis[1] = 1;
+    dis[1] = 0;
+
+    for (; front < back; ) {
+        now = q[front];
+        front = front + 1;
+        vis[now] = 0;
+
+        for (eidx = head[now]; eidx != 0; eidx = nxt[eidx]) {
+            nn = to[eidx];
+            if (dis[nn] < dis[now] + w[eidx]) {
+                dis[nn] = dis[now] + w[eidx];
+                if (vis[nn] == 0) {
+                    vis[nn] = 1;
+                    q[back] = nn;
+                    back = back + 1;
+                }
+            }
+        }
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int x;
+    int y;
+    int z;
+
+    K = getint();
+    n = getint();
+    m = getint();
+
+    cnt = 0;
+    for (i = 1; i <= n; i = i + 1) head[i] = 0;
+
+    for (i = 1; i <= K; i = i + 1) {
+        x = getint();
+        y = getint();
+        z = getint();
+        z = min_int(z, m);
+        add_edge(x, y, z);
+    }
+    for (i = 1; i < n; i = i + 1) add_edge(i, i + 1, 0);
+
+    spfa();
+    printf("%d\n", dis[n]);
+    return 0;
+}

@@ -1,0 +1,59 @@
+/* Description:
+ *   Converted from a C++ program that computes:
+ *     ans = max over edges (a[x] + a[y]) / z
+ *   Since Strict SysY supports only integers, this version:
+ *     - reads all inputs as integers
+ *     - computes ans rounded to 2 decimals using integer arithmetic
+ *     - prints as "<intpart>.<2digits>\n" using only %d placeholders
+ */
+
+const int MAXN = 1000;
+int a[MAXN];
+
+int round_div(int numerator, int denom) {
+    int q;
+    int r;
+    q = numerator / denom;
+    r = numerator - q * denom;
+    if (r * 2 >= denom) q = q + 1;
+    return q;
+}
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int x;
+    int y;
+    int z;
+    int ans100;
+    int sum;
+    int cur100;
+    int intpart;
+    int frac;
+
+    n = getint();
+    m = getint();
+
+    i = 1;
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+
+    ans100 = 0;
+    for (i = 1; i <= m; i = i + 1) {
+        x = getint();
+        y = getint();
+        z = getint();
+
+        sum = a[x] + a[y];
+        cur100 = round_div(sum * 100, z);
+        if (cur100 > ans100) ans100 = cur100;
+    }
+
+    intpart = ans100 / 100;
+    frac = ans100 - intpart * 100;
+    if (frac < 10) printf("%d.0%d\n", intpart, frac);
+    if (frac >= 10) printf("%d.%d\n", intpart, frac);
+    return 0;
+}

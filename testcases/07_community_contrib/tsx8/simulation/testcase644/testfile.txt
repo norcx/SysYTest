@@ -1,0 +1,168 @@
+/* Description:
+ *   Count the number of quadruples (i,j,k,l) such that
+ *   a[i] + b[j] + c[k] + d[l] <= n.
+ *
+ * Input format (newline-separated integers):
+ *   n A B C D
+ *   a[1..A]
+ *   b[1..B]
+ *   c[1..C]
+ *   d[1..D]
+ */
+
+const int MAXN = 60;
+const int MAXM = 4000;
+
+int n;
+int A;
+int B;
+int C;
+int D;
+
+int a[MAXN + 1];
+int b[MAXN + 1];
+int c[MAXN + 1];
+int d[MAXN + 1];
+
+int e[MAXM + 1];
+int f[MAXM + 1];
+int c1[MAXM + 1];
+int c2[MAXM + 1];
+int sum[MAXM + 1];
+
+int eCnt;
+int fCnt;
+int eDistinct;
+int fDistinct;
+
+void sort_1based(int arr[], int len) {
+    int i;
+    int j;
+    int minPos;
+    int tmp;
+    for (i = 1; i <= len; i = i + 1) {
+        minPos = i;
+        for (j = i + 1; j <= len; j = j + 1) {
+            if (arr[j] < arr[minPos]) {
+                minPos = j;
+            }
+        }
+        tmp = arr[i];
+        arr[i] = arr[minPos];
+        arr[minPos] = tmp;
+    }
+}
+
+void init() {
+    int i;
+    int j;
+
+    sort_1based(a, A);
+    sort_1based(b, B);
+    sort_1based(c, C);
+    sort_1based(d, D);
+
+    for (; A > 1 && a[A] > n; A = A - 1) {
+    }
+    for (; B > 1 && b[B] > n; B = B - 1) {
+    }
+    for (; C > 1 && c[C] > n; C = C - 1) {
+    }
+    for (; D > 1 && d[D] > n; D = D - 1) {
+    }
+
+    eCnt = 0;
+    for (i = 1; i <= A; i = i + 1) {
+        for (j = 1; j <= B; j = j + 1) {
+            eCnt = eCnt + 1;
+            e[eCnt] = a[i] + b[j];
+        }
+    }
+
+    fCnt = 0;
+    for (i = 1; i <= C; i = i + 1) {
+        for (j = 1; j <= D; j = j + 1) {
+            fCnt = fCnt + 1;
+            f[fCnt] = c[i] + d[j];
+        }
+    }
+
+    sort_1based(e, eCnt);
+    sort_1based(f, fCnt);
+
+    eDistinct = 0;
+    if (eCnt > 0) {
+        eDistinct = 1;
+        c1[1] = 1;
+        for (i = 2; i <= eCnt; i = i + 1) {
+            if (e[i] == e[eDistinct]) {
+                c1[eDistinct] = c1[eDistinct] + 1;
+            } else {
+                eDistinct = eDistinct + 1;
+                e[eDistinct] = e[i];
+                c1[eDistinct] = 1;
+            }
+        }
+    }
+
+    fDistinct = 0;
+    if (fCnt > 0) {
+        fDistinct = 1;
+        c2[1] = 1;
+        for (i = 2; i <= fCnt; i = i + 1) {
+            if (f[i] == f[fDistinct]) {
+                c2[fDistinct] = c2[fDistinct] + 1;
+            } else {
+                fDistinct = fDistinct + 1;
+                f[fDistinct] = f[i];
+                c2[fDistinct] = 1;
+            }
+        }
+    }
+
+    sum[0] = 0;
+    for (i = 1; i <= fDistinct; i = i + 1) {
+        sum[i] = sum[i - 1] + c2[i];
+    }
+}
+
+int main() {
+    int i;
+    int r;
+    int ans;
+
+    n = getint();
+    A = getint();
+    B = getint();
+    C = getint();
+    D = getint();
+
+    for (i = 1; i <= A; i = i + 1) {
+        a[i] = getint();
+    }
+    for (i = 1; i <= B; i = i + 1) {
+        b[i] = getint();
+    }
+    for (i = 1; i <= C; i = i + 1) {
+        c[i] = getint();
+    }
+    for (i = 1; i <= D; i = i + 1) {
+        d[i] = getint();
+    }
+
+    init();
+
+    ans = 0;
+    r = fDistinct;
+    for (i = 1; i <= eDistinct; i = i + 1) {
+        for (; r > 0 && e[i] + f[r] > n; r = r - 1) {
+        }
+        if (r == 0) {
+            break;
+        }
+        ans = ans + c1[i] * sum[r];
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

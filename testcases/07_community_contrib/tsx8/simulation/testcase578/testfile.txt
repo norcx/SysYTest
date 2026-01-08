@@ -1,0 +1,75 @@
+/* Description:
+ *   [Add description here]
+ */
+
+const int STRIDE = 128;
+int a[20000];
+int mt[20000];
+
+int main() {
+  int n;
+  int m;
+  int Q;
+  int i;
+  int j;
+  int x;
+  int y;
+  int z;
+
+  n = getint();
+  m = getint();
+  Q = getint();
+
+  for (i = 1; i <= n; i = i + 1) {
+    for (j = 1; j <= m; j = j + 1) {
+      a[i * STRIDE + j] = getint();
+      mt[i * STRIDE + j] = a[i * STRIDE + j];
+    }
+  }
+
+  if (n <= 100 && m <= 100 && Q <= 100) {
+    for (;Q > 0;) {
+      x = getint();
+      y = getint();
+      z = getint();
+      for (i = 1; i <= z; i = i + 1) {
+        for (j = 1; j <= z; j = j + 1) {
+          mt[j * STRIDE + (z - i + 1)] = a[(x + i - 1) * STRIDE + (y + j - 1)];
+        }
+      }
+      for (i = 1; i <= z; i = i + 1) {
+        for (j = 1; j <= z; j = j + 1) {
+          a[(x + i - 1) * STRIDE + (y + j - 1)] = mt[i * STRIDE + j];
+        }
+      }
+      Q = Q - 1;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+      for (j = 1; j <= m; j = j + 1) {
+        printf("%d ", a[i * STRIDE + j]);
+      }
+      printf("\n");
+    }
+  } else {
+    for (;Q > 0;) {
+      x = getint();
+      y = getint();
+      z = getint();
+      for (i = 1; i <= z; i = i + 1) {
+        for (j = 1; j <= z; j = j + 1) {
+          mt[j * STRIDE + (z - i + 1)] = a[(x + i - 1) * STRIDE + (y + j - 1)];
+        }
+      }
+      Q = Q - 1;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+      for (j = 1; j <= m; j = j + 1) {
+        printf("%d ", mt[i * STRIDE + j]);
+      }
+      printf("\n");
+    }
+  }
+  return 0;
+}

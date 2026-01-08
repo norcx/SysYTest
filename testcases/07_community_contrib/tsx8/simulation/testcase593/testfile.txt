@@ -1,0 +1,74 @@
+const int MAXN = 64;
+const int MAXH = 256;
+const int INF = 1047483647;
+
+int n;
+int w[MAXN];
+int h[MAXN];
+int prev_f[MAXH];
+int cur_f[MAXH];
+int prev_g[MAXH];
+int cur_g[MAXH];
+
+int min2(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+int max2(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+int main() {
+    int i;
+    int j;
+    int H;
+    int ans;
+
+    n = getint();
+    H = 0;
+    i = 1;
+    for (i = 1; i <= n; i = i + 1) {
+        w[i] = getint();
+        h[i] = getint();
+        H = max2(H, w[i]);
+        H = max2(H, h[i]);
+    }
+
+    for (j = 0; j < MAXH; j = j + 1) {
+        prev_f[j] = INF;
+        cur_f[j] = INF;
+        prev_g[j] = 0;
+        cur_g[j] = 0;
+    }
+    prev_f[0] = 0;
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 0; j <= H; j = j + 1) {
+            cur_f[j] = INF;
+            cur_g[j] = INF;
+        }
+        for (j = 0; j <= H; j = j + 1) {
+            if (j > h[i]) cur_f[j] = min2(cur_f[j], prev_f[j] + w[i]);
+            if (j > w[i]) cur_f[j] = min2(cur_f[j], prev_f[j] + h[i]);
+            if (j == h[i]) cur_f[j] = min2(cur_f[j], prev_g[j] + w[i]);
+            if (j == w[i]) cur_f[j] = min2(cur_f[j], prev_g[j] + h[i]);
+
+            cur_g[j] = cur_f[j];
+            if (j) cur_g[j] = min2(cur_g[j], cur_g[j - 1]);
+        }
+
+        for (j = 0; j <= H; j = j + 1) {
+            prev_f[j] = cur_f[j];
+            prev_g[j] = cur_g[j];
+        }
+    }
+
+    ans = INF;
+    for (j = 0; j <= H; j = j + 1) {
+        if (prev_f[j] != INF) ans = min2(ans, prev_f[j] * j);
+    }
+    printf("%d\n", ans);
+    return 0;
+}

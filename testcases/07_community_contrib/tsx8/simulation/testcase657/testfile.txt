@@ -1,0 +1,50 @@
+/*
+  Deterministic conversion of the given C++ data generator.
+
+  - Removed time()/srand()/freopen() and replaced rand() with a fixed-seed
+    arithmetic PRNG (Park–Miller with Schrage method) to avoid overflow UB.
+  - Scaled n down from 100000 to 10000 for lighter testcase output.
+*/
+
+int seed;
+
+int next_rand() {
+    int hi;
+    int lo;
+    int test;
+    hi = seed / 127773;
+    lo = seed - hi * 127773;
+    test = 16807 * lo - 2836 * hi;
+    if (test <= 0) test = test + 2147483647;
+    seed = test;
+    return seed;
+}
+
+int rand_mod(int mod) {
+    int r;
+    r = next_rand() % mod;
+    return r;
+}
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int v;
+
+    seed = 1;
+    n = 10000;
+    m = rand_mod(n / 2 - 1) + 1;
+    printf("%d %d\n", n, m);
+
+    for (i = 1; i <= n; i = i + 1) {
+        v = rand_mod(10000000);
+        v = v + rand_mod(10000000) * 6;
+        v = v + rand_mod(10000000) * 13;
+        v = v + rand_mod(10000000);
+        v = v + rand_mod(10000000) * 21;
+        printf("%d ", v);
+    }
+    printf("\n");
+    return 0;
+}

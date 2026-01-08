@@ -1,0 +1,106 @@
+/*
+  Converted from the given C++ source to Strict SysY.
+  Input:
+    n
+    m
+    p
+    a[1][1]..a[n][m] (row-major), one integer per getint()
+  Output:
+    ans
+*/
+
+const int LIM = 350;
+const int MAXA = 122500;
+const int INF = 2047483647;
+
+int n;
+int m;
+int p;
+int ans;
+
+int a[MAXA];
+int b[LIM];
+int l[LIM];
+int r[LIM];
+int mn[LIM];
+
+int idx(int i, int j) {
+    return i * LIM + j;
+}
+
+int main() {
+    int t;
+    int tt;
+    int tmp_mn;
+    int i;
+    int j;
+    int k;
+    int tmp;
+    int add;
+    int expr;
+
+    n = getint();
+    m = getint();
+    p = getint();
+
+    t = 0;
+    tt = 0;
+    tmp_mn = INF;
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            a[idx(i, j)] = getint();
+            if (a[idx(i, j)] < tmp_mn) tmp_mn = a[idx(i, j)];
+            t = t + a[idx(i, j)];
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        b[0] = 0;
+        l[0] = 0;
+        b[m + 1] = 0;
+        r[m + 1] = 0;
+        for (j = 1; j <= m; j = j + 1) {
+            b[j] = 0;
+            mn[j] = INF;
+        }
+
+        for (j = i; j <= n; j = j + 1) {
+            l[0] = 0;
+            r[m + 1] = 0;
+            for (k = 1; k <= m; k = k + 1) {
+                b[k] = b[k] + a[idx(j, k)];
+                l[k] = 0;
+                r[k] = 0;
+                if (a[idx(j, k)] < mn[k]) mn[k] = a[idx(j, k)];
+            }
+
+            for (k = 1; k <= m; k = k + 1) {
+                tmp = l[k - 1] + b[k - 1];
+                if (tmp > l[k]) l[k] = tmp;
+            }
+
+            for (k = m; k >= 1; k = k - 1) {
+                tmp = r[k + 1] + b[k + 1];
+                if (tmp > r[k]) r[k] = tmp;
+            }
+
+            for (k = 1; k <= m; k = k + 1) {
+                add = 0;
+                if (mn[k] < p) add = p - mn[k];
+                tmp = l[k] + r[k] + b[k] + add;
+
+                if (tmp == t && tt == 0) {
+                    expr = tmp - tmp_mn + p;
+                    if (expr > ans) ans = expr;
+                    tt = tt + 1;
+                } else {
+                    if (tmp > ans) ans = tmp;
+                }
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

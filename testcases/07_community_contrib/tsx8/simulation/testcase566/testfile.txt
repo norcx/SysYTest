@@ -1,0 +1,33 @@
+/* Description:
+ * Generate a deterministic permutation of 1..21 (refactored from a C++
+ * rand()/time()-based generator into Strict SysY).
+ */
+
+const int MAXN = 30;
+
+int vis[MAXN];
+int seed = 0;
+
+int myrand() {
+    seed = seed + 1;
+    return seed;
+}
+
+int main() {
+    int n;
+    int i;
+    int tmp;
+
+    n = 21;
+    printf("%d\n", n);
+    for (i = 1; i <= n; i = i + 1) {
+        tmp = myrand() % n + 1;
+        for (; vis[tmp] != 0; ) {
+            tmp = myrand() % n + 1;
+        }
+        vis[tmp] = 1;
+        printf("%d ", tmp);
+    }
+    printf("\n");
+    return 0;
+}

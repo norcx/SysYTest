@@ -1,0 +1,154 @@
+/* Description:
+ *   Converted from C++ inversion-count-with-level-reversals program (pair).
+ *   Strict SysY constraints applied:
+ *   - int/void only, 1D arrays only, no preprocessor/bitwise/scanf.
+ *   - Scaled for MARS-like memory constraints.
+ */
+
+int n;
+int nn;
+int m;
+
+int a[8193];
+int t[8193];
+int low[8193];
+
+int ch0[32773];
+int ch1[32773];
+int rev[32773];
+
+int ins0[32773];
+int ins1[32773];
+int outs0[32773];
+int outs1[32773];
+
+int pow2(int k) {
+    int res;
+    int i;
+    res = 1;
+    for (i = 0; i < k; i = i + 1) res = res * 2;
+    return res;
+}
+
+void init_low(int limit) {
+    int i;
+    low[0] = 0;
+    if (limit >= 1) low[1] = 1;
+    for (i = 2; i <= limit; i = i + 1) {
+        if (i % 2 == 1) low[i] = 1;
+        else low[i] = low[i / 2] * 2;
+    }
+}
+
+void add(int x, int val) {
+    int i;
+    if (x == 0) return;
+    for (i = x; i <= n; i = i + low[i]) t[i] = t[i] + val;
+}
+
+int query(int x) {
+    int tmp;
+    int i;
+    tmp = 0;
+    for (i = x; i > 0; i = i - low[i]) tmp = tmp + t[i];
+    return tmp;
+}
+
+void push_up(int o) {
+    int lch;
+    int rch;
+    lch = ch0[o];
+    rch = ch1[o];
+    ins0[o] = outs0[lch] + outs0[rch] + ins0[lch] + ins0[rch];
+    ins1[o] = outs1[lch] + outs1[rch] + ins1[lch] + ins1[rch];
+}
+
+void push_down(int o) {
+    int lch;
+    int rch;
+    int tmp;
+    if (rev[o] == 0) return;
+    rev[o] = 0;
+
+    tmp = ins0[o];
+    ins0[o] = ins1[o];
+    ins1[o] = tmp;
+
+    lch = ch0[o];
+    rch = ch1[o];
+
+    rev[lch] = 1 - rev[lch];
+    rev[rch] = 1 - rev[rch];
+
+    tmp = outs0[lch];
+    outs0[lch] = outs1[rch];
+    outs1[rch] = tmp;
+
+    tmp = outs1[lch];
+    outs1[lch] = outs0[rch];
+    outs0[rch] = tmp;
+
+    tmp = ch0[o];
+    ch0[o] = ch1[o];
+    ch1[o] = tmp;
+}
+
+void build(int l, int r, int o) {
+    int mid;
+    int lch;
+    int rch;
+    int i;
+    if (l == r) {
+        ins0[o] = 0;
+        ins1[o] = 0;
+        outs0[o] = 0;
+        outs1[o] = 0;
+        return;
+    }
+    mid = (l + r) / 2;
+    lch = o * 2;
+    rch = o * 2 + 1;
+    ch0[o] = lch;
+    ch1[o] = rch;
+    build(l, mid, lch);
+    build(mid + 1, r, rch);
+
+    for (i = l; i <= mid; i = i + 1) add(a[i], 1);
+    for (i = mid + 1; i <= r; i = i + 1) {
+        outs0[rch] = outs0[rch] + (mid - l + 1 - query(a[i]));
+        outs1[rch] = outs1[rch] + query(a[i] - 1);
+    }
+    for (i = l; i <= mid; i = i + 1) add(a[i], -1);
+    push_up(o);
+}
+
+void updata(int l, int r, int o, int now_deep, int tar_deep) {
+    int mid;
+    if (now_deep == tar_deep) {
+        rev[o] = 1 - rev[o];
+        push_down(o);
+        return;
+    }
+    push_down(o);
+    mid = (l + r) / 2;
+    updata(l, mid, ch0[o], now_deep - 1, tar_deep);
+    updata(mid + 1, r, ch1[o], now_deep - 1, tar_deep);
+    push_up(o);
+}
+
+int main() {
+    int i;
+    int x;
+    nn = getint();
+    n = pow2(nn);
+    init_low(n);
+    for (i = 1; i <= n; i = i + 1) a[i] = getint();
+    build(1, n, 1);
+    m = getint();
+    for (i = 0; i < m; i = i + 1) {
+        x = getint();
+        if (x != 0) updata(1, n, 1, nn, x);
+        printf("%d\n", ins0[1]);
+    }
+    return 0;
+}

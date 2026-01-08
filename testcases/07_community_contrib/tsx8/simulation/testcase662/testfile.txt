@@ -1,0 +1,96 @@
+/* Description:
+ * Fixed-point (x100) integer translation of the given C++ program.
+ * Output is ans * 100 as an integer.
+ */
+
+const int MAXN = 10000;
+const int SCALE = 100;
+const int INF = 2147483647;
+
+int n;
+int a[10010];
+int b[10010];
+int sa1[10010];
+int sa2[10012];
+int sb1[10010];
+int sb2[10012];
+
+int min_int(int x, int y) {
+    if (x < y) return x;
+    return y;
+}
+
+int main() {
+    n = getint();
+
+    int i;
+    sa1[0] = 0;
+    sb1[0] = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        b[i] = getint();
+        sa1[i] = sa1[i - 1] + a[i];
+        sb1[i] = sb1[i - 1] + b[i];
+    }
+
+    int T = getint();
+    int t_scaled = T * SCALE;
+
+    sa2[n + 1] = 0;
+    sb2[n + 1] = 0;
+    for (i = n; i >= 1; i = i - 1) {
+        sa2[i] = sa2[i + 1] + a[i];
+        sb2[i] = sb2[i + 1] + b[i];
+    }
+
+    int ans = INF;
+
+    for (i = 0; i <= n; i = i + 1) {
+        int sb_sum = sb1[i] + sb2[i + 1];
+        int sa_suffix = sa2[i + 1];
+        int sb_suffix = sb2[i + 1];
+        int sa2_sb2 = sa_suffix + sb_suffix;
+        int sa1_sb1 = sa1[i] + sb1[i];
+
+        if (i < n) {
+            int xx = 0;
+            if (sa2_sb2 != 0) {
+                int tmp = sb_sum * T;
+                xx = tmp * SCALE / sa2_sb2;
+                if (xx > t_scaled) xx = t_scaled;
+            }
+
+            int x = 0;
+            if (sa1_sb1 != 0) {
+                int tmp2 = sb_sum * T * SCALE - sa2_sb2 * xx;
+                x = tmp2 / sa1_sb1;
+                if (x < 0) x = 0;
+            }
+
+            int cost = sa1[i] * x + sa_suffix * xx;
+            ans = min_int(ans, cost);
+        }
+
+        if (i > 0) {
+            int x2 = 0;
+            if (sa1_sb1 != 0) {
+                int tmp3 = sb_sum * T;
+                x2 = tmp3 * SCALE / sa1_sb1;
+                if (x2 > t_scaled) x2 = t_scaled;
+            }
+
+            int xx2 = 0;
+            if (sa2_sb2 != 0) {
+                int tmp4 = sb_sum * T * SCALE - sa1_sb1 * x2;
+                xx2 = tmp4 / sa2_sb2;
+                if (xx2 < 0) xx2 = 0;
+            }
+
+            int cost2 = sa1[i] * x2 + sa_suffix * xx2;
+            ans = min_int(ans, cost2);
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

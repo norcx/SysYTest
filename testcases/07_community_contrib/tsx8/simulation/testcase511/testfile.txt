@@ -1,0 +1,16 @@
+/* Description:
+ *   Reads a fixed number of integers from stdin and produces no output.
+ *   Converted from a fast-I/O C++ program that read 4,000,000 integers.
+ *   Scaled down to 40,000 reads for SysY testcase runtime limits.
+ */
+
+const int N = 40000;
+
+int main() {
+  int i;
+  int x;
+  for (i = 0; i < N; i = i + 1) {
+    x = getint();
+  }
+  return 0;
+}

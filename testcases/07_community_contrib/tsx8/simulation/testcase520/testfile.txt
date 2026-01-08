@@ -1,0 +1,102 @@
+/* Description:
+ *   Binary search the minimum threshold w such that
+ *   edges with weight > w can be 2-colored (bipartite constraints),
+ *   using DSU over 2*n elements.
+ */
+
+const int MAXN = 256;
+const int MAXM = 512;
+
+int n;
+int m;
+int ans;
+int l;
+int r;
+
+int fa[MAXN * 2 + 5];
+int ex[MAXM + 5];
+int ey[MAXM + 5];
+int ez[MAXM + 5];
+
+int father(int x) {
+    if (fa[x] == x) return x;
+    fa[x] = father(fa[x]);
+    return fa[x];
+}
+
+int judge(int midz) {
+    int i;
+    int fax;
+    int fay;
+    for (i = 1; i <= n * 2; i = i + 1) fa[i] = i;
+    for (i = 1; i <= m; i = i + 1) {
+        if (ez[i] > midz) {
+            fax = father(ex[i]);
+            fay = father(ey[i] + n);
+            if (fax == fay) return 0;
+            fa[fax] = fay;
+
+            fax = father(ex[i] + n);
+            fay = father(ey[i]);
+            if (fax == fay) return 0;
+            fa[fax] = fay;
+        }
+    }
+    return 1;
+}
+
+void sort_edges() {
+    int i;
+    int j;
+    int tx;
+    int ty;
+    int tz;
+    for (i = 1; i <= m; i = i + 1) {
+        for (j = i + 1; j <= m; j = j + 1) {
+            if (ez[j] < ez[i]) {
+                tx = ex[i];
+                ty = ey[i];
+                tz = ez[i];
+                ex[i] = ex[j];
+                ey[i] = ey[j];
+                ez[i] = ez[j];
+                ex[j] = tx;
+                ey[j] = ty;
+                ez[j] = tz;
+            }
+        }
+    }
+}
+
+int main() {
+    int i;
+    int mid;
+
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= m; i = i + 1) {
+        ex[i] = getint();
+        ey[i] = getint();
+        ez[i] = getint();
+    }
+    ez[0] = 0;
+
+    sort_edges();
+
+    l = 0;
+    r = m;
+    ans = 0;
+    for (; l <= r;) {
+        mid = (l + r) / 2;
+        if (judge(ez[mid]) == 1) {
+            r = mid - 1;
+            ans = ez[mid];
+        } else {
+            l = mid + 1;
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

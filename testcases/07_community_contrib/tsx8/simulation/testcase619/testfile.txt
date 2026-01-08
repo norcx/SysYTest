@@ -1,0 +1,60 @@
+const int MAXN = 2048;
+
+int n;
+int m;
+int ans;
+int a[MAXN];
+int b[MAXN];
+
+int pow2(int e) {
+  int res;
+  int i;
+  res = 1;
+  for (i = 0; i < e; i = i + 1) {
+    res = res * 2;
+  }
+  return res;
+}
+
+int main() {
+  int n_exp;
+  int i;
+  int j;
+  int q;
+  int x_exp;
+  int x;
+
+  n_exp = getint();
+  n = pow2(n_exp);
+
+  for (i = 0; i < n; i = i + 1) {
+    a[i] = getint();
+  }
+
+  m = getint();
+  for (q = 0; q < m; q = q + 1) {
+    x_exp = getint();
+    x = pow2(x_exp);
+
+    for (i = 0; i < n; i = i + x) {
+      for (j = 0; j < x; j = j + 1) {
+        b[j] = a[i + x - 1 - j];
+      }
+      for (j = 0; j < x; j = j + 1) {
+        a[i + j] = b[j];
+      }
+    }
+
+    ans = 0;
+    for (i = 0; i < n; i = i + 1) {
+      for (j = 0; j < i; j = j + 1) {
+        if (a[j] > a[i]) {
+          ans = ans + 1;
+        }
+      }
+    }
+    printf("%d\n", ans);
+  }
+
+  return 0;
+}

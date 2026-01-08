@@ -1,0 +1,79 @@
+/* Description:
+ *   Deterministic pseudo-random accumulation (Strict SysY, int-only).
+ */
+
+const int MOD = 1000000007;
+
+const int PRNG_A = 48271;
+const int PRNG_M = 2147483647;
+const int PRNG_Q = 44488;
+const int PRNG_R = 3399;
+
+int seed = 1;
+
+int next_rng() {
+    int hi;
+    int lo;
+    int test;
+    hi = seed / PRNG_Q;
+    lo = seed - hi * PRNG_Q;
+    test = PRNG_A * lo - PRNG_R * hi;
+    if (test > 0) seed = test;
+    else seed = test + PRNG_M;
+    return seed;
+}
+
+int mul_mod(int a, int b) {
+    int res;
+    int x;
+    int y;
+    int k;
+    res = 0;
+    x = a % MOD;
+    y = b;
+    for (k = 0; y > 0; k = k + 1) {
+        if (y % 2 == 1) {
+            res = res + x;
+            res = res % MOD;
+        }
+        x = x + x;
+        x = x % MOD;
+        y = y / 2;
+    }
+    return res;
+}
+
+int pow5_mod(int x) {
+    int res;
+    int k;
+    res = 1;
+    for (k = 0; k < 5; k = k + 1) res = mul_mod(res, x);
+    return res;
+}
+
+int main() {
+    int T;
+    int t;
+    int i;
+    int n;
+    int r;
+    int rs;
+    int p;
+    int term;
+
+    T = 10;
+    n = 0;
+    printf("%d\n", T);
+    for (t = 0; t < T; t = t + 1) {
+        for (i = 1; i <= 100; i = i + 1) {
+            r = next_rng();
+            rs = r % 100000;
+            p = pow5_mod(i);
+            term = mul_mod(rs, p);
+            n = n + term;
+            n = n % MOD;
+        }
+        printf("%d\n", n);
+    }
+    return 0;
+}

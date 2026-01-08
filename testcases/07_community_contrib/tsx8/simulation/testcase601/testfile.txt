@@ -1,0 +1,46 @@
+int seed = 1;
+
+int next_rand() {
+    int hi;
+    int lo;
+    int test;
+    hi = seed / 127773;
+    lo = seed - hi * 127773;
+    test = 16807 * lo - 2836 * hi;
+    if (test <= 0) {
+        test = test + 2147483647;
+    }
+    seed = test;
+    return seed;
+}
+
+int main() {
+    int n;
+    int m;
+    int limit;
+    int i;
+    int x;
+    int y;
+
+    n = 10;
+    m = 1000;
+    printf("%d %d\n", n, m);
+
+    limit = 1;
+    for (i = 0; i < n; i = i + 1) {
+        limit = limit * 2;
+    }
+
+    for (i = 1; i <= limit; i = i + 1) {
+        x = next_rand();
+        printf("%d ", x);
+    }
+    printf("\n");
+
+    for (i = 1; i <= m; i = i + 1) {
+        x = next_rand() % limit;
+        y = next_rand();
+        printf("%d %d\n", x, y);
+    }
+    return 0;
+}

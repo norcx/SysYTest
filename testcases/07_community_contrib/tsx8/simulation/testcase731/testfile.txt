@@ -1,0 +1,151 @@
+/* Description:
+ *   Segment-tree bus-capacity accumulation (SysY strict subset).
+ *   Input:
+ *     K
+ *     n
+ *     m
+ *     then K triples (x, y, z), one integer per line.
+ *   Output:
+ *     total accepted passengers.
+ */
+
+const int MAXK = 256;
+const int MAXN = 64;
+
+int K;
+int n;
+int m;
+int ans;
+
+int hx[MAXK + 5];
+int hy[MAXK + 5];
+int hz[MAXK + 5];
+
+int mx[MAXN * 4 + 5];
+int add[MAXN * 4 + 5];
+
+int max2(int a, int b) {
+    if (a < b) return b;
+    return a;
+}
+
+int min2(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+void push_down(int o) {
+    int lch;
+    int rch;
+    lch = o * 2;
+    rch = o * 2 + 1;
+    add[lch] = add[lch] + add[o];
+    add[rch] = add[rch] + add[o];
+    mx[lch] = mx[lch] + add[o];
+    mx[rch] = mx[rch] + add[o];
+    add[o] = 0;
+    return;
+}
+
+int query(int l, int r, int o, int x, int y) {
+    int mid;
+    int lch;
+    int rch;
+    int tmp;
+    if (x <= l && r <= y) return mx[o];
+    push_down(o);
+    mid = (l + r) / 2;
+    lch = o * 2;
+    rch = o * 2 + 1;
+    tmp = 0;
+    if (x <= mid) tmp = query(l, mid, lch, x, y);
+    if (mid < y) tmp = max2(tmp, query(mid + 1, r, rch, x, y));
+    mx[o] = max2(mx[lch], mx[rch]);
+    return tmp;
+}
+
+void updata(int l, int r, int o, int x, int y, int z) {
+    int mid;
+    int lch;
+    int rch;
+    if (x <= l && r <= y) {
+        add[o] = add[o] + z;
+        mx[o] = mx[o] + z;
+        return;
+    }
+    push_down(o);
+    mid = (l + r) / 2;
+    lch = o * 2;
+    rch = o * 2 + 1;
+    if (x <= mid) updata(l, mid, lch, x, y, z);
+    if (mid < y) updata(mid + 1, r, rch, x, y, z);
+    mx[o] = max2(mx[lch], mx[rch]);
+    return;
+}
+
+void sort_by_y(int len) {
+    int i;
+    int j;
+    int best;
+    int tx;
+    int ty;
+    int tz;
+    for (i = 1; i <= len; i = i + 1) {
+        best = i;
+        for (j = i + 1; j <= len; j = j + 1) {
+            if (hy[j] < hy[best]) best = j;
+            if (hy[j] == hy[best] && hx[j] < hx[best]) best = j;
+            if (hy[j] == hy[best] && hx[j] == hx[best] && hz[j] < hz[best]) best = j;
+        }
+        if (best != i) {
+            tx = hx[i];
+            ty = hy[i];
+            tz = hz[i];
+            hx[i] = hx[best];
+            hy[i] = hy[best];
+            hz[i] = hz[best];
+            hx[best] = tx;
+            hy[best] = ty;
+            hz[best] = tz;
+        }
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int tt;
+    int left;
+    int right;
+
+    K = getint();
+    n = getint();
+    m = getint();
+
+    for (i = 1; i <= K; i = i + 1) {
+        hx[i] = getint();
+        hy[i] = getint();
+        hz[i] = getint();
+        hz[i] = min2(hz[i], m);
+    }
+
+    sort_by_y(K);
+
+    ans = 0;
+    for (i = 1; i <= K; i = i + 1) {
+        left = hx[i];
+        right = hy[i] - 1;
+
+        tt = 0;
+        if (left <= right) tt = query(1, n, 1, left, right);
+
+        tt = min2(hz[i], m - tt);
+        if (tt < 0) tt = 0;
+
+        ans = ans + tt;
+        if (tt != 0 && left <= right) updata(1, n, 1, left, right, tt);
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

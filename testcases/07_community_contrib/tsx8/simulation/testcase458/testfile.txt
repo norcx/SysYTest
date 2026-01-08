@@ -1,0 +1,83 @@
+/* Converted from C++ to Strict SysY. */
+const int MAXN = 130;
+const int SIZE = MAXN * MAXN;
+
+int n;
+int f[SIZE];
+int g[SIZE];
+int s[MAXN];
+
+int idx(int l, int r) {
+  return l * MAXN + r;
+}
+
+int dfs(int l, int r, int fat) {
+  int id;
+  int id2;
+  int tmp;
+  int i;
+
+  id = idx(l, r);
+  if (f[id] != -1) return f[id];
+
+  if (l == r) {
+    g[id] = 1;
+    f[id] = 1;
+    return 1;
+  }
+  if (l > r) return 0;
+
+  f[id] = 0;
+  if (s[l] == s[r]) {
+    f[id] = f[id] + dfs(l + 1, r - 1, s[l]);
+    id2 = idx(l + 1, r - 1);
+    printf("first %d %d %d\n", l, r, f[id2]);
+  }
+
+  tmp = 0;
+  for (i = l + 2; i < r; i = i + 2) {
+    if (s[i] == s[l] && s[r] == s[l]) {
+      tmp = tmp + dfs(l + 1, i - 1, s[l]) * dfs(i + 1, r - 1, s[l]);
+      printf("%d %d %dadsfdasfdsaf\n", l, r, i);
+    }
+  }
+
+  g[id] = 0;
+  if (fat == 97) {
+    f[id] = f[id] + tmp;
+    return f[id];
+  }
+
+  for (i = l + 1; i < r; i = i + 2) {
+    if (s[i] == fat) {
+      dfs(l, i - 1, fat);
+      dfs(i + 1, r, fat);
+      g[id] = g[id] + g[idx(l, i - 1)] * g[idx(i + 1, r)];
+    }
+  }
+
+  if (s[l] == s[r]) f[id] = f[id] + g[id];
+  f[id] = f[id] + tmp;
+  return f[id];
+}
+
+int main() {
+  int i;
+  int j;
+
+  for (i = 0; i < SIZE; i = i + 1) {
+    f[i] = -1;
+    g[i] = -1;
+  }
+
+  n = getint();
+  for (i = 1; i <= n; i = i + 1) s[i] = getint();
+
+  printf("%d\n", dfs(1, n, 97));
+  for (i = 1; i <= n; i = i + 1) {
+    for (j = i; j <= n; j = j + 1) {
+      printf("f[%d][%d] = %d\n", i, j, f[idx(i, j)]);
+    }
+  }
+  return 0;
+}

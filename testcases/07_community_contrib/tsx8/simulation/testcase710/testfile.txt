@@ -1,0 +1,134 @@
+/* Description:
+ *   Converted from a C++ DP solution that reads a command string over {'F','T'}
+ *   and an integer n, then computes the maximum reachable absolute position
+ *   after applying up to n edits with parity constraint.
+ *
+ *   Strict SysY adaptation:
+ *     - Input uses integers only.
+ *     - First line: len
+ *     - Next len lines: cmd[i] where 0 = 'F', 1 = 'T'
+ *     - Last line: n
+ */
+
+const int MAXN = 211;
+const int INF = 1061109567;
+const int NEG_INF = -1044266559;
+const int SIZE = MAXN * MAXN * 2;
+
+int n;
+int ans;
+int len;
+int f[SIZE];
+int g[SIZE];
+int cmd[MAXN];
+
+int idx(int i, int j, int k) {
+    return (i * MAXN + j) * 2 + k;
+}
+
+int max2(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+int min2(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+int abs2(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+void work(int now, int i, int j, int k) {
+    int next;
+    int p;
+    if (i + 1 > len) return;
+    next = cmd[i + 1];
+
+    if (next == 0) {
+        p = idx(i + 1, j, k);
+        if (k == 1) {
+            f[p] = max2(f[p], now + 1);
+            g[p] = min2(g[p], now + 1);
+        } else {
+            f[p] = max2(f[p], now - 1);
+            g[p] = min2(g[p], now - 1);
+        }
+
+        if (j + 1 <= n) {
+            p = idx(i + 1, j + 1, 1 - k);
+            f[p] = max2(f[p], now);
+            g[p] = min2(g[p], now);
+        }
+    } else {
+        if (j + 1 <= n) {
+            p = idx(i + 1, j + 1, k);
+            if (k == 1) {
+                f[p] = max2(f[p], now + 1);
+                g[p] = min2(g[p], now + 1);
+            } else {
+                f[p] = max2(f[p], now - 1);
+                g[p] = min2(g[p], now - 1);
+            }
+        }
+
+        p = idx(i + 1, j, 1 - k);
+        f[p] = max2(f[p], now);
+        g[p] = min2(g[p], now);
+    }
+    return;
+}
+
+void get_ans(int x) {
+    int v;
+    v = f[idx(len, x, 0)];
+    if (v != NEG_INF) ans = max2(ans, abs2(v));
+    v = f[idx(len, x, 1)];
+    if (v != NEG_INF) ans = max2(ans, abs2(v));
+    v = g[idx(len, x, 0)];
+    if (v != INF) ans = max2(ans, abs2(v));
+    v = g[idx(len, x, 1)];
+    if (v != INF) ans = max2(ans, abs2(v));
+    return;
+}
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int p;
+
+    len = getint();
+    for (i = 1; i <= len; i = i + 1) {
+        cmd[i] = getint();
+    }
+    n = getint();
+
+    for (i = 0; i < SIZE; i = i + 1) {
+        f[i] = NEG_INF;
+        g[i] = INF;
+    }
+
+    ans = 0;
+    f[idx(0, 0, 1)] = 0;
+    g[idx(0, 0, 1)] = 0;
+
+    for (i = 0; i < len; i = i + 1) {
+        for (j = 0; j <= n; j = j + 1) {
+            for (k = 0; k <= 1; k = k + 1) {
+                p = idx(i, j, k);
+                if (f[p] != NEG_INF) work(f[p], i, j, k);
+                if (g[p] != INF) work(g[p], i, j, k);
+            }
+        }
+    }
+
+    for (i = n; i >= 0; i = i - 2) {
+        get_ans(i);
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

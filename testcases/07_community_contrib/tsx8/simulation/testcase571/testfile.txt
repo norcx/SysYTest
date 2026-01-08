@@ -1,0 +1,9 @@
+/* Description:
+ *   Converted from a C program that redirects stdout to a file and invokes
+ *   an OS-specific shell command. Strict SysY has no filesystem/shell APIs,
+ *   so this testcase performs no I/O and produces empty stdout.
+ */
+
+int main() {
+    return 0;
+}

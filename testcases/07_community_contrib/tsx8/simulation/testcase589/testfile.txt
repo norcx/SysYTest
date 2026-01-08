@@ -1,0 +1,95 @@
+/*
+  Segment tree with alternating OR/XOR levels (bitwise emulated via arithmetic).
+*/
+const int MAX_BIT = 30;
+const int MAX_N = 16;
+const int MAX_LEAVES = 65536;
+const int MAX_TREE = 262150;
+
+int pow2[31];
+int tree_x[MAX_TREE];
+
+int bit_or(int a, int b) {
+    int i;
+    int res;
+    int ai;
+    int bi;
+    int bit;
+    res = 0;
+    for (i = 0; i <= MAX_BIT; i = i + 1) {
+        ai = (a / pow2[i]) % 2;
+        bi = (b / pow2[i]) % 2;
+        bit = 0;
+        if (ai + bi > 0) bit = 1;
+        res = res + bit * pow2[i];
+    }
+    return res;
+}
+
+int bit_xor(int a, int b) {
+    int i;
+    int res;
+    int ai;
+    int bi;
+    int bit;
+    res = 0;
+    for (i = 0; i <= MAX_BIT; i = i + 1) {
+        ai = (a / pow2[i]) % 2;
+        bi = (b / pow2[i]) % 2;
+        bit = 0;
+        if (ai != bi) bit = 1;
+        res = res + bit * pow2[i];
+    }
+    return res;
+}
+
+void build(int id, int l, int r, int dep) {
+    int mid;
+    if (l == r) {
+        tree_x[id] = getint();
+    } else {
+        mid = (l + r) / 2;
+        build(id * 2, l, mid, dep - 1);
+        build(id * 2 + 1, mid + 1, r, dep - 1);
+        if (dep % 2 == 1) tree_x[id] = bit_or(tree_x[id * 2], tree_x[id * 2 + 1]);
+        else tree_x[id] = bit_xor(tree_x[id * 2], tree_x[id * 2 + 1]);
+    }
+}
+
+void update(int id, int l, int r, int k, int x, int dep) {
+    int mid;
+    if (l == r) {
+        tree_x[id] = x;
+    } else {
+        mid = (l + r) / 2;
+        if (k <= mid) update(id * 2, l, mid, k, x, dep - 1);
+        else update(id * 2 + 1, mid + 1, r, k, x, dep - 1);
+        if (dep % 2 == 1) tree_x[id] = bit_or(tree_x[id * 2], tree_x[id * 2 + 1]);
+        else tree_x[id] = bit_xor(tree_x[id * 2], tree_x[id * 2 + 1]);
+    }
+}
+
+int main() {
+    int n;
+    int q;
+    int size;
+    int i;
+    int k;
+    int x;
+
+    pow2[0] = 1;
+    for (i = 1; i <= 30; i = i + 1) pow2[i] = pow2[i - 1] * 2;
+
+    n = getint();
+    q = getint();
+    size = pow2[n];
+
+    build(1, 1, size, n);
+    for (i = 1; i <= q; i = i + 1) {
+        k = getint();
+        x = getint();
+        update(1, 1, size, k, x, n);
+        printf("%d\n", tree_x[1]);
+    }
+    return 0;
+}

@@ -1,0 +1,99 @@
+/* Description:
+ *   [Add description here]
+ */
+const int MAXN = 20000;
+
+int heap[MAXN + 5];
+int hsz;
+
+int heap_empty() {
+  if (hsz == 0) return 1;
+  return 0;
+}
+
+int heap_top() { return heap[1]; }
+
+void heap_push(int x) {
+  int i;
+  int p;
+  int t;
+  hsz = hsz + 1;
+  heap[hsz] = x;
+  i = hsz;
+  for (;;) {
+    if (i <= 1) break;
+    p = i / 2;
+    if (heap[i] < heap[p]) {
+      t = heap[i];
+      heap[i] = heap[p];
+      heap[p] = t;
+      i = p;
+    } else {
+      break;
+    }
+  }
+}
+
+int heap_pop() {
+  int ret;
+  int i;
+  int l;
+  int r;
+  int s;
+  int t;
+  ret = heap[1];
+  heap[1] = heap[hsz];
+  hsz = hsz - 1;
+  i = 1;
+  for (;;) {
+    l = i * 2;
+    r = l + 1;
+    s = i;
+    if (l <= hsz && heap[l] < heap[s]) s = l;
+    if (r <= hsz && heap[r] < heap[s]) s = r;
+    if (s == i) break;
+    t = heap[i];
+    heap[i] = heap[s];
+    heap[s] = t;
+    i = s;
+  }
+  return ret;
+}
+
+int main() {
+  int n;
+  int cnt;
+  int i;
+  int x;
+  int now;
+  int ans;
+
+  cnt = 0;
+  for (;;) {
+    n = getint();
+    if (n == 0) break;
+    cnt = cnt + 1;
+    hsz = 0;
+    ans = 0;
+
+    for (i = 1; i <= n; i = i + 1) {
+      x = getint();
+      if (heap_empty() == 1) {
+        heap_push(x);
+      } else {
+        now = heap_top();
+        if (x <= now) {
+          heap_push(x);
+        } else {
+          ans = ans + x - now;
+          heap_pop();
+          heap_push(x);
+          heap_push(x);
+        }
+      }
+    }
+
+    printf("Case #%d: %d\n", cnt, ans);
+  }
+  return 0;
+}

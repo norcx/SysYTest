@@ -1,0 +1,312 @@
+/*
+  Strict SysY port of the given C++ source.
+  - Tree with weighted edges
+  - Answers queries using LCA + subtree sums + max-heap selection
+*/
+
+const int MAXN = 2000;
+const int MAXM = 6000;
+const int LOG = 19;
+
+int n;
+int m;
+int cnt;
+int ans;
+
+int head[MAXN + 5];
+int to[MAXM + 5];
+int w[MAXM + 5];
+int nxt[MAXM + 5];
+
+int depth[MAXN + 5];
+int sum[MAXN + 5];
+int fa[(MAXN + 5) * LOG];
+
+int pow2[LOG + 1];
+
+int heap[MAXN + 5];
+int heap_size;
+
+int myabs(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+int clamp_nonneg(int x) {
+    if (x < 0) return 0;
+    return x;
+}
+
+void heap_clear() {
+    heap_size = 0;
+}
+
+void heap_push(int value) {
+    int idx;
+    int loop;
+    int parent;
+    int tmp;
+    idx = heap_size + 1;
+    heap_size = idx;
+    heap[idx] = value;
+    for (loop = 1; loop == 1; loop = 1) {
+        parent = idx / 2;
+        if (parent == 0) break;
+        if (heap[parent] >= heap[idx]) break;
+        tmp = heap[parent];
+        heap[parent] = heap[idx];
+        heap[idx] = tmp;
+        idx = parent;
+    }
+}
+
+int heap_pop() {
+    int ret;
+    int idx;
+    int loop;
+    int left;
+    int right;
+    int child;
+    int tmp;
+    ret = heap[1];
+    heap[1] = heap[heap_size];
+    heap_size = heap_size - 1;
+    idx = 1;
+    for (loop = 1; loop == 1; loop = 1) {
+        left = idx * 2;
+        if (left > heap_size) break;
+        right = left + 1;
+        child = left;
+        if (right <= heap_size && heap[right] > heap[left]) child = right;
+        if (heap[idx] >= heap[child]) break;
+        tmp = heap[idx];
+        heap[idx] = heap[child];
+        heap[child] = tmp;
+        idx = child;
+    }
+    return ret;
+}
+
+void add_edge(int x, int y, int z) {
+    cnt = cnt + 1;
+    to[cnt] = y;
+    w[cnt] = z;
+    nxt[cnt] = head[x];
+    head[x] = cnt;
+}
+
+void dfs(int now, int fat, int now_depth) {
+    int i;
+    int nn;
+    depth[now] = now_depth;
+    fa[now * LOG + 0] = fat;
+    for (i = 1; i < LOG; i = i + 1) {
+        if (pow2[i] + 1 <= now_depth) {
+            fa[now * LOG + i] = fa[fa[now * LOG + i - 1] * LOG + i - 1];
+        }
+    }
+    for (i = head[now]; i != 0; i = nxt[i]) {
+        nn = to[i];
+        if (nn == fat) {
+        } else {
+            dfs(nn, now, now_depth + 1);
+            sum[now] = sum[now] + sum[nn] + w[i];
+        }
+    }
+}
+
+int get_lca(int x, int y) {
+    int i;
+    int anc;
+    if (depth[x] < depth[y]) {
+        for (i = LOG - 1; i >= 0; i = i - 1) {
+            anc = fa[y * LOG + i];
+            if (depth[anc] >= depth[x]) y = anc;
+        }
+    }
+    if (depth[x] > depth[y]) {
+        for (i = LOG - 1; i >= 0; i = i - 1) {
+            anc = fa[x * LOG + i];
+            if (depth[anc] >= depth[y]) x = anc;
+        }
+    }
+    if (x == y) return x;
+    for (i = LOG - 1; i >= 0; i = i - 1) {
+        if (fa[x * LOG + i] != fa[y * LOG + i]) {
+            x = fa[x * LOG + i];
+            y = fa[y * LOG + i];
+        }
+    }
+    return fa[x * LOG + 0];
+}
+
+int get_z(int x, int y) {
+    int i;
+    int bit;
+    for (i = 0; i < LOG; i = i + 1) {
+        bit = (y / pow2[i]) % 2;
+        if (bit == 1) x = fa[x * LOG + i];
+    }
+    return x;
+}
+
+void get_ans(int x, int y, int z, int p, int pp) {
+    int i;
+    int nn;
+    int tmp;
+    int dummy;
+    int top;
+    heap_clear();
+    ans = 0;
+    if (x == fa[z * LOG + 0]) ans = sum[1] - sum[z];
+    for (i = head[z]; i != 0; i = nxt[i]) {
+        nn = to[i];
+        if (nn == x && x != fa[z * LOG + 0]) ans = ans + sum[x] + w[i];
+        if (nn == x || nn == y) {
+        } else {
+            if (nn == fa[z * LOG + 0]) {
+                heap_push(sum[1] - sum[z]);
+            } else {
+                heap_push(w[i] + sum[nn]);
+            }
+        }
+    }
+    tmp = 1 - p;
+    for (dummy = 0; heap_size > 0; dummy = dummy) {
+        tmp = tmp + 1;
+        top = heap_pop();
+        if (tmp % 2 == 1) ans = ans + top;
+    }
+    pp = pp;
+}
+
+void get_ans_2(int x, int y, int z, int p) {
+    int i;
+    int nn;
+    int tmp;
+    int dummy;
+    int top;
+    heap_clear();
+    ans = 0;
+    for (i = head[z]; i != 0; i = nxt[i]) {
+        nn = to[i];
+        if (nn == x) {
+            ans = ans + w[i] + sum[nn];
+        } else {
+            if (nn == y || nn == fa[z * LOG + 0]) {
+            } else {
+                heap_push(w[i] + sum[nn]);
+            }
+        }
+    }
+    heap_push(sum[1] - sum[z]);
+    tmp = 1 - p;
+    for (dummy = 0; heap_size > 0; dummy = dummy) {
+        tmp = tmp + 1;
+        top = heap_pop();
+        if (tmp % 2 == 1) ans = ans + top;
+    }
+}
+
+void get_ans_3(int z) {
+    int i;
+    int nn;
+    int tmp;
+    int dummy;
+    int top;
+    heap_clear();
+    ans = 0;
+    for (i = head[z]; i != 0; i = nxt[i]) {
+        nn = to[i];
+        heap_push(w[i] + sum[nn]);
+    }
+    tmp = 1;
+    for (dummy = 0; heap_size > 0; dummy = dummy) {
+        tmp = tmp + 1;
+        top = heap_pop();
+        if (tmp % 2 == 1) ans = ans + top;
+    }
+    if (sum[1] - ans > ans) ans = sum[1] - ans;
+}
+
+int main() {
+    int i;
+    int x;
+    int y;
+    int z;
+    int lca;
+    int p;
+    int dt;
+    int dd;
+    int qi;
+
+    pow2[0] = 1;
+    for (i = 1; i <= LOG; i = i + 1) pow2[i] = pow2[i - 1] * 2;
+
+    n = getint();
+    m = getint();
+    for (i = 1; i < n; i = i + 1) {
+        x = getint();
+        y = getint();
+        z = getint();
+        add_edge(x, y, z);
+        add_edge(y, x, z);
+    }
+    dfs(1, 0, 1);
+
+    for (qi = 0; qi < m; qi = qi + 1) {
+        x = getint();
+        y = getint();
+        lca = get_lca(x, y);
+        dt = myabs(depth[y] - depth[x]);
+        if (x == y) {
+            get_ans_3(x);
+        } else if (lca == x) {
+            z = get_z(y, dt / 2);
+            p = (dt + 1) % 2;
+            x = fa[z * LOG + 0];
+            y = get_z(y, clamp_nonneg(dt / 2 - 1));
+            get_ans(x, y, z, p, 1);
+        } else if (lca == y) {
+            z = get_z(x, (dt + 1) / 2);
+            p = (dt + 1) % 2;
+            x = get_z(x, clamp_nonneg((dt + 1) / 2 - 1));
+            if (z != y) y = fa[z * LOG + 0];
+            get_ans(x, y, z, p, 0);
+        } else {
+            if (dt == 0) {
+                z = lca;
+                p = 1;
+                x = get_z(x, clamp_nonneg(depth[x] - depth[lca] - 1));
+                y = get_z(y, clamp_nonneg(depth[y] - depth[lca] - 1));
+                get_ans_2(x, y, z, p);
+            }
+            if (depth[x] < depth[y]) {
+                dd = depth[x] - depth[lca];
+                dt = depth[y] - depth[lca] - dd;
+                z = get_z(y, dt / 2 + dd);
+                p = (dt + 1) % 2;
+                x = fa[z * LOG + 0];
+                y = get_z(y, clamp_nonneg(dt / 2 + dd - 1));
+                get_ans(x, y, z, p, 1);
+            }
+            if (depth[x] > depth[y]) {
+                dd = depth[y] - depth[lca];
+                dt = depth[x] - depth[lca] - dd;
+                z = get_z(x, (dt + 1) / 2 + dd);
+                p = (dt + 1) % 2;
+                if (depth[x] - depth[y] == 1) {
+                    y = get_z(y, clamp_nonneg(dd - 1));
+                    x = get_z(x, clamp_nonneg(depth[x] - depth[lca] - 1));
+                    get_ans_2(x, y, z, p);
+                } else {
+                    x = get_z(x, clamp_nonneg((dt + 1) / 2 + dd - 1));
+                    y = fa[z * LOG + 0];
+                    get_ans(x, y, z, p, 0);
+                }
+            }
+        }
+        printf("%d\n", ans);
+    }
+    return 0;
+}

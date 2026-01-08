@@ -1,0 +1,76 @@
+/* Description:
+ * Subset-sum DP table printer (mod 998244353).
+ * Input: n, p
+ * Output: (n lines) DP values for sums 0..p, then a final summary line.
+ */
+
+const int MOD = 998244353;
+const int MAXP = 64;
+
+int n;
+int p;
+int now;
+int f0[MAXP];
+int f1[MAXP];
+
+int main() {
+    n = getint();
+    p = getint();
+
+    f0[0] = 1;
+    now = 1;
+
+    int i;
+    int j;
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (now == 0) {
+            f0[0] = 1;
+            printf("1 ");
+            for (j = 1; j <= p; j = j + 1) {
+                int v;
+                v = f1[j];
+                if (j >= i) {
+                    v = v + f1[j - i];
+                    v = v % MOD;
+                }
+                f0[j] = v;
+                printf("%d ", v);
+            }
+            printf("\n");
+        } else {
+            f1[0] = 1;
+            printf("1 ");
+            for (j = 1; j <= p; j = j + 1) {
+                int v;
+                v = f0[j];
+                if (j >= i) {
+                    v = v + f0[j - i];
+                    v = v % MOD;
+                }
+                f1[j] = v;
+                printf("%d ", v);
+            }
+            printf("\n");
+        }
+
+        now = 1 - now;
+    }
+
+    now = 1 - now;
+
+    printf("%d ", 0);
+    if (now == 0) {
+        for (i = 1; i <= n; i = i + 1) {
+            printf("%d ", f0[i] - f0[i - 1]);
+        }
+        printf("%d\n", f0[p]);
+    } else {
+        for (i = 1; i <= n; i = i + 1) {
+            printf("%d ", f1[i] - f1[i - 1]);
+        }
+        printf("%d\n", f1[p]);
+    }
+
+    return 0;
+}

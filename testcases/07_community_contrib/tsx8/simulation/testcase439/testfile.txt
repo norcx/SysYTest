@@ -1,0 +1,119 @@
+/* Description:
+ *   "paint" drawing simulation (Strict SysY).
+ *   Input encodes each draw command as 5 integers:
+ *     x, y, z, w, c
+ *   where c is an ASCII code for a single printable character.
+ */
+
+const int MAXNM = 6000;
+int s[MAXNM];
+
+int idx(int r, int c, int m) {
+    return (r - 1) * m + (c - 1);
+}
+
+int min2(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+int max2(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+void print_cell(int v) {
+    if (v == 32) printf(" ");
+    else if (v == 36) printf("$");
+    else if (v == 50) printf("2");
+    else if (v == 51) printf("3");
+    else if (v == 65) printf("A");
+    else if (v == 66) printf("B");
+    else if (v == 67) printf("C");
+    else if (v == 68) printf("D");
+    else if (v == 69) printf("E");
+    else printf("?");
+}
+
+int main() {
+    int n;
+    int m;
+    int t;
+    int i;
+    int j;
+
+    n = getint();
+    m = getint();
+    t = getint();
+
+    if (n <= 0) return 0;
+    if (m <= 0) return 0;
+    if (n * m > MAXNM) return 0;
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            s[idx(i, j, m)] = 32;
+        }
+    }
+
+    for (i = 0; i < t; i = i + 1) {
+        int x;
+        int y;
+        int z;
+        int w;
+        int c;
+
+        x = getint();
+        y = getint();
+        z = getint();
+        w = getint();
+        c = getint();
+
+        if (x == z) {
+            int lo;
+            int hi;
+            int k;
+            lo = min2(y, w);
+            hi = max2(y, w);
+            for (k = lo; k <= hi; k = k + 1) s[idx(x, k, m)] = c;
+        } else if (y == w) {
+            int lo2;
+            int hi2;
+            int k2;
+            lo2 = min2(x, z);
+            hi2 = max2(x, z);
+            for (k2 = lo2; k2 <= hi2; k2 = k2 + 1) s[idx(k2, y, m)] = c;
+        } else {
+            if (x > z) {
+                int tmp;
+                tmp = x;
+                x = z;
+                z = tmp;
+                tmp = y;
+                y = w;
+                w = tmp;
+            }
+
+            if (y < w) {
+                int d;
+                for (d = 0; d <= z - x; d = d + 1) s[idx(x + d, y + d, m)] = c;
+            } else {
+                int d2;
+                for (d2 = 0; d2 <= z - x; d2 = d2 + 1) s[idx(x + d2, y - d2, m)] = c;
+            }
+        }
+    }
+
+    for (i = 1; i <= m + 2; i = i + 1) printf("#");
+    printf("\n");
+
+    for (i = 1; i <= n; i = i + 1) {
+        printf("#");
+        for (j = 1; j <= m; j = j + 1) print_cell(s[idx(i, j, m)]);
+        printf("#\n");
+    }
+
+    for (i = 1; i <= m + 2; i = i + 1) printf("#");
+    printf("\n");
+    return 0;
+}

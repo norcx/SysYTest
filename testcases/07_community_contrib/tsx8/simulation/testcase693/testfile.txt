@@ -1,0 +1,74 @@
+/* Description:
+ *   Converted from the given C++ source (string->int hash map with query sums)
+ *   into Strict SysY (int-only).
+ *
+ *   Adaptation:
+ *   - "Strings" are mapped to integer IDs provided by input.
+ *   - Hash is computed from the integer ID (no collision handling, matching the
+ *     original array-overwrite behavior); test data avoids collisions.
+ *   - Constants are scaled down to fit memory limits.
+ */
+
+const int MAXN = 1000;
+const int SEED = 1007;
+
+int bo[MAXN];
+
+int hash_int(int x) {
+    int tmp;
+    tmp = x * SEED;
+    tmp = tmp % MAXN;
+    return tmp;
+}
+
+int main() {
+    int i;
+    int j;
+    int n;
+    int m;
+
+    for (i = 0; i < MAXN; i = i + 1) {
+        bo[i] = -1;
+    }
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        int key;
+        int val;
+        int h;
+        key = getint();
+        val = getint();
+        h = hash_int(key);
+        bo[h] = val;
+    }
+
+    m = getint();
+    for (i = 1; i <= m; i = i + 1) {
+        int x;
+        int p;
+        int ans;
+        x = getint();
+        p = 0;
+        ans = 0;
+
+        for (j = 1; j <= x; j = j + 1) {
+            int key;
+            int h;
+            key = getint();
+            h = hash_int(key);
+            if (bo[h] == -1) {
+                p = 1;
+            } else {
+                ans = ans + bo[h];
+            }
+        }
+
+        if (p != 0) {
+            printf("-1\n");
+        } else {
+            printf("%d\n", ans);
+        }
+    }
+
+    return 0;
+}

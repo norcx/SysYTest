@@ -1,0 +1,184 @@
+/*
+  Converted from the provided C++ source into Strict SysY.
+  Notes:
+  - Uses array-based adjacency list (no structs / STL).
+  - Uses for-loops only (no while).
+*/
+
+const int MAXN = 10000;
+const int MAXE = 50000;
+
+int n, m, q, nn, mm;
+int sum_b, ans1, ans2, ans3, cnt, average;
+
+int a[MAXN], b[MAXN], vis[MAXN], head[MAXN];
+int to[MAXE], w[MAXE], nxt[MAXE];
+int que[MAXN];
+
+void add_edge(int x, int y, int z) {
+    cnt = cnt + 1;
+    to[cnt] = y;
+    w[cnt] = z;
+    nxt[cnt] = head[x];
+    head[x] = cnt;
+    return;
+}
+
+void bfs(int ss) {
+    int qh, qt;
+    qh = 0;
+    qt = 0;
+    que[qt] = ss;
+    qt = qt + 1;
+    vis[ss] = 1;
+
+    for (; qh < qt; ) {
+        int now;
+        now = que[qh];
+        qh = qh + 1;
+
+        if (a[now] > ans1) {
+            ans1 = a[now];
+            ans2 = 1;
+        } else {
+            if (a[now] == ans1) {
+                ans2 = ans2 + 1;
+            }
+        }
+
+        ans3 = ans3 - b[now];
+
+        int i;
+        i = head[now];
+        for (; i != 0; i = nxt[i]) {
+            int v;
+            v = to[i];
+            if (w[i] > mm) {
+            } else {
+                if (vis[v] == 0) {
+                    vis[v] = 1;
+                    que[qt] = v;
+                    qt = qt + 1;
+                }
+            }
+        }
+    }
+    return;
+}
+
+void work() {
+    int mx, mxx;
+    int i, x;
+
+    mx = 0;
+    mxx = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        if (mx < a[i]) {
+            mx = a[i];
+            mxx = 1;
+        } else {
+            if (mx == a[i]) {
+                mxx = mxx + 1;
+            }
+        }
+    }
+
+    for (; q > 0; q = q - 1) {
+        nn = getint();
+        mm = getint();
+
+        ans1 = 0;
+        ans2 = 0;
+        ans3 = sum_b;
+
+        for (i = 1; i <= nn; i = i + 1) {
+            x = getint();
+            if (ans1 < a[x]) {
+                ans1 = x;
+                ans2 = 1;
+            } else {
+                if (ans1 == a[x]) {
+                    ans2 = ans2 + 1;
+                }
+            }
+            ans3 = ans3 - b[x];
+        }
+
+        if (mm >= average) {
+            printf("%d %d\n", mx * mxx, 0);
+        } else {
+            printf("%d %d\n", ans1 * ans2, ans3);
+        }
+    }
+
+    return;
+}
+
+int main() {
+    int i, x, y, z;
+
+    n = getint();
+    m = getint();
+    q = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+    sum_b = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        b[i] = getint();
+        sum_b = sum_b + b[i];
+    }
+
+    cnt = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        head[i] = 0;
+    }
+
+    average = 0;
+    for (i = 1; i <= m; i = i + 1) {
+        x = getint();
+        y = getint();
+        z = getint();
+        add_edge(x, y, z);
+        add_edge(y, x, z);
+
+        if (average == -1) {
+        } else {
+            if (i == 1) {
+                average = z;
+            } else {
+                if (average != z) {
+                    average = -1;
+                }
+            }
+        }
+    }
+
+    if (average != -1) {
+        work();
+        return 0;
+    }
+
+    for (; q > 0; q = q - 1) {
+        nn = getint();
+        mm = getint();
+
+        ans1 = 0;
+        ans2 = 0;
+        ans3 = sum_b;
+
+        for (i = 1; i <= n; i = i + 1) {
+            vis[i] = 0;
+        }
+
+        for (i = 1; i <= nn; i = i + 1) {
+            x = getint();
+            bfs(x);
+        }
+
+        printf("%d %d\n", ans1 * ans2, ans3);
+    }
+
+    return 0;
+}

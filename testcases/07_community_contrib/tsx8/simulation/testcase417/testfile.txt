@@ -1,0 +1,114 @@
+/* Description:
+ *   Matrix-exponentiation sequence under mod 1e9+7.
+ */
+const int MOD = 1000000007;
+
+int T;
+int n;
+
+int base[9];
+int ans[9];
+int tmp[9];
+int now[9];
+
+int idx(int i, int j) {
+  return i * 3 + j;
+}
+
+int addmod(int a, int b) {
+  int s;
+  s = a + b;
+  if (s >= MOD) s = s - MOD;
+  return s;
+}
+
+int mulmod(int a, int b) {
+  int res;
+  res = 0;
+  for (; b > 0; b = b / 2) {
+    if (b % 2 == 1) res = addmod(res, a);
+    a = addmod(a, a);
+  }
+  return res;
+}
+
+void calc_1() {
+  int i;
+  int j;
+  int k;
+  int s;
+
+  for (i = 0; i < 3; i = i + 1) {
+    for (j = 0; j < 3; j = j + 1) {
+      s = 0;
+      for (k = 0; k < 3; k = k + 1) {
+        s = addmod(s, mulmod(ans[idx(i, k)], now[idx(k, j)]));
+      }
+      tmp[idx(i, j)] = s;
+    }
+  }
+
+  for (i = 0; i < 9; i = i + 1) ans[i] = tmp[i];
+}
+
+void calc_2() {
+  int i;
+  int j;
+  int k;
+  int s;
+
+  for (i = 0; i < 3; i = i + 1) {
+    for (j = 0; j < 3; j = j + 1) {
+      s = 0;
+      for (k = 0; k < 3; k = k + 1) {
+        s = addmod(s, mulmod(now[idx(i, k)], now[idx(k, j)]));
+      }
+      tmp[idx(i, j)] = s;
+    }
+  }
+
+  for (i = 0; i < 9; i = i + 1) now[i] = tmp[i];
+}
+
+void get_ans() {
+  int i;
+
+  for (i = 0; i < 9; i = i + 1) {
+    ans[i] = base[i];
+    now[i] = base[i];
+  }
+
+  for (; n > 0;) {
+    if (n % 2 == 1) calc_1();
+    n = n / 2;
+    calc_2();
+  }
+}
+
+int main() {
+  int i;
+  int t;
+
+  for (i = 0; i < 9; i = i + 1) base[i] = 0;
+  base[idx(0, 2)] = 1;
+  base[idx(1, 0)] = 1;
+  base[idx(2, 1)] = 1;
+  base[idx(2, 2)] = 1;
+
+  T = getint();
+  for (; T > 0; T = T - 1) {
+    n = getint();
+    if (n <= 3) {
+      printf("%d\n", 1);
+    } else {
+      n = n - 4;
+      get_ans();
+      t = 0;
+      t = addmod(t, ans[idx(0, 2)]);
+      t = addmod(t, ans[idx(2, 2)]);
+      t = addmod(t, ans[idx(1, 2)]);
+      printf("%d\n", t);
+    }
+  }
+  return 0;
+}

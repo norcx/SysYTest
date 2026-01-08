@@ -1,0 +1,87 @@
+/* Description:
+ *   Converted from C++ to Strict SysY.
+ *   Input:
+ *     n
+ *     s1
+ *     s2
+ *     ...
+ *     sn
+ *   Where each si is an integer "character id" (only equality matters).
+ */
+
+const int MAXN = 360;
+const int MOD = 1000000000;
+
+int n;
+int s[360];
+int f[129600];
+
+int add_mod(int a, int b) {
+    int t;
+    t = a + b;
+    if (t >= MOD) t = t - MOD;
+    return t;
+}
+
+int mul_mod(int a, int b) {
+    int res;
+    int aa;
+    int bb;
+    res = 0;
+    aa = a;
+    if (aa >= MOD) aa = aa % MOD;
+    bb = b;
+    for (; bb > 0; bb = bb / 2) {
+        if (bb % 2 == 1) {
+            res = add_mod(res, aa);
+        }
+        aa = add_mod(aa, aa);
+    }
+    return res;
+}
+
+int dfs(int l, int r) {
+    int idx;
+    int res;
+    int tmp;
+    int i;
+    if (l > r) return 0;
+    idx = l * MAXN + r;
+    if (f[idx] != -1) return f[idx];
+    if (l == r) {
+        f[idx] = 1;
+        return 1;
+    }
+
+    res = 0;
+    if (s[l] == s[r]) {
+        res = add_mod(res, dfs(l + 1, r - 1));
+    }
+
+    tmp = 0;
+    for (i = l + 2; i < r; i = i + 1) {
+        if (s[i] == s[l]) {
+            tmp = add_mod(tmp, mul_mod(dfs(l + 1, i - 1), dfs(i, r)));
+        }
+    }
+    res = add_mod(res, tmp);
+    f[idx] = res;
+    return res;
+}
+
+int main() {
+    int i;
+    int ans;
+    for (i = 0; i < 129600; i = i + 1) {
+        f[i] = -1;
+    }
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        s[i] = getint();
+    }
+
+    ans = dfs(1, n);
+    printf("%d\n", ans);
+    return 0;
+}

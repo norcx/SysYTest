@@ -1,0 +1,70 @@
+/*
+  Dictionary sum query (string keys mapped to int IDs).
+  Input:
+    n
+    n times: key value
+    m
+    m times: cnt, then cnt keys
+  Output:
+    sum of values if all keys exist, else -1
+*/
+
+const int MAXKEY = 100;
+int exist[MAXKEY + 1];
+int val[MAXKEY + 1];
+
+int main() {
+    int i;
+    for (i = 0; i <= MAXKEY; i = i + 1) {
+        exist[i] = 0;
+        val[i] = 0;
+    }
+
+    int n;
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        int key;
+        int x;
+        key = getint();
+        x = getint();
+        if (0 <= key && key <= MAXKEY) {
+            exist[key] = 1;
+            val[key] = x;
+        }
+    }
+
+    int m;
+    m = getint();
+    for (i = 0; i < m; i = i + 1) {
+        int cnt;
+        int j;
+        int ans;
+        int missing;
+
+        cnt = getint();
+        ans = 0;
+        missing = 0;
+
+        for (j = 0; j < cnt; j = j + 1) {
+            int key;
+            key = getint();
+            if (0 <= key && key <= MAXKEY) {
+                if (exist[key] == 0) {
+                    missing = 1;
+                } else {
+                    ans = ans + val[key];
+                }
+            } else {
+                missing = 1;
+            }
+        }
+
+        if (missing == 1) {
+            printf("%d\n", -1);
+        } else {
+            printf("%d\n", ans);
+        }
+    }
+
+    return 0;
+}

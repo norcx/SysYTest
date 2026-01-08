@@ -1,0 +1,53 @@
+/* Description:
+ * Count ordered triples (i, j, k) where i + j + k = n, all >= m,
+ * and none of i/j/k contain digit 3 (mod 12345647).
+ */
+const int MOD = 12345647;
+
+int n;
+int m;
+int ans;
+
+int judge(int x) {
+  int t;
+  for (t = x; t > 0; t = t / 10) {
+    if (t % 10 == 3) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int main() {
+  int i;
+  int j;
+  int tmp;
+
+  n = getint();
+  m = getint();
+
+  ans = 0;
+  for (i = m; i <= n; i = i + 1) {
+    if (judge(i) == 0) {
+      continue;
+    }
+    for (j = m; j <= n && j + i <= n; j = j + 1) {
+      if (judge(j) == 0) {
+        continue;
+      }
+      tmp = n - i - j;
+      if (tmp < m) {
+        break;
+      }
+      if (judge(tmp) == 0) {
+        continue;
+      }
+
+      ans = ans + 1;
+      ans = ans % MOD;
+    }
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

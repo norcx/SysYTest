@@ -1,0 +1,77 @@
+/*
+ * Converted from the provided C++ source.
+ * Uses a 0-sentinel for `n` to terminate input (SysY has no EOF semantics).
+ */
+
+const int MAXN = 256;
+const int NEG = -1000000000;
+
+int a[MAXN];
+int f0[MAXN + 5];
+int f1[MAXN + 5];
+
+int max2(int x, int y) {
+    if (x > y) return x;
+    return y;
+}
+
+int main() {
+    int cnt;
+    cnt = 0;
+
+    int keep_running;
+    for (keep_running = 0; keep_running == 0; keep_running = 0) {
+        int n;
+        n = getint();
+        if (n == 0) break;
+
+        cnt = cnt + 1;
+
+        int i;
+        for (i = 1; i <= n; i = i + 1) {
+            a[i] = getint();
+        }
+
+        int j;
+        for (j = 0; j <= n + 2; j = j + 1) {
+            f0[j] = NEG;
+            f1[j] = NEG;
+        }
+        f0[0] = 0;
+
+        int now;
+        now = 1;
+        for (i = 1; i <= n; i = i + 1) {
+            if (now == 1) {
+                for (j = 0; j <= n + 2; j = j + 1) f1[j] = NEG;
+                for (j = 0; j <= i; j = j + 1) {
+                    int best;
+                    best = f1[j];
+                    if (j > 0) best = max2(best, f0[j - 1] - a[i]);
+                    best = max2(best, f0[j + 1] + a[i]);
+                    best = max2(best, f0[j]);
+                    f1[j] = best;
+                }
+            } else {
+                for (j = 0; j <= n + 2; j = j + 1) f0[j] = NEG;
+                for (j = 0; j <= i; j = j + 1) {
+                    int best;
+                    best = f0[j];
+                    if (j > 0) best = max2(best, f1[j - 1] - a[i]);
+                    best = max2(best, f1[j + 1] + a[i]);
+                    best = max2(best, f1[j]);
+                    f0[j] = best;
+                }
+            }
+            now = 1 - now;
+        }
+
+        int ans;
+        ans = f1[0];
+        if (now == 1) ans = f0[0];
+
+        printf("Case #%d: %d\n", cnt, ans);
+    }
+
+    return 0;
+}

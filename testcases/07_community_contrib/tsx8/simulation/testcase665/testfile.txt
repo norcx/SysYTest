@@ -1,0 +1,128 @@
+/* Description:
+ * Converted from a C++ memoized DFS / game DP into Strict SysY.
+ * Input:
+ *   T
+ *   n m            (repeated T times)
+ * Output:
+ *   ans.x - ans.y  (one line per testcase)
+ */
+
+const int MAXN = 20;
+const int MAXM = 20;
+const int MAXS = 60;
+const int DIMY = 21;
+const int DIMS = 61;
+const int STATES = 53802;
+const int PACK_BASE = 100000;
+
+int n;
+int m;
+int memo[53802];
+int vis[53802];
+
+int pack(int x, int y) {
+    return x * PACK_BASE + y;
+}
+
+int unpack_x(int v) {
+    return v / PACK_BASE;
+}
+
+int unpack_y(int v) {
+    return v - (v / PACK_BASE) * PACK_BASE;
+}
+
+int idx(int x, int y, int s, int p) {
+    return ((x * DIMY + y) * DIMS + s) * 2 + p;
+}
+
+int dfs(int x, int y, int s, int p) {
+    int id;
+    int now;
+    int t1;
+    int t2;
+    int p1;
+    int p2;
+    int tx;
+    int ty;
+
+    id = idx(x, y, s, p);
+    if (vis[id] != 0) return memo[id];
+
+    now = pack(0, 0);
+    t1 = pack(0, 0);
+    t2 = pack(0, 0);
+
+    if (x == 0 && y == 0) {
+        if (p == 1) now = pack(0, s);
+        else now = pack(s, 0);
+        vis[id] = 1;
+        memo[id] = now;
+        return now;
+    }
+
+    if (x == n && y == m) {
+        now = dfs(x - 1, y, s + 1, 1 - p);
+    } else if (p == 1) {
+        p1 = 0;
+        p2 = 0;
+        if (x != 0) {
+            p1 = 1;
+            t1 = dfs(x - 1, y, s + 1, 1 - p);
+        }
+        if (s != 0 || s == 0 && x == 0) {
+            p2 = 1;
+            t2 = dfs(x, y, 0, 1 - p);
+            tx = unpack_x(t2);
+            ty = unpack_y(t2) + s;
+            t2 = pack(tx, ty);
+        }
+        if (p1 == 1 && p2 == 1) {
+            if (unpack_x(t1) >= unpack_x(t2)) now = t1;
+            else now = t2;
+        } else if (p1 == 1) now = t1;
+        else if (p2 == 1) now = t2;
+    } else {
+        p1 = 0;
+        p2 = 0;
+        if (y != 0) {
+            p1 = 1;
+            t1 = dfs(x, y - 1, s + 1, 1 - p);
+        }
+        if (s != 0 || s == 0 && y == 0) {
+            p2 = 1;
+            t2 = dfs(x, y, 0, 1 - p);
+            tx = unpack_x(t2) + s;
+            ty = unpack_y(t2);
+            t2 = pack(tx, ty);
+        }
+        if (p1 == 1 && p2 == 1) {
+            if (unpack_y(t1) >= unpack_y(t2)) now = t1;
+            else now = t2;
+        } else if (p1 == 1) now = t1;
+        else if (p2 == 1) now = t2;
+    }
+
+    vis[id] = 1;
+    memo[id] = now;
+    return now;
+}
+
+int main() {
+    int T;
+    int i;
+    int ans;
+
+    T = getint();
+    for (;T > 0;) {
+        n = getint();
+        m = getint();
+
+        for (i = 0; i < STATES; i = i + 1) vis[i] = 0;
+
+        ans = dfs(n, m, 0, 1);
+        printf("%d\n", unpack_x(ans) - unpack_y(ans));
+        T = T - 1;
+    }
+    return 0;
+}

@@ -1,0 +1,150 @@
+/* Description:
+ *   Sweep-line maximum overlap after interval construction.
+ *   Input is adapted to avoid EOF: first integer is T testcases.
+ */
+
+const int MAXE = 80050;
+
+int ev_pos[MAXE];
+int ev_delta[MAXE];
+int tmp_pos[MAXE];
+int tmp_delta[MAXE];
+
+void merge_events(int l, int mid, int r) {
+    int i;
+    int j;
+    int k;
+    i = l;
+    j = mid + 1;
+    for (k = l; k <= r; k = k + 1) {
+        if (i > mid) {
+            tmp_pos[k] = ev_pos[j];
+            tmp_delta[k] = ev_delta[j];
+            j = j + 1;
+        } else if (j > r) {
+            tmp_pos[k] = ev_pos[i];
+            tmp_delta[k] = ev_delta[i];
+            i = i + 1;
+        } else if (ev_pos[i] < ev_pos[j] || ev_pos[i] == ev_pos[j] && ev_delta[i] > ev_delta[j]) {
+            tmp_pos[k] = ev_pos[i];
+            tmp_delta[k] = ev_delta[i];
+            i = i + 1;
+        } else {
+            tmp_pos[k] = ev_pos[j];
+            tmp_delta[k] = ev_delta[j];
+            j = j + 1;
+        }
+    }
+    for (k = l; k <= r; k = k + 1) {
+        ev_pos[k] = tmp_pos[k];
+        ev_delta[k] = tmp_delta[k];
+    }
+    return;
+}
+
+void sort_events(int l, int r) {
+    int mid;
+    if (l >= r) {
+        return;
+    }
+    mid = (l + r) / 2;
+    sort_events(l, mid);
+    sort_events(mid + 1, r);
+    merge_events(l, mid, r);
+    return;
+}
+
+int main() {
+    int T;
+    int tc;
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        int ta;
+        int tb;
+        int stb;
+        int n;
+        int m;
+        int t;
+        int now;
+        int ans;
+        int tot;
+        int i;
+        ta = getint();
+        tb = getint();
+        stb = getint();
+        n = getint();
+        m = getint();
+
+        t = 0;
+        now = 0;
+        ans = 0;
+        tot = 0;
+
+        for (i = 1; i <= n; i = i + 1) {
+            int x;
+            int y;
+            int z;
+            int l;
+            int r;
+            x = getint();
+            y = getint();
+            z = getint();
+
+            if (x + y < stb || x + y > stb + tb) {
+            } else {
+                tot = tot + z;
+                l = x + 2 * y;
+                r = x + ((stb + tb - x - y) / (2 * y) + 1) * 2 * y;
+                if (r - l <= ta) {
+                    t = t + 1;
+                    ev_pos[t] = l - (ta - (r - l));
+                    ev_delta[t] = z;
+                    t = t + 1;
+                    ev_pos[t] = l;
+                    ev_delta[t] = 0 - z;
+                }
+            }
+        }
+
+        for (i = 1; i <= m; i = i + 1) {
+            int x;
+            int y;
+            int z;
+            int l;
+            int r;
+            x = getint();
+            y = getint();
+            z = getint();
+
+            tot = tot + z;
+            l = x + y;
+            if (x + 2 * y < stb) {
+                r = x + y;
+            } else if (x + 2 * y > stb + tb) {
+                r = x + y;
+            } else {
+                r = x + (stb + tb - x) / (2 * y) * 2 * y + y;
+            }
+            if (r - l <= ta) {
+                t = t + 1;
+                ev_pos[t] = l - (ta - (r - l));
+                ev_delta[t] = z;
+                t = t + 1;
+                ev_pos[t] = l;
+                ev_delta[t] = 0 - z;
+            }
+        }
+
+        if (t > 1) {
+            sort_events(1, t);
+        }
+        for (i = 1; i <= t; i = i + 1) {
+            now = now + ev_delta[i];
+            if (now > ans) {
+                ans = now;
+            }
+        }
+        printf("%d\n", tot - ans);
+    }
+    return 0;
+}

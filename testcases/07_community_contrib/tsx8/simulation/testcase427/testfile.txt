@@ -1,0 +1,213 @@
+/* Description:
+ *   Strict SysY translation of the given C++ program (DSU + offline queries).
+ *   Scaled-down constants and test input are provided in in.txt.
+ */
+
+const int MAXN = 210;
+const int MAXM = 410;
+const int MAXQ = 210;
+const int MAXS = 2100;
+
+int n;
+int m;
+int q;
+
+int a[MAXN];
+int b[MAXN];
+
+int ex[MAXM];
+int ey[MAXM];
+int ez[MAXM];
+
+int c[MAXQ];
+int d[MAXQ];
+int id[MAXQ];
+
+int startPos[MAXQ];
+int lenQ[MAXQ];
+int nodes[MAXS];
+
+int fa[MAXN];
+int vis[MAXN];
+int sumB[MAXN];
+int mxA[MAXN];
+int mxCnt[MAXN];
+
+int out1[MAXQ];
+int out2[MAXQ];
+
+int findfa(int x) {
+    int r;
+    int t;
+    int nxt;
+    for (r = x; fa[r] != r; r = fa[r]) {
+    }
+    for (t = x; fa[t] != t; t = nxt) {
+        nxt = fa[t];
+        fa[t] = r;
+    }
+    return r;
+}
+
+void sort_edges() {
+    int i;
+    int j;
+    int tx;
+    int ty;
+    int tz;
+    for (i = 2; i <= m; i = i + 1) {
+        for (j = i; j > 1; j = j - 1) {
+            if (ez[j] < ez[j - 1]) {
+                tx = ex[j];
+                ex[j] = ex[j - 1];
+                ex[j - 1] = tx;
+                ty = ey[j];
+                ey[j] = ey[j - 1];
+                ey[j - 1] = ty;
+                tz = ez[j];
+                ez[j] = ez[j - 1];
+                ez[j - 1] = tz;
+            } else {
+                break;
+            }
+        }
+    }
+}
+
+void sort_queries() {
+    int i;
+    int j;
+    int t;
+    for (i = 1; i <= q; i = i + 1) {
+        id[i] = i;
+    }
+    for (i = 2; i <= q; i = i + 1) {
+        for (j = i; j > 1; j = j - 1) {
+            if (d[id[j]] < d[id[j - 1]]) {
+                t = id[j];
+                id[j] = id[j - 1];
+                id[j - 1] = t;
+            } else {
+                break;
+            }
+        }
+    }
+}
+
+int main() {
+    int i;
+    int j;
+    int pp;
+    int totalB;
+    int totalNodes;
+
+    int P;
+    int ii;
+    int qi;
+    int dcur;
+
+    int x;
+    int y;
+    int rx;
+    int ry;
+
+    int ans1;
+    int ans2;
+    int ans3;
+
+    n = getint();
+    m = getint();
+    q = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+    }
+
+    totalB = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        b[i] = getint();
+        totalB = totalB + b[i];
+        fa[i] = i;
+        vis[i] = 0;
+        sumB[i] = b[i];
+        mxA[i] = a[i];
+        mxCnt[i] = 1;
+    }
+
+    for (i = 1; i <= m; i = i + 1) {
+        ex[i] = getint();
+        ey[i] = getint();
+        ez[i] = getint();
+    }
+    sort_edges();
+
+    totalNodes = 0;
+    for (i = 1; i <= q; i = i + 1) {
+        c[i] = getint();
+        d[i] = getint();
+        startPos[i] = totalNodes;
+        lenQ[i] = c[i];
+        for (j = 0; j < c[i]; j = j + 1) {
+            nodes[totalNodes] = getint();
+            totalNodes = totalNodes + 1;
+        }
+    }
+    sort_queries();
+
+    P = 1;
+    for (ii = 1; ii <= q; ii = ii + 1) {
+        qi = id[ii];
+        dcur = d[qi];
+
+        for (pp = P; pp <= m && ez[pp] <= dcur; pp = pp + 1) {
+            x = ex[pp];
+            y = ey[pp];
+            rx = findfa(x);
+            ry = findfa(y);
+            if (rx != ry) {
+                fa[rx] = ry;
+                sumB[ry] = sumB[ry] + sumB[rx];
+                sumB[rx] = 0;
+                if (mxA[rx] == mxA[ry]) {
+                    mxCnt[ry] = mxCnt[ry] + mxCnt[rx];
+                }
+                if (mxA[rx] > mxA[ry]) {
+                    mxA[ry] = mxA[rx];
+                    mxCnt[ry] = mxCnt[rx];
+                }
+                mxA[rx] = 0;
+                mxCnt[rx] = 0;
+            }
+        }
+        P = pp;
+
+        ans1 = 0;
+        ans2 = 0;
+        ans3 = totalB;
+
+        for (j = 0; j < lenQ[qi]; j = j + 1) {
+            x = nodes[startPos[qi] + j];
+            rx = findfa(x);
+            if (vis[rx] == ii) {
+            } else {
+                vis[rx] = ii;
+                if (ans1 == mxA[rx]) {
+                    ans2 = ans2 + mxCnt[rx];
+                }
+                if (ans1 < mxA[rx]) {
+                    ans1 = mxA[rx];
+                    ans2 = mxCnt[rx];
+                }
+                ans3 = ans3 - sumB[rx];
+            }
+        }
+
+        out1[qi] = ans1 * ans2;
+        out2[qi] = ans3;
+    }
+
+    for (i = 1; i <= q; i = i + 1) {
+        printf("%d %d\n", out1[i], out2[i]);
+    }
+    return 0;
+}

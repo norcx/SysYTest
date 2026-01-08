@@ -1,0 +1,163 @@
+/*
+ * Converted from C++ to Strict SysY.
+ * Scaled-down constants to fit memory limits.
+ */
+
+const int MAXN = 4096;
+const int MAXM = 16384;
+const int MAX2M = 32768;
+
+int n;
+int nn;
+int ans;
+int m;
+
+int a[MAXN];
+int b[MAXN];
+int t[MAXN];
+
+int ins[MAX2M];
+int outs[MAX2M];
+int ch[MAX2M];
+int rev[MAXM];
+
+int lowbit(int x) {
+    int lb;
+    int tmp;
+    if (x == 0) return 0;
+    lb = 1;
+    tmp = x;
+    for (; tmp % 2 == 0; ) {
+        lb = lb * 2;
+        tmp = tmp / 2;
+    }
+    return lb;
+}
+
+void add(int x, int val) {
+    int i;
+    if (x == 0) return;
+    for (i = x; i <= n; i = i + lowbit(i)) {
+        t[i] = t[i] + val;
+    }
+}
+
+int query(int x) {
+    int tmp;
+    int i;
+    tmp = 0;
+    for (i = x; i > 0; i = i - lowbit(i)) {
+        tmp = tmp + t[i];
+    }
+    return tmp;
+}
+
+void push_up(int o) {
+    int lch;
+    int rch;
+    lch = ch[o * 2];
+    rch = ch[o * 2 + 1];
+    ins[o * 2] = outs[lch * 2] + outs[rch * 2] + ins[lch * 2] + ins[rch * 2];
+    ins[o * 2 + 1] =
+        outs[lch * 2 + 1] + outs[rch * 2 + 1] + ins[lch * 2 + 1] + ins[rch * 2 + 1];
+}
+
+void push_down(int o) {
+    int lch;
+    int rch;
+    int tmp;
+    if (rev[o] == 0) return;
+    rev[o] = 0;
+
+    tmp = ins[o * 2];
+    ins[o * 2] = ins[o * 2 + 1];
+    ins[o * 2 + 1] = tmp;
+
+    lch = ch[o * 2];
+    rch = ch[o * 2 + 1];
+
+    rev[lch] = 1 - rev[lch];
+    rev[rch] = 1 - rev[rch];
+
+    tmp = outs[lch * 2];
+    outs[lch * 2] = outs[rch * 2 + 1];
+    outs[rch * 2 + 1] = tmp;
+
+    tmp = outs[lch * 2 + 1];
+    outs[lch * 2 + 1] = outs[rch * 2];
+    outs[rch * 2] = tmp;
+
+    tmp = ch[o * 2];
+    ch[o * 2] = ch[o * 2 + 1];
+    ch[o * 2 + 1] = tmp;
+}
+
+void build(int l, int r, int o) {
+    int mid;
+    int lch;
+    int rch;
+    int i;
+
+    ins[o * 2] = 0;
+    ins[o * 2 + 1] = 0;
+    outs[o * 2] = 0;
+    outs[o * 2 + 1] = 0;
+    rev[o] = 0;
+
+    if (l == r) return;
+
+    mid = (l + r) / 2;
+    lch = o * 2;
+    rch = lch + 1;
+    ch[o * 2] = lch;
+    ch[o * 2 + 1] = rch;
+
+    build(l, mid, lch);
+    build(mid + 1, r, rch);
+
+    for (i = l; i <= mid; i = i + 1) add(a[i], 1);
+    for (i = mid + 1; i <= r; i = i + 1) {
+        outs[rch * 2] = outs[rch * 2] + (mid - l + 1 - query(a[i]));
+        outs[rch * 2 + 1] = outs[rch * 2 + 1] + query(a[i] - 1);
+    }
+    for (i = l; i <= mid; i = i + 1) add(a[i], -1);
+
+    push_up(o);
+}
+
+void updata(int l, int r, int o, int now_deep, int tar_deep) {
+    int mid;
+    if (now_deep == tar_deep) {
+        rev[o] = 1 - rev[o];
+        push_down(o);
+        return;
+    }
+
+    push_down(o);
+    mid = (l + r) / 2;
+    updata(l, mid, ch[o * 2], now_deep - 1, tar_deep);
+    updata(mid + 1, r, ch[o * 2 + 1], now_deep - 1, tar_deep);
+    push_up(o);
+}
+
+int main() {
+    int i;
+    int q;
+    int x;
+
+    nn = getint();
+    n = 1;
+    for (i = 0; i < nn; i = i + 1) n = n * 2;
+
+    for (i = 1; i <= n; i = i + 1) a[i] = getint();
+    build(1, n, 1);
+
+    m = getint();
+    for (q = 0; q < m; q = q + 1) {
+        ans = 0;
+        x = getint();
+        if (x != 0) updata(1, n, 1, nn, x);
+        printf("%d\n", ins[2]);
+    }
+    return 0;
+}

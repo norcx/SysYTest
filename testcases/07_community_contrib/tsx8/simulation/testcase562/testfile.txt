@@ -1,0 +1,241 @@
+/* Description:
+ *   Strict SysY conversion of the given C++ program (forest).
+ *   Uses only int/void, 1D arrays, getint() input, printf() output.
+ */
+
+const int MOD = 1000000007;
+const int MAXN = 2100;
+const int MAXM = 4200;
+
+int n;
+
+int head[MAXN];
+int to[MAXM];
+int nxt[MAXM];
+int ecnt;
+
+int edge_x[MAXN];
+int edge_y[MAXN];
+int query_idx[MAXN];
+
+int parent_[MAXN];
+int dsu[MAXN];
+
+int a[MAXN];
+int s[MAXN];
+int d[MAXN];
+int ans_arr[MAXN];
+
+int bfs_q[MAXN];
+
+int ans;
+
+int max2(int x, int y) {
+    if (x > y) return x;
+    return y;
+}
+
+void add_edge(int x, int y) {
+    ecnt = ecnt + 1;
+    to[ecnt] = y;
+    nxt[ecnt] = head[x];
+    head[x] = ecnt;
+
+    ecnt = ecnt + 1;
+    to[ecnt] = x;
+    nxt[ecnt] = head[y];
+    head[y] = ecnt;
+}
+
+int find_set(int x) {
+    int r;
+    int p;
+    r = x;
+    for (; dsu[r] != r; ) {
+        r = dsu[r];
+    }
+    for (; dsu[x] != x; ) {
+        p = dsu[x];
+        dsu[x] = r;
+        x = p;
+    }
+    return r;
+}
+
+int mul_mod(int aa, int bb) {
+    int a1;
+    int b1;
+    int res;
+    a1 = aa % MOD;
+    if (a1 < 0) a1 = a1 + MOD;
+    b1 = bb % MOD;
+    if (b1 < 0) b1 = b1 + MOD;
+
+    res = 0;
+    for (; b1 != 0; b1 = b1 / 2) {
+        if (b1 % 2 != 0) {
+            res = res + a1;
+            if (res >= MOD) res = res - MOD;
+        }
+        a1 = a1 + a1;
+        if (a1 >= MOD) a1 = a1 - MOD;
+    }
+    return res;
+}
+
+int pow_mod(int base, int exp) {
+    int res;
+    int b;
+    int e;
+    res = 1;
+    b = base % MOD;
+    if (b < 0) b = b + MOD;
+    e = exp;
+    for (; e != 0; e = e / 2) {
+        if (e % 2 != 0) res = mul_mod(res, b);
+        b = mul_mod(b, b);
+    }
+    return res;
+}
+
+int inv_mod(int x) {
+    return pow_mod(x, MOD - 2);
+}
+
+void div_val(int v) {
+    int t;
+    t = v % MOD;
+    if (t < 0) t = t + MOD;
+    ans = mul_mod(ans, inv_mod(t));
+}
+
+void build_parent_rooted_at_1() {
+    int front;
+    int back;
+    int u;
+    int i;
+    int v;
+
+    front = 0;
+    back = 1;
+    bfs_q[0] = 1;
+    parent_[1] = 0;
+
+    for (; front < back; front = front + 1) {
+        u = bfs_q[front];
+        for (i = head[u]; i != 0; i = nxt[i]) {
+            v = to[i];
+            if (v != parent_[u]) {
+                parent_[v] = u;
+                bfs_q[back] = v;
+                back = back + 1;
+            }
+        }
+    }
+}
+
+void update_up(int start, int root) {
+    int cur;
+    int best1;
+    int best2;
+    int i;
+    int v;
+    int tmp;
+    int cand;
+
+    cur = start;
+    for (; ; ) {
+        best1 = 0;
+        best2 = 0;
+
+        for (i = head[cur]; i != 0; i = nxt[i]) {
+            v = to[i];
+            if (v != parent_[cur]) {
+                tmp = s[v];
+                if (tmp >= best1) {
+                    best2 = best1;
+                    best1 = tmp;
+                } else {
+                    if (tmp > best2) best2 = tmp;
+                }
+                if (d[v] > d[cur]) d[cur] = d[v];
+            }
+        }
+
+        cand = best1 + best2 + a[cur];
+        if (cand > d[cur]) d[cur] = cand;
+        s[cur] = best1 + a[cur];
+
+        if (cur == root) break;
+        cur = parent_[cur];
+    }
+}
+
+int main() {
+    int i;
+    int idx;
+    int x;
+    int y;
+    int fx;
+    int fy;
+
+    n = getint();
+    ans = 1;
+
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        ans = mul_mod(ans, a[i]);
+        dsu[i] = i;
+        s[i] = a[i];
+        d[i] = a[i];
+        head[i] = 0;
+    }
+    ecnt = 0;
+
+    for (i = 1; i < n; i = i + 1) {
+        edge_x[i] = getint();
+        edge_y[i] = getint();
+        add_edge(edge_x[i], edge_y[i]);
+    }
+
+    build_parent_rooted_at_1();
+
+    for (i = 1; i <= n; i = i + 1) head[i] = 0;
+    ecnt = 0;
+
+    for (i = 1; i < n; i = i + 1) {
+        query_idx[i] = getint();
+    }
+
+    ans_arr[n] = ans;
+
+    for (i = n - 1; i >= 1; i = i - 1) {
+        idx = query_idx[i];
+        x = edge_x[idx];
+        y = edge_y[idx];
+        fx = find_set(x);
+        fy = find_set(y);
+
+        add_edge(x, y);
+
+        div_val(d[fx]);
+        div_val(d[fy]);
+
+        if (parent_[y] == x) {
+            update_up(x, fx);
+            ans = mul_mod(ans, d[fx]);
+            dsu[fy] = fx;
+        } else {
+            update_up(y, fy);
+            ans = mul_mod(ans, d[fy]);
+            dsu[fx] = fy;
+        }
+
+        ans_arr[i] = ans;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        printf("%d\n", ans_arr[i]);
+    }
+    return 0;
+}

@@ -1,0 +1,199 @@
+/*
+  Converted to Strict SysY testcase.
+  Original source: drink.cpp (grid link updates).
+*/
+
+const int MAXN = 10;
+const int MAXM = 10;
+const int MAXZ = 6;
+const int MAXNODE = (MAXN + 2) * (MAXM + 2);
+const int D_SIZE = (MAXNODE + 1) * 4;
+const int V_SIZE = 4 * 2 * MAXZ;
+
+int n;
+int m;
+int Q;
+int rows;
+int cols;
+int node_cnt;
+
+int a[MAXNODE];
+int d[D_SIZE];
+int v_dir[V_SIZE];
+int v_now[V_SIZE];
+
+int st_main[2];
+int st_row[2];
+int st_q[2];
+
+int mod4(int x) {
+    int r;
+    r = x % 4;
+    if (r < 0) r = r + 4;
+    return r;
+}
+
+int dpos(int node, int dir) {
+    return node * 4 + dir;
+}
+
+int vidx(int i, int t, int j) {
+    return (i * 2 + t) * MAXZ + j;
+}
+
+void init_d() {
+    int node;
+    int r;
+    int c;
+    int up;
+    int right;
+    int down;
+    int left;
+    for (node = 1; node <= node_cnt; node = node + 1) {
+        r = (node - 1) / cols;
+        c = (node - 1) % cols;
+
+        up = node - cols;
+        if (r == 0) up = node;
+        right = node + 1;
+        if (c == cols - 1) right = node;
+        down = node + cols;
+        if (r == rows - 1) down = node;
+        left = node - 1;
+        if (c == 0) left = node;
+
+        d[dpos(node, 0)] = up;
+        d[dpos(node, 1)] = right;
+        d[dpos(node, 2)] = down;
+        d[dpos(node, 3)] = left;
+    }
+    return;
+}
+
+void move(int st[], int j) {
+    int dir;
+    int now;
+    int nxt;
+    int idx;
+    int idx2;
+    int k;
+
+    dir = st[0];
+    now = st[1];
+
+    idx = mod4(j - dir + 4);
+    nxt = d[dpos(now, idx)];
+
+    for (k = 0; k < 4; k = k + 1) {
+        idx2 = mod4(j - dir + 6);
+        if (d[dpos(nxt, idx2)] == now) {
+            k = 4;
+        } else {
+            dir = mod4(dir + 1);
+        }
+    }
+
+    st[0] = dir;
+    st[1] = nxt;
+    return;
+}
+
+void process_query(int x, int y, int z) {
+    int i;
+    int j;
+    int ndir;
+    int nnow;
+    int dest;
+
+    st_q[0] = 0;
+    st_q[1] = 1;
+
+    for (i = 1; i <= x; i = i + 1) move(st_q, 2);
+    for (i = 1; i <= y; i = i + 1) move(st_q, 1);
+
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 1; j <= z; j = j + 1) {
+            v_dir[vidx(i, 0, j - 1)] = st_q[0];
+            v_now[vidx(i, 0, j - 1)] = st_q[1];
+            move(st_q, i);
+
+            v_dir[vidx(i, 1, j - 1)] = st_q[0];
+            v_now[vidx(i, 1, j - 1)] = st_q[1];
+            move(st_q, mod4(i + 2));
+
+            if (j != z) move(st_q, mod4(i + 1));
+        }
+    }
+
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < z; j = j + 1) {
+            ndir = v_dir[vidx(i, 1, j)];
+            nnow = v_now[vidx(i, 1, j)];
+            dest = v_now[vidx(mod4(i + 3), 0, j)];
+            d[dpos(nnow, mod4(i + 6 - ndir))] = dest;
+
+            ndir = v_dir[vidx(i, 0, j)];
+            nnow = v_now[vidx(i, 0, j)];
+            dest = v_now[vidx(mod4(i + 1), 1, j)];
+            d[dpos(nnow, mod4(i + 4 - ndir))] = dest;
+        }
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int j;
+    int qq;
+    int x;
+    int y;
+    int z;
+    int nn;
+    int r;
+    int c;
+    int val;
+
+    n = getint();
+    m = getint();
+    Q = getint();
+
+    rows = n + 2;
+    cols = m + 2;
+    node_cnt = rows * cols;
+
+    init_d();
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            a[i * cols + j] = getint();
+        }
+    }
+
+    for (qq = 0; qq < Q; qq = qq + 1) {
+        x = getint();
+        y = getint();
+        z = getint();
+        process_query(x, y, z);
+    }
+
+    st_main[0] = 0;
+    st_main[1] = 1;
+
+    for (i = 1; i <= n; i = i + 1) {
+        move(st_main, 2);
+        st_row[0] = st_main[0];
+        st_row[1] = st_main[1];
+        for (j = 1; j <= m; j = j + 1) {
+            move(st_row, 1);
+            nn = st_row[1];
+            r = (nn - 1) / cols;
+            c = (nn - 1) % cols;
+            val = a[r * cols + c];
+            printf("%d", val);
+            printf(" ");
+        }
+        printf("\n");
+    }
+
+    return 0;
+}

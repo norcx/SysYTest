@@ -1,0 +1,51 @@
+/*
+  Counts the number of subsets of {1..n} whose sum equals p (mod 998244353).
+  Input:
+    n
+    p
+  Output:
+    answer
+*/
+
+const int MOD = 998244353;
+const int MAXP = 5000;
+
+int n;
+int p;
+int f[10002];
+
+int main() {
+    int now;
+    int width;
+    int i;
+    int j;
+    int curOff;
+    int preOff;
+
+    n = getint();
+    p = getint();
+
+    width = MAXP + 1;
+
+    f[0] = 1;
+    now = 0;
+
+    for (i = 1; i <= n; i = i + 1) {
+        now = 1 - now;
+        curOff = now * width;
+        preOff = (1 - now) * width;
+
+        f[curOff + 0] = 1;
+        for (j = 1; j <= p; j = j + 1) {
+            f[curOff + j] = f[preOff + j];
+            if (j >= i) {
+                f[curOff + j] = f[curOff + j] + f[preOff + (j - i)];
+                f[curOff + j] = f[curOff + j] % MOD;
+            }
+        }
+    }
+
+    curOff = now * width;
+    printf("%d\n", f[curOff + p]);
+    return 0;
+}

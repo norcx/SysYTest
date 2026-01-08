@@ -1,0 +1,31 @@
+/* Description:
+ *   [Add description here]
+ */
+
+int main() {
+  int n;
+  int i;
+  int x;
+  int sum;
+  int ans;
+
+  n = getint();
+  sum = 0;
+  ans = 0;
+
+  for (i = 0; i < n; i = i + 1) {
+    x = getint();
+    if (x == 1) {
+      sum = sum + 1;
+    } else {
+      sum = sum - 1;
+    }
+    if (sum < 0) {
+      sum = 1;
+      ans = ans + 1;
+    }
+  }
+
+  printf("%d\n", ans + sum / 2);
+  return 0;
+}

@@ -1,0 +1,115 @@
+const int MAXN = 4100;
+
+int n;
+int nn;
+int m;
+
+int a[MAXN];
+int b[MAXN];
+int c[MAXN];
+
+int inv[32];
+int shun[32];
+
+void init(int l, int r, int deep) {
+  int mid;
+  int len;
+  int i;
+  int x;
+  int y;
+  int c0;
+
+  if (l == r) {
+    return;
+  }
+
+  mid = (l + r) / 2;
+  len = r - l + 1;
+
+  init(l, mid, deep - 1);
+  init(mid + 1, r, deep - 1);
+
+  for (i = l; i <= r; i = i + 1) {
+    b[i] = a[i];
+  }
+  x = l;
+  y = mid + 1;
+  for (; x <= mid && y <= r;) {
+    if (b[x] > b[y]) {
+      inv[deep] = inv[deep] + (mid - x + 1);
+      y = y + 1;
+    } else {
+      x = x + 1;
+    }
+  }
+
+  for (i = l; i <= r; i = i + 1) {
+    b[i] = a[i];
+  }
+  x = l;
+  y = mid + 1;
+  c0 = 0;
+  for (; x <= mid && y <= r;) {
+    if (b[x] < b[y]) {
+      c0 = c0 + 1;
+      c[c0] = b[x];
+      shun[deep] = shun[deep] + (r - y + 1);
+      x = x + 1;
+    } else {
+      c0 = c0 + 1;
+      c[c0] = b[y];
+      y = y + 1;
+    }
+  }
+  for (; x <= mid;) {
+    c0 = c0 + 1;
+    c[c0] = b[x];
+    x = x + 1;
+  }
+  for (; y <= r;) {
+    c0 = c0 + 1;
+    c[c0] = b[y];
+    y = y + 1;
+  }
+  for (i = 1; i <= len; i = i + 1) {
+    a[i + l - 1] = c[i];
+  }
+  return;
+}
+
+int main() {
+  int i;
+  int j;
+  int x;
+  int t;
+  int ans;
+
+  nn = getint();
+  n = 1;
+  for (i = 0; i < nn; i = i + 1) {
+    n = n * 2;
+  }
+
+  for (i = 1; i <= n; i = i + 1) {
+    a[i] = getint();
+  }
+
+  init(1, n, nn);
+
+  m = getint();
+  for (i = 0; i < m; i = i + 1) {
+    x = getint();
+    for (j = 1; j <= x; j = j + 1) {
+      t = inv[j];
+      inv[j] = shun[j];
+      shun[j] = t;
+    }
+
+    ans = 0;
+    for (j = 1; j <= nn; j = j + 1) {
+      ans = ans + inv[j];
+    }
+    printf("%d\n", ans);
+  }
+  return 0;
+}

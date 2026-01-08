@@ -1,0 +1,74 @@
+/* Description:
+ *   SysY translation of a C++ program that only parses input.
+ *
+ *   Original behavior:
+ *     - Reads n, then n pairs (x[i], y[i]) as doubles.
+ *     - Reads m operations; each operation reads a string op and (l, r),
+ *       and optionally extra numbers depending on op.
+ *     - Performs empty loops (no state changes) and prints nothing.
+ *
+ *   SysY mapping (int-only):
+ *     - Operation string is mapped to an integer opcode per query:
+ *         1: 'M' (reads p, q)
+ *         2: 'X' (no extra)
+ *         3: 'Y' (no extra)
+ *         4: 'O' (no extra)
+ *         5: other (reads a)
+ */
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int qi;
+    int op;
+    int l;
+    int r;
+    int xi;
+    int yi;
+    int p;
+    int q;
+    int a;
+    int sink;
+
+    sink = 0;
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        xi = getint();
+        yi = getint();
+    }
+
+    m = getint();
+    for (qi = 0; qi < m; qi = qi + 1) {
+        op = getint();
+        l = getint();
+        r = getint();
+
+        if (op == 1) {
+            p = getint();
+            q = getint();
+            for (i = l; i <= r; i = i + 1) {
+                sink = sink + 0;
+            }
+        } else if (op == 2) {
+            for (i = l; i <= r; i = i + 1) {
+                sink = sink + 0;
+            }
+        } else if (op == 3) {
+            for (i = l; i <= r; i = i + 1) {
+                sink = sink + 0;
+            }
+        } else if (op == 4) {
+            for (i = l; i <= r; i = i + 1) {
+                sink = sink + 0;
+            }
+        } else {
+            a = getint();
+            for (i = l; i <= r; i = i + 1) {
+                sink = sink + 0;
+            }
+        }
+    }
+
+    return 0;
+}

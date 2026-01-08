@@ -1,0 +1,64 @@
+/* Description:
+ *   Deterministic generator derived from the given C source.
+ *   Prints:
+ *     n = 17
+ *     2^n pseudo-random ints in [1, n]
+ *     m = 2000
+ *     m pseudo-random ints in [0, n-1]
+ *
+ *   RNG: MINSTD (Park–Miller) seeded from getint() (in.txt).
+ */
+
+const int A = 48271;
+const int M = 2147483647;
+const int Q = 44488;
+const int R = 3399;
+
+int seed;
+
+int next_rand() {
+    int hi;
+    int lo;
+    int test;
+    hi = seed / Q;
+    lo = seed - hi * Q;
+    test = A * lo - R * hi;
+    if (test > 0) seed = test;
+    else seed = test + M;
+    return seed;
+}
+
+int main() {
+    int n;
+    int m;
+    int limit;
+    int i;
+    int x;
+
+    seed = getint();
+    if (seed <= 0) seed = 1;
+
+    n = 7;
+    printf("%d\n", n);
+
+    limit = 1;
+    for (i = 0; i < n; i = i + 1) {
+        limit = limit * 2;
+    }
+
+    for (i = 1; i <= limit; i = i + 1) {
+        x = next_rand() % n + 1;
+        printf("%d ", x);
+    }
+    printf("\n");
+
+    m = 200;
+    printf("%d\n", m);
+
+    for (i = 0; i < m; i = i + 1) {
+        x = next_rand() % n;
+        printf("%d ", x);
+    }
+    printf("\n");
+    return 0;
+}

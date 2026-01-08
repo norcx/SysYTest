@@ -1,0 +1,51 @@
+const int MAXN = 1000;
+
+int n;
+int m;
+int ansx;
+int ansy;
+int h;
+int t;
+int q[MAXN];
+int ans;
+int a[MAXN];
+int sum[MAXN];
+
+int main() {
+  int i;
+  int tmp;
+
+  n = getint();
+  m = getint();
+
+  for (i = 1; i <= n; i = i + 1) {
+    a[i] = getint();
+    sum[i] = sum[i - 1] + a[i];
+  }
+
+  h = 1;
+  t = 0;
+
+  for (i = m + 1; i + m - 1 <= n; i = i + 1) {
+    for (; h <= t && sum[q[t] + m - 1] - sum[q[t] - 1] <= sum[i + m - 1] - sum[i - 1];) {
+      t = t - 1;
+    }
+    t = t + 1;
+    q[t] = i;
+  }
+
+  for (i = 1; i <= n && i + m + m - 1 <= n; i = i + 1) {
+    for (; h <= t && i + m > q[h];) {
+      h = h + 1;
+    }
+    tmp = sum[i + m - 1] - sum[i - 1] + sum[q[h] + m - 1] - sum[q[h] - 1];
+    if (tmp > ans) {
+      ans = tmp;
+      ansx = i;
+      ansy = q[h];
+    }
+  }
+
+  printf("%d %d\n", ansx, ansy);
+  return 0;
+}

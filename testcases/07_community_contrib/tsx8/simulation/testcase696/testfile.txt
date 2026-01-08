@@ -1,0 +1,46 @@
+/* Description:
+ *   Converted from C++ DP code to Strict SysY.
+ */
+const int MOD = 998244353;
+const int MAXP = 2000;
+
+int n;
+int p;
+int prev[MAXP + 1];
+int cur[MAXP + 1];
+
+int norm_mod(int x) {
+  x = x % MOD;
+  if (x < 0) x = x + MOD;
+  return x;
+}
+
+int main() {
+  int i;
+  int j;
+  int ans;
+
+  n = getint();
+  p = getint();
+
+  ans = 0;
+  prev[0] = 1;
+
+  for (i = 1; (i + 1) * i / 2 <= p; i = i + 1) {
+    for (j = i; j <= p; j = j + 1) {
+      cur[j] = prev[j - i] + cur[j - i];
+      if (j >= n + 1) cur[j] = cur[j] - prev[j - n - 1];
+      cur[j] = norm_mod(cur[j]);
+    }
+
+    ans = norm_mod(ans + cur[p]);
+
+    for (j = 0; j <= p; j = j + 1) {
+      prev[j] = cur[j];
+      cur[j] = 0;
+    }
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

@@ -1,0 +1,52 @@
+/* Description:
+ * Deterministically generates 100 pseudo-random primes from a scaled-down sieve.
+ */
+
+const int MAX_I = 50000;
+const int LIMIT = 100000;
+const int T = 100;
+
+int check[100005];
+int prime[50005];
+int seed;
+
+int myrand() {
+    seed = seed * 11021 + 12345;
+    seed = seed % 46337;
+    return seed;
+}
+
+void init() {
+    int i;
+    int j;
+    for (i = 2; i <= MAX_I; i = i + 1) {
+        if (check[i] == 0) {
+            prime[0] = prime[0] + 1;
+            prime[prime[0]] = i;
+        }
+        for (j = 1; j <= prime[0]; j = j + 1) {
+            if (i > LIMIT / prime[j]) {
+                break;
+            }
+            check[i * prime[j]] = 1;
+            if (i % prime[j] == 0) {
+                break;
+            }
+        }
+    }
+}
+
+int main() {
+    int k;
+    int idx;
+
+    seed = 1;
+    init();
+
+    printf("%d\n", T);
+    for (k = 0; k < T; k = k + 1) {
+        idx = myrand() % prime[0] + 1;
+        printf("%d\n", prime[idx]);
+    }
+    return 0;
+}

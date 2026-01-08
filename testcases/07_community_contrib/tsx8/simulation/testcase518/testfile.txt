@@ -1,0 +1,45 @@
+/*
+  Deterministic version of the given generator:
+  - Prints n=10
+  - Prints 10 pseudo-random integers in [0, 3], each followed by a space
+*/
+
+int n;
+int seed;
+
+int myrand() {
+    int a;
+    int m;
+    int q;
+    int r;
+    int hi;
+    int lo;
+    int t;
+
+    a = 16807;
+    m = 2147483647;
+    q = 127773;
+    r = 2836;
+
+    hi = seed / q;
+    lo = seed - hi * q;
+    t = a * lo - r * hi;
+    if (t <= 0) t = t + m;
+    seed = t;
+    return seed;
+}
+
+int main() {
+    int i;
+    int x;
+
+    n = 10;
+    seed = 1;
+
+    printf("%d\n", n);
+    for (i = 1; i <= n; i = i + 1) {
+        x = myrand() % (n - 6);
+        printf("%d ", x);
+    }
+    return 0;
+}

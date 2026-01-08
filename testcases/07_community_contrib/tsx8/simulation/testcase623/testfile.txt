@@ -1,0 +1,170 @@
+/* Description:
+ *   SysY translation of the given C++ program.
+ *   Input format (strict, 1 integer per line):
+ *     T
+ *     sign(0=non-negative, 1=negative)
+ *     len
+ *     d0
+ *     d1
+ *     ...
+ *     d(len-1)
+ *   Repeated for T cases. Each case prints one line.
+ */
+
+const int MAXLEN = 1024;
+
+void print_trimmed(int a[], int len) {
+    int i;
+    int first;
+    int found;
+
+    first = len - 1;
+    found = 0;
+    for (i = 0; i < len; i = i + 1) {
+        if (found == 0 && a[i] != 0) {
+            first = i;
+            found = 1;
+        }
+    }
+
+    for (i = first; i < len; i = i + 1) {
+        printf("%d", a[i]);
+    }
+}
+
+void solve_nonneg(int a[], int len) {
+    int i;
+    int j;
+    int sum;
+    int flag;
+    int ss;
+    int room;
+    int inc;
+
+    sum = 0;
+    flag = 0;
+    for (i = len - 1; i >= 0; i = i - 1) {
+        if (a[i] >= 1 && sum >= 2) {
+            a[i] = a[i] - 1;
+            sum = 2;
+            for (j = i + 1; j < len; j = j + 1) {
+                room = 9 - a[j];
+                if (sum > 0 && room > 0) {
+                    inc = room;
+                    if (inc > sum) {
+                        inc = sum;
+                    }
+                    a[j] = a[j] + inc;
+                    sum = sum - inc;
+                }
+            }
+
+            ss = 0;
+            for (j = i + 1; j < len; j = j + 1) {
+                ss = ss + a[j];
+            }
+            for (j = i + 1; j < len; j = j + 1) {
+                if (ss >= 9) {
+                    a[j] = 9;
+                    ss = ss - 9;
+                } else {
+                    a[j] = ss;
+                    ss = 0;
+                }
+            }
+
+            flag = 1;
+        }
+        if (flag == 1) {
+            i = -1;
+        } else {
+            sum = sum + (9 - a[i]);
+        }
+    }
+
+    if (flag == 1) {
+        print_trimmed(a, len);
+        printf("\n");
+        return;
+    }
+
+    printf("-");
+    flag = 0;
+    for (i = len - 1; i >= 0; i = i - 1) {
+        if (flag == 0 && a[i] < 9) {
+            a[i] = a[i] + 1;
+            flag = 1;
+        }
+    }
+    if (flag == 1) {
+        print_trimmed(a, len);
+        printf("\n");
+        return;
+    }
+
+    printf("1");
+    print_trimmed(a, len);
+    printf("\n");
+}
+
+void solve_neg(int a[], int len) {
+    int i;
+    int flag;
+
+    printf("-");
+    flag = 0;
+    for (i = len - 1; i >= 0; i = i - 1) {
+        if (flag == 0 && a[i] < 9) {
+            a[i] = a[i] + 1;
+            flag = 1;
+        }
+    }
+
+    if (flag == 1) {
+        print_trimmed(a, len);
+        printf("\n");
+        return;
+    }
+
+    printf("1");
+    print_trimmed(a, len);
+    printf("\n");
+}
+
+int main() {
+    int t;
+    int case_id;
+    int sign;
+    int len;
+    int a[MAXLEN];
+    int i;
+
+    t = getint();
+    for (case_id = 0; case_id < t; case_id = case_id + 1) {
+        sign = getint();
+        len = getint();
+        if (len < 1) {
+            len = 1;
+        }
+        if (len > MAXLEN) {
+            len = MAXLEN;
+        }
+        for (i = 0; i < len; i = i + 1) {
+            a[i] = getint();
+            if (a[i] < 0) {
+                a[i] = 0;
+            }
+            if (a[i] > 9) {
+                a[i] = 9;
+            }
+        }
+
+        if (sign == 0) {
+            solve_nonneg(a, len);
+        } else {
+            solve_neg(a, len);
+        }
+    }
+
+    return 0;
+}

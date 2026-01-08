@@ -1,0 +1,46 @@
+/* Description:
+ *   Converted from a Windows stress-test harness that repeatedly compares
+ *   mine.txt and std.txt and stops on first difference.
+ *
+ *   SysY version: read multiple rounds of paired integers and stop when any
+ *   pair differs. Input format:
+ *     n
+ *     mine_1
+ *     std_1
+ *     ...
+ *     mine_n
+ *     std_n
+ *   Repeat rounds; terminate with n == 0.
+ */
+
+int main() {
+    const int MAX_ROUNDS = 1000;
+    int round;
+    int n;
+    int i;
+    int mismatch;
+    int mine_v;
+    int std_v;
+
+    for (round = 0; round < MAX_ROUNDS; round = round + 1) {
+        n = getint();
+        if (n == 0) {
+            break;
+        }
+
+        mismatch = 0;
+        for (i = 0; i < n; i = i + 1) {
+            mine_v = getint();
+            std_v = getint();
+            if (mine_v != std_v) {
+                mismatch = 1;
+            }
+        }
+
+        if (mismatch != 0) {
+            break;
+        }
+    }
+
+    return 0;
+}

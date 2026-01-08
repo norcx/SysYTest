@@ -1,0 +1,112 @@
+/* Description:
+ *   Converted from a C++ program that:
+ *   1) reads n pairs (x[i], y[i]) with original index i (1..n)
+ *   2) sorts items by x ascending, builds idpos[orig] -> sorted position
+ *   3) for each query (qx, qy): qx is 0-based original index
+ *      - rank = idpos[qx+1]
+ *      - build array a[j] = x[j] + qy if y[j]==1 else x[j] - qy (in sorted-by-x order)
+ *      - sort a and print a[rank]
+ *
+ *   Strict SysY constraints:
+ *   - no includes/structs/preprocessor
+ *   - int-only, 1D arrays, for-loops only
+ */
+
+const int MAXN = 2000;
+
+int n;
+int m;
+int hx[2005];
+int hy[2005];
+int hid[2005];
+int idpos[2005];
+int a[2005];
+
+void sort_triples_by_x(int len) {
+    int i;
+    int j;
+    int keyx;
+    int keyy;
+    int keyid;
+    for (i = 2; i <= len; i = i + 1) {
+        keyx = hx[i];
+        keyy = hy[i];
+        keyid = hid[i];
+        j = i - 1;
+        for (; j >= 1; j = j - 1) {
+            if (hx[j] > keyx) {
+                hx[j + 1] = hx[j];
+                hy[j + 1] = hy[j];
+                hid[j + 1] = hid[j];
+            } else {
+                break;
+            }
+        }
+        hx[j + 1] = keyx;
+        hy[j + 1] = keyy;
+        hid[j + 1] = keyid;
+    }
+    return;
+}
+
+void sort_int_1based(int arr[], int len) {
+    int i;
+    int j;
+    int key;
+    for (i = 2; i <= len; i = i + 1) {
+        key = arr[i];
+        j = i - 1;
+        for (; j >= 1; j = j - 1) {
+            if (arr[j] > key) {
+                arr[j + 1] = arr[j];
+            } else {
+                break;
+            }
+        }
+        arr[j + 1] = key;
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int j;
+    int x;
+    int qx;
+    int qy;
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        x = getint();
+        hx[i] = x;
+        hid[i] = i;
+    }
+    for (i = 1; i <= n; i = i + 1) {
+        hy[i] = getint();
+    }
+
+    sort_triples_by_x(n);
+    for (i = 1; i <= n; i = i + 1) {
+        idpos[hid[i]] = i;
+    }
+
+    m = getint();
+    for (i = 1; i <= m; i = i + 1) {
+        qx = getint();
+        qy = getint();
+
+        qx = qx + 1;
+        qx = idpos[qx];
+
+        for (j = 1; j <= n; j = j + 1) {
+            if (hy[j] == 1) {
+                a[j] = hx[j] + qy;
+            } else {
+                a[j] = hx[j] - qy;
+            }
+        }
+        sort_int_1based(a, n);
+        printf("%d\n", a[qx]);
+    }
+    return 0;
+}

@@ -1,0 +1,125 @@
+/* Description:
+ *   Converted from C++ solution for "photo" style optimization.
+ *   Input:
+ *     n
+ *     w1 h1
+ *     ...
+ *     wn hn
+ *   Output:
+ *     ans
+ */
+
+const int INF = 2047483647;
+const int MAXN = 1111;
+
+int n;
+int ans;
+int ha_w[MAXN];
+int ha_h[MAXN];
+int t_w[MAXN];
+int t_h[MAXN];
+
+void sort_ha_by_h_desc() {
+    int i;
+    int j;
+    int tw;
+    int th;
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= n - i; j = j + 1) {
+            if (ha_h[j] < ha_h[j + 1]) {
+                tw = ha_w[j];
+                ha_w[j] = ha_w[j + 1];
+                ha_w[j + 1] = tw;
+                th = ha_h[j];
+                ha_h[j] = ha_h[j + 1];
+                ha_h[j + 1] = th;
+            }
+        }
+    }
+    return;
+}
+
+void sort_t_by_diff_desc(int nn) {
+    int i;
+    int j;
+    int tw;
+    int th;
+    int d1;
+    int d2;
+    for (i = 1; i <= nn; i = i + 1) {
+        for (j = 1; j <= nn - i; j = j + 1) {
+            d1 = t_w[j] - t_h[j];
+            d2 = t_w[j + 1] - t_h[j + 1];
+            if (d1 < d2) {
+                tw = t_w[j];
+                t_w[j] = t_w[j + 1];
+                t_w[j + 1] = tw;
+                th = t_h[j];
+                t_h[j] = t_h[j + 1];
+                t_h[j + 1] = th;
+            }
+        }
+    }
+    return;
+}
+
+int work(int x) {
+    int W;
+    int tmp;
+    int nn;
+    int i;
+    int m;
+    int area;
+
+    W = 0;
+    tmp = 0;
+    nn = 0;
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (ha_h[i] > x) {
+            if (ha_w[i] > x) return 0;
+            W = W + ha_h[i];
+            tmp = tmp + 1;
+        } else {
+            if (ha_h[i] < ha_w[i] && ha_w[i] <= x) {
+                nn = nn + 1;
+                t_w[nn] = ha_w[i];
+                t_h[nn] = ha_h[i];
+            }
+            W = W + ha_w[i];
+        }
+    }
+
+    if (tmp > n / 2) return 0;
+
+    sort_t_by_diff_desc(nn);
+
+    m = n / 2 - tmp;
+    if (nn < m) m = nn;
+    for (i = 1; i <= m; i = i + 1) {
+        W = W - (t_w[i] - t_h[i]);
+    }
+
+    area = W * x;
+    if (area < ans) ans = area;
+    return 1;
+}
+
+int main() {
+    int i;
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+        ha_w[i] = getint();
+        ha_h[i] = getint();
+    }
+
+    ans = INF;
+    sort_ha_by_h_desc();
+
+    for (i = 1; i <= n; i = i + 1) {
+        if (work(ha_h[i]) == 0) break;
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

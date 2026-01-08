@@ -1,0 +1,13 @@
+/* Description:
+ *   Converted from a Windows/C++ differential-testing harness.
+ *   Strict SysY has no system()/process/files, so this testcase keeps the
+ *   deterministic behavior: print the first counter value and exit.
+ */
+
+int main() {
+    int cnt;
+    cnt = 0;
+    cnt = cnt + 1;
+    printf("%d\n", cnt);
+    return 0;
+}

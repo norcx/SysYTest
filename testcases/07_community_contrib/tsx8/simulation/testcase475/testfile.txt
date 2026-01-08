@@ -1,0 +1,105 @@
+const int MAXN = 10000;
+
+int n;
+int cnt;
+int ans;
+int a[10005];
+
+int heapSize;
+int heap[10005];
+
+void heap_push(int x) {
+    int i;
+    int p;
+    int tmp;
+    heapSize = heapSize + 1;
+    heap[heapSize] = x;
+    i = heapSize;
+    for (; i > 1;) {
+        p = i / 2;
+        if (heap[p] < heap[i]) {
+            tmp = heap[p];
+            heap[p] = heap[i];
+            heap[i] = tmp;
+            i = p;
+        } else {
+            break;
+        }
+    }
+}
+
+int heap_top() {
+    return heap[1];
+}
+
+void heap_pop() {
+    int i;
+    int l;
+    int r;
+    int best;
+    int tmp;
+    heap[1] = heap[heapSize];
+    heapSize = heapSize - 1;
+    i = 1;
+    for (; heapSize > 0;) {
+        l = i * 2;
+        if (l > heapSize) {
+            break;
+        }
+        r = l + 1;
+        best = l;
+        if (r <= heapSize && heap[r] > heap[l]) {
+            best = r;
+        }
+        if (heap[best] > heap[i]) {
+            tmp = heap[best];
+            heap[best] = heap[i];
+            heap[i] = tmp;
+            i = best;
+        } else {
+            break;
+        }
+    }
+}
+
+int main() {
+    int i;
+    int loop;
+    int now;
+
+    cnt = 0;
+    loop = 0;
+    for (loop = 0; loop == 0; loop = loop) {
+        n = getint();
+        if (n == 0) {
+            break;
+        }
+        cnt = cnt + 1;
+        heapSize = 0;
+        ans = 0;
+
+        for (i = 1; i <= n; i = i + 1) {
+            a[i] = getint();
+        }
+
+        for (i = 1; i <= n; i = i + 1) {
+            if (heapSize == 0) {
+                heap_push(0 - a[i]);
+            } else {
+                now = 0 - heap_top();
+                if (a[i] <= now) {
+                    heap_push(0 - a[i]);
+                } else {
+                    ans = ans + (a[i] - now);
+                    heap_pop();
+                    heap_push(0 - a[i]);
+                    heap_push(0 - a[i]);
+                }
+            }
+        }
+
+        printf("Case #%d: %d\n", cnt, ans);
+    }
+
+    return 0;
+}

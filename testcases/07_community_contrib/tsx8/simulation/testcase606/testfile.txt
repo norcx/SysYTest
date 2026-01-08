@@ -1,0 +1,72 @@
+/* Description:
+ *   Emulate byte-wise increment on a 32-bit int (x = 255) without pointers,
+ *   then print the 4 bytes in big-endian order as 2-digit lowercase hex.
+ */
+
+int inc_byte(int b) {
+    if (b == 255) return 0;
+    return b + 1;
+}
+
+void print_hex_digit(int d) {
+    if (d == 0) printf("0");
+    else if (d == 1) printf("1");
+    else if (d == 2) printf("2");
+    else if (d == 3) printf("3");
+    else if (d == 4) printf("4");
+    else if (d == 5) printf("5");
+    else if (d == 6) printf("6");
+    else if (d == 7) printf("7");
+    else if (d == 8) printf("8");
+    else if (d == 9) printf("9");
+    else if (d == 10) printf("a");
+    else if (d == 11) printf("b");
+    else if (d == 12) printf("c");
+    else if (d == 13) printf("d");
+    else if (d == 14) printf("e");
+    else printf("f");
+}
+
+void print_hex2(int b) {
+    int hi;
+    int lo;
+    hi = b / 16;
+    lo = b - hi * 16;
+    print_hex_digit(hi);
+    print_hex_digit(lo);
+}
+
+int main() {
+    int x;
+    int c[4];
+    int t;
+    int i;
+    int A;
+
+    x = 255;
+
+    t = x;
+    c[0] = t % 256;
+    t = t / 256;
+    c[1] = t % 256;
+    t = t / 256;
+    c[2] = t % 256;
+    t = t / 256;
+    c[3] = t % 256;
+
+    for (i = 0; i < 4; i = i + 1) {
+        c[i] = inc_byte(c[i]);
+    }
+
+    for (i = 3; i >= 0; i = i - 1) {
+        print_hex2(c[i]);
+        printf(" ");
+    }
+
+    A = c[3];
+    A = A * 256 + c[2];
+    A = A * 256 + c[1];
+    A = A * 256 + c[0];
+
+    return 0;
+}

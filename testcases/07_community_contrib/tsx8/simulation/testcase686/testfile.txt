@@ -1,0 +1,296 @@
+/* Description:
+ *   Tree queries with LCA + subtree sums.
+ *   Converted from C++ to Strict SysY.
+ */
+
+int h[2205];
+int to[4405];
+int nxt[4405];
+int ew[4405];
+
+int fa[2205 * 13];
+int ss[2205 * 13];
+int deep[2205];
+int sum[2205];
+
+int tmpc[2205];
+
+int n;
+int q;
+int tot;
+int tc;
+
+void Add(int u, int v, int c) {
+    tot = tot + 1;
+    nxt[tot] = h[u];
+    to[tot] = v;
+    ew[tot] = c;
+    h[u] = tot;
+}
+
+void Dfs(int u, int f) {
+    int i;
+    int e;
+    int v;
+    int p;
+
+    for (i = 1; i <= 12; i = i + 1) {
+        p = fa[u * 13 + (i - 1)];
+        fa[u * 13 + i] = fa[p * 13 + (i - 1)];
+        ss[u * 13 + i] = ss[u * 13 + (i - 1)] + ss[p * 13 + (i - 1)];
+    }
+
+    for (e = h[u]; e != 0; e = nxt[e]) {
+        v = to[e];
+        if (v != f) {
+            deep[v] = deep[u] + 1;
+            fa[v * 13 + 0] = u;
+            ss[v * 13 + 0] = ew[e];
+            sum[u] = sum[u] + ew[e];
+            Dfs(v, u);
+            sum[u] = sum[u] + sum[v];
+        }
+    }
+}
+
+int Lca(int a, int b) {
+    int i;
+    if (deep[a] < deep[b]) {
+        for (i = 12; i >= 0; i = i - 1) {
+            if (deep[fa[b * 13 + i]] >= deep[a]) {
+                b = fa[b * 13 + i];
+            }
+        }
+    }
+    if (deep[a] > deep[b]) {
+        for (i = 12; i >= 0; i = i - 1) {
+            if (deep[fa[a * 13 + i]] >= deep[b]) {
+                a = fa[a * 13 + i];
+            }
+        }
+    }
+    if (a == b) return a;
+    for (i = 12; i >= 0; i = i - 1) {
+        if (fa[a * 13 + i] != fa[b * 13 + i]) {
+            a = fa[a * 13 + i];
+            b = fa[b * 13 + i];
+        }
+    }
+    return fa[a * 13 + 0];
+}
+
+void SortDesc(int len) {
+    int i;
+    int j;
+    int t;
+    for (i = 1; i <= len; i = i + 1) {
+        for (j = i + 1; j <= len; j = j + 1) {
+            if (tmpc[j] > tmpc[i]) {
+                t = tmpc[i];
+                tmpc[i] = tmpc[j];
+                tmpc[j] = t;
+            }
+        }
+    }
+}
+
+int main() {
+    int i;
+    int x;
+    int y;
+    int z;
+
+    n = getint();
+    q = getint();
+
+    for (i = 1; i < n; i = i + 1) {
+        x = getint();
+        y = getint();
+        z = getint();
+        Add(x, y, z);
+        Add(y, x, z);
+    }
+
+    deep[1] = 1;
+    Dfs(1, 0);
+
+    for (i = 0; i < q; i = i + 1) {
+        int o;
+        int w;
+        int cur;
+        int dis;
+        int leftx;
+        int flag;
+        int yd;
+        int start;
+
+        x = getint();
+        y = getint();
+
+        o = Lca(x, y);
+        printf("%d\n", o);
+
+        if (x == y) {
+            int e;
+            int v;
+            int temp;
+
+            tc = 0;
+            temp = 0;
+            for (e = h[x]; e != 0; e = nxt[e]) {
+                v = to[e];
+                if (v != fa[x * 13 + 0]) {
+                    tc = tc + 1;
+                    tmpc[tc] = sum[v] + ew[e];
+                }
+            }
+            tc = tc + 1;
+            tmpc[tc] = sum[1] - sum[x];
+
+            SortDesc(tc);
+            for (e = 1; e <= tc; e = e + 2) temp = temp + tmpc[e];
+            printf("%d\n", temp);
+        } else {
+            int now2;
+            int now3;
+            int temp;
+            int res;
+            int e;
+            int v;
+
+            w = x;
+            flag = 0;
+
+            dis = deep[x] + deep[y] - deep[o] * 2;
+            cur = dis / 2;
+            if (dis % 2 != 0) cur = cur + 1;
+
+            leftx = deep[x] - deep[o];
+
+            if (cur > leftx) {
+                w = y;
+                flag = 0;
+                yd = deep[o] + cur - leftx;
+                for (e = 12; e >= 0; e = e - 1) {
+                    if (deep[fa[w * 13 + e]] >= yd) w = fa[w * 13 + e];
+                }
+            } else if (cur < leftx) {
+                flag = 1;
+                yd = deep[o] + leftx - cur;
+                for (e = 12; e >= 0; e = e - 1) {
+                    if (deep[fa[w * 13 + e]] >= yd) w = fa[w * 13 + e];
+                }
+            } else {
+                w = o;
+            }
+
+            if (o == x) {
+                now2 = y;
+                temp = 0;
+                tc = 0;
+                for (e = 12; e >= 0; e = e - 1) {
+                    if (deep[fa[now2 * 13 + e]] >= deep[w] + 1) now2 = fa[now2 * 13 + e];
+                }
+                for (e = h[w]; e != 0; e = nxt[e]) {
+                    v = to[e];
+                    if (v != fa[w * 13 + 0] && v != now2) {
+                        tc = tc + 1;
+                        tmpc[tc] = ew[e] + sum[v];
+                    }
+                }
+                SortDesc(tc);
+                start = 1;
+                if (dis % 2 != 0) start = 2;
+                for (e = start; e <= tc; e = e + 2) temp = temp + tmpc[e];
+                printf("%d\n", temp + sum[1] - sum[w]);
+            } else if (o == y) {
+                now2 = x;
+                temp = 0;
+                tc = 0;
+                for (e = 12; e >= 0; e = e - 1) {
+                    if (deep[fa[now2 * 13 + e]] >= deep[w] + 1) now2 = fa[now2 * 13 + e];
+                }
+                for (e = h[w]; e != 0; e = nxt[e]) {
+                    v = to[e];
+                    if (v != fa[w * 13 + 0] && v != now2) {
+                        tc = tc + 1;
+                        tmpc[tc] = ew[e] + sum[v];
+                    }
+                }
+                SortDesc(tc);
+                start = 1;
+                if (dis % 2 != 0) start = 2;
+                for (e = start; e <= tc; e = e + 2) temp = temp + tmpc[e];
+                printf("%d\n", temp + sum[now2] + ss[now2 * 13 + 0]);
+            } else if (w == o) {
+                now2 = x;
+                now3 = y;
+                temp = 0;
+                res = 0;
+                tc = 0;
+                for (e = 12; e >= 0; e = e - 1) {
+                    if (deep[fa[now2 * 13 + e]] >= deep[w] + 1) now2 = fa[now2 * 13 + e];
+                }
+                for (e = 12; e >= 0; e = e - 1) {
+                    if (deep[fa[now3 * 13 + e]] >= deep[w] + 1) now3 = fa[now3 * 13 + e];
+                }
+                for (e = h[w]; e != 0; e = nxt[e]) {
+                    v = to[e];
+                    if (v == now2) res = ew[e] + sum[v];
+                    if (v != now2 && v != now3 && v != fa[w * 13 + 0]) {
+                        tc = tc + 1;
+                        tmpc[tc] = ew[e] + sum[v];
+                    }
+                }
+                tc = tc + 1;
+                tmpc[tc] = sum[1] - sum[w];
+                SortDesc(tc);
+                start = 1;
+                if (dis % 2 != 0) start = 2;
+                for (e = start; e <= tc; e = e + 2) temp = temp + tmpc[e];
+                printf("%d\n", temp + res);
+            } else {
+                if (flag != 0) {
+                    now2 = x;
+                    temp = 0;
+                    tc = 0;
+                    for (e = 12; e >= 0; e = e - 1) {
+                        if (deep[fa[now2 * 13 + e]] >= deep[w] + 1) now2 = fa[now2 * 13 + e];
+                    }
+                    for (e = h[w]; e != 0; e = nxt[e]) {
+                        v = to[e];
+                        if (v != now2 && v != fa[w * 13 + 0]) {
+                            tc = tc + 1;
+                            tmpc[tc] = ew[e] + sum[v];
+                        }
+                    }
+                    SortDesc(tc);
+                    start = 1;
+                    if (dis % 2 != 0) start = 2;
+                    for (e = start; e <= tc; e = e + 2) temp = temp + tmpc[e];
+                    printf("%d\n", temp + sum[now2] + ss[now2 * 13 + 0]);
+                } else {
+                    now2 = y;
+                    temp = 0;
+                    tc = 0;
+                    for (e = 12; e >= 0; e = e - 1) {
+                        if (deep[fa[now2 * 13 + e]] >= deep[w] + 1) now2 = fa[now2 * 13 + e];
+                    }
+                    for (e = h[w]; e != 0; e = nxt[e]) {
+                        v = to[e];
+                        if (v != now2 && v != fa[w * 13 + 0]) {
+                            tc = tc + 1;
+                            tmpc[tc] = ew[e] + sum[v];
+                        }
+                    }
+                    SortDesc(tc);
+                    start = 1;
+                    if (dis % 2 != 0) start = 2;
+                    for (e = start; e <= tc; e = e + 2) temp = temp + tmpc[e];
+                    printf("%d\n", temp + sum[1] - sum[w]);
+                }
+            }
+        }
+    }
+    return 0;
+}

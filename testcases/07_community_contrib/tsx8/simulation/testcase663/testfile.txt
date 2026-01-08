@@ -1,0 +1,23 @@
+/* Description:
+ *   Reads T testcases; each testcase reads n and m.
+ *   Prints n - m - 2 if both n and m are non-zero; otherwise prints n - m.
+ */
+
+int T;
+int n;
+int m;
+
+int main() {
+    int i;
+    T = getint();
+    for (i = 0; i < T; i = i + 1) {
+        n = getint();
+        m = getint();
+        if (n != 0 && m != 0) {
+            printf("%d\n", n - m - 2);
+        } else {
+            printf("%d\n", n - m);
+        }
+    }
+    return 0;
+}

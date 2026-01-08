@@ -1,0 +1,109 @@
+const int MOD = 64123;
+const int MAXP = 30;
+const int MAXK = 10;
+const int MAXN = 8;
+const int MAXNN = 64;
+const int PRE_SIZE = 30 * 10 * 64;
+
+int N;
+int P;
+int pre[PRE_SIZE];
+
+int V[MAXN];
+int tmpV[MAXN];
+
+int base_pre(int p, int d) {
+    return (p * MAXK + d) * MAXNN;
+}
+
+int mul_mod(int a, int b) {
+    int res;
+    res = 0;
+    for (; b > 0;) {
+        if (b % 2 == 1) {
+            res = res + a;
+            res = res % MOD;
+        }
+        a = a + a;
+        a = a % MOD;
+        b = b / 2;
+    }
+    return res;
+}
+
+void mat_mul_pre(int baseA, int baseB, int baseC) {
+    int i;
+    int j;
+    int k;
+    int t;
+    int aik;
+    for (t = 0; t < MAXNN; t = t + 1) pre[baseC + t] = 0;
+    for (i = 0; i < N; i = i + 1) {
+        for (k = 0; k < N; k = k + 1) {
+            aik = pre[baseA + i * MAXN + k];
+            if (aik != 0) {
+                for (j = 0; j < N; j = j + 1) {
+                    pre[baseC + i * MAXN + j] = pre[baseC + i * MAXN + j] + mul_mod(aik, pre[baseB + k * MAXN + j]);
+                    pre[baseC + i * MAXN + j] = pre[baseC + i * MAXN + j] % MOD;
+                }
+            }
+        }
+    }
+}
+
+void mat_vec_mul_pre(int baseA) {
+    int i;
+    int j;
+    for (i = 0; i < MAXN; i = i + 1) tmpV[i] = 0;
+    for (i = 0; i < N; i = i + 1) {
+        for (j = 0; j < N; j = j + 1) {
+            tmpV[i] = tmpV[i] + mul_mod(pre[baseA + i * MAXN + j], V[j]);
+            tmpV[i] = tmpV[i] % MOD;
+        }
+    }
+    for (i = 0; i < N; i = i + 1) V[i] = tmpV[i];
+}
+
+int main() {
+    int T;
+    int k;
+    int m;
+    int p;
+    int i;
+    int digit;
+    int L;
+
+    N = 0;
+    P = 1;
+
+    T = getint();
+    k = getint();
+    m = getint();
+
+    for (i = 0; i < m; i = i + 1) {
+        p = getint();
+        if (N < p) N = p;
+        pre[base_pre(1, 1) + (p - 1)] = 1;
+    }
+    for (i = 1; i < N; i = i + 1) pre[base_pre(1, 1) + i * MAXN + (i - 1)] = 1;
+    for (i = 2; i < k; i = i + 1) mat_mul_pre(base_pre(1, i - 1), base_pre(1, 1), base_pre(1, i));
+
+    for (; T > 0; T = T - 1) {
+        L = getint();
+
+        for (; P < L; P = P + 1) {
+            mat_mul_pre(base_pre(P - 1, k - 1), base_pre(P - 1, 1), base_pre(P, 1));
+            for (i = 2; i < k; i = i + 1) mat_mul_pre(base_pre(P, i - 1), base_pre(P, 1), base_pre(P, i));
+        }
+
+        for (i = 0; i < MAXN; i = i + 1) V[i] = 0;
+        V[0] = 1;
+        for (i = 1; i <= L; i = i + 1) {
+            digit = getint();
+            if (digit != 0) mat_vec_mul_pre(base_pre(L - i + 1, digit));
+        }
+
+        printf("%d\n", V[0]);
+    }
+    return 0;
+}

@@ -1,0 +1,71 @@
+/* Description:
+ *   Converted from C++:
+ *     Read a string s and an integer n, build all suffixes of s,
+ *     sort them lexicographically, and output the n-th suffix.
+ *
+ *   Strict SysY mapping:
+ *     Input is integer-only:
+ *       L
+ *       s[0] (ASCII code)
+ *       ...
+ *       s[L-1]
+ *       n   (1-based)
+ *     Output is the chosen suffix as ASCII codes, one integer per line.
+ */
+
+const int MAXL = 64;
+
+int s[MAXL];
+int idx[MAXL];
+
+int suffix_less(int a, int b, int len) {
+    int i;
+    int j;
+    int k;
+    i = a;
+    j = b;
+    for (k = 0; k < len; k = k + 1) {
+        if (i >= len) break;
+        if (j >= len) break;
+        if (s[i] < s[j]) return 1;
+        if (s[i] > s[j]) return 0;
+        i = i + 1;
+        j = j + 1;
+    }
+    if (i >= len && j >= len) return 0;
+    if (i >= len) return 1;
+    return 0;
+}
+
+int main() {
+    int len;
+    int n;
+    int i;
+    int j;
+    int minPos;
+    int tmp;
+    int start;
+
+    len = getint();
+    for (i = 0; i < len; i = i + 1) {
+        s[i] = getint();
+        idx[i] = i;
+    }
+    n = getint();
+
+    for (i = 0; i < len; i = i + 1) {
+        minPos = i;
+        for (j = i + 1; j < len; j = j + 1) {
+            if (suffix_less(idx[j], idx[minPos], len) == 1) minPos = j;
+        }
+        tmp = idx[i];
+        idx[i] = idx[minPos];
+        idx[minPos] = tmp;
+    }
+
+    start = idx[n - 1];
+    for (i = start; i < len; i = i + 1) {
+        printf("%d\n", s[i]);
+    }
+    return 0;
+}

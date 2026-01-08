@@ -1,0 +1,74 @@
+/* Description:
+ *   Deterministic data generator converted from a C++ random testcase writer.
+ *   Prints the content that would have been written to "magnet.in".
+ *
+ *   Differences from the original:
+ *   - Uses a deterministic PRNG (Park-Miller) with a fixed seed (1).
+ *   - Scales line count from 250000 down to 5000 for testcase size/runtime.
+ */
+
+int seed;
+
+int pm_next() {
+    int hi;
+    int lo;
+    int t;
+    hi = seed / 44488;
+    lo = seed % 44488;
+    t = 48271 * lo - 3399 * hi;
+    if (t > 0) seed = t;
+    else seed = t + 2147483647;
+    return seed;
+}
+
+int myrand() {
+    int x;
+    x = pm_next();
+    return x % 32768;
+}
+
+int gen(int k) {
+    int a;
+    int b;
+    int t;
+    int sign;
+    a = myrand();
+    b = myrand();
+    t = a * b;
+    t = t % 1000000000;
+    if (k) return t;
+    sign = 1;
+    if (myrand() % 2 == 0) sign = 1;
+    else sign = -1;
+    return t * sign;
+}
+
+int main() {
+    int n;
+    int i;
+    int x1;
+    int x2;
+    int x3;
+    int x4;
+    int x5;
+
+    seed = 1;
+    n = 5000;
+
+    x1 = gen(0);
+    x2 = gen(0);
+    x3 = gen(1);
+    x4 = gen(1);
+    printf("%d %d %d %d %d\n", x1, x2, x3, x4, n);
+
+    for (i = 1; i <= n; i = i + 1) {
+        x1 = gen(0);
+        x2 = gen(0);
+        x3 = gen(1);
+        x4 = gen(1);
+        x5 = gen(1);
+        printf("%d %d %d %d %d\n", x1, x2, x3, x4, x5);
+    }
+
+    return 0;
+}

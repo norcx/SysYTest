@@ -1,0 +1,74 @@
+/* Description:
+ *   Deterministic testcase generator converted from C++ to Strict SysY.
+ *   Produces a directed weighted graph and queries, scaled down to fit limits.
+ */
+
+int seed = 123456789;
+int vis[160000];
+
+int next_rand() {
+    seed = seed * 1103515245 + 12345;
+    seed = seed % 1000000000;
+    if (seed < 0) seed = 0 - seed;
+    return seed;
+}
+
+int main() {
+    int n;
+    int m;
+    int q;
+    int total;
+    int i;
+    int step;
+    int found;
+    int u;
+    int v;
+    int w;
+    int base;
+    int idx;
+    int uu;
+    int vv;
+
+    n = 400;
+    m = 600;
+    q = 200;
+    total = n * n;
+
+    printf("%d %d %d\n", n, m, q);
+
+    for (i = 1; i <= m; i = i + 1) {
+        u = next_rand() % n + 1;
+        v = next_rand() % n + 1;
+        base = (u - 1) * n + (v - 1);
+
+        found = 0;
+        for (step = 0; step < total; step = step + 1) {
+            idx = (base + step) % total;
+            uu = idx / n + 1;
+            vv = idx % n + 1;
+            if (uu != vv && vis[idx] == 0) {
+                vis[idx] = 1;
+                u = uu;
+                v = vv;
+                found = 1;
+                break;
+            }
+        }
+        if (found == 0) {
+            u = 1;
+            v = 2;
+        }
+
+        w = next_rand() % 10000 + 1;
+        printf("%d %d %d\n", u, v, w);
+    }
+
+    for (i = 1; i <= q; i = i + 1) {
+        u = next_rand() % n + 1;
+        v = next_rand() % n + 1;
+        printf("%d %d\n", u, v);
+    }
+
+    printf("\n");
+    return 0;
+}

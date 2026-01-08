@@ -1,0 +1,20 @@
+/* Description:
+ *   Converted from a Windows-based differential-testing harness:
+ *   reads integers as simulated `fc` return codes; prints an increasing
+ *   counter for each 0, and stops at the first non-zero.
+ */
+
+int cnt;
+
+int main() {
+  int code;
+  int i;
+  cnt = 0;
+  for (i = 0; i < 1000000; i = i + 1) {
+    code = getint();
+    if (code != 0) break;
+    cnt = cnt + 1;
+    printf("%d\n", cnt);
+  }
+  return 0;
+}

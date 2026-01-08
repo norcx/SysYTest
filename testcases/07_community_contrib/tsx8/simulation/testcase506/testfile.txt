@@ -1,0 +1,80 @@
+/* Description:
+ *   Deterministic translation of the given C generator.
+ *   Input:
+ *     n
+ *     flag0
+ *     ...
+ *     flag9
+ *   Output:
+ *     Prints "10", then 10 cases; each case is chosen by (flag % 4).
+ */
+
+void A(int n)
+{
+    int i;
+    printf("%d\n", n);
+    for (i = 1; i <= n; i = i + 1)
+        printf("1 %d\n", i);
+    for (i = 1; i <= n - 2; i = i + 1)
+        printf("2 %d\n", i);
+    printf("\n");
+}
+
+void B(int n)
+{
+    int i;
+    printf("%d\n", n);
+    printf("%d %d\n", n - 1, n);
+    printf("%d %d\n", n, n - 1);
+    for (i = 1; i <= n; i = i + 1)
+        printf("1 %d\n", i);
+    for (i = 1; i <= n - 4; i = i + 1)
+        printf("2 %d\n", i);
+    printf("\n");
+}
+
+void C(int n)
+{
+    int i;
+    printf("%d\n", n);
+    for (i = n; i >= 1; i = i - 1)
+        printf("4 %d\n", i);
+    for (i = 1; i <= n - 2; i = i + 1)
+        printf("1 %d\n", i);
+    printf("\n");
+}
+
+void D(int n)
+{
+    int i;
+    printf("%d\n", n);
+    for (i = 1; i <= n; i = i + 1)
+        printf("%d %d\n", n - 1, i);
+    for (i = 1; i <= n - 3; i = i + 1)
+        printf("2 %d\n", i);
+    printf("1 1\n");
+    printf("\n");
+}
+
+int main()
+{
+    int n;
+    int flag;
+    int mod;
+    int i;
+
+    n = getint();
+
+    printf("10\n");
+
+    for (i = 0; i < 10; i = i + 1) {
+        flag = getint();
+        mod = flag % 4;
+        if (mod == 0) A(n);
+        if (mod == 1) B(n);
+        if (mod == 2) C(n);
+        if (mod == 3) D(n);
+    }
+
+    return 0;
+}

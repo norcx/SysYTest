@@ -1,0 +1,27 @@
+/*
+  Converted from a Windows C++ differential-test harness that:
+  - increments and prints an iteration counter
+  - runs external programs and compares their outputs
+  - stops when the comparison reports a mismatch
+
+  Strict SysY cannot execute external commands or do file I/O, so we model the
+  comparison result as input:
+    r == 0  -> match, continue
+    r != 0  -> mismatch, break
+  Each loop iteration reads one integer r from input.
+*/
+
+int main() {
+  int cnt;
+  int r;
+  cnt = 0;
+  for (;;) {
+    cnt = cnt + 1;
+    printf("%d\n", cnt);
+    r = getint();
+    if (r != 0) {
+      break;
+    }
+  }
+  return 0;
+}

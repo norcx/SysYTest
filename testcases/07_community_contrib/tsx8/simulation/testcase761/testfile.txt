@@ -1,0 +1,134 @@
+/* Description:
+ *   Deterministic translation of the given C++ generator.
+ *   Builds a random permutation of 1..8 (fixed PRNG seed), builds an RMQ sparse
+ *   table for range minimum, then prints 10 queries:
+ *     - first 5 lines contain correct minima
+ *     - last 5 lines contain random answers
+ */
+
+int st[100];
+int a[20];
+int pow2_[10];
+int seed_;
+
+int imin(int x, int y) {
+    if (x < y) return x;
+    return y;
+}
+
+int R() {
+    seed_ = (seed_ * 101 + 17) % 10000000;
+    return seed_ + 1;
+}
+
+void iswap(int i, int j) {
+    int t;
+    t = a[i];
+    a[i] = a[j];
+    a[j] = t;
+    return;
+}
+
+void build_pow2() {
+    int i;
+    pow2_[0] = 1;
+    for (i = 1; i <= 3; i = i + 1) {
+        pow2_[i] = pow2_[i - 1] * 2;
+    }
+    return;
+}
+
+void shuffle(int n) {
+    int i;
+    int j;
+    for (i = n; i >= 2; i = i - 1) {
+        j = R() % i + 1;
+        iswap(i, j);
+    }
+    return;
+}
+
+void build_sparse(int n) {
+    int i;
+    int j;
+    int left;
+    int right;
+    for (i = 1; i <= n; i = i + 1) {
+        st[i * 4 + 0] = a[i];
+    }
+    for (i = 1; i <= 3; i = i + 1) {
+        for (j = 1; j <= n - pow2_[i] + 1; j = j + 1) {
+            left = st[j * 4 + (i - 1)];
+            right = st[(j + pow2_[i - 1]) * 4 + (i - 1)];
+            st[j * 4 + i] = imin(left, right);
+        }
+    }
+    return;
+}
+
+int ilog2_len(int len) {
+    int k;
+    k = 0;
+    if (len >= 2) k = 1;
+    if (len >= 4) k = 2;
+    if (len >= 8) k = 3;
+    return k;
+}
+
+int query_min(int l, int r) {
+    int len;
+    int lg;
+    int x;
+    int y;
+    len = r - l + 1;
+    lg = ilog2_len(len);
+    x = st[l * 4 + lg];
+    y = st[(r - pow2_[lg] + 1) * 4 + lg];
+    return imin(x, y);
+}
+
+int main() {
+    int n;
+    int T;
+    int i;
+    int l;
+    int r;
+    int t;
+
+    seed_ = 1234567;
+    n = 8;
+    T = 10;
+
+    build_pow2();
+
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = i;
+    }
+    shuffle(n);
+    build_sparse(n);
+
+    printf("%d %d\n", n, T);
+
+    for (i = 1; i <= T / 2; i = i + 1) {
+        l = R() % n + 1;
+        r = R() % n + 1;
+        if (l >= r) {
+            t = l;
+            l = r;
+            r = t;
+        }
+        printf("%d %d %d\n", l, r, query_min(l, r));
+    }
+
+    for (i = 1; i <= T / 2; i = i + 1) {
+        l = R() % n + 1;
+        r = R() % n + 1;
+        if (l >= r) {
+            t = l;
+            l = r;
+            r = t;
+        }
+        printf("%d %d %d\n", l, r, R() % n + 1);
+    }
+    return 0;
+}

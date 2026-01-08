@@ -1,0 +1,83 @@
+/*
+Input format:
+  n
+  op x   (repeated n times; each integer is on its own line)
+Where op: 1=add, 2=del, 3=cnt
+*/
+
+const int BYTE = 256;
+const int BITN = 8;
+
+int s[65536];
+int pow2[8] = {1, 2, 4, 8, 16, 32, 64, 128};
+
+int getbit(int x, int k) {
+  int t;
+  t = x / pow2[k];
+  t = t % 2;
+  return t;
+}
+
+int is_superset(int a, int b) {
+  int k;
+  int ab;
+  int bb;
+  for (k = 0; k < BITN; k = k + 1) {
+    bb = getbit(b, k);
+    if (bb == 1) {
+      ab = getbit(a, k);
+      if (ab == 0) {
+        return 0;
+      }
+    }
+  }
+  return 1;
+}
+
+int main() {
+  int n;
+  int t;
+  int op;
+  int x;
+  int pre;
+  int sub;
+  int i;
+  int ans;
+
+  n = getint();
+  for (t = 0; t < n; t = t + 1) {
+    op = getint();
+    x = getint();
+
+    pre = x / BYTE;
+    sub = x % BYTE;
+
+    if (op == 1) {
+      for (i = 0; i < BYTE; i = i + 1) {
+        if (is_superset(i, sub) == 1) {
+          s[pre * BYTE + i] = s[pre * BYTE + i] + 1;
+        }
+      }
+    }
+
+    if (op == 2) {
+      for (i = 0; i < BYTE; i = i + 1) {
+        if (is_superset(i, sub) == 1) {
+          s[pre * BYTE + i] = s[pre * BYTE + i] - 1;
+        }
+      }
+    }
+
+    if (op == 3) {
+      ans = 0;
+      for (i = 0; i < BYTE; i = i + 1) {
+        if (is_superset(pre, i) == 1) {
+          ans = ans + s[i * BYTE + sub];
+        }
+      }
+      printf("%d\n", ans);
+    }
+  }
+
+  return 0;
+}

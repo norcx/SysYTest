@@ -1,0 +1,53 @@
+const int MAXN = 2000;
+const int MAXQ = 4010;
+
+int a[MAXN];
+int q[MAXQ];
+
+int main() {
+  int T;
+  int n;
+  int m;
+  int D;
+  int L;
+  int h;
+  int t;
+  int i;
+  int case_idx;
+
+  T = getint();
+  for (case_idx = 0; case_idx < T; case_idx = case_idx + 1) {
+    n = getint();
+    m = getint();
+    D = getint();
+    L = getint();
+
+    h = 1;
+    t = m;
+    for (i = 1; i <= m; i = i + 1) {
+      q[i] = 0;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+      a[i] = getint();
+      for (; h <= t && a[q[h]] + D < a[i]; h = h + 1) {
+      }
+      if (h <= t) {
+        h = h + 1;
+        t = t + 1;
+        q[t] = i;
+      }
+    }
+
+    for (; h <= t && a[q[h]] + D < L; h = h + 1) {
+    }
+
+    if (t - h + 1 >= m) {
+      printf("Excited\n");
+    } else {
+      printf("%d\n", t - h + 1);
+    }
+  }
+
+  return 0;
+}

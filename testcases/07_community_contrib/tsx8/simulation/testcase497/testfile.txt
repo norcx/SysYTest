@@ -1,0 +1,110 @@
+/* Description:
+ *   Converted from C++ DP + priority queue.
+ *   Strict SysY, using a manual max-heap (by key y).
+ */
+
+const int MAXN = 20005;
+
+int n;
+int m;
+int a[MAXN];
+int b[MAXN];
+int sum[MAXN];
+int f[MAXN];
+
+int heapX[MAXN];
+int heapY[MAXN];
+int heapSize;
+
+void heap_swap(int i, int j) {
+    int tx;
+    int ty;
+    tx = heapX[i];
+    ty = heapY[i];
+    heapX[i] = heapX[j];
+    heapY[i] = heapY[j];
+    heapX[j] = tx;
+    heapY[j] = ty;
+    return;
+}
+
+void heap_push(int x, int y) {
+    int i;
+    int p;
+    heapSize = heapSize + 1;
+    heapX[heapSize] = x;
+    heapY[heapSize] = y;
+    i = heapSize;
+    p = i / 2;
+    for (; p > 0 && heapY[p] < heapY[i];) {
+        heap_swap(p, i);
+        i = p;
+        p = i / 2;
+    }
+    return;
+}
+
+void heap_pop() {
+    int i;
+    int l;
+    int r;
+    int best;
+    if (heapSize <= 0) return;
+    heapX[1] = heapX[heapSize];
+    heapY[1] = heapY[heapSize];
+    heapSize = heapSize - 1;
+    i = 1;
+    for (; 1;) {
+        l = i * 2;
+        r = l + 1;
+        best = i;
+        if (l <= heapSize && heapY[l] > heapY[best]) best = l;
+        if (r <= heapSize && heapY[r] > heapY[best]) best = r;
+        if (best == i) break;
+        heap_swap(i, best);
+        i = best;
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int tmpx;
+    int tmpy;
+
+    n = getint();
+    m = getint();
+
+    i = 1;
+    for (; i <= n; i = i + 1) a[i] = getint();
+
+    sum[0] = 0;
+    i = 1;
+    for (; i <= n; i = i + 1) {
+        b[i] = getint();
+        sum[i] = sum[i - 1] + b[i];
+    }
+
+    heapSize = 0;
+    heap_push(m, m);
+
+    i = 1;
+    for (; i <= n; i = i + 1) {
+        if (heapSize > 0) {
+            tmpx = heapX[1];
+            tmpy = heapY[1];
+            for (; heapSize > 0 && tmpx < a[i];) {
+                heap_pop();
+                if (heapSize > 0) {
+                    tmpx = heapX[1];
+                    tmpy = heapY[1];
+                }
+            }
+            if (heapSize > 0) f[i] = tmpy - a[i] + sum[i];
+        }
+        heap_push(f[i], f[i] - sum[i]);
+    }
+
+    printf("%d\n", f[n]);
+    return 0;
+}

@@ -1,0 +1,194 @@
+/* Description:
+ *   Converted from C++ "missile" solution.
+ *   Uses sentinel input: ta == 0 ends all testcases.
+ */
+
+int pos[90005];
+int delta[90005];
+int stL[1024];
+int stR[1024];
+
+void swap_at(int i, int j) {
+    int tp;
+    int td;
+    tp = pos[i];
+    pos[i] = pos[j];
+    pos[j] = tp;
+    td = delta[i];
+    delta[i] = delta[j];
+    delta[j] = td;
+}
+
+void sort_events(int n) {
+    int top;
+    int l;
+    int r;
+    int i;
+    int j;
+    int mid;
+    int ppos;
+    int pdel;
+
+    if (n <= 1) {
+        return;
+    }
+
+    top = 1;
+    stL[top] = 1;
+    stR[top] = n;
+
+    for (; top > 0;) {
+        l = stL[top];
+        r = stR[top];
+        top = top - 1;
+
+        for (; l < r;) {
+            i = l;
+            j = r;
+            mid = (l + r) / 2;
+            ppos = pos[mid];
+            pdel = delta[mid];
+
+            for (; i <= j;) {
+                for (; i <= r && pos[i] < ppos || i <= r && pos[i] == ppos && delta[i] > pdel;) {
+                    i = i + 1;
+                }
+                for (; l <= j && ppos < pos[j] || l <= j && ppos == pos[j] && pdel > delta[j];) {
+                    j = j - 1;
+                }
+                if (i <= j) {
+                    swap_at(i, j);
+                    i = i + 1;
+                    j = j - 1;
+                }
+            }
+
+            if (j - l < r - i) {
+                if (i < r) {
+                    top = top + 1;
+                    stL[top] = i;
+                    stR[top] = r;
+                }
+                r = j;
+            } else {
+                if (l < j) {
+                    top = top + 1;
+                    stL[top] = l;
+                    stR[top] = j;
+                }
+                l = i;
+            }
+        }
+    }
+}
+
+int main() {
+    int ta;
+    int tb;
+    int stb;
+    int n;
+    int m;
+    int t;
+    int now;
+    int ans;
+    int tot;
+    int i;
+    int x;
+    int y;
+    int z;
+    int l;
+    int r;
+    int tmp;
+    int step;
+    int len;
+    int start;
+
+    for (;;) {
+        ta = getint();
+        if (ta == 0) {
+            break;
+        }
+        tb = getint();
+        stb = getint();
+        n = getint();
+        m = getint();
+
+        t = 0;
+        now = 0;
+        ans = 0;
+        tot = 0;
+
+        for (i = 1; i <= n; i = i + 1) {
+            x = getint();
+            y = getint();
+            z = getint();
+            if (x + y < stb || x + y > stb + tb) {
+                continue;
+            }
+            tot = tot + z;
+
+            l = x + 2 * y;
+            tmp = stb + tb - x - y;
+            step = tmp / (2 * y) + 1;
+            r = x + step * 2 * y;
+
+            len = r - l;
+            if (len > ta) {
+                continue;
+            }
+            start = l - (ta - len);
+            t = t + 1;
+            pos[t] = start;
+            delta[t] = z;
+            t = t + 1;
+            pos[t] = l;
+            delta[t] = 0 - z;
+        }
+
+        for (i = 1; i <= m; i = i + 1) {
+            x = getint();
+            y = getint();
+            z = getint();
+            tot = tot + z;
+
+            l = x + y;
+            if (x + 2 * y < stb) {
+                r = x + y;
+            } else {
+                if (x + 2 * y > stb + tb) {
+                    r = x + y;
+                } else {
+                    tmp = stb + tb - x;
+                    step = tmp / (2 * y);
+                    r = x + step * 2 * y + y;
+                }
+            }
+
+            len = r - l;
+            if (len > ta) {
+                continue;
+            }
+            start = l - (ta - len);
+            t = t + 1;
+            pos[t] = start;
+            delta[t] = z;
+            t = t + 1;
+            pos[t] = l;
+            delta[t] = 0 - z;
+        }
+
+        sort_events(t);
+        now = 0;
+        ans = 0;
+        for (i = 1; i <= t; i = i + 1) {
+            now = now + delta[i];
+            if (now > ans) {
+                ans = now;
+            }
+        }
+
+        printf("%d\n", tot - ans);
+    }
+
+    return 0;
+}

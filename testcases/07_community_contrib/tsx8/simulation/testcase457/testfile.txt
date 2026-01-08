@@ -1,0 +1,100 @@
+/* Description:
+ *   Integer-only version of the given "magnet" program.
+ *   Each magnet i has (x[i], y[i], m[i], p[i], r[i]).
+ *   Starting from S (sx, sy, sp, sr), a visited magnet can activate any unvisited
+ *   magnet j with m[j] <= p[cur] and dist2(cur, j) <= r[cur]^2.
+ *   Output: number of activated magnets excluding the start.
+ *
+ *   Input format (all integers, one per line):
+ *     sx sy sp sr n
+ *     then n lines of: x y m p r   (still provided as 5 integers per magnet)
+ */
+
+const int MAXN = 64;
+
+int x[64];
+int y[64];
+int mm[64];
+int pp[64];
+int rr[64];
+
+int vis[64];
+int q[64];
+
+int dist2(int ax, int ay, int bx, int by) {
+    int dx;
+    int dy;
+    dx = ax - bx;
+    dy = ay - by;
+    return dx * dx + dy * dy;
+}
+
+int main() {
+    int n;
+    int sx;
+    int sy;
+    int sp;
+    int sr;
+
+    int i;
+    int head;
+    int tail;
+    int cur;
+    int ans;
+
+    int d2;
+    int r2;
+
+    sx = getint();
+    sy = getint();
+    sp = getint();
+    sr = getint();
+    n = getint();
+
+    x[n] = sx;
+    y[n] = sy;
+    mm[n] = 0;
+    pp[n] = sp;
+    rr[n] = sr;
+
+    for (i = 0; i < n; i = i + 1) {
+        x[i] = getint();
+        y[i] = getint();
+        mm[i] = getint();
+        pp[i] = getint();
+        rr[i] = getint();
+    }
+
+    for (i = 0; i <= n; i = i + 1) {
+        vis[i] = 0;
+    }
+
+    head = 0;
+    tail = 0;
+    q[tail] = n;
+    tail = tail + 1;
+    vis[n] = 1;
+
+    ans = -1;
+    for (head = 0; head < tail; head = head + 1) {
+        cur = q[head];
+        ans = ans + 1;
+        r2 = rr[cur] * rr[cur];
+
+        for (i = 0; i < n; i = i + 1) {
+            if (vis[i] == 0) {
+                if (mm[i] <= pp[cur]) {
+                    d2 = dist2(x[cur], y[cur], x[i], y[i]);
+                    if (d2 <= r2) {
+                        vis[i] = 1;
+                        q[tail] = i;
+                        tail = tail + 1;
+                    }
+                }
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

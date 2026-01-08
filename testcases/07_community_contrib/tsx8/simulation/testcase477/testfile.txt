@@ -1,0 +1,347 @@
+/* Description:
+ *   SysY translation of the given C++ "warchess" simulator.
+ *
+ *   To satisfy Strict SysY I/O (integers only), commands are encoded as:
+ *     1 now_gr
+ *     2 id
+ *     3 x y
+ *     4 target_id   (attack: kill prints INVALID)
+ *     5 target_id   (damage: kill prints remaining hp)
+ */
+
+const int MAX = 110;
+const int SIZE = 20000;
+const int MAXC = 110;
+const int QSIZE = 200000;
+
+int n;
+int m;
+int C;
+int E;
+int now_gr;
+int now_id;
+
+int g[SIZE];
+int bo[SIZE];
+int vis[SIZE];
+int dis[SIZE];
+
+int p_hp[MAXC];
+int p_at[MAXC];
+int p_mv[MAXC];
+int p_ad1[MAXC];
+int p_ad2[MAXC];
+int p_x[MAXC];
+int p_y[MAXC];
+int p_gr[MAXC];
+int p_die[MAXC];
+
+int now_hp;
+int now_at;
+int now_mv;
+int now_ad1;
+int now_ad2;
+int now_x;
+int now_y;
+int now_gr_piece;
+int now_die;
+
+int qx[QSIZE];
+int qy[QSIZE];
+
+int idx(int x, int y) {
+    return x * MAX + y;
+}
+
+int myabs(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+int judge0(int x, int y) {
+    int enemy;
+    int nx;
+    int ny;
+    enemy = 1 - now_gr;
+
+    nx = x + 1;
+    ny = y;
+    if (nx >= 1 && nx <= n && ny >= 1 && ny <= m) {
+        if (bo[idx(nx, ny)] == enemy) return 1;
+    }
+
+    nx = x;
+    ny = y + 1;
+    if (nx >= 1 && nx <= n && ny >= 1 && ny <= m) {
+        if (bo[idx(nx, ny)] == enemy) return 1;
+    }
+
+    nx = x - 1;
+    ny = y;
+    if (nx >= 1 && nx <= n && ny >= 1 && ny <= m) {
+        if (bo[idx(nx, ny)] == enemy) return 1;
+    }
+
+    nx = x;
+    ny = y - 1;
+    if (nx >= 1 && nx <= n && ny >= 1 && ny <= m) {
+        if (bo[idx(nx, ny)] == enemy) return 1;
+    }
+
+    return 0;
+}
+
+int move_ok(int tx, int ty) {
+    int i;
+    int j;
+    int head;
+    int tail;
+    int curx;
+    int cury;
+    int curi;
+    int nx;
+    int ny;
+    int ni;
+    int mv;
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            dis[idx(i, j)] = -1;
+            vis[idx(i, j)] = 0;
+        }
+    }
+
+    dis[idx(now_x, now_y)] = now_mv;
+    vis[idx(now_x, now_y)] = 1;
+    qx[0] = now_x;
+    qy[0] = now_y;
+    tail = 1;
+
+    for (head = 0; head < tail; head = head + 1) {
+        curx = qx[head];
+        cury = qy[head];
+        curi = idx(curx, cury);
+        vis[curi] = 0;
+
+        nx = curx + 1;
+        ny = cury;
+        if (nx >= 1 && nx <= n && ny >= 1 && ny <= m) {
+            ni = idx(nx, ny);
+            if (bo[ni] == -1) {
+                mv = dis[curi] - g[ni];
+                if (mv >= 0) {
+                    if (judge0(nx, ny) == 1) {
+                        if (dis[ni] == -1) dis[ni] = 0;
+                    } else {
+                        if (dis[ni] == -1 || dis[ni] < mv) {
+                            dis[ni] = mv;
+                            if (vis[ni] == 0) {
+                                vis[ni] = 1;
+                                qx[tail] = nx;
+                                qy[tail] = ny;
+                                tail = tail + 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        nx = curx;
+        ny = cury + 1;
+        if (nx >= 1 && nx <= n && ny >= 1 && ny <= m) {
+            ni = idx(nx, ny);
+            if (bo[ni] == -1) {
+                mv = dis[curi] - g[ni];
+                if (mv >= 0) {
+                    if (judge0(nx, ny) == 1) {
+                        if (dis[ni] == -1) dis[ni] = 0;
+                    } else {
+                        if (dis[ni] == -1 || dis[ni] < mv) {
+                            dis[ni] = mv;
+                            if (vis[ni] == 0) {
+                                vis[ni] = 1;
+                                qx[tail] = nx;
+                                qy[tail] = ny;
+                                tail = tail + 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        nx = curx - 1;
+        ny = cury;
+        if (nx >= 1 && nx <= n && ny >= 1 && ny <= m) {
+            ni = idx(nx, ny);
+            if (bo[ni] == -1) {
+                mv = dis[curi] - g[ni];
+                if (mv >= 0) {
+                    if (judge0(nx, ny) == 1) {
+                        if (dis[ni] == -1) dis[ni] = 0;
+                    } else {
+                        if (dis[ni] == -1 || dis[ni] < mv) {
+                            dis[ni] = mv;
+                            if (vis[ni] == 0) {
+                                vis[ni] = 1;
+                                qx[tail] = nx;
+                                qy[tail] = ny;
+                                tail = tail + 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        nx = curx;
+        ny = cury - 1;
+        if (nx >= 1 && nx <= n && ny >= 1 && ny <= m) {
+            ni = idx(nx, ny);
+            if (bo[ni] == -1) {
+                mv = dis[curi] - g[ni];
+                if (mv >= 0) {
+                    if (judge0(nx, ny) == 1) {
+                        if (dis[ni] == -1) dis[ni] = 0;
+                    } else {
+                        if (dis[ni] == -1 || dis[ni] < mv) {
+                            dis[ni] = mv;
+                            if (vis[ni] == 0) {
+                                vis[ni] = 1;
+                                qx[tail] = nx;
+                                qy[tail] = ny;
+                                tail = tail + 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (dis[idx(tx, ty)] == -1) return 0;
+    return 1;
+}
+
+int main() {
+    int i;
+    int j;
+    int e;
+    int cmd;
+    int tmp;
+    int nx;
+    int ny;
+    int dist;
+
+    n = getint();
+    m = getint();
+    C = getint();
+    E = getint();
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 1; j <= m; j = j + 1) {
+            g[idx(i, j)] = getint();
+            bo[idx(i, j)] = -1;
+        }
+    }
+
+    for (i = 1; i <= C; i = i + 1) {
+        p_hp[i] = getint();
+        p_at[i] = getint();
+        p_mv[i] = getint();
+        p_ad1[i] = getint();
+        p_ad2[i] = getint();
+        p_x[i] = getint();
+        p_y[i] = getint();
+        p_gr[i] = getint();
+        p_die[i] = 0;
+        bo[idx(p_x[i], p_y[i])] = p_gr[i];
+    }
+
+    now_gr = 0;
+    now_id = 0;
+    now_die = 1;
+
+    for (e = 0; e < E; e = e + 1) {
+        cmd = getint();
+
+        if (cmd == 1) {
+            now_gr = getint();
+        } else if (cmd == 2) {
+            tmp = getint();
+            now_id = tmp;
+            now_hp = p_hp[tmp];
+            now_at = p_at[tmp];
+            now_mv = p_mv[tmp];
+            now_ad1 = p_ad1[tmp];
+            now_ad2 = p_ad2[tmp];
+            now_x = p_x[tmp];
+            now_y = p_y[tmp];
+            now_gr_piece = p_gr[tmp];
+            now_die = p_die[tmp];
+        } else if (cmd == 3) {
+            nx = getint();
+            ny = getint();
+            if (now_die == 1) {
+                printf("INVALID\n");
+            } else {
+                if (move_ok(nx, ny) == 1) {
+                    printf("%d\n", dis[idx(nx, ny)]);
+                    bo[idx(now_x, now_y)] = -1;
+                    bo[idx(nx, ny)] = now_gr_piece;
+                    now_x = nx;
+                    now_y = ny;
+                    p_x[now_id] = nx;
+                    p_y[now_id] = ny;
+                } else {
+                    printf("INVALID\n");
+                }
+            }
+        } else if (cmd == 4) {
+            tmp = getint();
+            if (p_die[tmp] == 1) {
+                printf("INVALID\n");
+            } else if (now_gr_piece == p_gr[tmp]) {
+                printf("INVALID\n");
+            } else {
+                dist = myabs(now_x - p_x[tmp]) + myabs(now_y - p_y[tmp]);
+                if (dist < now_ad1 || dist > now_ad2) {
+                    printf("INVALID\n");
+                } else {
+                    p_hp[tmp] = p_hp[tmp] - now_at;
+                    if (p_hp[tmp] <= 0) {
+                        bo[idx(p_x[tmp], p_y[tmp])] = -1;
+                        p_die[tmp] = 1;
+                        printf("INVALID\n");
+                    } else {
+                        printf("%d\n", p_hp[tmp]);
+                    }
+                }
+            }
+        } else if (cmd == 5) {
+            tmp = getint();
+            if (p_die[tmp] == 1) {
+                printf("INVALID\n");
+            } else if (now_gr_piece == p_gr[tmp]) {
+                printf("INVALID\n");
+            } else {
+                dist = myabs(now_x - p_x[tmp]) + myabs(now_y - p_y[tmp]);
+                if (dist < now_ad1 || dist > now_ad2) {
+                    printf("INVALID\n");
+                } else {
+                    p_hp[tmp] = p_hp[tmp] - now_at;
+                    if (p_hp[tmp] <= 0) {
+                        bo[idx(p_x[tmp], p_y[tmp])] = -1;
+                        p_die[tmp] = 1;
+                        printf("%d\n", p_hp[tmp]);
+                    } else {
+                        printf("INVALID\n");
+                    }
+                }
+            }
+        }
+    }
+
+    return 0;
+}

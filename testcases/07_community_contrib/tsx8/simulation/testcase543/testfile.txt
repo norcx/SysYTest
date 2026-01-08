@@ -1,0 +1,121 @@
+/* Description:
+ *   Brute-force Strict SysY translation of the given C++ program.
+ *   It computes, for each position i, the maximum odd window length L
+ *   such that there exists a length-L subarray whose median value equals a[i]
+ *   and i is inside that subarray. Then it answers range maximum queries.
+ *
+ *   Notes for Strict SysY:
+ *   - Only int/void are used.
+ *   - Only 1D arrays are used (sparse table is flattened).
+ *   - Only for-loops are used (no while/do-while).
+ *   - No bitwise operators; powers of two are built by multiplication.
+ */
+
+const int MAXN = 60;
+const int MAXV = 200;
+const int MAXLOG = 7;
+
+int n;
+int m;
+int a[MAXN + 1];
+int beautiful[MAXN + 1];
+int freq[MAXV + 1];
+int pow2[MAXLOG];
+int ds[MAXN + 1];
+int st[(MAXN + 2) * MAXLOG];
+
+int max2(int x, int y) {
+    if (x > y) return x;
+    return y;
+}
+
+int find_median(int l, int r) {
+    int v;
+    for (v = 0; v <= MAXV; v = v + 1) freq[v] = 0;
+    int i;
+    for (i = l; i <= r; i = i + 1) freq[a[i]] = freq[a[i]] + 1;
+
+    int len = r - l + 1;
+    int kth = (len + 1) / 2;
+
+    int sum = 0;
+    int med = 0;
+    int found = 0;
+    for (v = 0; v <= MAXV; v = v + 1) {
+        sum = sum + freq[v];
+        if (found == 0) {
+            if (sum >= kth) {
+                med = v;
+                found = 1;
+            }
+        }
+    }
+    return med;
+}
+
+void build_tables() {
+    int i;
+    int k;
+
+    pow2[0] = 1;
+    for (k = 1; k < MAXLOG; k = k + 1) pow2[k] = pow2[k - 1] * 2;
+
+    for (i = 1; i <= n; i = i + 1) {
+        ds[i] = 0;
+        for (k = 0; k < MAXLOG; k = k + 1) {
+            if (pow2[k] <= i) ds[i] = k;
+        }
+    }
+
+    for (i = 1; i <= n; i = i + 1) st[i * MAXLOG + 0] = beautiful[i];
+
+    for (k = 1; k < MAXLOG; k = k + 1) {
+        int span = pow2[k];
+        int half = pow2[k - 1];
+        for (i = 1; i + span - 1 <= n; i = i + 1) {
+            int leftv = st[i * MAXLOG + (k - 1)];
+            int rightv = st[(i + half) * MAXLOG + (k - 1)];
+            st[i * MAXLOG + k] = max2(leftv, rightv);
+        }
+    }
+}
+
+int main() {
+    n = getint();
+
+    int i;
+    for (i = 1; i <= n; i = i + 1) {
+        a[i] = getint();
+        beautiful[i] = 0;
+    }
+
+    int len;
+    for (len = 1; len <= n; len = len + 2) {
+        int start;
+        for (start = 1; start + len - 1 <= n; start = start + 1) {
+            int end = start + len - 1;
+            int med = find_median(start, end);
+            for (i = start; i <= end; i = i + 1) {
+                if (a[i] == med) beautiful[i] = len;
+            }
+        }
+    }
+
+    build_tables();
+
+    m = getint();
+    int q;
+    for (q = 0; q < m; q = q + 1) {
+        int x = getint();
+        int y = getint();
+        int L = y - x + 1;
+        int k = ds[L];
+        int leftv = st[x * MAXLOG + k];
+        int right_start = y - pow2[k] + 1;
+        int rightv = st[right_start * MAXLOG + k];
+        int ans = max2(leftv, rightv);
+        printf("%d\n", ans);
+    }
+
+    return 0;
+}

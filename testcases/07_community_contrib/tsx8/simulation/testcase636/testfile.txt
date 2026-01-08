@@ -1,0 +1,123 @@
+/*
+  Converted from C++ to Strict SysY.
+
+  Input format (newline-separated integers only):
+    n
+    a1
+    a2
+    ...
+    an
+    m
+    b1
+    b2
+    ...
+    bm
+
+  Here a1..an are digits (0..9) for A (length n).
+  b1..bm are digits (0..9) for B (length m), aligned to the right of A:
+    B's i-th digit maps to position (n - m + i) in 1..n.
+*/
+
+const int MOD = 12345647;
+const int MAXN = 2100;
+
+int a[MAXN];
+int b[MAXN];
+int cur[24];
+int nxt[24];
+
+int idx(int j, int k, int l, int o) {
+    return j * 8 + k * 4 + l * 2 + o;
+}
+
+int main() {
+    int n;
+    int m;
+    int i;
+    int j;
+    int k;
+    int l;
+    int o;
+    int kk;
+    int ll;
+    int oo;
+    int pos;
+    int bpos;
+    int val;
+    int nj;
+    int nk;
+    int nl;
+    int no;
+    int to;
+    int ans;
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) a[i] = getint();
+
+    m = getint();
+    for (i = 1; i <= m; i = i + 1) {
+        pos = i + n - m;
+        b[pos] = getint();
+    }
+
+    for (i = 0; i < 24; i = i + 1) cur[i] = 0;
+    cur[idx(0, 0, 0, 0)] = 1;
+
+    for (i = 0; i < n; i = i + 1) {
+        for (j = 0; j < 24; j = j + 1) nxt[j] = 0;
+
+        for (j = 0; j <= 2; j = j + 1) {
+            for (k = 0; k <= 1; k = k + 1) {
+                for (l = 0; l <= 1; l = l + 1) {
+                    for (o = 0; o <= 1; o = o + 1) {
+                        val = cur[idx(j, k, l, o)];
+                        if (val != 0) {
+                            bpos = b[i + 1];
+                            for (kk = 0; kk <= 9; kk = kk + 1) {
+                                if (kk == 3) continue;
+                                if (k == 0 && kk < bpos) continue;
+                                for (ll = 0; ll <= 9; ll = ll + 1) {
+                                    if (ll == 3) continue;
+                                    if (l == 0 && ll < bpos) continue;
+                                    for (oo = 0; oo <= 9; oo = oo + 1) {
+                                        if (oo == 3) continue;
+                                        if (o == 0 && oo < bpos) continue;
+
+                                        nj = j * 10 + a[i + 1] - kk - ll - oo;
+                                        if (nj < 0 || nj > 2) continue;
+
+                                        nk = k;
+                                        if (kk > bpos) nk = 1;
+                                        nl = l;
+                                        if (ll > bpos) nl = 1;
+                                        no = o;
+                                        if (oo > bpos) no = 1;
+
+                                        to = idx(nj, nk, nl, no);
+                                        nxt[to] = nxt[to] + val;
+                                        if (nxt[to] >= MOD) nxt[to] = nxt[to] - MOD;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for (j = 0; j < 24; j = j + 1) cur[j] = nxt[j];
+    }
+
+    ans = 0;
+    for (i = 0; i <= 1; i = i + 1) {
+        for (j = 0; j <= 1; j = j + 1) {
+            for (k = 0; k <= 1; k = k + 1) {
+                ans = ans + cur[idx(0, i, j, k)];
+                ans = ans % MOD;
+            }
+        }
+    }
+
+    printf("%d\n", ans);
+    return 0;
+}

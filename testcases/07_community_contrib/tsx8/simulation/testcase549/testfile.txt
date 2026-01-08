@@ -1,0 +1,60 @@
+/*
+  Count permutations of length n with exactly K inversions (mod 10000).
+  Rolling DP derived from the original O(n*K) solution.
+*/
+
+const int MOD = 10000;
+const int MAXK = 1000;
+
+int gprev[1001];
+int gcur[1001];
+int fcur[1001];
+
+int solve(int n, int K) {
+    int i;
+    int j;
+
+    for (j = 0; j <= K; j = j + 1) {
+        gprev[j] = 1;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+        for (j = 0; j <= K; j = j + 1) {
+            fcur[j] = gprev[j] + MOD;
+            if (j >= i) {
+                fcur[j] = fcur[j] - gprev[j - i];
+            }
+            fcur[j] = fcur[j] % MOD;
+        }
+
+        gcur[0] = fcur[0];
+        for (j = 1; j <= K; j = j + 1) {
+            gcur[j] = gcur[j - 1] + fcur[j];
+            gcur[j] = gcur[j] % MOD;
+        }
+
+        for (j = 0; j <= K; j = j + 1) {
+            gprev[j] = gcur[j];
+        }
+    }
+
+    return fcur[K];
+}
+
+int main() {
+    int T;
+    int n;
+    int K;
+    int ans;
+    int tc;
+
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        n = getint();
+        K = getint();
+
+        ans = solve(n, K);
+        printf("%d\n", ans);
+    }
+    return 0;
+}

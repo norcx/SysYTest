@@ -1,0 +1,23 @@
+/* Description:
+ *   Converted from a Windows/C++ harness that repeatedly prints an iteration counter
+ *   and breaks when a comparison detects a mismatch between two results.
+ */
+
+int main() {
+    int cnt;
+    int a;
+    int b;
+
+    cnt = 0;
+    for (;;)
+    {
+        cnt = cnt + 1;
+        printf("%d\n", cnt);
+
+        a = cnt * cnt + 1;
+        b = cnt * cnt + 1;
+        if (cnt == 7) b = b + 1;
+        if (a != b) break;
+    }
+    return 0;
+}
