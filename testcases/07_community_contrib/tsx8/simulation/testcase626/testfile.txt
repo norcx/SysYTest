@@ -8,6 +8,8 @@
 
 int seed;
 
+int table[50021];
+
 int sysy_rand() {
     int hi;
     int lo;
@@ -27,8 +29,6 @@ int R() {
     b = sysy_rand();
     return a * 30000 + b % 30000;
 }
-
-int table[50021];
 
 int has_key(int key) {
     int idx;
