@@ -1,0 +1,191 @@
+/*
+  UVa1471 Defense Lines (scaled-down for Strict SysY testcase)
+
+  Input format:
+    T
+    For each testcase:
+      n
+      a[0..n-1]
+
+  Computes:
+    max over i>j with a[j]<a[i] of g[j] + f[i],
+    where g[j] is length of increasing contiguous subsequence ending at j,
+    and f[i] is length of increasing contiguous subsequence starting at i.
+
+  Notes:
+    - Strict SysY: int-only, 1D arrays, for-loops only, no bitwise ops.
+    - Memory: arrays sized for MAXN=50000.
+*/
+
+const int MAXN = 50000 + 5;
+
+int n;
+int a[MAXN];
+int f[MAXN];
+int g[MAXN];
+int vals[MAXN];
+int tmp[MAXN];
+int bit[MAXN];
+
+int lowbit(int x) {
+  int lb;
+  int t;
+  lb = 1;
+  t = x;
+  for (; t % 2 == 0; ) {
+    lb = lb * 2;
+    t = t / 2;
+  }
+  return lb;
+}
+
+void bit_clear(int m) {
+  int i;
+  for (i = 1; i <= m; i = i + 1) bit[i] = 0;
+}
+
+void bit_update(int idx, int val, int m) {
+  int i;
+  i = idx;
+  for (; i <= m; ) {
+    if (bit[i] < val) bit[i] = val;
+    i = i + lowbit(i);
+  }
+}
+
+int bit_query(int idx) {
+  int res;
+  int i;
+  res = 0;
+  i = idx;
+  for (; i > 0; ) {
+    if (res < bit[i]) res = bit[i];
+    i = i - lowbit(i);
+  }
+  return res;
+}
+
+void merge_sort(int arr[], int len) {
+  int width;
+  int i;
+  int left;
+  int mid;
+  int right;
+  int p;
+  int q;
+  int k;
+
+  for (width = 1; width < len; width = width * 2) {
+    for (i = 0; i < len; i = i + width + width) {
+      left = i;
+      mid = i + width;
+      right = i + width + width;
+      if (mid > len) mid = len;
+      if (right > len) right = len;
+
+      p = left;
+      q = mid;
+      k = left;
+      for (; p < mid && q < right; ) {
+        if (arr[p] <= arr[q]) {
+          tmp[k] = arr[p];
+          p = p + 1;
+        } else {
+          tmp[k] = arr[q];
+          q = q + 1;
+        }
+        k = k + 1;
+      }
+      for (; p < mid; ) {
+        tmp[k] = arr[p];
+        p = p + 1;
+        k = k + 1;
+      }
+      for (; q < right; ) {
+        tmp[k] = arr[q];
+        q = q + 1;
+        k = k + 1;
+      }
+    }
+    for (i = 0; i < len; i = i + 1) arr[i] = tmp[i];
+  }
+}
+
+int unique_sorted(int arr[], int len) {
+  int m;
+  int i;
+  if (len <= 0) return 0;
+  m = 1;
+  for (i = 1; i < len; i = i + 1) {
+    if (arr[i] != arr[m - 1]) {
+      arr[m] = arr[i];
+      m = m + 1;
+    }
+  }
+  return m;
+}
+
+int lower_bound_int(int arr[], int len, int x) {
+  int l;
+  int r;
+  int mid;
+  l = 0;
+  r = len;
+  for (; l < r; ) {
+    mid = (l + r) / 2;
+    if (arr[mid] < x) l = mid + 1;
+    else r = mid;
+  }
+  return l;
+}
+
+int main() {
+  int T;
+  int tc;
+  int i;
+  int m;
+  int rank;
+  int best;
+  int ans;
+  int len;
+
+  T = getint();
+  for (tc = 0; tc < T; tc = tc + 1) {
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+      a[i] = getint();
+      vals[i] = a[i];
+    }
+
+    if (n == 1) {
+      printf("1\n");
+    } else {
+      g[0] = 1;
+      for (i = 1; i < n; i = i + 1) {
+        if (a[i - 1] < a[i]) g[i] = g[i - 1] + 1;
+        else g[i] = 1;
+      }
+
+      f[n - 1] = 1;
+      for (i = n - 2; i >= 0; i = i - 1) {
+        if (a[i] < a[i + 1]) f[i] = f[i + 1] + 1;
+        else f[i] = 1;
+      }
+
+      merge_sort(vals, n);
+      m = unique_sorted(vals, n);
+      bit_clear(m);
+
+      ans = 1;
+      for (i = 0; i < n; i = i + 1) {
+        rank = lower_bound_int(vals, m, a[i]) + 1;
+        best = bit_query(rank - 1);
+        len = f[i] + best;
+        if (ans < len) ans = len;
+        bit_update(rank, g[i], m);
+      }
+      printf("%d\n", ans);
+    }
+  }
+  return 0;
+}

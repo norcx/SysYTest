@@ -1,0 +1,52 @@
+/* Description:
+ *   Converted from UVa12230 Crossing Rivers (Rujia Liu).
+ *   Uses fixed-point (x1000) arithmetic to emulate %.3lf output.
+ */
+
+int main() {
+    int n;
+    int D;
+    int p;
+    int L;
+    int v;
+    int kase;
+    int i;
+    int total1000;
+    int term1000;
+    int ipart;
+    int frac;
+
+    kase = 0;
+    for (;;) {
+        n = getint();
+        D = getint();
+        if (D == 0) break;
+
+        total1000 = 0;
+        for (i = 0; i < n; i = i + 1) {
+            p = getint();
+            L = getint();
+            v = getint();
+
+            D = D - L;
+            term1000 = (2000 * L) / v;
+            total1000 = total1000 + term1000;
+        }
+
+        total1000 = total1000 + D * 1000;
+        ipart = total1000 / 1000;
+        frac = total1000 - ipart * 1000;
+
+        kase = kase + 1;
+        printf("Case %d: %d.", kase, ipart);
+        if (frac < 10) {
+            printf("00%d", frac);
+        } else {
+            if (frac < 100) printf("0%d", frac);
+            else printf("%d", frac);
+        }
+        printf("\n\n");
+    }
+
+    return 0;
+}

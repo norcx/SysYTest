@@ -1,0 +1,124 @@
+/*
+UVa11212 Editing a Book (ported to Strict SysY)
+
+Input:
+  Repeated testcases:
+    n
+    a0
+    a1
+    ...
+    a(n-1)
+  Terminates with n == 0.
+
+Output:
+  Case k: ans
+*/
+
+const int MAXN = 9;
+
+int n;
+int a[MAXN];
+
+int is_sorted() {
+  int i;
+  for (i = 0; i < n - 1; i = i + 1) {
+    if (a[i] >= a[i + 1]) return 0;
+  }
+  return 1;
+}
+
+int h() {
+  int cnt;
+  int i;
+  cnt = 0;
+  for (i = 0; i < n - 1; i = i + 1) {
+    if (a[i] + 1 != a[i + 1]) cnt = cnt + 1;
+  }
+  if (a[n - 1] != n) cnt = cnt + 1;
+  return cnt;
+}
+
+void copy_arr(int dst[], int src[]) {
+  int i;
+  for (i = 0; i < MAXN; i = i + 1) {
+    dst[i] = src[i];
+  }
+}
+
+int dfs(int d, int maxd) {
+  if (d * 3 + h() > maxd * 3) return 0;
+  if (is_sorted()) return 1;
+
+  int b[MAXN];
+  int olda[MAXN];
+  int i;
+  int j;
+  int k;
+  int p;
+  int cnt;
+  int cnt2;
+
+  copy_arr(olda, a);
+
+  for (i = 0; i < n; i = i + 1) {
+    for (j = i; j < n; j = j + 1) {
+      cnt = 0;
+      for (k = 0; k < n; k = k + 1) {
+        if (k < i || k > j) {
+          b[cnt] = a[k];
+          cnt = cnt + 1;
+        }
+      }
+
+      for (k = 0; k <= cnt; k = k + 1) {
+        cnt2 = 0;
+
+        for (p = 0; p < k; p = p + 1) {
+          a[cnt2] = b[p];
+          cnt2 = cnt2 + 1;
+        }
+        for (p = i; p <= j; p = p + 1) {
+          a[cnt2] = olda[p];
+          cnt2 = cnt2 + 1;
+        }
+        for (p = k; p < cnt; p = p + 1) {
+          a[cnt2] = b[p];
+          cnt2 = cnt2 + 1;
+        }
+
+        if (dfs(d + 1, maxd)) return 1;
+        copy_arr(a, olda);
+      }
+    }
+  }
+
+  return 0;
+}
+
+int solve() {
+  if (is_sorted()) return 0;
+
+  int max_ans;
+  int maxd;
+  max_ans = 5;
+  for (maxd = 1; maxd < max_ans; maxd = maxd + 1) {
+    if (dfs(0, maxd)) return maxd;
+  }
+  return max_ans;
+}
+
+int main() {
+  int kase;
+  int i;
+  kase = 0;
+  for (;;) {
+    n = getint();
+    if (n == 0) break;
+    for (i = 0; i < n; i = i + 1) {
+      a[i] = getint();
+    }
+    kase = kase + 1;
+    printf("Case %d: %d\n", kase, solve());
+  }
+  return 0;
+}

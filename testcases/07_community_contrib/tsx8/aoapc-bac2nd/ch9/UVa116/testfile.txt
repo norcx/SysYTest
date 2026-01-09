@@ -1,0 +1,97 @@
+/* UVa 116 - Unidirectional TSP (Strict SysY) */
+const int INF = 1000000000;
+const int MAXSIZE = 11025;
+
+int a[MAXSIZE];
+int d[MAXSIZE];
+int nxt[MAXSIZE];
+
+void sort3(int x[]) {
+  int t;
+  if (x[0] > x[1]) {
+    t = x[0];
+    x[0] = x[1];
+    x[1] = t;
+  }
+  if (x[1] > x[2]) {
+    t = x[1];
+    x[1] = x[2];
+    x[2] = t;
+  }
+  if (x[0] > x[1]) {
+    t = x[0];
+    x[0] = x[1];
+    x[1] = t;
+  }
+  return;
+}
+
+int main() {
+  int m;
+  int n;
+  int i;
+  int j;
+  int k;
+  int idx;
+  int ans;
+  int first;
+  int rows[3];
+  int v;
+
+  for (;;) {
+    m = getint();
+    n = getint();
+    if (m == 0) break;
+
+    for (i = 0; i < m; i = i + 1) {
+      for (j = 0; j < n; j = j + 1) {
+        a[i * n + j] = getint();
+      }
+    }
+
+    ans = INF;
+    first = 0;
+
+    for (j = n - 1; j >= 0; j = j - 1) {
+      for (i = 0; i < m; i = i + 1) {
+        idx = i * n + j;
+
+        if (j == n - 1) {
+          d[idx] = a[idx];
+          nxt[idx] = i;
+        } else {
+          rows[0] = i;
+          rows[1] = i - 1;
+          rows[2] = i + 1;
+          if (i == 0) rows[1] = m - 1;
+          if (i == m - 1) rows[2] = 0;
+          sort3(rows);
+
+          d[idx] = INF;
+          for (k = 0; k < 3; k = k + 1) {
+            v = d[rows[k] * n + (j + 1)] + a[idx];
+            if (v < d[idx]) {
+              d[idx] = v;
+              nxt[idx] = rows[k];
+            }
+          }
+        }
+
+        if (j == 0 && d[idx] < ans) {
+          ans = d[idx];
+          first = i;
+        }
+      }
+    }
+
+    printf("%d", first + 1);
+    i = first;
+    for (j = 0; j < n - 1; j = j + 1) {
+      i = nxt[i * n + j];
+      printf(" %d", i + 1);
+    }
+    printf("\n%d\n", ans);
+  }
+
+  return 0;
+}

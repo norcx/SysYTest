@@ -1,0 +1,19 @@
+/* Description:
+ *   Read N, then N pairs (a,b); output a+b per line.
+ *   (Adapted from EOF-terminated C input to deterministic Strict SysY input.)
+ */
+
+int main() {
+    int n;
+    int i;
+    int a;
+    int b;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        a = getint();
+        b = getint();
+        printf("%d\n", a + b);
+    }
+    return 0;
+}

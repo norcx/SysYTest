@@ -1,0 +1,26 @@
+/* Description:
+ *   Sums integers separated by "line" sentinels.
+ *   Input encoding (Strict SysY, 1 int per line):
+ *     - Numbers accumulate into current line sum
+ *     - 0 prints current sum and resets (end of a line)
+ *     - -1 terminates input (must appear explicitly)
+ */
+
+int main() {
+    int x;
+    int sum;
+    sum = 0;
+    for (;;) {
+        x = getint();
+        if (x == -1) {
+            break;
+        }
+        if (x == 0) {
+            printf("%d\n", sum);
+            sum = 0;
+        } else {
+            sum = sum + x;
+        }
+    }
+    return 0;
+}

@@ -1,0 +1,108 @@
+/*
+UVa1642 Magical GCD (scaled-down SysY version)
+Compute max over all subarrays: gcd(subarray) * length
+*/
+
+const int MAXN = 220;
+
+int A[MAXN];
+int g_list[MAXN];
+int p_list[MAXN];
+int tmp_g[MAXN];
+int tmp_p[MAXN];
+
+int gcd_int(int a, int b) {
+    int t;
+    if (a < 0) a = 0 - a;
+    if (b < 0) b = 0 - b;
+    for (; b != 0; ) {
+        t = a % b;
+        a = b;
+        b = t;
+    }
+    return a;
+}
+
+int need_shift(int gj, int pj, int keyg, int keyp) {
+    if (gj > keyg) return 1;
+    if (gj == keyg && pj > keyp) return 1;
+    return 0;
+}
+
+void sort_items(int g[], int p[], int m) {
+    int i;
+    int j;
+    int keyg;
+    int keyp;
+    for (i = 1; i < m; i = i + 1) {
+        keyg = g[i];
+        keyp = p[i];
+        j = i - 1;
+        for (; j >= 0 && need_shift(g[j], p[j], keyg, keyp) == 1; ) {
+            g[j + 1] = g[j];
+            p[j + 1] = p[j];
+            j = j - 1;
+        }
+        g[j + 1] = keyg;
+        p[j + 1] = keyp;
+    }
+    return;
+}
+
+int main() {
+    int T;
+    int tc;
+    int n;
+    int i;
+    int j;
+    int k;
+
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        n = getint();
+        for (i = 0; i < n; i = i + 1) {
+            A[i] = getint();
+        }
+
+        int items_size;
+        int ans;
+        items_size = 0;
+        ans = 0;
+
+        for (j = 0; j < n; j = j + 1) {
+            g_list[items_size] = 0;
+            p_list[items_size] = j;
+            items_size = items_size + 1;
+
+            for (k = 0; k < items_size; k = k + 1) {
+                g_list[k] = gcd_int(g_list[k], A[j]);
+            }
+
+            sort_items(g_list, p_list, items_size);
+
+            int new_size;
+            new_size = 0;
+            for (k = 0; k < items_size; k = k + 1) {
+                if (k == 0 || g_list[k] != g_list[k - 1]) {
+                    int len;
+                    int prod;
+                    tmp_g[new_size] = g_list[k];
+                    tmp_p[new_size] = p_list[k];
+                    len = j - p_list[k] + 1;
+                    prod = g_list[k] * len;
+                    if (prod > ans) ans = prod;
+                    new_size = new_size + 1;
+                }
+            }
+
+            items_size = new_size;
+            for (k = 0; k < items_size; k = k + 1) {
+                g_list[k] = tmp_g[k];
+                p_list[k] = tmp_p[k];
+            }
+        }
+
+        printf("%d\n", ans);
+    }
+    return 0;
+}

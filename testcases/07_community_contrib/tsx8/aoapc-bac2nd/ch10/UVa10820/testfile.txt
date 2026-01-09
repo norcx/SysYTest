@@ -1,0 +1,42 @@
+/*
+ * UVa10820 - Send a Table
+ * Converted to Strict SysY.
+ *
+ * Input: n per line, terminated by 0.
+ * Output: 2 * sum_{i=1..n} phi(i) + 1, with phi(1)=0.
+ */
+
+const int MAXN = 50000;
+const int MAXN1 = 50001;
+
+int phi[MAXN1];
+int phi_psum[MAXN1];
+
+void phi_table(int n) {
+  int i;
+  int j;
+  phi[1] = 0;
+  for (i = 2; i <= n; i = i + 1) {
+    if (phi[i] == 0) {
+      for (j = i; j <= n; j = j + i) {
+        if (phi[j] == 0) phi[j] = j;
+        phi[j] = phi[j] / i * (i - 1);
+      }
+    }
+  }
+  return;
+}
+
+int main() {
+  int n;
+  int i;
+  phi_table(MAXN);
+  phi_psum[0] = 0;
+  for (i = 1; i <= MAXN; i = i + 1) {
+    phi_psum[i] = phi_psum[i - 1] + phi[i];
+  }
+  for (n = getint(); n != 0; n = getint()) {
+    printf("%d\n", phi_psum[n] * 2 + 1);
+  }
+  return 0;
+}

@@ -1,0 +1,138 @@
+// Converted from UVa1336 "Fixing the Great Wall"
+// Refactored to Strict SysY (int-only, no structs, no 2D arrays).
+
+const int MAXN = 55;
+const int STRIDE = MAXN + 2;
+const int INF = 1000000000;
+
+int n;
+int v;
+int x0;
+int kase;
+
+int sx[STRIDE];
+int sc[STRIDE];
+int sdt[STRIDE];
+int psdt[STRIDE];
+
+int vis[STRIDE * STRIDE * 2];
+int memo[STRIDE * STRIDE * 2];
+
+int myabs(int a) {
+  if(a < 0) return -a;
+  return a;
+}
+
+int idx(int i, int j, int p) {
+  return ((i * STRIDE + j) * 2 + p);
+}
+
+int cost(int x1, int x2, int i, int j) {
+  int finished_dt;
+  int remaining_dt;
+  int dist;
+  finished_dt = 0;
+  if(i >= 1 && j >= 1) finished_dt = psdt[j] - psdt[i - 1];
+  remaining_dt = psdt[n] - finished_dt;
+  dist = myabs(x2 - x1);
+  return remaining_dt * dist / v;
+}
+
+int dp(int i, int j, int p) {
+  int index;
+  int ans;
+  int curx;
+  int t;
+  if(i == 1 && j == n) return 0;
+
+  index = idx(i, j, p);
+  if(vis[index] == kase) return memo[index];
+  vis[index] = kase;
+
+  ans = INF;
+  if(p == 0) curx = sx[i];
+  else curx = sx[j];
+
+  if(i > 1) {
+    t = dp(i - 1, j, 0) + cost(curx, sx[i - 1], i, j);
+    if(t < ans) ans = t;
+  }
+  if(j < n) {
+    t = dp(i, j + 1, 1) + cost(curx, sx[j + 1], i, j);
+    if(t < ans) ans = t;
+  }
+
+  memo[index] = ans;
+  return ans;
+}
+
+void sort_sections() {
+  int i;
+  int j;
+  int keyx;
+  int keyc;
+  int keydt;
+  for(i = 2; i <= n; i = i + 1) {
+    keyx = sx[i];
+    keyc = sc[i];
+    keydt = sdt[i];
+    j = i - 1;
+    for(; j >= 1 && sx[j] > keyx; j = j - 1) {
+      sx[j + 1] = sx[j];
+      sc[j + 1] = sc[j];
+      sdt[j + 1] = sdt[j];
+    }
+    sx[j + 1] = keyx;
+    sc[j + 1] = keyc;
+    sdt[j + 1] = keydt;
+  }
+}
+
+int main() {
+  int sumc;
+  int ans;
+  int i;
+  int t;
+
+  for(;;) {
+    n = getint();
+    if(n == 0) break;
+    v = getint();
+    x0 = getint();
+    kase = kase + 1;
+
+    sumc = 0;
+    for(i = 1; i <= n; i = i + 1) {
+      sx[i] = getint();
+      sc[i] = getint();
+      sdt[i] = getint();
+      sumc = sumc + sc[i];
+    }
+
+    sort_sections();
+
+    psdt[0] = 0;
+    for(i = 1; i <= n; i = i + 1) psdt[i] = psdt[i - 1] + sdt[i];
+
+    sx[0] = -INF;
+    sx[n + 1] = INF;
+
+    ans = INF;
+    for(i = 1; i <= n + 1; i = i + 1) {
+      if(x0 > sx[i - 1] && x0 < sx[i]) {
+        if(i > 1) {
+          t = dp(i - 1, i - 1, 0) + cost(x0, sx[i - 1], 0, 0);
+          if(t < ans) ans = t;
+        }
+        if(i <= n) {
+          t = dp(i, i, 0) + cost(x0, sx[i], 0, 0);
+          if(t < ans) ans = t;
+        }
+        break;
+      }
+    }
+
+    printf("%d\n", ans + sumc);
+  }
+  return 0;
+}

@@ -1,0 +1,88 @@
+/*
+  Converted from C++:
+  - Fill an array with deterministic pseudo-random ints
+  - Sort it
+  - Verify non-decreasing order
+
+  Scaled down from 1,000,000 elements to 10,000 to fit Strict SysY limits.
+*/
+
+const int N = 10000;
+int a[N];
+int tmp[N];
+
+int next_rand(int seed) {
+  seed = seed * 131 + 17;
+  seed = seed % 1000000;
+  return seed;
+}
+
+void fill_random_int(int cnt) {
+  int i;
+  int seed;
+  seed = 12345;
+  for (i = 0; i < cnt; i = i + 1) {
+    seed = next_rand(seed);
+    a[i] = seed - 500000;
+  }
+}
+
+void merge_sort(int n) {
+  int width;
+  int i;
+  int left;
+  int mid;
+  int right;
+  int p;
+  int q;
+  int k;
+
+  for (width = 1; width < n; width = width * 2) {
+    for (i = 0; i < n; i = i + width + width) {
+      left = i;
+      mid = i + width;
+      right = i + width + width;
+      if (mid > n) mid = n;
+      if (right > n) right = n;
+
+      p = left;
+      q = mid;
+      for (k = left; k < right; k = k + 1) {
+        if (p >= mid) {
+          tmp[k] = a[q];
+          q = q + 1;
+        } else if (q >= right) {
+          tmp[k] = a[p];
+          p = p + 1;
+        } else if (a[p] <= a[q]) {
+          tmp[k] = a[p];
+          p = p + 1;
+        } else {
+          tmp[k] = a[q];
+          q = q + 1;
+        }
+      }
+
+      for (k = left; k < right; k = k + 1) {
+        a[k] = tmp[k];
+      }
+    }
+  }
+}
+
+int check_sorted(int n) {
+  int i;
+  for (i = 0; i < n - 1; i = i + 1) {
+    if (a[i] > a[i + 1]) return 0;
+  }
+  return 1;
+}
+
+int main() {
+  int ok;
+  fill_random_int(N);
+  merge_sort(N);
+  ok = check_sorted(N);
+  printf("%d\n", ok);
+  return 0;
+}

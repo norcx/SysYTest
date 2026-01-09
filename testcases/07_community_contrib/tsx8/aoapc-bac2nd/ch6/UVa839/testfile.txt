@@ -1,0 +1,41 @@
+// UVa839 Not so Mobile (Strict SysY)
+// Read a mobile and judge whether it's balanced via torque equality.
+
+int ok;
+
+int solve() {
+  int W1;
+  int D1;
+  int W2;
+  int D2;
+  int leftWeight;
+  int rightWeight;
+
+  W1 = getint();
+  D1 = getint();
+  W2 = getint();
+  D2 = getint();
+
+  leftWeight = W1;
+  rightWeight = W2;
+  if (W1 == 0) leftWeight = solve();
+  if (W2 == 0) rightWeight = solve();
+
+  if (leftWeight * D1 != rightWeight * D2) ok = 0;
+  return leftWeight + rightWeight;
+}
+
+int main() {
+  int T;
+  int i;
+
+  T = getint();
+  for (i = 0; i < T; i = i + 1) {
+    ok = 1;
+    solve();
+    if (ok == 1) printf("YES\n");
+    else printf("NO\n");
+    if (i != T - 1) printf("\n");
+  }
+  return 0;
+}

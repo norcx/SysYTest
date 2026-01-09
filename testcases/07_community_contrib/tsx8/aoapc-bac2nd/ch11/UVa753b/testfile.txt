@@ -1,0 +1,177 @@
+/* Description:
+ *   UVa753 "A Plug for UNIX" rewritten in Strict SysY:
+ *   - All strings are mapped to integer type IDs in input.
+ *   - Output is the number of devices that cannot be plugged.
+ */
+
+const int MAXN = 405;
+const int MAXV = 420;
+const int MAXE = 5000;
+const int INF = 1000000000;
+
+int n;
+int m;
+int k;
+
+int target[MAXN];
+int deviceType[MAXN];
+int convFrom[MAXN];
+int convTo[MAXN];
+
+int head[MAXV];
+int toV[MAXE];
+int fromV[MAXE];
+int cap[MAXE];
+int flow[MAXE];
+int nextE[MAXE];
+int edgeCnt;
+
+int a[MAXV];
+int pEdge[MAXV];
+int q[MAXV];
+
+void graph_init(int nodeCount) {
+    int i;
+    edgeCnt = 0;
+    for (i = 0; i < nodeCount; i = i + 1) {
+        head[i] = -1;
+    }
+}
+
+void add_edge(int u, int v, int c) {
+    int e;
+    e = edgeCnt;
+    fromV[e] = u;
+    toV[e] = v;
+    cap[e] = c;
+    flow[e] = 0;
+    nextE[e] = head[u];
+    head[u] = e;
+    edgeCnt = edgeCnt + 1;
+
+    e = edgeCnt;
+    fromV[e] = v;
+    toV[e] = u;
+    cap[e] = 0;
+    flow[e] = 0;
+    nextE[e] = head[v];
+    head[v] = e;
+    edgeCnt = edgeCnt + 1;
+}
+
+int maxflow(int s, int t, int nodeCount) {
+    int total;
+    int i;
+    int headQ;
+    int tailQ;
+    int x;
+    int e;
+    int v;
+    int rem;
+    int f;
+    int u;
+    int rev;
+
+    total = 0;
+    for (;;) {
+        for (i = 0; i < nodeCount; i = i + 1) {
+            a[i] = 0;
+        }
+
+        headQ = 0;
+        tailQ = 0;
+        q[tailQ] = s;
+        tailQ = tailQ + 1;
+        a[s] = INF;
+
+        for (; headQ < tailQ && a[t] == 0; headQ = headQ + 1) {
+            x = q[headQ];
+            for (e = head[x]; e != -1 && a[t] == 0; e = nextE[e]) {
+                v = toV[e];
+                if (a[v] == 0 && cap[e] > flow[e]) {
+                    pEdge[v] = e;
+                    rem = cap[e] - flow[e];
+                    if (a[x] < rem) a[v] = a[x];
+                    else a[v] = rem;
+                    q[tailQ] = v;
+                    tailQ = tailQ + 1;
+                }
+            }
+        }
+
+        if (a[t] == 0) {
+            break;
+        }
+
+        f = a[t];
+        for (u = t; u != s;) {
+            e = pEdge[u];
+            flow[e] = flow[e] + f;
+            if (e % 2 == 0) rev = e + 1;
+            else rev = e - 1;
+            flow[rev] = flow[rev] - f;
+            u = fromV[e];
+        }
+        total = total + f;
+    }
+    return total;
+}
+
+int main() {
+    int T;
+    int caseIdx;
+    int i;
+    int dummy;
+    int maxType;
+    int V;
+    int s;
+    int t;
+    int r;
+
+    T = getint();
+    for (caseIdx = 0; caseIdx < T; caseIdx = caseIdx + 1) {
+        n = getint();
+        maxType = -1;
+
+        for (i = 0; i < n; i = i + 1) {
+            target[i] = getint();
+            if (target[i] > maxType) maxType = target[i];
+        }
+
+        m = getint();
+        for (i = 0; i < m; i = i + 1) {
+            dummy = getint();
+            deviceType[i] = getint();
+            if (deviceType[i] > maxType) maxType = deviceType[i];
+        }
+
+        k = getint();
+        for (i = 0; i < k; i = i + 1) {
+            convFrom[i] = getint();
+            convTo[i] = getint();
+            if (convFrom[i] > maxType) maxType = convFrom[i];
+            if (convTo[i] > maxType) maxType = convTo[i];
+        }
+
+        V = maxType + 1;
+        s = V;
+        t = V + 1;
+
+        graph_init(V + 2);
+
+        for (i = 0; i < m; i = i + 1) {
+            add_edge(s, deviceType[i], 1);
+        }
+        for (i = 0; i < n; i = i + 1) {
+            add_edge(target[i], t, 1);
+        }
+        for (i = 0; i < k; i = i + 1) {
+            add_edge(convFrom[i], convTo[i], INF);
+        }
+
+        r = maxflow(s, t, V + 2);
+        printf("%d\n", m - r);
+        if (caseIdx != T - 1) printf("\n");
+    }
+    return 0;
+}

@@ -1,0 +1,77 @@
+/* Description:
+ *   UVa1262 Password (simplified): read two 6x5 grids (letters encoded as 0..25),
+ *   enumerate common passwords in lexicographic order, output the k-th as a base-26
+ *   integer, or -1 if it doesn't exist.
+ */
+
+int k;
+int cnt;
+int result;
+int grid[60];
+int common[130];
+int commonCount[5];
+int digits[5];
+int vis0[26];
+int vis1[26];
+
+int encode() {
+    return digits[0] * 456976 + digits[1] * 17576 + digits[2] * 676 + digits[3] * 26 + digits[4];
+}
+
+void build_common() {
+    int col;
+    int i;
+    int row;
+    int letter;
+    for (col = 0; col < 5; col = col + 1) {
+        for (i = 0; i < 26; i = i + 1) {
+            vis0[i] = 0;
+            vis1[i] = 0;
+        }
+        for (row = 0; row < 6; row = row + 1) {
+            vis0[grid[row * 5 + col]] = 1;
+            vis1[grid[30 + row * 5 + col]] = 1;
+        }
+        commonCount[col] = 0;
+        for (letter = 0; letter < 26; letter = letter + 1) {
+            if (vis0[letter] == 1 && vis1[letter] == 1) {
+                common[col * 26 + commonCount[col]] = letter;
+                commonCount[col] = commonCount[col] + 1;
+            }
+        }
+    }
+}
+
+int dfs(int col) {
+    int idx;
+    if (col == 5) {
+        cnt = cnt + 1;
+        if (cnt == k) {
+            result = encode();
+            return 1;
+        }
+        return 0;
+    }
+    for (idx = 0; idx < commonCount[col]; idx = idx + 1) {
+        digits[col] = common[col * 26 + idx];
+        if (dfs(col + 1) == 1) return 1;
+    }
+    return 0;
+}
+
+int main() {
+    int T;
+    int t;
+    int i;
+    T = getint();
+    for (t = 0; t < T; t = t + 1) {
+        k = getint();
+        for (i = 0; i < 60; i = i + 1) grid[i] = getint();
+        cnt = 0;
+        result = -1;
+        build_common();
+        dfs(0);
+        printf("%d\n", result);
+    }
+    return 0;
+}

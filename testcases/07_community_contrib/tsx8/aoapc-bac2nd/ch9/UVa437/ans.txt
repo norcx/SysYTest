@@ -1,0 +1,3 @@
+Case 1: maximum height = 40
+Case 2: maximum height = 60
+Case 3: maximum height = 11

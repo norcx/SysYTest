@@ -1,0 +1,73 @@
+/* Description:
+ *   UVa 340 Master-Mind Hints (scaled to Strict SysY).
+ *   Reads multiple games:
+ *     n
+ *     a[0..n-1] (secret)
+ *     repeated guesses b[0..n-1] until b[0]==0
+ *   Ends when n==0.
+ */
+
+const int MAXN = 1010;
+int a[MAXN];
+int b[MAXN];
+
+int main() {
+    int n;
+    int kase;
+    int i;
+    int d;
+    int A;
+    int B;
+    int c1;
+    int c2;
+
+    kase = 0;
+    for (;;) {
+        n = getint();
+        if (n == 0) {
+            break;
+        }
+        kase = kase + 1;
+        printf("Game %d:\n", kase);
+
+        for (i = 0; i < n; i = i + 1) {
+            a[i] = getint();
+        }
+
+        for (;;) {
+            A = 0;
+            B = 0;
+
+            for (i = 0; i < n; i = i + 1) {
+                b[i] = getint();
+                if (a[i] == b[i]) {
+                    A = A + 1;
+                }
+            }
+
+            if (b[0] == 0) {
+                break;
+            }
+
+            for (d = 1; d <= 9; d = d + 1) {
+                c1 = 0;
+                c2 = 0;
+                for (i = 0; i < n; i = i + 1) {
+                    if (a[i] == d) {
+                        c1 = c1 + 1;
+                    }
+                    if (b[i] == d) {
+                        c2 = c2 + 1;
+                    }
+                }
+                if (c1 < c2) {
+                    B = B + c1;
+                } else {
+                    B = B + c2;
+                }
+            }
+            printf("    (%d,%d)\n", A, B - A);
+        }
+    }
+    return 0;
+}

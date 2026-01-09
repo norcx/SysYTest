@@ -1,0 +1,100 @@
+/* Description:
+ *   Strict SysY adaptation of "Common Subexpression Elimination" on a
+ *   binary expression tree. Input is integer-only encoding:
+ *
+ *   T
+ *   For each testcase, a tree in preorder:
+ *     label, has_children(0/1), [left subtree], [right subtree]
+ *
+ *   Output is an integer token stream per testcase:
+ *     -label         : first-time visit of a node (prints its label)
+ *      id(>0)        : later visit of an already-printed node (1-based id)
+ *      0             : end marker for an internal node
+ *      1000000007    : end marker for a testcase
+ */
+
+const int MAXN = 5000;
+const int HASH_SIZE = 8192;
+
+int node_label[MAXN];
+int node_left[MAXN];
+int node_right[MAXN];
+int node_next[MAXN];
+int head[HASH_SIZE];
+int done[MAXN];
+
+int cnt;
+int kase;
+
+int intern(int lab, int l, int r) {
+    int h;
+    int b;
+    int cur;
+    int id;
+    h = lab * 1000003 + l * 10007 + r * 97;
+    b = h % HASH_SIZE;
+    if (b < 0) b = b + HASH_SIZE;
+
+    for (cur = head[b]; cur != -1; cur = node_next[cur]) {
+        if (node_label[cur] == lab && node_left[cur] == l && node_right[cur] == r) {
+            return cur;
+        }
+    }
+
+    id = cnt;
+    cnt = cnt + 1;
+    node_label[id] = lab;
+    node_left[id] = l;
+    node_right[id] = r;
+    node_next[id] = head[b];
+    head[b] = id;
+    return id;
+}
+
+int parse() {
+    int lab;
+    int has_children;
+    int l;
+    int r;
+
+    lab = getint();
+    has_children = getint();
+    l = -1;
+    r = -1;
+    if (has_children != 0) {
+        l = parse();
+        r = parse();
+    }
+    return intern(lab, l, r);
+}
+
+void emit(int v) {
+    if (done[v] == kase) {
+        printf("%d\n", v + 1);
+    } else {
+        done[v] = kase;
+        printf("%d\n", 0 - node_label[v]);
+        if (node_left[v] != -1) {
+            emit(node_left[v]);
+            emit(node_right[v]);
+            printf("%d\n", 0);
+        }
+    }
+    return;
+}
+
+int main() {
+    int T;
+    int i;
+    int root;
+
+    T = getint();
+    for (kase = 1; kase <= T; kase = kase + 1) {
+        for (i = 0; i < HASH_SIZE; i = i + 1) head[i] = -1;
+        cnt = 0;
+        root = parse();
+        emit(root);
+        printf("%d\n", 1000000007);
+    }
+    return 0;
+}

@@ -1,0 +1,107 @@
+/*
+  Converted from: UVa10900 "So you want to be a 2n-aire?"
+  Strict SysY version: integer-only fixed-point (3 decimals).
+  Input format (integers, 1 per line):
+    n
+    t_scaled (t * 1000)
+    ... repeat ...
+    0   (sentinel to stop)
+*/
+
+const int SCALE = 1000;
+const int MAXN = 40;
+
+int d[MAXN];
+int pow2v[MAXN];
+
+int round_div(int num, int den) {
+    return (num + den / 2) / den;
+}
+
+int mul_floor_div2(int a, int b) {
+    int res;
+    if (a % 2 == 0) {
+        res = (a / 2) * b;
+    } else {
+        if (b % 2 == 0) {
+            res = a * (b / 2);
+        } else {
+            res = (a / 2) * b + (b / 2);
+        }
+    }
+    return res;
+}
+
+void print_scaled3(int x) {
+    int ip;
+    int frac;
+    ip = x / SCALE;
+    frac = x - ip * SCALE;
+    if (frac < 10) {
+        printf("%d.00%d\n", ip, frac);
+    } else {
+        if (frac < 100) {
+            printf("%d.0%d\n", ip, frac);
+        } else {
+            printf("%d.%d\n", ip, frac);
+        }
+    }
+}
+
+int main() {
+    int n;
+    int tS;
+    int i;
+
+    for (;;) {
+        n = getint();
+        if (n == 0) {
+            break;
+        }
+        tS = getint();
+
+        pow2v[0] = 1;
+        i = 1;
+        for (; i <= n; i = i + 1) {
+            pow2v[i] = pow2v[i - 1] * 2;
+        }
+
+        d[n] = pow2v[n] * SCALE;
+        i = n - 1;
+        for (; i >= 0; i = i - 1) {
+            int p0S;
+            int p1S;
+            int termA;
+            int termB;
+            int b1;
+            int b2;
+            int y;
+
+            p0S = round_div(pow2v[i] * 1000000, d[i + 1]);
+            if (p0S < tS) {
+                p0S = tS;
+            }
+            if (p0S > SCALE) {
+                p0S = SCALE;
+            }
+
+            if (tS == SCALE) {
+                p1S = 0;
+            } else {
+                p1S = round_div((p0S - tS) * SCALE, SCALE - tS);
+            }
+
+            termA = pow2v[i] * p1S;
+
+            b1 = SCALE + p0S;
+            b2 = SCALE - p1S;
+            y = mul_floor_div2(d[i + 1], b1);
+            termB = ((y / SCALE) * b2) / SCALE;
+
+            d[i] = termA + termB;
+        }
+
+        print_scaled3(d[0]);
+    }
+    return 0;
+}

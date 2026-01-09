@@ -1,0 +1,108 @@
+/* Description:
+ *   UVa 1640 - The Counting Problem (digit frequencies in [a, b]).
+ *   Input: repeated pairs a, b (one integer per line), terminated by a==0 or b==0.
+ *   Output: for each pair, counts of digits 0..9 in all numbers from a to b (inclusive).
+ */
+
+int count1ToN(int d, int n) {
+    int res;
+    int factor;
+    res = 0;
+    factor = 1;
+
+    for (; ; ) {
+        int tmp;
+        int cur;
+        int higher;
+        int lower;
+
+        if (n / factor == 0) {
+            break;
+        }
+
+        tmp = n / factor;
+        cur = tmp % 10;
+        higher = tmp / 10;
+        lower = n % factor;
+
+        if (d != 0) {
+            res = res + higher * factor;
+            if (cur > d) {
+                res = res + factor;
+            } else {
+                if (cur == d) {
+                    res = res + lower + 1;
+                }
+            }
+        } else {
+            if (higher > 0) {
+                res = res + (higher - 1) * factor;
+                if (cur > 0) {
+                    res = res + factor;
+                } else {
+                    res = res + lower + 1;
+                }
+            }
+        }
+
+        if (factor > n / 10) {
+            break;
+        }
+        factor = factor * 10;
+    }
+
+    return res;
+}
+
+int count0ToX(int d, int x) {
+    int res;
+    if (x < 0) {
+        return 0;
+    }
+    res = count1ToN(d, x);
+    if (d == 0) {
+        res = res + 1;
+    }
+    return res;
+}
+
+int f(int d, int n) {
+    if (n <= 0) {
+        return 0;
+    }
+    return count0ToX(d, n - 1);
+}
+
+int main() {
+    for (; ; ) {
+        int a;
+        int b;
+        int d;
+
+        a = getint();
+        b = getint();
+        if (a == 0 || b == 0) {
+            break;
+        }
+
+        if (a > b) {
+            int t;
+            t = a;
+            a = b;
+            b = t;
+        }
+
+        d = 0;
+        for (d = 0; d < 10; d = d + 1) {
+            int ans;
+            if (d != 0) {
+                printf(" ");
+            }
+            ans = f(d, b + 1) - f(d, a);
+            printf("%d", ans);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}

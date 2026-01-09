@@ -1,0 +1,65 @@
+// Multiset permutations (unique), Strict SysY
+
+int P[100];
+int A[100];
+
+void sort_p(int n) {
+  int i;
+  int j;
+  int t;
+  for (i = 0; i < n; i = i + 1) {
+    for (j = i + 1; j < n; j = j + 1) {
+      if (P[j] < P[i]) {
+        t = P[i];
+        P[i] = P[j];
+        P[j] = t;
+      }
+    }
+  }
+}
+
+void print_permutation(int n, int cur) {
+  int i;
+  int j;
+  int c1;
+  int c2;
+  if (cur == n) {
+    for (i = 0; i < n; i = i + 1) {
+      printf("%d ", A[i]);
+    }
+    printf("\n");
+  } else {
+    for (i = 0; i < n; i = i + 1) {
+      if (i == 0 || P[i] != P[i - 1]) {
+        c1 = 0;
+        c2 = 0;
+        for (j = 0; j < cur; j = j + 1) {
+          if (A[j] == P[i]) {
+            c1 = c1 + 1;
+          }
+        }
+        for (j = 0; j < n; j = j + 1) {
+          if (P[i] == P[j]) {
+            c2 = c2 + 1;
+          }
+        }
+        if (c1 < c2) {
+          A[cur] = P[i];
+          print_permutation(n, cur + 1);
+        }
+      }
+    }
+  }
+}
+
+int main() {
+  int n;
+  int i;
+  n = getint();
+  for (i = 0; i < n; i = i + 1) {
+    P[i] = getint();
+  }
+  sort_p(n);
+  print_permutation(n, 0);
+  return 0;
+}

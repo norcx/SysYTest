@@ -1,0 +1,32 @@
+Depend 1 2
+Depend 2 1
+Depend 3 2
+Installing 4
+Installing 2
+Installing 5
+Installing 3
+Installing 1
+List 5
+4
+2
+5
+3
+1
+Needed 2
+Removing 1
+Removing 2
+Removing 3
+Removing 4
+Removing 5
+List 0
+NotInstalled 1
+Depend 6 1
+Installing 7
+Installing 6
+Already 7
+List 2
+7
+6
+Removing 6
+Removing 7
+List 0

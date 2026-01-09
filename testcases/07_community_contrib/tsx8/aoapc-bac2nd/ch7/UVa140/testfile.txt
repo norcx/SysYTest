@@ -1,0 +1,98 @@
+const int MAXN = 10;
+const int MAXM = 200;
+
+int edgeU[MAXM];
+int edgeV[MAXM];
+
+int P[MAXN];
+int bestP[MAXN];
+int pos[MAXN];
+
+int abs_int(int x) {
+  if (x < 0) return -x;
+  return x;
+}
+
+int next_permutation_int(int a[], int n) {
+  int i;
+  int j;
+  int t;
+  int l;
+  int r;
+  int tmp;
+
+  i = n - 2;
+  for (; i >= 0; i = i - 1) {
+    if (a[i] < a[i + 1]) break;
+  }
+  if (i < 0) return 0;
+
+  j = n - 1;
+  for (; j > i; j = j - 1) {
+    if (a[j] > a[i]) break;
+  }
+
+  tmp = a[i];
+  a[i] = a[j];
+  a[j] = tmp;
+
+  t = 0;
+  for (; t < (n - (i + 1)) / 2; t = t + 1) {
+    l = i + 1 + t;
+    r = n - 1 - t;
+    tmp = a[l];
+    a[l] = a[r];
+    a[r] = tmp;
+  }
+  return 1;
+}
+
+int main() {
+  int n;
+  int m;
+  int i;
+  int bandwidth;
+  int ans;
+  int diff;
+
+  for (;;) {
+    n = getint();
+    if (n == 0) break;
+
+    m = getint();
+    i = 0;
+    for (; i < m; i = i + 1) {
+      edgeU[i] = getint();
+      edgeV[i] = getint();
+    }
+
+    i = 0;
+    for (; i < n; i = i + 1) P[i] = i;
+
+    ans = n;
+    for (;;) {
+      i = 0;
+      for (; i < n; i = i + 1) pos[P[i]] = i;
+
+      bandwidth = 0;
+      i = 0;
+      for (; i < m; i = i + 1) {
+        diff = abs_int(pos[edgeU[i]] - pos[edgeV[i]]);
+        if (bandwidth < diff) bandwidth = diff;
+      }
+
+      if (bandwidth < ans) {
+        ans = bandwidth;
+        i = 0;
+        for (; i < n; i = i + 1) bestP[i] = P[i];
+      }
+
+      if (next_permutation_int(P, n) == 0) break;
+    }
+
+    i = 0;
+    for (; i < n; i = i + 1) printf("%d ", bestP[i]);
+    printf("-> %d\n", ans);
+  }
+  return 0;
+}

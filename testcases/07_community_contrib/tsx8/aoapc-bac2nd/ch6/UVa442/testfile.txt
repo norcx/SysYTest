@@ -1,0 +1,91 @@
+/*
+  UVa442 Matrix Chain Multiplication (integer-only input encoding)
+
+  Input format (all integers, one per line):
+    n
+    repeat n:
+      k (0..25 for 'A'..'Z')
+      r
+      c
+    q
+    repeat q:
+      L
+      repeat L:
+        token (ASCII code), e.g. '('=40, ')'=41, 'A'=65..'Z'=90
+*/
+
+int matR[26];
+int matC[26];
+
+int stkR[1024];
+int stkC[1024];
+
+int main() {
+    int n;
+    int i;
+    int q;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        int k;
+        k = getint();
+        matR[k] = getint();
+        matC[k] = getint();
+    }
+
+    q = getint();
+    for (i = 0; i < q; i = i + 1) {
+        int L;
+        int j;
+        int top;
+        int ans;
+        int error;
+
+        L = getint();
+        top = 0;
+        ans = 0;
+        error = 0;
+
+        for (j = 0; j < L; j = j + 1) {
+            int tok;
+            tok = getint();
+
+            if (error == 0 && tok >= 65 && tok <= 90) {
+                int idx;
+                idx = tok - 65;
+                stkR[top] = matR[idx];
+                stkC[top] = matC[idx];
+                top = top + 1;
+            } else if (error == 0 && tok == 41) {
+                int r2;
+                int c2;
+                int r1;
+                int c1;
+
+                top = top - 1;
+                r2 = stkR[top];
+                c2 = stkC[top];
+                top = top - 1;
+                r1 = stkR[top];
+                c1 = stkC[top];
+
+                if (c1 != r2) {
+                    error = 1;
+                } else {
+                    ans = ans + r1 * c1 * c2;
+                    stkR[top] = r1;
+                    stkC[top] = c2;
+                    top = top + 1;
+                }
+            }
+        }
+
+        if (error != 0) {
+            printf("error\n");
+        } else {
+            printf("%d\n", ans);
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,22 @@
+/* Description:
+ *   Read pairs (a, b) and print min(a, b) per line.
+ *   Input ends with sentinel pair: 0, 0.
+ */
+
+int main() {
+    int a;
+    int b;
+    for (; 1; ) {
+        a = getint();
+        b = getint();
+        if (a == 0 && b == 0) {
+            break;
+        }
+        if (a < b) {
+            printf("%d\n", a);
+        } else {
+            printf("%d\n", b);
+        }
+    }
+    return 0;
+}

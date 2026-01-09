@@ -1,0 +1,258 @@
+/* Description:
+ *   UVa12171 Sculpture (scaled down):
+ *   Compute exterior surface area and volume via discretization + flood fill.
+ */
+
+const int MAX_N = 12;
+const int MAXC = 10;
+const int COORD_MAX = 30;
+const int CELL_MAX = 20000;
+
+int n;
+int x0[MAX_N];
+int y0[MAX_N];
+int z0[MAX_N];
+int x1[MAX_N];
+int y1[MAX_N];
+int z1[MAX_N];
+
+int nx;
+int ny;
+int nz;
+int xs[COORD_MAX];
+int ys[COORD_MAX];
+int zs[COORD_MAX];
+
+int g_xcells;
+int g_ycells;
+int g_zcells;
+int g_surface;
+
+int color[CELL_MAX];
+int qx[CELL_MAX];
+int qy[CELL_MAX];
+int qz[CELL_MAX];
+
+int ddx[6] = {1, -1, 0, 0, 0, 0};
+int ddy[6] = {0, 0, 1, -1, 0, 0};
+int ddz[6] = {0, 0, 0, 0, 1, -1};
+
+void sort_int(int a[], int len) {
+    int i;
+    int j;
+    int t;
+    for (i = 0; i < len; i = i + 1) {
+        for (j = i + 1; j < len; j = j + 1) {
+            if (a[j] < a[i]) {
+                t = a[i];
+                a[i] = a[j];
+                a[j] = t;
+            }
+        }
+    }
+}
+
+int unique_int(int a[], int len) {
+    int i;
+    int m;
+    if (len <= 0) return 0;
+    m = 1;
+    for (i = 1; i < len; i = i + 1) {
+        if (a[i] != a[m - 1]) {
+            a[m] = a[i];
+            m = m + 1;
+        }
+    }
+    return m;
+}
+
+int discretize(int a[], int len) {
+    sort_int(a, len);
+    return unique_int(a, len);
+}
+
+int find_id(int a[], int len, int v) {
+    int i;
+    for (i = 0; i < len; i = i + 1) {
+        if (a[i] == v) return i;
+    }
+    return 0;
+}
+
+int cell_valid(int x, int y, int z) {
+    if (x < 0) return 0;
+    if (y < 0) return 0;
+    if (z < 0) return 0;
+    if (x >= g_xcells) return 0;
+    if (y >= g_ycells) return 0;
+    if (z >= g_zcells) return 0;
+    return 1;
+}
+
+int cell_idx(int x, int y, int z) {
+    return (x * g_ycells + y) * g_zcells + z;
+}
+
+int cell_volume(int x, int y, int z) {
+    return (xs[x + 1] - xs[x]) * (ys[y + 1] - ys[y]) * (zs[z + 1] - zs[z]);
+}
+
+int face_area(int x, int y, int z, int dir) {
+    if (ddx[dir] != 0) return (ys[y + 1] - ys[y]) * (zs[z + 1] - zs[z]);
+    if (ddy[dir] != 0) return (xs[x + 1] - xs[x]) * (zs[z + 1] - zs[z]);
+    return (xs[x + 1] - xs[x]) * (ys[y + 1] - ys[y]);
+}
+
+void clear_color(int cells) {
+    int i;
+    for (i = 0; i < cells; i = i + 1) {
+        color[i] = 0;
+    }
+}
+
+int floodfill_volume() {
+    int cells;
+    int idx0;
+    int outside;
+    int head;
+    int tail;
+    int x;
+    int y;
+    int z;
+    int i;
+    int x2;
+    int y2;
+    int z2;
+    int idx2;
+
+    g_surface = 0;
+    outside = 0;
+    cells = g_xcells * g_ycells * g_zcells;
+
+    idx0 = cell_idx(0, 0, 0);
+    if (color[idx0] == 1) {
+        return MAXC * MAXC * MAXC;
+    }
+
+    tail = 0;
+    color[idx0] = 2;
+    qx[tail] = 0;
+    qy[tail] = 0;
+    qz[tail] = 0;
+    tail = tail + 1;
+
+    for (head = 0; head < tail; head = head + 1) {
+        x = qx[head];
+        y = qy[head];
+        z = qz[head];
+
+        outside = outside + cell_volume(x, y, z);
+
+        for (i = 0; i < 6; i = i + 1) {
+            x2 = x + ddx[i];
+            y2 = y + ddy[i];
+            z2 = z + ddz[i];
+            if (cell_valid(x2, y2, z2) == 1) {
+                idx2 = cell_idx(x2, y2, z2);
+                if (color[idx2] == 1) {
+                    g_surface = g_surface + face_area(x, y, z, i);
+                } else if (color[idx2] == 0) {
+                    color[idx2] = 2;
+                    qx[tail] = x2;
+                    qy[tail] = y2;
+                    qz[tail] = z2;
+                    tail = tail + 1;
+                }
+            }
+        }
+    }
+
+    return MAXC * MAXC * MAXC - outside;
+}
+
+int main() {
+    int T;
+    int tc;
+    int i;
+    int cells;
+    int X1;
+    int X2;
+    int Y1;
+    int Y2;
+    int Z1;
+    int Z2;
+    int X;
+    int Y;
+    int Z;
+    int volume;
+
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        nx = 2;
+        ny = 2;
+        nz = 2;
+        xs[0] = 0;
+        ys[0] = 0;
+        zs[0] = 0;
+        xs[1] = MAXC;
+        ys[1] = MAXC;
+        zs[1] = MAXC;
+
+        n = getint();
+        for (i = 0; i < n; i = i + 1) {
+            x0[i] = getint();
+            y0[i] = getint();
+            z0[i] = getint();
+            x1[i] = getint();
+            y1[i] = getint();
+            z1[i] = getint();
+            x1[i] = x1[i] + x0[i];
+            y1[i] = y1[i] + y0[i];
+            z1[i] = z1[i] + z0[i];
+
+            xs[nx] = x0[i];
+            nx = nx + 1;
+            xs[nx] = x1[i];
+            nx = nx + 1;
+            ys[ny] = y0[i];
+            ny = ny + 1;
+            ys[ny] = y1[i];
+            ny = ny + 1;
+            zs[nz] = z0[i];
+            nz = nz + 1;
+            zs[nz] = z1[i];
+            nz = nz + 1;
+        }
+
+        nx = discretize(xs, nx);
+        ny = discretize(ys, ny);
+        nz = discretize(zs, nz);
+
+        g_xcells = nx - 1;
+        g_ycells = ny - 1;
+        g_zcells = nz - 1;
+        cells = g_xcells * g_ycells * g_zcells;
+        clear_color(cells);
+
+        for (i = 0; i < n; i = i + 1) {
+            X1 = find_id(xs, nx, x0[i]);
+            X2 = find_id(xs, nx, x1[i]);
+            Y1 = find_id(ys, ny, y0[i]);
+            Y2 = find_id(ys, ny, y1[i]);
+            Z1 = find_id(zs, nz, z0[i]);
+            Z2 = find_id(zs, nz, z1[i]);
+
+            for (X = X1; X < X2; X = X + 1) {
+                for (Y = Y1; Y < Y2; Y = Y + 1) {
+                    for (Z = Z1; Z < Z2; Z = Z + 1) {
+                        color[cell_idx(X, Y, Z)] = 1;
+                    }
+                }
+            }
+        }
+
+        volume = floodfill_volume();
+        printf("%d %d\n", g_surface, volume);
+    }
+    return 0;
+}

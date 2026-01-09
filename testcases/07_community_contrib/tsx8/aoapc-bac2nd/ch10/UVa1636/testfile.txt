@@ -1,0 +1,52 @@
+/* Description:
+ * UVa1636/LA4596 Headshot (converted to Strict SysY).
+ *
+ * Input encoding (integer-only, 1 per line):
+ *   T
+ *   For each testcase:
+ *     n
+ *     s0
+ *     s1
+ *     ...
+ *     s(n-1)
+ * where each si is 0 or 1.
+ *
+ * Output (one per testcase):
+ *   "EQUAL", "SHOOT", or "ROTATE"
+ */
+
+int s[130];
+
+int main() {
+  int t;
+  int tc;
+  t = getint();
+  for (tc = 0; tc < t; tc = tc + 1) {
+    int n;
+    int i;
+    int j;
+    int a;
+    int b;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+      s[i] = getint();
+    }
+
+    a = 0;
+    b = 0;
+    for (i = 0; i < n; i = i + 1) {
+      if (s[i] == 0) {
+        b = b + 1;
+        j = i + 1;
+        if (j == n) j = 0;
+        if (s[j] == 0) a = a + 1;
+      }
+    }
+
+    if (a * n == b * b) printf("EQUAL\n");
+    else if (a * n > b * b) printf("SHOOT\n");
+    else printf("ROTATE\n");
+  }
+  return 0;
+}

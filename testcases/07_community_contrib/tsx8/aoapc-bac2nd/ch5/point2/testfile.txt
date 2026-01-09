@@ -1,0 +1,41 @@
+/*
+ * Prints the result of adding two 2D points:
+ *   (1,2) + (3,4) => (4,6)
+ *   (1.1,2.2) + (3.3,4.4) => (4.4,6.6)  (stored as fixed-point x10)
+ */
+
+int main() {
+    int ax;
+    int ay;
+    int bx;
+    int by;
+
+    int cx10;
+    int cy10;
+    int dx10;
+    int dy10;
+
+    int sumix;
+    int sumiy;
+    int sumx10;
+    int sumy10;
+
+    ax = 1;
+    ay = 2;
+    bx = 3;
+    by = 4;
+
+    cx10 = 11;
+    cy10 = 22;
+    dx10 = 33;
+    dy10 = 44;
+
+    sumix = ax + bx;
+    sumiy = ay + by;
+    sumx10 = cx10 + dx10;
+    sumy10 = cy10 + dy10;
+
+    printf("(%d,%d) ", sumix, sumiy);
+    printf("(%d.%d,%d.%d)\n", sumx10 / 10, sumx10 % 10, sumy10 / 10, sumy10 % 10);
+    return 0;
+}

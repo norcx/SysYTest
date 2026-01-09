@@ -1,0 +1,6 @@
+Case #1: The maximum product is 120.
+
+Case #2: The maximum product is 24.
+
+Case #3: The maximum product is 24.
+

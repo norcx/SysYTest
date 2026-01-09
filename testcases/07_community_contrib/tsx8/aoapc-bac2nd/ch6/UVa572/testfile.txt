@@ -1,0 +1,92 @@
+/* Description:
+ *   UVa 572 - Oil Deposits (8-connected components).
+ *
+ * Input encoding for SysY:
+ *   For each case:
+ *     m
+ *     n
+ *     then m*n integers (0 = '.', 1 = '@') in row-major order
+ *   Terminated by:
+ *     0
+ *     0
+ */
+
+const int MAXM = 110;
+const int MAXN = 110;
+const int MAX = 12100;
+
+int pic[MAX];
+int vis[MAX];
+int st[MAX];
+int m;
+int n;
+
+void flood(int start) {
+  int top;
+  int cur;
+  int r;
+  int c;
+  int dr;
+  int dc;
+  int nr;
+  int nc;
+  int ni;
+
+  top = 0;
+  st[top] = start;
+  top = top + 1;
+  vis[start] = 1;
+
+  for (; top > 0; ) {
+    top = top - 1;
+    cur = st[top];
+
+    r = cur / n;
+    c = cur - r * n;
+
+    for (dr = -1; dr <= 1; dr = dr + 1) {
+      for (dc = -1; dc <= 1; dc = dc + 1) {
+        if (dr != 0 || dc != 0) {
+          nr = r + dr;
+          nc = c + dc;
+          if (nr >= 0 && nr < m && nc >= 0 && nc < n) {
+            ni = nr * n + nc;
+            if (pic[ni] == 1 && vis[ni] == 0) {
+              vis[ni] = 1;
+              st[top] = ni;
+              top = top + 1;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+int main() {
+  int i;
+  int cells;
+  int cnt;
+
+  m = getint();
+  n = getint();
+  for (; m != 0 && n != 0; ) {
+    cells = m * n;
+    for (i = 0; i < cells; i = i + 1) pic[i] = getint();
+    for (i = 0; i < cells; i = i + 1) vis[i] = 0;
+
+    cnt = 0;
+    for (i = 0; i < cells; i = i + 1) {
+      if (pic[i] == 1 && vis[i] == 0) {
+        cnt = cnt + 1;
+        flood(i);
+      }
+    }
+
+    printf("%d\n", cnt);
+    m = getint();
+    n = getint();
+  }
+
+  return 0;
+}
