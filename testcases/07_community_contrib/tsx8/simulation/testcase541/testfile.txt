@@ -1,5 +1,5 @@
 /*
-  DP for inversion-count permutations (mod 10000), scaled to fit SysY limits.
+  DP for inversion-count permutations (mod 100), scaled to fit SysY limits.
 
   Input (in.txt): newline-separated integers:
     T
@@ -9,12 +9,12 @@
     m2
     ...
   Output:
-    f[n][m] per line (mod 10000)
+    f[n][m] per line (mod 100)
 */
 
-const int LIM = 450;
-const int W = 451;
-const int MOD = 10000;
+const int LIM = 200;
+const int W = 201;
+const int MOD = 100;
 
 int f[203401];
 int g[203401];

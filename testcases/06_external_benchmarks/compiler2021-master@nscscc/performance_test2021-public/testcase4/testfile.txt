@@ -1,5 +1,5 @@
-int matrix[200000];
-int a[100000];
+int matrix[13000];
+int a[100];
 
 int transpose(int n, int matrix[], int rowsize){
     int colsize = n / rowsize;

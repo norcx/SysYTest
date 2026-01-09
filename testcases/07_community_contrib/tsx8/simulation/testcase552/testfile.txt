@@ -1,8 +1,8 @@
 /* Description:
  *   op=1 add, op=2 del, op=3 count.
- *   x encodes (pre, suf) as x = pre*256 + suf.
+ *   x encodes (pre, suf) as x = pre*64 + suf.
  */
-const int MASKN = 256;
+const int MASKN = 64;
 const int BITN = 8;
 
 int pow2[8];

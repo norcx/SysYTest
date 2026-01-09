@@ -7,4 +7,4 @@ Case 6: 2
 Case 7: 6
 Case 8: 160
 Case 9: 1577
-Case 10: 16920
+Case 10: 1580

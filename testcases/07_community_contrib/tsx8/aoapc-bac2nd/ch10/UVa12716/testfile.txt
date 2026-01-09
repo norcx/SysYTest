@@ -1,7 +1,7 @@
 /* Description:
  *   UVa12716 GCD XOR (scaled-down for SysY)
  */
-const int M = 10000;
+const int M = 1000;
 
 int cnt[M + 1];
 int sum[M + 1];

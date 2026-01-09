@@ -1,5 +1,5 @@
 // UVa12034 Race (Strict SysY)
-const int MAXN = 1000;
+const int MAXN = 600;
 const int MOD = 10056;
 
 int comb[1001];

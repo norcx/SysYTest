@@ -6,7 +6,7 @@ int main() {
     
     int l0 = 1; int l1 = 2; int l2 = 3; int l3 = 4; int l4 = 5;
     
-    for (; i < 1000000; i = i + 1) {
+    for (; i < 100000; i = i + 1) {
         h0 = h0 + 1; h1 = h1 + 1; h2 = h2 + 1; h3 = h3 + 1; h4 = h4 + 1;
         h5 = h5 + 1; h6 = h6 + 1; h7 = h7 + 1; h8 = h8 + 1; h9 = h9 + 1;
         h10 = h10 + 1; h11 = h11 + 1;
