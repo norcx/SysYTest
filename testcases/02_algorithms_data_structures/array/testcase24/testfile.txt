@@ -1,8 +1,8 @@
 // test24 - 数组部分初始化
 int g_partial[20] = {1, 2, 3};  // 后面应该是0
+int local_partial[15] = {100, 200};  // 后面应该是0
 
 int main() {
-    int local_partial[15] = {100, 200};  // 后面应该是0
     int i;
     
     printf("Global partial init:\n");
