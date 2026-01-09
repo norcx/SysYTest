@@ -24,7 +24,7 @@ class Job:
 
 
 def _iter_code_files(code_dir: Path) -> list[Path]:
-    exts = {".c", ".cpp"}
+    exts = {".c", ".cpp", ".cc"}
     return sorted(
         [p for p in code_dir.rglob("*") if p.is_file() and p.suffix.lower() in exts],
         key=lambda p: str(p.relative_to(code_dir)),
