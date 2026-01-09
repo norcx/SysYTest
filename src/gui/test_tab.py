@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from pathlib import Path
 from datetime import datetime
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, Tuple
 import threading
 import queue
 import subprocess
@@ -383,16 +383,56 @@ class TestTab(BaseTab, OutputMixin):
         self.refresh_compilers()
 
     def _get_zip_dir(self) -> Optional[Path]:
+        zip_dir, _ = self._get_zip_dir_and_preferred_zip()
+        return zip_dir
+
+    def _resolve_project_path(self) -> Optional[Path]:
         raw = (self.project_var.get() or "").strip()
         if not raw:
-            return None
+            return self.app.zip_dir
         p = Path(raw)
-        return p if p.exists() and p.is_dir() else None
+        if not p.is_absolute():
+            p = (self.test_dir / p).resolve()
+        return p
+
+    def _get_zip_dir_and_preferred_zip(self) -> Tuple[Optional[Path], Optional[Path]]:
+        """从输入框解析 zip_dir，并在输入为单个 zip 时返回其路径用于默认选择。"""
+        project_path = self._resolve_project_path()
+        if not project_path:
+            return None, None
+
+        if project_path.exists() and project_path.is_file():
+            if project_path.suffix.lower() == ".zip":
+                return project_path.parent.resolve(), project_path.resolve()
+            return project_path.parent.resolve(), None
+
+        if project_path.exists() and project_path.is_dir():
+            return project_path.resolve(), None
+
+        return None, None
 
     def refresh_compilers(self):
         """刷新 zip_dir 下的编译器实例列表。"""
-        zip_dir = self._get_zip_dir()
-        self.zip_instances = discover_zip_compilers(zip_dir) if zip_dir else []
+        if threading.current_thread() is not threading.main_thread():
+            self.parent.after(0, self.refresh_compilers)
+            return
+
+        zip_dir, preferred_zip = self._get_zip_dir_and_preferred_zip()
+
+        # 保留刷新前的选择（按 zip_path 匹配），避免刷新后丢失。
+        previously_selected: set[Path] = set()
+        if hasattr(self, "inst_listbox"):
+            prev_valid = [i for i in self.zip_instances if i.valid]
+            for idx in self.inst_listbox.curselection() or ():
+                if 0 <= idx < len(prev_valid):
+                    previously_selected.add(prev_valid[idx].zip_path.resolve())
+
+        if zip_dir:
+            self.app.zip_dir = zip_dir
+            self.app.update_project_status(zip_dir)
+            self.zip_instances = discover_zip_compilers(zip_dir, recursive=True)
+        else:
+            self.zip_instances = []
 
         valid = [i for i in self.zip_instances if i.valid]
         invalid = [i for i in self.zip_instances if not i.valid]
@@ -403,6 +443,24 @@ class TestTab(BaseTab, OutputMixin):
                 lang = (inst.language or "unknown").upper()
                 obj = (inst.object_code or "?").lower()
                 self.inst_listbox.insert(tk.END, f"{inst.name}  ({lang}, {obj})")
+
+            # 恢复选择：优先单 zip 输入，其次按旧选择恢复。
+            selected_any = False
+            if preferred_zip:
+                for idx, inst in enumerate(valid):
+                    if inst.zip_path.resolve() == preferred_zip:
+                        self.inst_listbox.selection_set(idx)
+                        self.inst_listbox.activate(idx)
+                        self.inst_listbox.see(idx)
+                        selected_any = True
+                        break
+            if not selected_any and previously_selected:
+                for idx, inst in enumerate(valid):
+                    if inst.zip_path.resolve() in previously_selected:
+                        self.inst_listbox.selection_set(idx)
+                        selected_any = True
+                if selected_any:
+                    self.inst_listbox.see(self.inst_listbox.curselection()[0])
 
         if hasattr(self, "inst_count_label"):
             self.inst_count_label.configure(text=f"{len(valid)} 可用 / {len(self.zip_instances)} 总计")
@@ -419,6 +477,10 @@ class TestTab(BaseTab, OutputMixin):
             return []
         selection = self.inst_listbox.curselection() if hasattr(self, "inst_listbox") else ()
         if not selection:
+            _, preferred_zip = self._get_zip_dir_and_preferred_zip()
+            if preferred_zip:
+                inst = next((i for i in valid if i.zip_path.resolve() == preferred_zip), None)
+                return [inst] if inst else []
             return valid
         selected: List[ZipCompilerInstance] = []
         for idx in selection:

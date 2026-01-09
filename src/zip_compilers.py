@@ -100,16 +100,31 @@ def _read_json_from_zip(zf: zipfile.ZipFile, path_in_zip: str) -> Tuple[Optional
         return None, f"读取 config.json 失败: {e}"
 
 
-def discover_zip_compilers(zip_dir: Path) -> List[ZipCompilerInstance]:
-    """发现 zip_dir 下的 .zip 编译器实例。"""
+def discover_zip_compilers(zip_dir: Path, recursive: bool = False) -> List[ZipCompilerInstance]:
+    """发现 zip_dir 下的 .zip 编译器实例。
+
+    Args:
+        zip_dir: 根目录。
+        recursive: 是否递归扫描子目录（用于 GUI 中 zip_dir 下按组/班级分层存放的情况）。
+    """
     zip_dir = Path(zip_dir)
     if not zip_dir.exists() or not zip_dir.is_dir():
         return []
 
     instances: List[ZipCompilerInstance] = []
-    zip_files = [p for p in zip_dir.iterdir() if p.is_file() and p.suffix.lower() == ".zip"]
-    for zip_path in sorted(zip_files, key=lambda p: p.name.lower()):
-        name = zip_path.stem
+    if recursive:
+        zip_files = [p for p in zip_dir.rglob("*.zip") if p.is_file()]
+        key = lambda p: str(p.relative_to(zip_dir)).lower()
+    else:
+        zip_files = [p for p in zip_dir.iterdir() if p.is_file() and p.suffix.lower() == ".zip"]
+        key = lambda p: p.name.lower()
+
+    for zip_path in sorted(zip_files, key=key):
+        if recursive:
+            # 递归扫描时用相对路径作为实例名，避免子目录中同名 zip 冲突。
+            name = zip_path.relative_to(zip_dir).with_suffix("").as_posix()
+        else:
+            name = zip_path.stem
         try:
             with zipfile.ZipFile(zip_path, "r") as zf:
                 config_path = _find_config_json_path(zf)
