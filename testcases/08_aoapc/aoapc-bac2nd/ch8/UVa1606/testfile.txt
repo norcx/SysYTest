@@ -82,14 +82,14 @@ void qsort_vec(int a[], int b[], int l, int r) {
 
     for (;;) {
         for (;;) {
-            if (less_vec(a[i], b[i], px, py)) {
+            if (i <= r && less_vec(a[i], b[i], px, py)) {
                 i = i + 1;
             } else {
                 break;
             }
         }
         for (;;) {
-            if (less_vec(px, py, a[j], b[j])) {
+            if (j >= l && less_vec(px, py, a[j], b[j])) {
                 j = j - 1;
             } else {
                 break;

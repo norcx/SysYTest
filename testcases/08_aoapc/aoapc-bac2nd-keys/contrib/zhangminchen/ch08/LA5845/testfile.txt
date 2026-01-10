@@ -53,14 +53,14 @@ void sort_seg(int l, int r) {
 
     for (; ; ) {
         for (; ; ) {
-            if (less_seg(seg_from[i], seg_to[i], p_from, p_to) == 1) {
+            if (i < r && less_seg(seg_from[i], seg_to[i], p_from, p_to) == 1) {
                 i = i + 1;
             } else {
                 break;
             }
         }
         for (; ; ) {
-            if (less_seg(p_from, p_to, seg_from[j], seg_to[j]) == 1) {
+            if (j > l && less_seg(p_from, p_to, seg_from[j], seg_to[j]) == 1) {
                 j = j - 1;
             } else {
                 break;
