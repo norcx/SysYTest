@@ -1,0 +1,216 @@
+/* Description:
+ *   [Add description here]
+ */
+
+const int MOD = 10007;
+const int BASE = 131;
+
+const int POW10_0 = 1;
+const int POW10_1 = 10;
+const int POW10_2 = 100;
+const int POW10_3 = 1000;
+const int POW10_4 = 10000;
+const int POW10_5 = 100000;
+const int POW10_6 = 1000000;
+const int POW10_7 = 10000000;
+const int POW10_8 = 100000000;
+const int POW10_9 = 1000000000;
+
+const int WEEKDAY_LEN[7] = {6, 6, 7, 9, 8, 6, 8};
+const int WEEKDAY_HASH[7] = {3449, 2563, 2235, 9863, 4307, 1423, 9046};
+const int WEEKDAY_ABBR_HASH[7] = {8799, 5117, 5937, 5288, 4250, 5462, 6185};
+
+const int MONTH_LEN[12] = {7, 8, 5, 5, 3, 4, 4, 6, 9, 7, 8, 8};
+const int MONTH_HASH[12] = {5659, 4435, 1814, 3398, 3294, 3300, 3058, 9527, 1597, 100, 6354, 1253};
+const int MONTH_ABBR_HASH[12] = {1835, 3752, 3287, 9467, 3294, 4455, 4453, 104, 6705, 7852, 2272, 9459};
+
+const int AM_HASH = 8592;
+const int PM_HASH = 550;
+
+const int FMT_C_LEN = 5;
+const int FMT_C[5] = {37, 88, 32, 37, 120};
+
+const int FMT_X_LEN = 8;
+const int FMT_X[8] = {37, 72, 58, 37, 77, 58, 37, 83};
+
+const int FMT_x_LEN = 9;
+const int FMT_x[9] = {37, 66, 32, 37, 100, 44, 32, 37, 89};
+
+int out_len;
+int out_hash;
+
+int pow10(int e) {
+  if (e == 0) return POW10_0;
+  if (e == 1) return POW10_1;
+  if (e == 2) return POW10_2;
+  if (e == 3) return POW10_3;
+  if (e == 4) return POW10_4;
+  if (e == 5) return POW10_5;
+  if (e == 6) return POW10_6;
+  if (e == 7) return POW10_7;
+  if (e == 8) return POW10_8;
+  return POW10_9;
+}
+
+int pow_base(int exp) {
+  int i;
+  int p;
+  p = 1;
+  for (i = 0; i < exp; i = i + 1) {
+    p = p * BASE;
+    p = p % MOD;
+  }
+  return p;
+}
+
+void reset_out() {
+  out_len = 0;
+  out_hash = 0;
+  return;
+}
+
+void append_char(int c) {
+  out_hash = out_hash * BASE + c;
+  out_hash = out_hash % MOD;
+  out_len = out_len + 1;
+  return;
+}
+
+void append_known(int h, int l) {
+  int p;
+  p = pow_base(l);
+  out_hash = out_hash * p + h;
+  out_hash = out_hash % MOD;
+  out_len = out_len + l;
+  return;
+}
+
+void append_num_fixed(int x, int width) {
+  int j;
+  int p;
+  int digit;
+  for (j = width - 1; j >= 0; j = j - 1) {
+    p = pow10(j);
+    digit = x / p;
+    digit = digit % 10;
+    append_char(48 + digit);
+  }
+  return;
+}
+
+void append_num_var(int x) {
+  int p;
+  int digit;
+  if (x == 0) {
+    append_char(48);
+    return;
+  }
+  p = 1;
+  for (;;) {
+    if (p <= POW10_8 && x >= p * 10) p = p * 10;
+    else break;
+  }
+  for (; p > 0; p = p / 10) {
+    digit = x / p;
+    append_char(48 + digit);
+    x = x - digit * p;
+  }
+  return;
+}
+
+int week_num(int wday, int yday, int isW) {
+  int fudge;
+  fudge = wday - yday % 7;
+  if (isW == 1) fudge = fudge - 1;
+  fudge = fudge + 7;
+  fudge = fudge % 7;
+  return (yday + fudge) / 7;
+}
+
+void process_format(int fmt[], int flen, int wday, int mon, int mday, int hour, int minute, int sec, int yday, int year) {
+  int i;
+  int spec;
+  int tmp;
+  for (i = 0; i < flen; i = i + 1) {
+    if (fmt[i] != 37) {
+      append_char(fmt[i]);
+    } else {
+      i = i + 1;
+      if (i >= flen) return;
+      spec = fmt[i];
+
+      if (spec == 97) append_known(WEEKDAY_ABBR_HASH[wday], 3);
+      else if (spec == 65) append_known(WEEKDAY_HASH[wday], WEEKDAY_LEN[wday]);
+      else if (spec == 98) append_known(MONTH_ABBR_HASH[mon], 3);
+      else if (spec == 66) append_known(MONTH_HASH[mon], MONTH_LEN[mon]);
+      else if (spec == 99) process_format(FMT_C, FMT_C_LEN, wday, mon, mday, hour, minute, sec, yday, year);
+      else if (spec == 100) append_num_fixed(mday, 2);
+      else if (spec == 72) append_num_fixed(hour, 2);
+      else if (spec == 73) {
+        tmp = hour + 11;
+        tmp = tmp % 12;
+        tmp = tmp + 1;
+        append_num_fixed(tmp, 2);
+      } else if (spec == 106) append_num_fixed(yday + 1, 3);
+      else if (spec == 109) append_num_fixed(mon + 1, 2);
+      else if (spec == 77) append_num_fixed(minute, 2);
+      else if (spec == 112) {
+        if (hour < 12) append_known(AM_HASH, 2);
+        else append_known(PM_HASH, 2);
+      } else if (spec == 83) append_num_fixed(sec, 2);
+      else if (spec == 85) append_num_fixed(week_num(wday, yday, 0), 2);
+      else if (spec == 87) append_num_fixed(week_num(wday, yday, 1), 2);
+      else if (spec == 119) append_num_fixed(wday, 2);
+      else if (spec == 120) process_format(FMT_x, FMT_x_LEN, wday, mon, mday, hour, minute, sec, yday, year);
+      else if (spec == 88) process_format(FMT_X, FMT_X_LEN, wday, mon, mday, hour, minute, sec, yday, year);
+      else if (spec == 121) append_num_fixed(year % 100, 2);
+      else if (spec == 89) append_num_var(year + 1900);
+      else if (spec == 37) append_char(37);
+      else {
+      }
+    }
+  }
+  return;
+}
+
+int main() {
+  int t;
+  int tc;
+  int maxsize;
+  int flen;
+  int i;
+  int fmt[64];
+  int wday;
+  int mon;
+  int mday;
+  int hour;
+  int minute;
+  int sec;
+  int yday;
+  int year;
+  int ret;
+
+  t = getint();
+  for (tc = 0; tc < t; tc = tc + 1) {
+    maxsize = getint();
+    flen = getint();
+    for (i = 0; i < flen; i = i + 1) fmt[i] = getint();
+
+    wday = getint();
+    mon = getint();
+    mday = getint();
+    hour = getint();
+    minute = getint();
+    sec = getint();
+    yday = getint();
+    year = getint();
+
+    reset_out();
+    process_format(fmt, flen, wday, mon, mday, hour, minute, sec, yday, year);
+
+    ret = out_len;
+    if (out_len >= maxsize) ret = 0;
+    printf("%d %d\n", ret, out_hash);
+  }
+  return 0;
+}

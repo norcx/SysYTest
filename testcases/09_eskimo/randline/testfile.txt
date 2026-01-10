@@ -1,0 +1,91 @@
+/* Description:
+ *   Integer analogue of `randline` reservoir sampling.
+ *
+ * Input (one integer per line):
+ *   nr        : number of items to keep (nr >= 1)
+ *   sflag     : 0 = keep arbitrary order, 1 = keep stable order
+ *   seed      : PRNG seed (1..2147483646)
+ *   N         : number of input items (N >= 0)
+ *   v[0..N-1] : N integers (streamed)
+ *
+ * Output:
+ *   The selected items, one per line, in reservoir order.
+ */
+
+int seed;
+
+int next_rand() {
+    int a;
+    int q;
+    int r;
+    int hi;
+    int lo;
+    int test;
+    a = 16807;
+    q = 127773;
+    r = 2836;
+    hi = seed / q;
+    lo = seed - hi * q;
+    test = a * lo - r * hi;
+    if (test <= 0) test = test + 2147483647;
+    seed = test;
+    return seed;
+}
+
+int randrange(int n) {
+    int x;
+    x = next_rand();
+    return x % n;
+}
+
+int main() {
+    int nr;
+    int sflag;
+    int N;
+    int i;
+    int j;
+    int lineno;
+    int nkeep;
+    int v;
+    int idx;
+    int keeplines[64];
+
+    nr = getint();
+    sflag = getint();
+    seed = getint();
+    N = getint();
+
+    nkeep = 0;
+    lineno = 1;
+
+    for (i = 0; i < N; i = i + 1) {
+        v = getint();
+
+        if (randrange(lineno) < nr) {
+            if (nkeep < nr) {
+                keeplines[nkeep] = v;
+                nkeep = nkeep + 1;
+            } else {
+                idx = 0;
+                if (nr > 1) idx = randrange(nr);
+
+                if (nr == 1 || sflag == 0) {
+                    keeplines[idx] = v;
+                } else {
+                    for (j = idx; j < nr - 1; j = j + 1) {
+                        keeplines[j] = keeplines[j + 1];
+                    }
+                    keeplines[nr - 1] = v;
+                }
+            }
+        }
+
+        lineno = lineno + 1;
+    }
+
+    for (i = 0; i < nkeep; i = i + 1) {
+        printf("%d\n", keeplines[i]);
+    }
+
+    return 0;
+}

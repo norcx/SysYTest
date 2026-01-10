@@ -1,0 +1,252 @@
+/* Description:
+ * A Strict SysY translation inspired by the classic Unix `stat` utility.
+ *
+ * Since SysY cannot access a filesystem or argv, this program reads mocked
+ * "stat" fields from stdin and prints selected fields, mimicking the original
+ * program's flag-selection and (simplified) mode rendering logic.
+ *
+ * Input format (all integers, one per line):
+ *   verboselevel
+ *   devflag inoflag modeflag nlinkflag uidflag gidflag rdevflag sizeflag atimeflag mtimeflag ctimeflag
+ *   filecount
+ *   repeated filecount times:
+ *     st_dev st_ino filetype uperm gperm operm suid sgid sticky st_nlink st_uid st_gid st_rdev st_size st_atime st_mtime st_ctime
+ *
+ * filetype: 0=REG 1=DIR 2=CHR 3=BLK 4=LNK 5=SOCK 6=FIFO
+ * perms: each of uperm/gperm/operm is 0..7 (r=4,w=2,x=1)
+ */
+
+void print_type(int t) {
+    if (t == 0) printf("S_IFREG");
+    else if (t == 1) printf("S_IFDIR");
+    else if (t == 2) printf("S_IFCHR");
+    else if (t == 3) printf("S_IFBLK");
+    else if (t == 4) printf("S_IFLNK");
+    else if (t == 5) printf("S_IFSOCK");
+    else if (t == 6) printf("S_IFIFO");
+    else printf("S_IF???");
+}
+
+void print_filechar(int t) {
+    if (t == 1) printf("d");
+    else if (t == 2) printf("c");
+    else if (t == 3) printf("b");
+    else if (t == 4) printf("l");
+    else if (t == 5) printf("s");
+    else if (t == 6) printf("p");
+    else printf("-");
+}
+
+void print_rw(int perm) {
+    if (perm >= 4) printf("r");
+    else printf("-");
+
+    if (perm % 4 >= 2) printf("w");
+    else printf("-");
+}
+
+void print_exec_user(int perm, int suid) {
+    int exec;
+    exec = perm % 2;
+    if (suid != 0) {
+        if (exec != 0) printf("s");
+        else printf("S");
+    } else {
+        if (exec != 0) printf("x");
+        else printf("-");
+    }
+}
+
+void print_exec_group(int perm, int sgid) {
+    int exec;
+    exec = perm % 2;
+    if (sgid != 0) {
+        if (exec != 0) printf("s");
+        else printf("S");
+    } else {
+        if (exec != 0) printf("x");
+        else printf("-");
+    }
+}
+
+void print_exec_other(int perm, int sticky) {
+    int exec;
+    exec = perm % 2;
+    if (sticky != 0) {
+        if (exec != 0) printf("t");
+        else printf("T");
+    } else {
+        if (exec != 0) printf("x");
+        else printf("-");
+    }
+}
+
+void print_lsmode(int filetype, int uperm, int gperm, int operm, int suid, int sgid, int sticky) {
+    print_filechar(filetype);
+
+    print_rw(uperm);
+    print_exec_user(uperm, suid);
+
+    print_rw(gperm);
+    print_exec_group(gperm, sgid);
+
+    print_rw(operm);
+    print_exec_other(operm, sticky);
+}
+
+int main() {
+    int verboselevel;
+    int devflag;
+    int inoflag;
+    int modeflag;
+    int nlinkflag;
+    int uidflag;
+    int gidflag;
+    int rdevflag;
+    int sizeflag;
+    int atimeflag;
+    int mtimeflag;
+    int ctimeflag;
+    int filecount;
+
+    int nument;
+    int i;
+
+    verboselevel = getint();
+
+    devflag = getint();
+    inoflag = getint();
+    modeflag = getint();
+    nlinkflag = getint();
+    uidflag = getint();
+    gidflag = getint();
+    rdevflag = getint();
+    sizeflag = getint();
+    atimeflag = getint();
+    mtimeflag = getint();
+    ctimeflag = getint();
+
+    filecount = getint();
+
+    nument = 0;
+    if (devflag != 0) nument = nument + 1;
+    if (inoflag != 0) nument = nument + 1;
+    if (modeflag != 0) nument = nument + 1;
+    if (nlinkflag != 0) nument = nument + 1;
+    if (uidflag != 0) nument = nument + 1;
+    if (gidflag != 0) nument = nument + 1;
+    if (rdevflag != 0) nument = nument + 1;
+    if (sizeflag != 0) nument = nument + 1;
+    if (atimeflag != 0) nument = nument + 1;
+    if (mtimeflag != 0) nument = nument + 1;
+    if (ctimeflag != 0) nument = nument + 1;
+
+    for (i = 0; i < filecount; i = i + 1) {
+        int st_dev;
+        int st_ino;
+        int filetype;
+        int uperm;
+        int gperm;
+        int operm;
+        int suid;
+        int sgid;
+        int sticky;
+        int st_nlink;
+        int st_uid;
+        int st_gid;
+        int st_rdev;
+        int st_size;
+        int st_atime;
+        int st_mtime;
+        int st_ctime;
+        int st_mode;
+
+        st_dev = getint();
+        st_ino = getint();
+        filetype = getint();
+        uperm = getint();
+        gperm = getint();
+        operm = getint();
+        suid = getint();
+        sgid = getint();
+        sticky = getint();
+        st_nlink = getint();
+        st_uid = getint();
+        st_gid = getint();
+        st_rdev = getint();
+        st_size = getint();
+        st_atime = getint();
+        st_mtime = getint();
+        st_ctime = getint();
+
+        st_mode = filetype * 1000000 + suid * 100000 + sgid * 10000 + sticky * 1000 + uperm * 100 + gperm * 10 + operm;
+
+        if (verboselevel > 0) printf("file%d\n", i);
+
+        if (nument == 0 || devflag != 0) {
+            if (verboselevel > 0) printf("st_dev = %d\n", st_dev);
+            else printf("%d\n", st_dev);
+        }
+
+        if (nument == 0 || inoflag != 0) {
+            if (verboselevel > 0) printf("st_ino = %d\n", st_ino);
+            else printf("%d\n", st_ino);
+        }
+
+        if (nument == 0 || modeflag != 0) {
+            if (verboselevel > 1) {
+                printf("st_mode = %d ", st_mode);
+                print_type(filetype);
+                printf(" ");
+                print_lsmode(filetype, uperm, gperm, operm, suid, sgid, sticky);
+                printf("\n");
+            } else if (verboselevel > 0) {
+                printf("st_mode = %d\n", st_mode);
+            } else {
+                printf("%d\n", st_mode);
+            }
+        }
+
+        if (nument == 0 || nlinkflag != 0) {
+            if (verboselevel > 0) printf("st_nlink = %d\n", st_nlink);
+            else printf("%d\n", st_nlink);
+        }
+
+        if (nument == 0 || uidflag != 0) {
+            if (verboselevel > 0) printf("st_uid = %d\n", st_uid);
+            else printf("%d\n", st_uid);
+        }
+
+        if (nument == 0 || gidflag != 0) {
+            if (verboselevel > 0) printf("st_gid = %d\n", st_gid);
+            else printf("%d\n", st_gid);
+        }
+
+        if (nument == 0 || rdevflag != 0) {
+            if (verboselevel > 0) printf("st_rdev = %d\n", st_rdev);
+            else printf("%d\n", st_rdev);
+        }
+
+        if (nument == 0 || sizeflag != 0) {
+            if (verboselevel > 0) printf("st_size = %d\n", st_size);
+            else printf("%d\n", st_size);
+        }
+
+        if (nument == 0 || atimeflag != 0) {
+            if (verboselevel > 0) printf("st_atime = %d\n", st_atime);
+            else printf("%d\n", st_atime);
+        }
+
+        if (nument == 0 || mtimeflag != 0) {
+            if (verboselevel > 0) printf("st_mtime = %d\n", st_mtime);
+            else printf("%d\n", st_mtime);
+        }
+
+        if (nument == 0 || ctimeflag != 0) {
+            if (verboselevel > 0) printf("st_ctime = %d\n", st_ctime);
+            else printf("%d\n", st_ctime);
+        }
+    }
+
+    return 0;
+}

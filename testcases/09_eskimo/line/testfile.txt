@@ -1,0 +1,96 @@
+/* Description:
+ *   SysY adaptation of a "select lines by line-number ranges" utility.
+ *   Input format (all integers, 1 per line):
+ *     nflag
+ *     vflag
+ *     nranges
+ *     start_1
+ *     end_1   (0 means open-ended)
+ *     ...
+ *     start_nranges
+ *     end_nranges
+ *     nfiles
+ *     For each file:
+ *       m
+ *       line_1_value
+ *       ...
+ *       line_m_value
+ *
+ *   For each "file", line numbers start from 1. If a line number is within
+ *   any range, it is selected. If vflag==1, selection is inverted.
+ *   If nflag==1, print "lineno: value", else print "value".
+ */
+
+const int MAXR = 32;
+
+int starts[MAXR];
+int ends[MAXR];
+int nranges;
+int rangep;
+
+int nflag;
+int vflag;
+
+int restart() {
+    rangep = 0;
+    return 0;
+}
+
+int want(int lineno) {
+    int s;
+    int e;
+    for (;;) {
+        if (rangep >= nranges) return 0;
+        s = starts[rangep];
+        e = ends[rangep];
+
+        if (lineno < s && s != 0) return 0;
+        if (lineno <= e || e == 0) return 1;
+
+        rangep = rangep + 1;
+    }
+    return 0;
+}
+
+int main() {
+    int i;
+    int nfiles;
+    int filei;
+    int m;
+    int lineno;
+    int val;
+    int sel;
+
+    nflag = getint();
+    vflag = getint();
+
+    nranges = getint();
+    if (nranges < 0) nranges = 0;
+    if (nranges > MAXR) nranges = MAXR;
+
+    for (i = 0; i < nranges; i = i + 1) {
+        starts[i] = getint();
+        ends[i] = getint();
+    }
+
+    nfiles = getint();
+    if (nfiles < 0) nfiles = 0;
+
+    for (filei = 0; filei < nfiles; filei = filei + 1) {
+        restart();
+        m = getint();
+        if (m < 0) m = 0;
+
+        for (lineno = 1; lineno <= m; lineno = lineno + 1) {
+            val = getint();
+            sel = want(lineno);
+            if (vflag == 1) sel = 1 - sel;
+            if (sel == 1) {
+                if (nflag == 1) printf("%d: %d\n", lineno, val);
+                else printf("%d\n", val);
+            }
+        }
+    }
+
+    return 0;
+}

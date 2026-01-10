@@ -1,0 +1,44 @@
+/* Description:
+ *   Counts from `from` to `to` inclusive, stepping by `by`.
+ *   Input:
+ *     t
+ *     from_1
+ *     to_1
+ *     by_1
+ *     ...
+ *     from_t
+ *     to_t
+ *     by_t
+ *   Output: each generated number on its own line.
+ */
+
+int main() {
+    int t;
+    int case_idx;
+    t = getint();
+
+    for (case_idx = 0; case_idx < t; case_idx = case_idx + 1) {
+        int from;
+        int to;
+        int by;
+        int i;
+
+        from = getint();
+        to = getint();
+        by = getint();
+
+        if (by > 0) {
+            for (i = from; i <= to; i = i + by) {
+                printf("%d\n", i);
+            }
+        } else {
+            if (by < 0) {
+                for (i = from; i >= to; i = i + by) {
+                    printf("%d\n", i);
+                }
+            }
+        }
+    }
+
+    return 0;
+}

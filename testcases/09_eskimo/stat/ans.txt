@@ -1,0 +1,24 @@
+file0
+st_dev = 10
+st_mode = 755 S_IFREG -rwxr-xr-x
+st_nlink = 1
+st_gid = 100
+st_size = 1234
+st_atime = 111
+st_ctime = 333
+file1
+st_dev = 20
+st_mode = 1101777 S_IFDIR drwsrwxrwt
+st_nlink = 2
+st_gid = 0
+st_size = 0
+st_atime = 444
+st_ctime = 666
+file2
+st_dev = 30
+st_mode = 6010640 S_IFIFO prw-r-S---
+st_nlink = 3
+st_gid = 43
+st_size = 99
+st_atime = 777
+st_ctime = 999

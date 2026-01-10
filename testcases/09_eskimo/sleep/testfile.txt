@@ -1,0 +1,161 @@
+/* Description:
+ *   Deterministic refactor of the Unix "sleep" utility's time parsing.
+ *
+ *   SysY cannot access argv, time-of-day, signals, or sleep syscalls, so this
+ *   testcase focuses on the core conversion logic: parsing various time
+ *   syntaxes (plain number with unit, mm:ss.f, hh:mm:ss.f) and the "-until"
+ *   delta between two times of day.
+ *
+ * Input format (all integers, one per line):
+ *   q
+ *   repeat q times:
+ *     mode
+ *     if mode == 0:
+ *       syntax
+ *       if syntax == 0: value_int value_frac unit
+ *         - value = value_int + value_frac / 1e6  (in the given unit)
+ *         - unit: 0=seconds, 1=minutes, 2=hours, 3=days
+ *       if syntax == 1: m s_int s_usec      (mm:ss.f)
+ *       if syntax == 2: h m s_int s_usec    (hh:mm:ss.f)
+ *     else:
+ *       now_h now_m now_s now_usec
+ *       tgt_h tgt_m tgt_s tgt_usec
+ *
+ * Output:
+ *   For each case, prints tv_sec then tv_usec, each on its own line.
+ */
+
+int gcd(int a, int b) {
+    int t;
+    for (; b != 0;) {
+        t = a % b;
+        a = b;
+        b = t;
+    }
+    return a;
+}
+
+int main() {
+    int q;
+    int i;
+
+    q = getint();
+
+    for (i = 0; i < q; i = i + 1) {
+        int mode;
+        int tv_sec;
+        int tv_usec;
+
+        mode = getint();
+        tv_sec = 0;
+        tv_usec = 0;
+
+        if (mode == 0) {
+            int syntax;
+            syntax = getint();
+
+            if (syntax == 0) {
+                int value_int;
+                int value_frac;
+                int unit;
+                int unit_sec;
+                int g;
+                int denom;
+                int mul;
+                int numerator;
+                int frac_sec;
+                int frac_rem;
+
+                value_int = getint();
+                value_frac = getint();
+                unit = getint();
+
+                unit_sec = 1;
+                if (unit == 1) unit_sec = 60;
+                if (unit == 2) unit_sec = 3600;
+                if (unit == 3) unit_sec = 86400;
+
+                tv_sec = value_int * unit_sec;
+                tv_usec = 0;
+
+                g = gcd(unit_sec, 1000000);
+                denom = 1000000 / g;
+                mul = unit_sec / g;
+
+                numerator = value_frac * mul;
+                frac_sec = numerator / denom;
+                frac_rem = numerator - frac_sec * denom;
+
+                tv_sec = tv_sec + frac_sec;
+                tv_usec = tv_usec + frac_rem * g;
+            }
+
+            if (syntax == 1) {
+                int mm;
+                int ss;
+                int usec;
+
+                mm = getint();
+                ss = getint();
+                usec = getint();
+
+                tv_sec = mm * 60 + ss;
+                tv_usec = usec;
+            }
+
+            if (syntax == 2) {
+                int hh;
+                int mm2;
+                int ss2;
+                int usec2;
+
+                hh = getint();
+                mm2 = getint();
+                ss2 = getint();
+                usec2 = getint();
+
+                tv_sec = hh * 3600 + mm2 * 60 + ss2;
+                tv_usec = usec2;
+            }
+        } else {
+            int now_h;
+            int now_m;
+            int now_s;
+            int now_usec;
+            int tgt_h;
+            int tgt_m;
+            int tgt_s;
+            int tgt_usec;
+            int now_total;
+            int tgt_total;
+
+            now_h = getint();
+            now_m = getint();
+            now_s = getint();
+            now_usec = getint();
+            tgt_h = getint();
+            tgt_m = getint();
+            tgt_s = getint();
+            tgt_usec = getint();
+
+            now_total = now_h * 3600 + now_m * 60 + now_s;
+            tgt_total = tgt_h * 3600 + tgt_m * 60 + tgt_s;
+
+            tv_sec = tgt_total - now_total;
+            tv_usec = tgt_usec - now_usec;
+            if (tv_usec < 0) {
+                tv_usec = tv_usec + 1000000;
+                tv_sec = tv_sec - 1;
+            }
+        }
+
+        for (; tv_usec >= 1000000;) {
+            tv_usec = tv_usec - 1000000;
+            tv_sec = tv_sec + 1;
+        }
+
+        printf("%d\n%d\n", tv_sec, tv_usec);
+    }
+
+    return 0;
+}
