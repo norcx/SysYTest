@@ -1,0 +1,356 @@
+const int MAXW = 64;
+const int MAXB = 64;
+const int MAXNUM = 512;
+const int MAXSEG = 4096;
+
+int nums[MAXNUM];
+int ans[MAXW];
+
+int wx0[MAXW];
+int wy0[MAXW];
+int wx1[MAXW];
+int wy1[MAXW];
+
+int bx[MAXB];
+int by[MAXB];
+int hit0[MAXB];
+int hit1[MAXB];
+int hit2[MAXB];
+int hit3[MAXB];
+
+int sega[MAXW];
+int segb[MAXW];
+int segc[MAXW];
+int segid[MAXW];
+
+int last[MAXSEG];
+
+int abs_int(int x) {
+  if (x >= 0) return x;
+  return 0 - x;
+}
+
+void init_last(int size) {
+  int i;
+  for (i = 0; i < size; i = i + 1) last[i] = -1;
+}
+
+void qsort_int(int a[], int l, int r) {
+  int i;
+  int j;
+  int pivot;
+  int tmp;
+  if (l >= r) return;
+  i = l;
+  j = r;
+  pivot = a[(l + r) / 2];
+  for (;;) {
+    for (; a[i] < pivot; ) i = i + 1;
+    for (; a[j] > pivot; ) j = j - 1;
+    if (i > j) break;
+    tmp = a[i];
+    a[i] = a[j];
+    a[j] = tmp;
+    i = i + 1;
+    j = j - 1;
+  }
+  if (l < j) qsort_int(a, l, j);
+  if (i < r) qsort_int(a, i, r);
+}
+
+int unique_sorted(int a[], int n) {
+  int i;
+  int k;
+  if (n <= 0) return 0;
+  k = 1;
+  for (i = 1; i < n; i = i + 1) {
+    if (a[i] != a[k - 1]) {
+      a[k] = a[i];
+      k = k + 1;
+    }
+  }
+  return k;
+}
+
+int lower_bound_int(int a[], int n, int x) {
+  int l;
+  int r;
+  int mid;
+  l = 0;
+  r = n;
+  for (; l < r; ) {
+    mid = (l + r) / 2;
+    if (a[mid] < x) {
+      l = mid + 1;
+    } else {
+      r = mid;
+    }
+  }
+  return l;
+}
+
+void swap_segs(int i, int j) {
+  int tmp;
+  tmp = sega[i]; sega[i] = sega[j]; sega[j] = tmp;
+  tmp = segb[i]; segb[i] = segb[j]; segb[j] = tmp;
+  tmp = segc[i]; segc[i] = segc[j]; segc[j] = tmp;
+  tmp = segid[i]; segid[i] = segid[j]; segid[j] = tmp;
+}
+
+void qsort_segs_by_c(int l, int r) {
+  int i;
+  int j;
+  int pivot;
+  if (l >= r) return;
+  i = l;
+  j = r;
+  pivot = segc[(l + r) / 2];
+  for (;;) {
+    for (; segc[i] < pivot; ) i = i + 1;
+    for (; segc[j] > pivot; ) j = j - 1;
+    if (i > j) break;
+    swap_segs(i, j);
+    i = i + 1;
+    j = j - 1;
+  }
+  if (l < j) qsort_segs_by_c(l, j);
+  if (i < r) qsort_segs_by_c(i, r);
+}
+
+void swap_birds(int i, int j) {
+  int tmp;
+  tmp = bx[i]; bx[i] = bx[j]; bx[j] = tmp;
+  tmp = by[i]; by[i] = by[j]; by[j] = tmp;
+  tmp = hit0[i]; hit0[i] = hit0[j]; hit0[j] = tmp;
+  tmp = hit1[i]; hit1[i] = hit1[j]; hit1[j] = tmp;
+  tmp = hit2[i]; hit2[i] = hit2[j]; hit2[j] = tmp;
+  tmp = hit3[i]; hit3[i] = hit3[j]; hit3[j] = tmp;
+}
+
+void qsort_birds_by_x(int l, int r) {
+  int i;
+  int j;
+  int pivot;
+  if (l >= r) return;
+  i = l;
+  j = r;
+  pivot = bx[(l + r) / 2];
+  for (;;) {
+    for (; bx[i] < pivot; ) i = i + 1;
+    for (; bx[j] > pivot; ) j = j - 1;
+    if (i > j) break;
+    swap_birds(i, j);
+    i = i + 1;
+    j = j - 1;
+  }
+  if (l < j) qsort_birds_by_x(l, j);
+  if (i < r) qsort_birds_by_x(i, r);
+}
+
+void qsort_birds_by_y(int l, int r) {
+  int i;
+  int j;
+  int pivot;
+  if (l >= r) return;
+  i = l;
+  j = r;
+  pivot = by[(l + r) / 2];
+  for (;;) {
+    for (; by[i] < pivot; ) i = i + 1;
+    for (; by[j] > pivot; ) j = j - 1;
+    if (i > j) break;
+    swap_birds(i, j);
+    i = i + 1;
+    j = j - 1;
+  }
+  if (l < j) qsort_birds_by_y(l, j);
+  if (i < r) qsort_birds_by_y(i, r);
+}
+
+void update(int rt, int l, int r, int ql, int qr, int c) {
+  int mid;
+  int lc;
+  int rc;
+  if (ql <= l && r <= qr) {
+    last[rt] = c;
+    return;
+  }
+  mid = (l + r) / 2;
+  if (last[rt] != -1) {
+    lc = rt * 2;
+    rc = rt * 2 + 1;
+    last[lc] = last[rt];
+    last[rc] = last[rt];
+    last[rt] = -1;
+  }
+  if (ql <= mid) update(rt * 2, l, mid, ql, qr, c);
+  if (qr > mid) update(rt * 2 + 1, mid + 1, r, ql, qr, c);
+}
+
+int query(int rt, int l, int r, int q) {
+  int mid;
+  if (l == r) return last[rt];
+  if (last[rt] != -1) return last[rt];
+  mid = (l + r) / 2;
+  if (q <= mid) return query(rt * 2, l, mid, q);
+  return query(rt * 2 + 1, mid + 1, r, q);
+}
+
+int main() {
+  int n;
+  int m;
+  int i;
+  int j;
+  int numCount;
+  int t;
+  int tmp;
+  int segSize;
+
+  n = getint();
+  m = getint();
+
+  numCount = 0;
+  for (i = 0; i < n; i = i + 1) {
+    wx0[i] = getint(); nums[numCount] = wx0[i]; numCount = numCount + 1;
+    wy0[i] = getint(); nums[numCount] = wy0[i]; numCount = numCount + 1;
+    wx1[i] = getint(); nums[numCount] = wx1[i]; numCount = numCount + 1;
+    wy1[i] = getint(); nums[numCount] = wy1[i]; numCount = numCount + 1;
+
+    if (wx0[i] > wx1[i]) {
+      tmp = wx0[i]; wx0[i] = wx1[i]; wx1[i] = tmp;
+    }
+    if (wy0[i] > wy1[i]) {
+      tmp = wy0[i]; wy0[i] = wy1[i]; wy1[i] = tmp;
+    }
+  }
+
+  for (i = 0; i < m; i = i + 1) {
+    bx[i] = getint(); nums[numCount] = bx[i]; numCount = numCount + 1;
+    by[i] = getint(); nums[numCount] = by[i]; numCount = numCount + 1;
+    hit0[i] = -1;
+    hit1[i] = -1;
+    hit2[i] = -1;
+    hit3[i] = -1;
+  }
+
+  if (numCount > 1) qsort_int(nums, 0, numCount - 1);
+  t = unique_sorted(nums, numCount);
+
+  for (i = 0; i < n; i = i + 1) {
+    wx0[i] = lower_bound_int(nums, t, wx0[i]);
+    wy0[i] = lower_bound_int(nums, t, wy0[i]);
+    wx1[i] = lower_bound_int(nums, t, wx1[i]);
+    wy1[i] = lower_bound_int(nums, t, wy1[i]);
+  }
+  for (i = 0; i < m; i = i + 1) {
+    bx[i] = lower_bound_int(nums, t, bx[i]);
+    by[i] = lower_bound_int(nums, t, by[i]);
+  }
+
+  for (i = 0; i < n; i = i + 1) {
+    sega[i] = wy0[i];
+    segb[i] = wy1[i];
+    segc[i] = wx0[i];
+    segid[i] = i;
+  }
+  if (n > 1) qsort_segs_by_c(0, n - 1);
+  if (m > 1) qsort_birds_by_x(0, m - 1);
+
+  segSize = t * 4 + 10;
+  if (segSize > MAXSEG) segSize = MAXSEG;
+
+  init_last(segSize);
+  j = 0;
+  for (i = 0; i < m; i = i + 1) {
+    for (; j < n && segc[j] < bx[i]; ) {
+      update(1, 0, t - 1, sega[j], segb[j], segid[j]);
+      j = j + 1;
+    }
+    hit2[i] = query(1, 0, t - 1, by[i]);
+  }
+
+  init_last(segSize);
+  j = n - 1;
+  for (i = m - 1; i >= 0; i = i - 1) {
+    for (; j >= 0 && segc[j] > bx[i]; ) {
+      update(1, 0, t - 1, sega[j], segb[j], segid[j]);
+      j = j - 1;
+    }
+    hit0[i] = query(1, 0, t - 1, by[i]);
+  }
+
+  for (i = 0; i < n; i = i + 1) {
+    sega[i] = wx0[i];
+    segb[i] = wx1[i];
+    segc[i] = wy0[i];
+    segid[i] = i;
+  }
+  if (n > 1) qsort_segs_by_c(0, n - 1);
+  if (m > 1) qsort_birds_by_y(0, m - 1);
+
+  init_last(segSize);
+  j = 0;
+  for (i = 0; i < m; i = i + 1) {
+    for (; j < n && segc[j] < by[i]; ) {
+      update(1, 0, t - 1, sega[j], segb[j], segid[j]);
+      j = j + 1;
+    }
+    hit3[i] = query(1, 0, t - 1, bx[i]);
+  }
+
+  init_last(segSize);
+  j = n - 1;
+  for (i = m - 1; i >= 0; i = i - 1) {
+    for (; j >= 0 && segc[j] > by[i]; ) {
+      update(1, 0, t - 1, sega[j], segb[j], segid[j]);
+      j = j - 1;
+    }
+    hit1[i] = query(1, 0, t - 1, bx[i]);
+  }
+
+  for (i = 0; i < n; i = i + 1) ans[i] = 0;
+
+  for (i = 0; i < m; i = i + 1) {
+    int bestId;
+    int bestDis;
+    int dir;
+    int tid;
+    int birdCoordIdx;
+    int wallCoordIdx;
+    int d;
+
+    bestId = -1;
+    bestDis = -1;
+
+    for (dir = 0; dir < 4; dir = dir + 1) {
+      tid = -1;
+      if (dir == 0) tid = hit0[i];
+      if (dir == 1) tid = hit1[i];
+      if (dir == 2) tid = hit2[i];
+      if (dir == 3) tid = hit3[i];
+
+      if (tid != -1) {
+        if (dir == 0 || dir == 2) birdCoordIdx = bx[i];
+        else birdCoordIdx = by[i];
+
+        wallCoordIdx = 0;
+        if (dir == 0) wallCoordIdx = wx0[tid];
+        if (dir == 1) wallCoordIdx = wy0[tid];
+        if (dir == 2) wallCoordIdx = wx1[tid];
+        if (dir == 3) wallCoordIdx = wy1[tid];
+
+        d = abs_int(nums[birdCoordIdx] - nums[wallCoordIdx]);
+        if (bestDis == -1 || d < bestDis) {
+          bestDis = d;
+          bestId = tid;
+        }
+      }
+    }
+    ans[bestId] = ans[bestId] + 1;
+  }
+
+  for (i = 0; i < n; i = i + 1) {
+    printf("%d\n", ans[i]);
+  }
+  return 0;
+}

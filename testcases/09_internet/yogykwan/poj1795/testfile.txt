@@ -1,0 +1,437 @@
+/* Description:
+ *   POJ 1795 (DNA Laboratory) logic adapted to Strict SysY:
+ *   - Input uses integer encoding for DNA strings.
+ *     A=1, C=2, G=3, T=4.
+ *   - For each test case:
+ *       n
+ *       (len, then len ints) repeated n times
+ *   - Output:
+ *       tc
+ *       answer_length
+ *       answer digits (one per line)
+ *       blank line
+ */
+
+const int MAXN = 10;
+const int MAXL = 20;
+const int MAXMASK = 1024; /* 2^MAXN */
+const int INF = 1000000000;
+
+int n;
+int pow2[MAXN + 1];
+
+int s_len[MAXN];
+int s_data[MAXN * MAXL];
+
+int ov[MAXN * MAXN];
+int cost_add[MAXN * MAXN];
+
+int d[MAXN * MAXMASK];
+int hb[MAXN * MAXMASK];
+
+int ans_len;
+int ans_data[MAXN * MAXL];
+
+int get_bit(int mask, int idx) {
+    int t;
+    int r;
+    t = mask / pow2[idx];
+    r = t - (t / 2) * 2;
+    return r;
+}
+
+int idx_state(int last, int mask) {
+    return last * MAXMASK + mask;
+}
+
+int idx_edge(int i, int j) {
+    return i * MAXN + j;
+}
+
+int compare_string(int a, int b) {
+    int i;
+    int la;
+    int lb;
+    la = s_len[a];
+    lb = s_len[b];
+    i = 0;
+    for (i = 0; i < la && i < lb; i = i + 1) {
+        int va;
+        int vb;
+        va = s_data[a * MAXL + i];
+        vb = s_data[b * MAXL + i];
+        if (va < vb) return -1;
+        if (va > vb) return 1;
+    }
+    if (la < lb) return -1;
+    if (la > lb) return 1;
+    return 0;
+}
+
+void copy_string(int src, int dst) {
+    int i;
+    s_len[dst] = s_len[src];
+    for (i = 0; i < MAXL; i = i + 1) {
+        s_data[dst * MAXL + i] = s_data[src * MAXL + i];
+    }
+}
+
+void swap_string(int i, int j) {
+    int k;
+    int tl;
+    tl = s_len[i];
+    s_len[i] = s_len[j];
+    s_len[j] = tl;
+    for (k = 0; k < MAXL; k = k + 1) {
+        int t;
+        t = s_data[i * MAXL + k];
+        s_data[i * MAXL + k] = s_data[j * MAXL + k];
+        s_data[j * MAXL + k] = t;
+    }
+}
+
+void sort_strings() {
+    int i;
+    int j;
+    for (i = 0; i < n; i = i + 1) {
+        for (j = i + 1; j < n; j = j + 1) {
+            if (compare_string(i, j) > 0) {
+                swap_string(i, j);
+            }
+        }
+    }
+}
+
+void unique_strings() {
+    int i;
+    int m;
+    m = 0;
+    for (i = 0; i < n; i = i + 1) {
+        if (m == 0) {
+            copy_string(i, 0);
+            m = 1;
+        } else {
+            if (compare_string(i, m - 1) != 0) {
+                copy_string(i, m);
+                m = m + 1;
+            }
+        }
+    }
+    n = m;
+}
+
+int contains_string(int big, int small) {
+    int i;
+    int j;
+    int lb;
+    int ls;
+    lb = s_len[big];
+    ls = s_len[small];
+    if (ls > lb) return 0;
+    for (i = 0; i + ls <= lb; i = i + 1) {
+        int ok;
+        ok = 1;
+        for (j = 0; j < ls; j = j + 1) {
+            int vb;
+            int vs;
+            vb = s_data[big * MAXL + i + j];
+            vs = s_data[small * MAXL + j];
+            if (vb != vs) {
+                ok = 0;
+                j = ls;
+            }
+        }
+        if (ok == 1) return 1;
+    }
+    return 0;
+}
+
+void remove_substrings() {
+    int sub[MAXN];
+    int i;
+    int j;
+    int m;
+    for (i = 0; i < MAXN; i = i + 1) sub[i] = 0;
+    for (i = 0; i < n; i = i + 1) {
+        for (j = 0; j < n; j = j + 1) {
+            if (i != j) {
+                if (contains_string(i, j) == 1) {
+                    sub[j] = 1;
+                }
+            }
+        }
+    }
+    m = 0;
+    for (i = 0; i < n; i = i + 1) {
+        if (sub[i] == 0) {
+            copy_string(i, m);
+            m = m + 1;
+        }
+    }
+    n = m;
+}
+
+int calc_overlap(int i, int j) {
+    int li;
+    int lj;
+    int maxk;
+    int k;
+    li = s_len[i];
+    lj = s_len[j];
+    maxk = li;
+    if (lj < maxk) maxk = lj;
+    for (k = maxk; k >= 0; k = k - 1) {
+        int p;
+        int ok;
+        ok = 1;
+        for (p = 0; p < k; p = p + 1) {
+            int a;
+            int b;
+            a = s_data[i * MAXL + (li - k + p)];
+            b = s_data[j * MAXL + p];
+            if (a != b) {
+                ok = 0;
+                p = k;
+            }
+        }
+        if (ok == 1) return k;
+    }
+    return 0;
+}
+
+void pre_edges() {
+    int i;
+    int j;
+    for (i = 0; i < n; i = i + 1) {
+        for (j = 0; j < n; j = j + 1) {
+            if (i != j) {
+                int o;
+                o = calc_overlap(i, j);
+                ov[idx_edge(i, j)] = o;
+                cost_add[idx_edge(i, j)] = s_len[j] - o;
+            } else {
+                ov[idx_edge(i, j)] = 0;
+                cost_add[idx_edge(i, j)] = 0;
+            }
+        }
+    }
+}
+
+void dp_solve() {
+    int i;
+    int mask;
+    int last;
+    int next;
+    int maxMask;
+    maxMask = pow2[n];
+    for (i = 0; i < MAXN * MAXMASK; i = i + 1) {
+        d[i] = INF;
+        hb[i] = 0;
+    }
+    for (i = 0; i < n; i = i + 1) {
+        int m;
+        m = pow2[i];
+        d[idx_state(i, m)] = s_len[i];
+    }
+
+    for (mask = 1; mask < maxMask; mask = mask + 1) {
+        for (last = 0; last < n; last = last + 1) {
+            int cur;
+            if (get_bit(mask, last) == 0) {
+                cur = INF;
+            } else {
+                cur = d[idx_state(last, mask)];
+            }
+            if (cur < INF) {
+                for (next = 0; next < n; next = next + 1) {
+                    if (get_bit(mask, next) == 0) {
+                        int nmask;
+                        int cand;
+                        nmask = mask + pow2[next];
+                        cand = cur + cost_add[idx_edge(last, next)];
+                        if (cand < d[idx_state(next, nmask)]) {
+                            d[idx_state(next, nmask)] = cand;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void back_mark(int j, int mask) {
+    int st;
+    int prevMask;
+    int i;
+    st = idx_state(j, mask);
+    if (hb[st] == 1) return;
+    hb[st] = 1;
+    prevMask = mask - pow2[j];
+    for (i = 0; i < n; i = i + 1) {
+        if (prevMask > 0 && get_bit(prevMask, i) == 1) {
+            int cand;
+            cand = d[idx_state(i, prevMask)] + cost_add[idx_edge(i, j)];
+            if (cand == d[st]) {
+                back_mark(i, prevMask);
+            }
+        }
+    }
+}
+
+void pre_back() {
+    int endMask;
+    int i;
+    int best;
+    endMask = pow2[n] - 1;
+    best = INF;
+    for (i = 0; i < n; i = i + 1) {
+        int v;
+        v = d[idx_state(i, endMask)];
+        if (v < best) best = v;
+    }
+    for (i = 0; i < n; i = i + 1) {
+        if (d[idx_state(i, endMask)] == best) {
+            back_mark(i, endMask);
+        }
+    }
+}
+
+int compare_append(int from, int to1, int to2) {
+    int o1;
+    int o2;
+    int l1;
+    int l2;
+    int i;
+    o1 = ov[idx_edge(from, to1)];
+    o2 = ov[idx_edge(from, to2)];
+    l1 = s_len[to1] - o1;
+    l2 = s_len[to2] - o2;
+    for (i = 0; i < l1 && i < l2; i = i + 1) {
+        int a;
+        int b;
+        a = s_data[to1 * MAXL + (o1 + i)];
+        b = s_data[to2 * MAXL + (o2 + i)];
+        if (a < b) return -1;
+        if (a > b) return 1;
+    }
+    if (l1 < l2) return -1;
+    if (l1 > l2) return 1;
+    return 0;
+}
+
+void build_answer() {
+    int i;
+    int r;
+    int cur;
+    int mask;
+    int start;
+
+    start = -1;
+    for (i = 0; i < n; i = i + 1) {
+        if (hb[idx_state(i, pow2[i])] == 1) {
+            start = i;
+            i = n;
+        }
+    }
+
+    ans_len = 0;
+    for (i = 0; i < s_len[start]; i = i + 1) {
+        ans_data[ans_len] = s_data[start * MAXL + i];
+        ans_len = ans_len + 1;
+    }
+
+    cur = start;
+    mask = pow2[start];
+
+    for (r = 1; r < n; r = r + 1) {
+        int bestNext;
+        int j;
+        bestNext = -1;
+        for (j = 0; j < n; j = j + 1) {
+            if (get_bit(mask, j) == 0) {
+                int nmask;
+                int ok;
+                nmask = mask + pow2[j];
+                ok = 0;
+                if (hb[idx_state(j, nmask)] == 1) {
+                    if (d[idx_state(cur, mask)] + cost_add[idx_edge(cur, j)] == d[idx_state(j, nmask)]) {
+                        ok = 1;
+                    }
+                }
+                if (ok == 1) {
+                    if (bestNext < 0) {
+                        bestNext = j;
+                    } else {
+                        int cmp;
+                        cmp = compare_append(cur, j, bestNext);
+                        if (cmp < 0) bestNext = j;
+                        if (cmp == 0 && compare_string(j, bestNext) < 0) bestNext = j;
+                    }
+                }
+            }
+        }
+
+        /* append bestNext */
+        {
+            int o;
+            int p;
+            o = ov[idx_edge(cur, bestNext)];
+            for (p = o; p < s_len[bestNext]; p = p + 1) {
+                ans_data[ans_len] = s_data[bestNext * MAXL + p];
+                ans_len = ans_len + 1;
+            }
+        }
+        mask = mask + pow2[bestNext];
+        cur = bestNext;
+    }
+}
+
+int main() {
+    int T;
+    int tc;
+    int i;
+    int j;
+
+    pow2[0] = 1;
+    for (i = 1; i <= MAXN; i = i + 1) {
+        pow2[i] = pow2[i - 1] * 2;
+    }
+
+    T = getint();
+    for (tc = 1; tc <= T; tc = tc + 1) {
+        n = getint();
+        for (i = 0; i < n; i = i + 1) {
+            int l;
+            l = getint();
+            s_len[i] = l;
+            for (j = 0; j < MAXL; j = j + 1) {
+                if (j < l) s_data[i * MAXL + j] = getint();
+                else s_data[i * MAXL + j] = 0;
+            }
+        }
+
+        sort_strings();
+        unique_strings();
+        remove_substrings();
+
+        if (n == 1) {
+            ans_len = s_len[0];
+            for (i = 0; i < ans_len; i = i + 1) {
+                ans_data[i] = s_data[i];
+            }
+        } else {
+            pre_edges();
+            dp_solve();
+            pre_back();
+            build_answer();
+        }
+
+        printf("%d\n", tc);
+        printf("%d\n", ans_len);
+        for (i = 0; i < ans_len; i = i + 1) {
+            printf("%d\n", ans_data[i]);
+        }
+        printf("\n");
+    }
+    return 0;
+}

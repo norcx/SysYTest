@@ -1,0 +1,100 @@
+/*
+  Converted from: SPOJ 2939 (Query on a tree V)
+  Behavior kept: toggle node color (black/white), query distance to nearest white node.
+  Implementation here uses BFS per query (small test sizes).
+*/
+
+const int MAXN = 100;
+const int MAXE = 210;
+
+int head[101];
+int to[211];
+int nxt[211];
+int ecnt;
+
+int color[101]; /* 0 = black, 1 = white */
+
+int q[101];
+int distv[101];
+int vis[101];
+
+void add_edge(int u, int v) {
+  ecnt = ecnt + 1;
+  to[ecnt] = v;
+  nxt[ecnt] = head[u];
+  head[u] = ecnt;
+  return;
+}
+
+int bfs_nearest_white(int start, int n) {
+  int i;
+  int front;
+  int back;
+  int u;
+  int e;
+  int v;
+
+  for (i = 1; i <= n; i = i + 1) {
+    vis[i] = 0;
+    distv[i] = 0;
+  }
+
+  front = 0;
+  back = 0;
+  q[back] = start;
+  back = back + 1;
+  vis[start] = 1;
+  distv[start] = 0;
+
+  for (front = 0; front < back; front = front + 1) {
+    u = q[front];
+    if (color[u] == 1) {
+      return distv[u];
+    }
+    for (e = head[u]; e != 0; e = nxt[e]) {
+      v = to[e];
+      if (vis[v] == 0) {
+        vis[v] = 1;
+        distv[v] = distv[u] + 1;
+        q[back] = v;
+        back = back + 1;
+      }
+    }
+  }
+
+  return -1;
+}
+
+int main() {
+  int n;
+  int i;
+  int u;
+  int v;
+  int m;
+  int t;
+  int op;
+  int node;
+  int res;
+
+  n = getint();
+  for (i = 1; i <= n - 1; i = i + 1) {
+    u = getint();
+    v = getint();
+    add_edge(u, v);
+    add_edge(v, u);
+  }
+
+  m = getint();
+  for (t = 0; t < m; t = t + 1) {
+    op = getint();
+    node = getint();
+    if (op == 0) {
+      color[node] = 1 - color[node];
+    } else {
+      res = bfs_nearest_white(node, n);
+      printf("%d\n", res);
+    }
+  }
+
+  return 0;
+}

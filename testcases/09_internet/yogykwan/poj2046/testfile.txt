@@ -1,0 +1,217 @@
+/*
+  POJ 2046: Gap (scaled-down strict SysY conversion)
+  - Uses BFS over board states.
+  - State is a 4x8 grid flattened to length 32.
+  - Cards are encoded as: id = (suit-1)*7 + value, with value in [1..7], suit in [1..4].
+  - Empty cell is encoded as 30.
+
+  Input format (per original code):
+  T test cases.
+  Each test case: 4 rows * 7 integers (columns 2..8). Column 1 is implicitly filled with 11,21,31,41.
+  Any number with last digit 1 (..1) denotes a blank (the original location of a '1' card).
+*/
+
+const int EMPTY = 30;
+const int HSIZE = 100003;
+const int MOD1 = 1000003;
+const int MOD2 = 1000033;
+const int BASE1 = 131;
+const int BASE2 = 137;
+const int QMAX = 5000;
+
+int q[QMAX * 32];
+int qd[QMAX];
+
+int key1[HSIZE];
+int key2[HSIZE];
+int tag[HSIZE];
+int curtag = 1;
+
+int target[32];
+int start_state[32];
+int u[32];
+int v[32];
+int ppos[29];
+int bpos[4];
+
+int add_vis(int a[]) {
+  int h1;
+  int h2;
+  int i;
+  int idx;
+  h1 = 0;
+  h2 = 0;
+  for (i = 0; i < 32; i = i + 1) {
+    h1 = (h1 * BASE1 + a[i]) % MOD1;
+    h2 = (h2 * BASE2 + a[i]) % MOD2;
+  }
+  idx = h1 % HSIZE;
+  for (;;) {
+    if (tag[idx] != curtag) {
+      tag[idx] = curtag;
+      key1[idx] = h1;
+      key2[idx] = h2;
+      return 1;
+    }
+    if (key1[idx] == h1 && key2[idx] == h2) {
+      return 0;
+    }
+    idx = idx + 1;
+    if (idx == HSIZE) {
+      idx = 0;
+    }
+  }
+  return 0;
+}
+
+int eq32(int a[], int b[]) {
+  int i;
+  for (i = 0; i < 32; i = i + 1) {
+    if (a[i] != b[i]) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int main() {
+  int i;
+  int j;
+  int k;
+  int cnt;
+  int T;
+  int tc;
+
+  cnt = 0;
+  for (i = 0; i < 4; i = i + 1) {
+    for (j = 1; j <= 7; j = j + 1) {
+      target[cnt] = i * 7 + j;
+      cnt = cnt + 1;
+    }
+    target[cnt] = EMPTY;
+    cnt = cnt + 1;
+  }
+
+  T = getint();
+  for (tc = 0; tc < T; tc = tc + 1) {
+    int head;
+    int tail;
+    int found;
+
+    curtag = curtag + 1;
+    if (curtag == 0) {
+      for (i = 0; i < HSIZE; i = i + 1) {
+        tag[i] = 0;
+      }
+      curtag = 1;
+    }
+
+    cnt = 0;
+    for (i = 0; i < 4; i = i + 1) {
+      start_state[cnt] = i * 7 + 1;
+      cnt = cnt + 1;
+      for (j = 0; j < 7; j = j + 1) {
+        int x;
+        x = getint();
+        if (x % 10 == 1) {
+          start_state[cnt] = EMPTY;
+        } else {
+          start_state[cnt] = (x / 10 - 1) * 7 + (x % 10);
+        }
+        cnt = cnt + 1;
+      }
+    }
+
+    if (eq32(start_state, target) == 1) {
+      printf("0\n");
+      continue;
+    }
+
+    head = 0;
+    tail = 0;
+    found = -1;
+
+    add_vis(start_state);
+    for (k = 0; k < 32; k = k + 1) {
+      q[tail * 32 + k] = start_state[k];
+    }
+    qd[tail] = 0;
+    tail = tail + 1;
+
+    for (;;) {
+      int dist;
+      int bcnt;
+
+      if (head == tail) {
+        break;
+      }
+
+      dist = qd[head];
+      for (k = 0; k < 32; k = k + 1) {
+        u[k] = q[head * 32 + k];
+      }
+      head = head + 1;
+
+      bcnt = 0;
+      for (k = 0; k < 32; k = k + 1) {
+        int val;
+        val = u[k];
+        if (val == EMPTY) {
+          bpos[bcnt] = k;
+          bcnt = bcnt + 1;
+        } else {
+          ppos[val] = k;
+        }
+      }
+
+      for (i = 0; i < bcnt; i = i + 1) {
+        int bp;
+        int pre;
+        int np;
+
+        if (found != -1) {
+          break;
+        }
+
+        bp = bpos[i];
+        if (bp % 8 == 0) {
+          continue;
+        }
+        pre = u[bp - 1];
+        if (pre == EMPTY) {
+          continue;
+        }
+        if (pre % 7 == 0) {
+          continue;
+        }
+
+        np = ppos[pre + 1];
+
+        for (k = 0; k < 32; k = k + 1) {
+          v[k] = u[k];
+        }
+        v[bp] = pre + 1;
+        v[np] = EMPTY;
+
+        if (eq32(v, target) == 1) {
+          found = dist + 1;
+          break;
+        }
+
+        if (add_vis(v) == 1) {
+          if (tail < QMAX) {
+            for (k = 0; k < 32; k = k + 1) {
+              q[tail * 32 + k] = v[k];
+            }
+            qd[tail] = dist + 1;
+            tail = tail + 1;
+          }
+        }
+      }
+    }
+
+    printf("%d\n", found);
+  }
+
+  return 0;
+}

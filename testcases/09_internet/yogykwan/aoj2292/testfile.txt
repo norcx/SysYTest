@@ -1,0 +1,84 @@
+/* Description:
+ * Count pairs of palindromic substrings (same length) from two sequences.
+ *
+ * Input (integers, one per line):
+ *   ns
+ *   a0..a(ns-1)
+ *   nt
+ *   b0..b(nt-1)
+ *
+ * Output:
+ *   ans
+ */
+
+const int MAXN = 64;
+
+int s1[MAXN];
+int s2[MAXN];
+int cntA[MAXN];
+int cntB[MAXN];
+
+int is_pal(int a[], int l, int r) {
+  int i;
+  int ok;
+  int len;
+  ok = 1;
+  len = r - l + 1;
+  for (i = 0; i < len / 2; i = i + 1) {
+    if (a[l + i] != a[r - i]) {
+      ok = 0;
+    }
+  }
+  return ok;
+}
+
+void count_pals(int a[], int n, int cnt[]) {
+  int l;
+  int r;
+  int len;
+  for (l = 0; l < n; l = l + 1) {
+    for (r = l; r < n; r = r + 1) {
+      if (is_pal(a, l, r) == 1) {
+        len = r - l + 1;
+        cnt[len] = cnt[len] + 1;
+      }
+    }
+  }
+}
+
+int main() {
+  int ns;
+  int nt;
+  int i;
+  int ans;
+  int maxLen;
+
+  ns = getint();
+  for (i = 0; i < ns; i = i + 1) {
+    s1[i] = getint();
+  }
+  nt = getint();
+  for (i = 0; i < nt; i = i + 1) {
+    s2[i] = getint();
+  }
+
+  for (i = 0; i < MAXN; i = i + 1) {
+    cntA[i] = 0;
+    cntB[i] = 0;
+  }
+
+  count_pals(s1, ns, cntA);
+  count_pals(s2, nt, cntB);
+
+  ans = 0;
+  maxLen = ns;
+  if (nt > maxLen) {
+    maxLen = nt;
+  }
+  for (i = 1; i <= maxLen; i = i + 1) {
+    ans = ans + cntA[i] * cntB[i];
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

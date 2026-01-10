@@ -1,0 +1,313 @@
+/* Description:
+ *   AOJ 0531: Paint Color (scaled-down Strict SysY)
+ *   Read multiple cases:
+ *     w
+ *     h
+ *     n
+ *     x1 y1 x2 y2   (n rectangles)
+ *   Stop when w == 0 (sentinel must be present in input).
+ *
+ *   Count connected components of the board area not covered by any rectangle,
+ *   after coordinate discretization + scanline prefix sum + BFS.
+ *
+ *   Constraints are scaled down to fit Strict SysY limits (1D arrays only,
+ *   total memory < ~4MB).
+ */
+
+const int MAXN = 200;
+const int MAXC = 2 * MAXN + 2;
+const int MAXL = 2 * MAXN;
+
+int rect_x1[MAXN];
+int rect_y1[MAXN];
+int rect_x2[MAXN];
+int rect_y2[MAXN];
+
+int xx[MAXC];
+int yy[MAXC];
+
+int line_y[MAXL];
+int line_x1[MAXL];
+int line_x2[MAXL];
+int line_ud[MAXL];
+
+int mat[(MAXC - 1) * (MAXC - 1)];
+int q[(MAXC - 1) * (MAXC - 1)];
+
+void sort_int(int a[], int n) {
+  int i;
+  int j;
+  int minp;
+  int tmp;
+  for (i = 0; i < n; i = i + 1) {
+    minp = i;
+    for (j = i + 1; j < n; j = j + 1) {
+      if (a[j] < a[minp]) {
+        minp = j;
+      }
+    }
+    if (minp != i) {
+      tmp = a[i];
+      a[i] = a[minp];
+      a[minp] = tmp;
+    }
+  }
+}
+
+int unique_int(int a[], int n) {
+  int i;
+  int m;
+  if (n <= 0) {
+    return 0;
+  }
+  m = 1;
+  for (i = 1; i < n; i = i + 1) {
+    if (a[i] != a[m - 1]) {
+      a[m] = a[i];
+      m = m + 1;
+    }
+  }
+  return m;
+}
+
+int lower_bound_int(int a[], int n, int val) {
+  int l;
+  int r;
+  int mid;
+  l = 0;
+  r = n;
+  for (;;) {
+    if (l >= r) {
+      break;
+    }
+    mid = (l + r) / 2;
+    if (a[mid] < val) {
+      l = mid + 1;
+    } else {
+      r = mid;
+    }
+  }
+  return l;
+}
+
+void sort_lines(int m) {
+  int i;
+  int j;
+  int minp;
+  int tmp;
+  for (i = 0; i < m; i = i + 1) {
+    minp = i;
+    for (j = i + 1; j < m; j = j + 1) {
+      if (line_y[j] < line_y[minp]) {
+        minp = j;
+      }
+    }
+    if (minp != i) {
+      tmp = line_y[i];
+      line_y[i] = line_y[minp];
+      line_y[minp] = tmp;
+
+      tmp = line_x1[i];
+      line_x1[i] = line_x1[minp];
+      line_x1[minp] = tmp;
+
+      tmp = line_x2[i];
+      line_x2[i] = line_x2[minp];
+      line_x2[minp] = tmp;
+
+      tmp = line_ud[i];
+      line_ud[i] = line_ud[minp];
+      line_ud[minp] = tmp;
+    }
+  }
+}
+
+int main() {
+  int w;
+  int h;
+  int n;
+  int i;
+  int j;
+
+  for (;;) {
+    int cnt;
+    int cntx;
+    int cnty;
+    int m;
+    int W;
+    int H;
+    int ans;
+
+    w = getint();
+    h = getint();
+    if (w == 0) {
+      break;
+    }
+
+    n = getint();
+
+    if (n > MAXN) {
+      n = MAXN;
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+      rect_x1[i] = getint();
+      rect_y1[i] = getint();
+      rect_x2[i] = getint();
+      rect_y2[i] = getint();
+
+      xx[i * 2] = rect_x1[i];
+      xx[i * 2 + 1] = rect_x2[i];
+      yy[i * 2] = rect_y1[i];
+      yy[i * 2 + 1] = rect_y2[i];
+    }
+
+    xx[n * 2] = 0;
+    xx[n * 2 + 1] = w;
+    yy[n * 2] = 0;
+    yy[n * 2 + 1] = h;
+
+    cnt = n + n + 2;
+    sort_int(xx, cnt);
+    sort_int(yy, cnt);
+    cntx = unique_int(xx, cnt);
+    cnty = unique_int(yy, cnt);
+
+    for (i = 0; i < n; i = i + 1) {
+      int x1;
+      int y1;
+      int x2;
+      int y2;
+      int p;
+
+      x1 = lower_bound_int(xx, cntx, rect_x1[i]);
+      x2 = lower_bound_int(xx, cntx, rect_x2[i]);
+      y1 = lower_bound_int(yy, cnty, rect_y1[i]);
+      y2 = lower_bound_int(yy, cnty, rect_y2[i]);
+
+      p = i * 2;
+      line_y[p] = y1;
+      line_x1[p] = x1;
+      line_x2[p] = x2;
+      line_ud[p] = 1;
+
+      p = i * 2 + 1;
+      line_y[p] = y2;
+      line_x1[p] = x1;
+      line_x2[p] = x2;
+      line_ud[p] = 0 - 1;
+    }
+
+    m = n + n;
+    sort_lines(m);
+
+    W = cntx - 1;
+    H = cnty - 1;
+
+    for (i = 0; i < H * W; i = i + 1) {
+      mat[i] = 0;
+    }
+
+    for (i = 0; i < m; i = i + 1) {
+      int y;
+      y = line_y[i];
+      if (y < H) {
+        for (j = line_x1[i]; j < line_x2[i]; j = j + 1) {
+          int idx;
+          idx = y * W + j;
+          mat[idx] = mat[idx] + line_ud[i];
+        }
+      }
+    }
+
+    for (i = 1; i < H; i = i + 1) {
+      for (j = 0; j < W; j = j + 1) {
+        int idx;
+        idx = i * W + j;
+        mat[idx] = mat[idx] + mat[(i - 1) * W + j];
+      }
+    }
+
+    ans = 0;
+    for (i = 0; i < H * W; i = i + 1) {
+      int head;
+      int tail;
+      int cur;
+      int cx;
+      int cy;
+
+      if (mat[i] != 0) {
+        continue;
+      }
+
+      ans = ans + 1;
+      head = 0;
+      tail = 0;
+      q[tail] = i;
+      tail = tail + 1;
+      mat[i] = 0 - 1;
+
+      for (;;) {
+        int nx;
+        int ny;
+        int nidx;
+        if (head >= tail) {
+          break;
+        }
+        cur = q[head];
+        head = head + 1;
+
+        cx = cur / W;
+        cy = cur - cx * W;
+
+        nx = cx - 1;
+        ny = cy;
+        if (nx >= 0) {
+          nidx = nx * W + ny;
+          if (mat[nidx] == 0) {
+            mat[nidx] = 0 - 1;
+            q[tail] = nidx;
+            tail = tail + 1;
+          }
+        }
+
+        nx = cx;
+        ny = cy + 1;
+        if (ny < W) {
+          nidx = nx * W + ny;
+          if (mat[nidx] == 0) {
+            mat[nidx] = 0 - 1;
+            q[tail] = nidx;
+            tail = tail + 1;
+          }
+        }
+
+        nx = cx + 1;
+        ny = cy;
+        if (nx < H) {
+          nidx = nx * W + ny;
+          if (mat[nidx] == 0) {
+            mat[nidx] = 0 - 1;
+            q[tail] = nidx;
+            tail = tail + 1;
+          }
+        }
+
+        nx = cx;
+        ny = cy - 1;
+        if (ny >= 0) {
+          nidx = nx * W + ny;
+          if (mat[nidx] == 0) {
+            mat[nidx] = 0 - 1;
+            q[tail] = nidx;
+            tail = tail + 1;
+          }
+        }
+      }
+    }
+
+    printf("%d\n", ans);
+  }
+
+  return 0;
+}

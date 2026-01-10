@@ -1,0 +1,221 @@
+/* Description:
+ *   Converted from POJ 3109 "Inner Vertices".
+ *   Input:
+ *     n
+ *     x1 y1
+ *     ...
+ *     xn yn
+ *   Output:
+ *     final black point count after closure (always stops after 1 step).
+ */
+
+const int MAXN = 256;
+const int INF = 1000000000;
+
+int ox[MAXN];
+int oy[MAXN];
+int xvals[MAXN];
+int yvals[MAXN];
+
+int px[MAXN];
+int py[MAXN];
+int has_left[MAXN];
+int has_right[MAXN];
+
+int cnt_x[MAXN];
+int start_x[MAXN];
+int end_x[MAXN];
+int pos_x[MAXN];
+int group_idx[MAXN];
+
+int min_y[MAXN];
+int max_y[MAXN];
+int active_y[MAXN];
+
+void sort_int(int a[], int n) {
+  int i;
+  int j;
+  int key;
+  for (i = 1; i < n; i = i + 1) {
+    key = a[i];
+    j = i - 1;
+    for (;;) {
+      if (j < 0) break;
+      if (a[j] > key) {
+        a[j + 1] = a[j];
+        j = j - 1;
+      } else {
+        break;
+      }
+    }
+    a[j + 1] = key;
+  }
+}
+
+int unique_int(int a[], int n) {
+  int i;
+  int m;
+  if (n <= 0) return 0;
+  m = 1;
+  for (i = 1; i < n; i = i + 1) {
+    if (a[i] != a[m - 1]) {
+      a[m] = a[i];
+      m = m + 1;
+    }
+  }
+  return m;
+}
+
+int lower_bound_int(int a[], int n, int v) {
+  int l;
+  int r;
+  int m;
+  l = 0;
+  r = n;
+  for (;;) {
+    if (l >= r) break;
+    m = (l + r) / 2;
+    if (a[m] < v) {
+      l = m + 1;
+    } else {
+      r = m;
+    }
+  }
+  return l;
+}
+
+void sort_points_by_yx(int n) {
+  int i;
+  int j;
+  int keyx;
+  int keyy;
+  for (i = 1; i < n; i = i + 1) {
+    keyx = px[i];
+    keyy = py[i];
+    j = i - 1;
+    for (;;) {
+      if (j < 0) break;
+      if (py[j] > keyy || py[j] == keyy && px[j] > keyx) {
+        px[j + 1] = px[j];
+        py[j + 1] = py[j];
+        j = j - 1;
+      } else {
+        break;
+      }
+    }
+    px[j + 1] = keyx;
+    py[j + 1] = keyy;
+  }
+}
+
+int main() {
+  int n;
+  int i;
+  int nx;
+  int ny;
+  int ans;
+  int xi;
+  int yi;
+  int x;
+  int y;
+  int p;
+  int idx;
+  int sum;
+  int yy;
+  int running;
+
+  n = getint();
+  for (i = 0; i < n; i = i + 1) {
+    ox[i] = getint();
+    oy[i] = getint();
+    xvals[i] = ox[i];
+    yvals[i] = oy[i];
+  }
+
+  if (n < 2) {
+    printf("%d\n", n);
+    return 0;
+  }
+
+  sort_int(xvals, n);
+  sort_int(yvals, n);
+  nx = unique_int(xvals, n);
+  ny = unique_int(yvals, n);
+
+  for (i = 0; i < n; i = i + 1) {
+    px[i] = lower_bound_int(xvals, nx, ox[i]);
+    py[i] = lower_bound_int(yvals, ny, oy[i]);
+  }
+
+  sort_points_by_yx(n);
+
+  for (i = 0; i < n; i = i + 1) {
+    has_left[i] = 0;
+    has_right[i] = 0;
+  }
+  for (i = 1; i < n; i = i + 1) {
+    if (py[i] == py[i - 1]) {
+      has_right[i - 1] = 1;
+      has_left[i] = 1;
+    }
+  }
+
+  for (x = 0; x < nx; x = x + 1) {
+    cnt_x[x] = 0;
+    min_y[x] = INF;
+    max_y[x] = -1;
+  }
+  for (i = 0; i < n; i = i + 1) {
+    xi = px[i];
+    yi = py[i];
+    cnt_x[xi] = cnt_x[xi] + 1;
+    if (min_y[xi] > yi) min_y[xi] = yi;
+    if (max_y[xi] < yi) max_y[xi] = yi;
+  }
+
+  running = 0;
+  for (x = 0; x < nx; x = x + 1) {
+    start_x[x] = running;
+    running = running + cnt_x[x];
+    end_x[x] = running;
+    pos_x[x] = start_x[x];
+  }
+  for (i = 0; i < n; i = i + 1) {
+    xi = px[i];
+    p = pos_x[xi];
+    group_idx[p] = i;
+    pos_x[xi] = p + 1;
+  }
+
+  for (y = 0; y < ny; y = y + 1) {
+    active_y[y] = 0;
+  }
+
+  ans = n;
+  for (x = 0; x < nx; x = x + 1) {
+    for (p = start_x[x]; p < end_x[x]; p = p + 1) {
+      idx = group_idx[p];
+      if (has_left[idx] == 1) {
+        yy = py[idx];
+        active_y[yy] = active_y[yy] - 1;
+      }
+    }
+
+    sum = 0;
+    for (y = min_y[x]; y <= max_y[x]; y = y + 1) {
+      sum = sum + active_y[y];
+    }
+    ans = ans + sum;
+
+    for (p = start_x[x]; p < end_x[x]; p = p + 1) {
+      idx = group_idx[p];
+      if (has_right[idx] == 1) {
+        yy = py[idx];
+        active_y[yy] = active_y[yy] + 1;
+      }
+    }
+  }
+
+  printf("%d\n", ans);
+  return 0;
+}

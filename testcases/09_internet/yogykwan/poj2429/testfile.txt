@@ -1,0 +1,66 @@
+/* Description:
+ *   POJ 2429 (scaled to int): Given gcd g and lcm l, find a pair (a,b)
+ *   with gcd(a,b)=g, lcm(a,b)=l, and minimal a+b.
+ *
+ *   Input format (SysY-friendly):
+ *     Repeated pairs (g, l), terminated by sentinel "0 0".
+ *     Each integer is on its own line in in.txt.
+ */
+
+int gcd_int(int a, int b) {
+    int t;
+    for (;;) {
+        if (b == 0) {
+            break;
+        }
+        t = a % b;
+        a = b;
+        b = t;
+    }
+    return a;
+}
+
+int main() {
+    int g;
+    int l;
+    for (;;) {
+        g = getint();
+        l = getint();
+        if (g == 0 && l == 0) {
+            break;
+        }
+
+        if (g == l) {
+            printf("%d %d\n", g, l);
+        } else {
+            int n;
+            int best_a;
+            int best_sum;
+            int i;
+
+            n = l / g;
+            best_a = 1;
+            best_sum = n + 1;
+
+            for (i = 1; i * i <= n; i = i + 1) {
+                if (n % i == 0) {
+                    int a;
+                    int b;
+                    int sum;
+                    a = i;
+                    b = n / i;
+                    if (gcd_int(a, b) == 1) {
+                        sum = a + b;
+                        if (sum < best_sum) {
+                            best_sum = sum;
+                            best_a = a;
+                        }
+                    }
+                }
+            }
+
+            printf("%d %d\n", g * best_a, g * (n / best_a));
+        }
+    }
+    return 0;
+}

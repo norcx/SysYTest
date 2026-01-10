@@ -1,0 +1,272 @@
+/*
+ * AOJ 2212: Stolen Jewel (SysY-adapted)
+ * - Grid pathfinding from S to G with forbidden move substrings.
+ * - Input is integer-only (newline separated) for SysY:
+ *   m, n
+ *   m*n cells (row-major): 0 empty, 1 wall, 2 start, 3 goal
+ *   nr
+ *   For each rule: len, then len directions (0 U, 1 R, 2 D, 3 L)
+ *   Terminator: m = 0, n = 0
+ */
+
+const int MAX_M = 25;
+const int MAX_N = 25;
+const int MAX_CELL = 625;
+const int MAX_RULE = 12;
+const int MAX_L = 12;
+const int MAX_NS = 120;
+
+const int INF = 1000000000;
+
+int grid[MAX_CELL];
+
+int ruleLen[MAX_RULE];
+int ruleSeq[MAX_RULE * MAX_L];
+
+int sufLen[MAX_NS];
+int sufSeq[MAX_NS * MAX_L];
+int trans[MAX_NS * 4];
+
+int distArr[MAX_CELL * MAX_NS];
+int qPos[MAX_CELL * MAX_NS];
+int qState[MAX_CELL * MAX_NS];
+
+int dxArr[4];
+int dyArr[4];
+
+int isSuffixRule(int tempSeq[], int tempLen, int r) {
+    int blen;
+    int i;
+    int off;
+    blen = ruleLen[r];
+    if (blen > tempLen) return 0;
+    off = r * MAX_L;
+    for (i = 0; i < blen; i = i + 1) {
+        if (tempSeq[tempLen - blen + i] != ruleSeq[off + i]) return 0;
+    }
+    return 1;
+}
+
+int isSuffixSuf(int tempSeq[], int tempLen, int s) {
+    int blen;
+    int i;
+    int off;
+    blen = sufLen[s];
+    if (blen > tempLen) return 0;
+    off = s * MAX_L;
+    for (i = 0; i < blen; i = i + 1) {
+        if (tempSeq[tempLen - blen + i] != sufSeq[off + i]) return 0;
+    }
+    return 1;
+}
+
+int buildSuffixStates(int nr) {
+    int ns;
+    int r;
+    int l;
+    int s;
+    int i;
+    int same;
+    int off;
+
+    ns = 1;
+    sufLen[0] = 0;
+
+    for (r = 0; r < nr; r = r + 1) {
+        for (l = 1; l < ruleLen[r]; l = l + 1) {
+            same = 0;
+            for (s = 0; s < ns; s = s + 1) {
+                if (sufLen[s] == l) {
+                    off = s * MAX_L;
+                    same = 1;
+                    for (i = 0; i < l; i = i + 1) {
+                        if (sufSeq[off + i] != ruleSeq[r * MAX_L + i]) {
+                            same = 0;
+                            i = l;
+                        }
+                    }
+                    if (same == 1) {
+                        s = ns;
+                    }
+                }
+            }
+            if (same == 0) {
+                if (ns < MAX_NS) {
+                    sufLen[ns] = l;
+                    off = ns * MAX_L;
+                    for (i = 0; i < l; i = i + 1) {
+                        sufSeq[off + i] = ruleSeq[r * MAX_L + i];
+                    }
+                    ns = ns + 1;
+                }
+            }
+        }
+    }
+    return ns;
+}
+
+void buildTransitions(int ns, int nr) {
+    int i;
+    int k;
+    int r;
+    int j;
+    int best;
+    int invalid;
+    int tempLen;
+    int tempSeq[MAX_L + 1];
+    int aoff;
+
+    for (i = 0; i < ns; i = i + 1) {
+        for (k = 0; k < 4; k = k + 1) {
+            tempLen = sufLen[i] + 1;
+            aoff = i * MAX_L;
+            for (j = 0; j < sufLen[i]; j = j + 1) {
+                tempSeq[j] = sufSeq[aoff + j];
+            }
+            tempSeq[tempLen - 1] = k;
+
+            invalid = 0;
+            for (r = 0; r < nr; r = r + 1) {
+                if (isSuffixRule(tempSeq, tempLen, r) == 1) {
+                    invalid = 1;
+                    r = nr;
+                }
+            }
+
+            if (invalid == 1) {
+                trans[i * 4 + k] = -1;
+            } else {
+                best = 0;
+                for (j = 0; j < ns; j = j + 1) {
+                    if (isSuffixSuf(tempSeq, tempLen, j) == 1) {
+                        if (sufLen[j] > sufLen[best]) best = j;
+                    }
+                }
+                trans[i * 4 + k] = best;
+            }
+        }
+    }
+}
+
+int bfsSolve(int m, int n, int ns, int startPos, int goalPos) {
+    int total;
+    int size;
+    int i;
+    int head;
+    int tail;
+    int pos;
+    int s;
+    int pre;
+    int x;
+    int y;
+    int k;
+    int xx;
+    int yy;
+    int np;
+    int ss;
+    int idx;
+
+    total = m * n;
+    size = total * ns;
+
+    for (i = 0; i < size; i = i + 1) {
+        distArr[i] = INF;
+    }
+
+    head = 0;
+    tail = 0;
+    distArr[startPos * ns + 0] = 0;
+    qPos[tail] = startPos;
+    qState[tail] = 0;
+    tail = tail + 1;
+
+    for (;;) {
+        if (head >= tail) break;
+
+        pos = qPos[head];
+        s = qState[head];
+        head = head + 1;
+
+        pre = distArr[pos * ns + s];
+        x = pos / n;
+        y = pos - x * n;
+
+        for (k = 0; k < 4; k = k + 1) {
+            ss = trans[s * 4 + k];
+            if (ss < 0) {
+            } else {
+                xx = x + dxArr[k];
+                yy = y + dyArr[k];
+                if (xx >= 0 && xx < m && yy >= 0 && yy < n) {
+                    np = xx * n + yy;
+                    if (grid[np] != 1) {
+                        if (np == goalPos) return pre + 1;
+                        idx = np * ns + ss;
+                        if (pre + 1 < distArr[idx]) {
+                            distArr[idx] = pre + 1;
+                            qPos[tail] = np;
+                            qState[tail] = ss;
+                            tail = tail + 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return -1;
+}
+
+int main() {
+    int m;
+    int n;
+    int total;
+    int i;
+    int v;
+    int startPos;
+    int goalPos;
+    int nr;
+    int r;
+    int l;
+    int ns;
+    int ans;
+
+    dxArr[0] = -1;
+    dyArr[0] = 0;
+    dxArr[1] = 0;
+    dyArr[1] = 1;
+    dxArr[2] = 1;
+    dyArr[2] = 0;
+    dxArr[3] = 0;
+    dyArr[3] = -1;
+
+    for (;;) {
+        m = getint();
+        n = getint();
+        if (m <= 0 && n <= 0) break;
+
+        total = m * n;
+        startPos = 0;
+        goalPos = 0;
+        for (i = 0; i < total; i = i + 1) {
+            v = getint();
+            grid[i] = v;
+            if (v == 2) startPos = i;
+            if (v == 3) goalPos = i;
+        }
+
+        nr = getint();
+        for (r = 0; r < nr; r = r + 1) {
+            ruleLen[r] = getint();
+            for (l = 0; l < ruleLen[r]; l = l + 1) {
+                ruleSeq[r * MAX_L + l] = getint();
+            }
+        }
+
+        ns = buildSuffixStates(nr);
+        buildTransitions(ns, nr);
+        ans = bfsSolve(m, n, ns, startPos, goalPos);
+        printf("%d\n", ans);
+    }
+    return 0;
+}

@@ -1,0 +1,197 @@
+/*
+ * Converted from AOJ 2230 solution (min-cost flow construction).
+ * Input format (each integer on its own line):
+ *   n
+ *   m
+ *   u v c  (repeated m times)
+ * Vertices are 0..n-1.
+ */
+
+const int INF = 1000000000;
+const int MAXV = 130;
+const int MAXE = 50000;
+
+int head[MAXV];
+int to[MAXE];
+int cap[MAXE];
+int cost[MAXE];
+int next[MAXE];
+int rev[MAXE];
+int edge_cnt;
+
+int indeg[MAXV];
+int outdeg[MAXV];
+
+int distv[MAXV];
+int prevv[MAXV];
+int preve[MAXV];
+
+void init_graph(int vcnt) {
+  int i;
+  for (i = 0; i < vcnt; i = i + 1) {
+    head[i] = -1;
+  }
+  edge_cnt = 0;
+}
+
+void add_edge(int u, int v, int c, int w) {
+  int a;
+  int b;
+
+  a = edge_cnt;
+  edge_cnt = edge_cnt + 1;
+  b = edge_cnt;
+  edge_cnt = edge_cnt + 1;
+
+  to[a] = v;
+  cap[a] = c;
+  cost[a] = w;
+  next[a] = head[u];
+  head[u] = a;
+  rev[a] = b;
+
+  to[b] = u;
+  cap[b] = 0;
+  cost[b] = 0 - w;
+  next[b] = head[v];
+  head[v] = b;
+  rev[b] = a;
+}
+
+int bellman(int s, int t, int vcnt) {
+  int i;
+  int u;
+  int ei;
+  int v;
+  int updated;
+
+  for (i = 0; i < vcnt; i = i + 1) {
+    distv[i] = INF;
+    prevv[i] = -1;
+    preve[i] = -1;
+  }
+  distv[s] = 0;
+
+  for (i = 0; i < vcnt - 1; i = i + 1) {
+    updated = 0;
+    for (u = 0; u < vcnt; u = u + 1) {
+      if (distv[u] != INF) {
+        for (ei = head[u]; ei != -1; ei = next[ei]) {
+          if (cap[ei] > 0) {
+            v = to[ei];
+            if (distv[v] > distv[u] + cost[ei]) {
+              distv[v] = distv[u] + cost[ei];
+              prevv[v] = u;
+              preve[v] = ei;
+              updated = 1;
+            }
+          }
+        }
+      }
+    }
+    if (updated == 0) {
+      break;
+    }
+  }
+
+  if (distv[t] == INF) return 0;
+  return 1;
+}
+
+int min_cost_flow(int s, int t, int need, int vcnt) {
+  int ans;
+  int cur;
+  int v;
+  int ei;
+
+  ans = 0;
+  for (; need > 0; ) {
+    if (bellman(s, t, vcnt) == 0) return -1;
+
+    cur = need;
+    v = t;
+    for (; v != s; v = prevv[v]) {
+      ei = preve[v];
+      if (cur > cap[ei]) cur = cap[ei];
+    }
+
+    ans = ans + cur * distv[t];
+    need = need - cur;
+
+    v = t;
+    for (; v != s; v = prevv[v]) {
+      ei = preve[v];
+      cap[ei] = cap[ei] - cur;
+      cap[rev[ei]] = cap[rev[ei]] + cur;
+    }
+  }
+  return ans;
+}
+
+int main() {
+  int n;
+  int m;
+  int s;
+  int t;
+  int vcnt;
+  int i;
+  int u;
+  int v;
+  int c;
+  int sum;
+  int degree;
+  int back_cost;
+  int mincost;
+  int ans;
+
+  n = getint();
+  m = getint();
+  s = n;
+  t = n + 1;
+  vcnt = n + 2;
+
+  init_graph(vcnt);
+
+  for (i = 0; i < vcnt; i = i + 1) {
+    indeg[i] = 0;
+    outdeg[i] = 0;
+  }
+
+  sum = 0;
+  for (i = 0; i < m; i = i + 1) {
+    u = getint();
+    v = getint();
+    c = getint();
+    add_edge(u, v, INF, 0 - c);
+    sum = sum + c;
+    indeg[v] = indeg[v] + 1;
+    outdeg[u] = outdeg[u] + 1;
+  }
+
+  if (bellman(0, n - 1, n) == 0) {
+    printf("%d\n", 0);
+    return 0;
+  }
+  back_cost = 0 - distv[n - 1];
+  add_edge(n - 1, 0, INF, back_cost);
+
+  degree = 0;
+  for (i = 0; i < n; i = i + 1) {
+    if (indeg[i] > outdeg[i]) {
+      degree = degree + (indeg[i] - outdeg[i]);
+    }
+  }
+
+  for (i = 0; i < n; i = i + 1) {
+    if (indeg[i] > outdeg[i]) {
+      add_edge(s, i, indeg[i] - outdeg[i], 0);
+    } else {
+      add_edge(i, t, outdeg[i] - indeg[i], 0);
+    }
+  }
+
+  mincost = min_cost_flow(s, t, degree, vcnt);
+  ans = mincost - sum;
+  printf("%d\n", ans);
+  return 0;
+}

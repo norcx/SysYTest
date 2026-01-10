@@ -1,0 +1,265 @@
+const int MAXN = 16;
+const int MAXV = 32;
+const int MAXC = 32;
+const int MAXE = 12000;
+
+int head[MAXV];
+int to[MAXE];
+int nxt[MAXE];
+int rhead[MAXV];
+int rto[MAXE];
+int rnxt[MAXE];
+int ecnt;
+
+int order[MAXV];
+int order_pos;
+int vis[MAXV];
+int comp_id[MAXV];
+int tot;
+
+int sx[2];
+int sy[2];
+int x[MAXN];
+int y[MAXN];
+
+int d0[MAXN];
+int d1dist[MAXN];
+int best1[2];
+int best2[2];
+int st;
+
+int hate_u[MAXC];
+int hate_v[MAXC];
+int like_u[MAXC];
+int like_v[MAXC];
+
+int ABS(int v) {
+  if (v < 0) return 0 - v;
+  return v;
+}
+
+int Manhattan(int x1, int y1, int x2, int y2) {
+  return ABS(x1 - x2) + ABS(y1 - y2);
+}
+
+int Max(int a, int b) {
+  if (a > b) return a;
+  return b;
+}
+
+void AddEdge(int u, int v) {
+  to[ecnt] = v;
+  nxt[ecnt] = head[u];
+  head[u] = ecnt;
+
+  rto[ecnt] = u;
+  rnxt[ecnt] = rhead[v];
+  rhead[v] = ecnt;
+
+  ecnt = ecnt + 1;
+}
+
+void Dfs(int u) {
+  int k;
+  int v;
+  vis[u] = 1;
+  for (k = head[u]; k != -1; k = nxt[k]) {
+    v = to[k];
+    if (vis[v] == 0) {
+      Dfs(v);
+    }
+  }
+  order[order_pos] = u;
+  order_pos = order_pos + 1;
+}
+
+void RDfs(int u) {
+  int k;
+  int v;
+  vis[u] = 1;
+  comp_id[u] = tot;
+  for (k = rhead[u]; k != -1; k = rnxt[k]) {
+    v = rto[k];
+    if (vis[v] == 0) {
+      RDfs(v);
+    }
+  }
+}
+
+int Scc(int n) {
+  int i;
+  int idx;
+  int v;
+  int ok;
+
+  order_pos = 0;
+  for (i = 0; i < 2 * n; i = i + 1) {
+    vis[i] = 0;
+  }
+  for (i = 0; i < 2 * n; i = i + 1) {
+    if (vis[i] == 0) Dfs(i);
+  }
+
+  for (i = 0; i < 2 * n; i = i + 1) {
+    vis[i] = 0;
+  }
+  tot = 0;
+  for (idx = order_pos - 1; idx >= 0; idx = idx - 1) {
+    v = order[idx];
+    if (vis[v] == 0) {
+      RDfs(v);
+      tot = tot + 1;
+    }
+  }
+
+  ok = 1;
+  for (i = 0; i < n; i = i + 1) {
+    if (comp_id[i] == comp_id[i + n]) {
+      ok = 0;
+    }
+  }
+  return ok;
+}
+
+int Gao(int bound, int n, int a, int b) {
+  int i;
+  int j;
+  int u;
+  int v;
+
+  for (i = 0; i < 2 * n; i = i + 1) {
+    head[i] = -1;
+    rhead[i] = -1;
+  }
+  ecnt = 0;
+
+  for (i = 0; i < a; i = i + 1) {
+    u = hate_u[i];
+    v = hate_v[i];
+    AddEdge(u, v + n);
+    AddEdge(u + n, v);
+    AddEdge(v, u + n);
+    AddEdge(v + n, u);
+  }
+
+  for (i = 0; i < b; i = i + 1) {
+    u = like_u[i];
+    v = like_v[i];
+    AddEdge(u, v);
+    AddEdge(u + n, v + n);
+    AddEdge(v, u);
+    AddEdge(v + n, u + n);
+  }
+
+  for (i = 0; i < n; i = i + 1) {
+    for (j = 0; j < n; j = j + 1) {
+      if (i != j) {
+        if (d0[i] + d0[j] > bound) {
+          AddEdge(i, j + n);
+        }
+        if (d0[i] + d1dist[j] + st > bound) {
+          AddEdge(i, j);
+        }
+        if (d1dist[i] + d1dist[j] > bound) {
+          AddEdge(i + n, j);
+        }
+        if (d1dist[i] + d0[j] + st > bound) {
+          AddEdge(i + n, j + n);
+        }
+      }
+    }
+  }
+
+  return Scc(n);
+}
+
+int main() {
+  int n;
+  int a;
+  int b;
+  int i;
+  int j;
+  int dist;
+  int l;
+  int r;
+  int m;
+  int tmp1;
+  int tmp2;
+
+  n = getint();
+  a = getint();
+  b = getint();
+
+  sx[0] = getint();
+  sy[0] = getint();
+  sx[1] = getint();
+  sy[1] = getint();
+
+  for (i = 0; i < n; i = i + 1) {
+    x[i] = getint();
+    y[i] = getint();
+  }
+
+  for (i = 0; i < a; i = i + 1) {
+    hate_u[i] = getint() - 1;
+    hate_v[i] = getint() - 1;
+  }
+  for (i = 0; i < b; i = i + 1) {
+    like_u[i] = getint() - 1;
+    like_v[i] = getint() - 1;
+  }
+
+  st = Manhattan(sx[0], sy[0], sx[1], sy[1]);
+
+  best1[0] = 0;
+  best2[0] = 0;
+  best1[1] = 0;
+  best2[1] = 0;
+
+  for (i = 0; i < n; i = i + 1) {
+    for (j = 0; j < 2; j = j + 1) {
+      dist = Manhattan(x[i], y[i], sx[j], sy[j]);
+      if (j == 0) {
+        d0[i] = dist;
+      } else {
+        d1dist[i] = dist;
+      }
+
+      if (dist >= best1[j]) {
+        best2[j] = best1[j];
+        best1[j] = dist;
+      } else {
+        if (dist > best2[j]) {
+          best2[j] = dist;
+        }
+      }
+    }
+  }
+
+  l = 0;
+  tmp1 = best1[0] + best2[0];
+  tmp2 = best1[1] + best2[1];
+  r = Max(tmp1, tmp2);
+  r = Max(r, best1[0] + best1[1] + st);
+
+  if (Gao(r, n, a, b) == 0) {
+    printf("-1\n");
+    return 0;
+  }
+
+  for (;;) {
+    if (l + 1 < r) {
+      m = (l + r) / 2;
+      if (Gao(m, n, a, b) != 0) {
+        r = m;
+      } else {
+        l = m;
+      }
+    } else {
+      break;
+    }
+  }
+
+  printf("%d\n", r);
+  return 0;
+}

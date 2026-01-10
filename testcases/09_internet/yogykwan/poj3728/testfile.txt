@@ -1,0 +1,245 @@
+/*
+ * Converted from POJ 3728: The merchant (tree path max profit).
+ * Strict SysY version: adjacency via arrays, binary lifting tables flattened.
+ */
+
+const int MAXN = 2000;
+const int LOG = 17;
+const int MAXE = 4005;
+const int TBL = 34017;
+const int INF = 1000000000;
+
+int price[MAXN + 1];
+int head[MAXN + 1];
+int to[MAXE];
+int nxt[MAXE];
+int edgeCnt;
+
+int dep[MAXN + 1];
+int pow2[LOG];
+
+int fa[TBL];
+int bg[TBL];
+int sm[TBL];
+int up[TBL];
+int dw[TBL];
+
+int max2(int a, int b) {
+  if (a > b) return a;
+  return b;
+}
+
+int min2(int a, int b) {
+  if (a < b) return a;
+  return b;
+}
+
+int idx(int u, int k) {
+  return u * LOG + k;
+}
+
+void addEdge(int u, int v) {
+  edgeCnt = edgeCnt + 1;
+  to[edgeCnt] = v;
+  nxt[edgeCnt] = head[u];
+  head[u] = edgeCnt;
+}
+
+void InitLsa(int u, int p, int step) {
+  int k;
+  int i;
+  int v;
+  int fa1;
+  dep[u] = step;
+  fa[idx(u, 0)] = p;
+  bg[idx(u, 0)] = price[u];
+  sm[idx(u, 0)] = price[u];
+  up[idx(u, 0)] = 0;
+  dw[idx(u, 0)] = 0;
+
+  for (k = 1; k < LOG; k = k + 1) {
+    fa1 = fa[idx(u, k - 1)];
+    fa[idx(u, k)] = fa[idx(fa1, k - 1)];
+
+    bg[idx(u, k)] = max2(bg[idx(u, k - 1)], bg[idx(fa1, k - 1)]);
+    sm[idx(u, k)] = min2(sm[idx(u, k - 1)], sm[idx(fa1, k - 1)]);
+
+    up[idx(u, k)] =
+        max2(max2(up[idx(u, k - 1)], up[idx(fa1, k - 1)]),
+             bg[idx(fa1, k - 1)] - sm[idx(u, k - 1)]);
+
+    dw[idx(u, k)] =
+        min2(min2(dw[idx(u, k - 1)], dw[idx(fa1, k - 1)]),
+             sm[idx(fa1, k - 1)] - bg[idx(u, k - 1)]);
+  }
+
+  for (i = head[u]; i != 0; i = nxt[i]) {
+    v = to[i];
+    if (v == p) continue;
+    InitLsa(v, u, step + 1);
+  }
+  return;
+}
+
+int GetLsa(int u, int v) {
+  int diff;
+  int k;
+  int t;
+  if (dep[u] > dep[v]) {
+    t = u;
+    u = v;
+    v = t;
+  }
+
+  diff = dep[v] - dep[u];
+  for (k = 0; k < LOG; k = k + 1) {
+    if (diff % 2 != 0) v = fa[idx(v, k)];
+    diff = diff / 2;
+  }
+
+  if (u == v) return u;
+
+  for (k = LOG - 1; k >= 0; k = k - 1) {
+    if (fa[idx(u, k)] != fa[idx(v, k)]) {
+      u = fa[idx(u, k)];
+      v = fa[idx(v, k)];
+    }
+  }
+  return fa[idx(u, 0)];
+}
+
+int GetMin(int u, int v) {
+  int res;
+  int len;
+  int k;
+  res = INF;
+  len = dep[u] - dep[v];
+  for (k = LOG - 1; k >= 0; k = k - 1) {
+    if (len >= pow2[k]) {
+      res = min2(res, sm[idx(u, k)]);
+      u = fa[idx(u, k)];
+      len = len - pow2[k];
+    }
+  }
+  return res;
+}
+
+int GetMax(int u, int v) {
+  int res;
+  int len;
+  int k;
+  res = 0;
+  len = dep[u] - dep[v];
+  for (k = LOG - 1; k >= 0; k = k - 1) {
+    if (len >= pow2[k]) {
+      res = max2(res, bg[idx(u, k)]);
+      u = fa[idx(u, k)];
+      len = len - pow2[k];
+    }
+  }
+  return res;
+}
+
+int GetUp(int u, int v) {
+  int res;
+  int len;
+  int k;
+  int c;
+  int tmp;
+  res = 0;
+  len = dep[u] - dep[v];
+  for (k = LOG - 1; k >= 0; k = k - 1) {
+    if (len >= pow2[k]) {
+      c = fa[idx(u, k)];
+      res = max2(res, up[idx(u, k)]);
+      tmp = GetMax(c, v) - GetMin(u, c);
+      res = max2(res, tmp);
+      u = c;
+      len = len - pow2[k];
+    }
+  }
+  return res;
+}
+
+int GetDown(int u, int v) {
+  int res;
+  int len;
+  int k;
+  int c;
+  int tmp;
+  res = 0;
+  len = dep[u] - dep[v];
+  for (k = LOG - 1; k >= 0; k = k - 1) {
+    if (len >= pow2[k]) {
+      c = fa[idx(u, k)];
+      res = min2(res, dw[idx(u, k)]);
+      tmp = GetMin(c, v) - GetMax(u, c);
+      res = min2(res, tmp);
+      u = c;
+      len = len - pow2[k];
+    }
+  }
+  return res;
+}
+
+int main() {
+  int n;
+  int i;
+  int u;
+  int v;
+  int qq;
+  int lca;
+  int fa2;
+  int upway;
+  int downway;
+  int merge;
+  int res;
+  int k;
+  int t;
+
+  pow2[0] = 1;
+  for (i = 1; i < LOG; i = i + 1) pow2[i] = pow2[i - 1] * 2;
+
+  for (i = 0; i <= MAXN; i = i + 1) {
+    head[i] = 0;
+    dep[i] = 0;
+    price[i] = 0;
+  }
+  for (i = 0; i < TBL; i = i + 1) {
+    fa[i] = 0;
+    bg[i] = 0;
+    sm[i] = INF;
+    up[i] = 0;
+    dw[i] = 0;
+  }
+  edgeCnt = 0;
+
+  n = getint();
+  for (i = 1; i <= n; i = i + 1) price[i] = getint();
+
+  for (i = 1; i < n; i = i + 1) {
+    u = getint();
+    v = getint();
+    addEdge(u, v);
+    addEdge(v, u);
+  }
+
+  InitLsa(1, 0, 1);
+
+  qq = getint();
+  for (i = 0; i < qq; i = i + 1) {
+    u = getint();
+    v = getint();
+    lca = GetLsa(u, v);
+    fa2 = fa[idx(lca, 0)];
+    upway = GetUp(u, fa2);
+    downway = 0 - GetDown(v, fa2);
+    merge = GetMax(v, fa2) - GetMin(u, fa2);
+    res = max2(max2(upway, downway), merge);
+    printf("%d\n", res);
+  }
+
+  t = 0;
+  k = t;
+  return k;
+}

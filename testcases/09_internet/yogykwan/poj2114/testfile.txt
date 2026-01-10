@@ -1,0 +1,379 @@
+/* Description:
+ *   Centroid decomposition on a weighted tree:
+ *   answers queries "is there a pair of nodes with distance k?"
+ */
+const int MAXN = 2000;
+const int MAXE = 8000;
+const int MAXM = 110;
+
+int n;
+int m;
+
+int head[MAXN + 1];
+int to[MAXE + 1];
+int wt[MAXE + 1];
+int nxt[MAXE + 1];
+int edgeCnt;
+
+int path[MAXM];
+int ansArr[MAXM];
+int center[MAXN + 1];
+int subSize[MAXN + 1];
+int allDone;
+
+int distVal[MAXN + 1];
+int distRoot[MAXN + 1];
+int distTot;
+
+int uniqDist[MAXN + 1];
+int uniqRoot[MAXN + 1];
+int uniqMulti[MAXN + 1];
+int uniqCnt;
+
+int bestCenter;
+int bestLarge;
+
+int max2(int a, int b) {
+  if (a > b) return a;
+  return b;
+}
+
+void addEdge(int u, int v, int w) {
+  edgeCnt = edgeCnt + 1;
+  to[edgeCnt] = v;
+  wt[edgeCnt] = w;
+  nxt[edgeCnt] = head[u];
+  head[u] = edgeCnt;
+  return;
+}
+
+int calcSub(int u, int p) {
+  int res;
+  int ei;
+  int v;
+  res = 1;
+  ei = head[u];
+  for (; ei != 0;) {
+    v = to[ei];
+    if (v != p && center[v] == 0) {
+      res = res + calcSub(v, u);
+    }
+    ei = nxt[ei];
+  }
+  subSize[u] = res;
+  return res;
+}
+
+void getCenter(int u, int p, int nt) {
+  int maxPart;
+  int sum;
+  int ei;
+  int v;
+  int other;
+
+  maxPart = 0;
+  sum = 0;
+  ei = head[u];
+  for (; ei != 0;) {
+    v = to[ei];
+    if (v != p && center[v] == 0) {
+      maxPart = max2(maxPart, subSize[v]);
+      sum = sum + subSize[v];
+      getCenter(v, u, nt);
+    }
+    ei = nxt[ei];
+  }
+  other = nt - 1 - sum;
+  maxPart = max2(maxPart, other);
+  if (maxPart < bestLarge) {
+    bestLarge = maxPart;
+    bestCenter = u;
+  }
+  return;
+}
+
+void collectDist(int u, int p, int cur, int rt) {
+  int ei;
+  int v;
+  int w;
+
+  distVal[distTot] = cur;
+  distRoot[distTot] = rt;
+  distTot = distTot + 1;
+
+  ei = head[u];
+  for (; ei != 0;) {
+    v = to[ei];
+    if (v != p && center[v] == 0) {
+      w = wt[ei];
+      collectDist(v, u, cur + w, rt);
+    }
+    ei = nxt[ei];
+  }
+  return;
+}
+
+void swapPair(int i, int j) {
+  int t;
+  t = distVal[i];
+  distVal[i] = distVal[j];
+  distVal[j] = t;
+  t = distRoot[i];
+  distRoot[i] = distRoot[j];
+  distRoot[j] = t;
+  return;
+}
+
+void quicksortPairs(int l, int r) {
+  int i;
+  int j;
+  int pivot;
+  int mid;
+  int sum;
+
+  i = l;
+  j = r;
+  mid = (l + r) / 2;
+  pivot = distVal[mid];
+
+  for (;;) {
+    for (; distVal[i] < pivot;) {
+      i = i + 1;
+    }
+    for (; distVal[j] > pivot;) {
+      j = j - 1;
+    }
+    if (i <= j) {
+      swapPair(i, j);
+      i = i + 1;
+      j = j - 1;
+    }
+    if (i > j) break;
+  }
+
+  if (l < j) quicksortPairs(l, j);
+  if (i < r) quicksortPairs(i, r);
+
+  sum = 0;
+  return;
+}
+
+int findDist(int x) {
+  int l;
+  int r;
+  int mid;
+  l = 0;
+  r = uniqCnt - 1;
+  for (; l <= r;) {
+    mid = (l + r) / 2;
+    if (uniqDist[mid] == x) return mid;
+    if (uniqDist[mid] < x) {
+      l = mid + 1;
+    } else {
+      r = mid - 1;
+    }
+  }
+  return -1;
+}
+
+void buildUnique() {
+  int i;
+  int j;
+  int d;
+  int root;
+  int multi;
+
+  uniqCnt = 0;
+  i = 0;
+  for (; i < distTot;) {
+    d = distVal[i];
+    root = distRoot[i];
+    multi = 0;
+    j = i + 1;
+    for (; j < distTot && distVal[j] == d;) {
+      if (distRoot[j] != root) multi = 1;
+      j = j + 1;
+    }
+    uniqDist[uniqCnt] = d;
+    uniqRoot[uniqCnt] = root;
+    uniqMulti[uniqCnt] = multi;
+    uniqCnt = uniqCnt + 1;
+    i = j;
+  }
+  return;
+}
+
+void solve(int entry) {
+  int nt;
+  int c;
+  int ei;
+  int v;
+  int w;
+  int i;
+  int k;
+  int idx;
+  int half;
+  int p1;
+  int p2;
+  int s;
+  int ok;
+  int answered;
+
+  if (allDone == 1) return;
+
+  nt = calcSub(entry, 0);
+  bestCenter = entry;
+  bestLarge = n + 1;
+  getCenter(entry, 0, nt);
+  c = bestCenter;
+  center[c] = 1;
+
+  distTot = 0;
+  ei = head[c];
+  for (; ei != 0;) {
+    v = to[ei];
+    if (center[v] == 0) {
+      w = wt[ei];
+      collectDist(v, c, w, v);
+    }
+    ei = nxt[ei];
+  }
+
+  if (distTot > 1) quicksortPairs(0, distTot - 1);
+  buildUnique();
+
+  i = 0;
+  for (; i < m;) {
+    if (ansArr[i] == 1) {
+      i = i + 1;
+      continue;
+    }
+    k = path[i];
+
+    idx = findDist(k);
+    if (idx >= 0) {
+      ansArr[i] = 1;
+      i = i + 1;
+      continue;
+    }
+
+    if (k % 2 == 0) {
+      half = k / 2;
+      idx = findDist(half);
+      if (idx >= 0 && uniqMulti[idx] == 1) {
+        ansArr[i] = 1;
+        i = i + 1;
+        continue;
+      }
+    }
+
+    p1 = 0;
+    p2 = uniqCnt - 1;
+    for (; p1 < p2;) {
+      s = uniqDist[p1] + uniqDist[p2];
+      if (s == k) {
+        ok = 0;
+        if (uniqMulti[p1] == 1) ok = 1;
+        if (uniqMulti[p2] == 1) ok = 1;
+        if (uniqMulti[p1] == 0 && uniqMulti[p2] == 0 && uniqRoot[p1] != uniqRoot[p2]) ok = 1;
+        if (ok == 1) {
+          ansArr[i] = 1;
+          break;
+        }
+        p1 = p1 + 1;
+        p2 = p2 - 1;
+      } else if (s < k) {
+        p1 = p1 + 1;
+      } else {
+        p2 = p2 - 1;
+      }
+    }
+
+    i = i + 1;
+  }
+
+  answered = 0;
+  i = 0;
+  for (; i < m;) {
+    answered = answered + ansArr[i];
+    i = i + 1;
+  }
+  if (answered == m) {
+    allDone = 1;
+    return;
+  }
+
+  ei = head[c];
+  for (; ei != 0;) {
+    v = to[ei];
+    if (center[v] == 0) {
+      solve(v);
+    }
+    ei = nxt[ei];
+  }
+
+  ok = 0;
+  return;
+}
+
+int main() {
+  int i;
+  int d;
+  int c;
+  int q;
+
+  for (;;) {
+    n = getint();
+    if (n == 0) break;
+
+    edgeCnt = 0;
+    i = 1;
+    for (; i <= n;) {
+      head[i] = 0;
+      i = i + 1;
+    }
+
+    i = 1;
+    for (; i <= n;) {
+      for (;;) {
+        d = getint();
+        if (d == 0) break;
+        c = getint();
+        addEdge(i, d, c);
+        addEdge(d, i, c);
+      }
+      i = i + 1;
+    }
+
+    m = 0;
+    for (;;) {
+      q = getint();
+      if (q == 0) break;
+      path[m] = q;
+      ansArr[m] = 0;
+      m = m + 1;
+    }
+
+    i = 1;
+    for (; i <= n;) {
+      center[i] = 0;
+      i = i + 1;
+    }
+    allDone = 0;
+
+    solve(1);
+
+    i = 0;
+    for (; i < m;) {
+      if (ansArr[i] == 1) {
+        printf("AYE\n");
+      } else {
+        printf("NAY\n");
+      }
+      i = i + 1;
+    }
+    printf(".\n");
+  }
+
+  return 0;
+}

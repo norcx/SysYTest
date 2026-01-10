@@ -1,0 +1,191 @@
+/* Description:
+ *   [Add description here]
+ */
+
+/* Strict SysY testcase: rectilinear polygon checker/perimeter */
+const int MAXN = 2050;
+
+int origX[MAXN];
+int origY[MAXN];
+
+int xVal[MAXN];
+int yVal[MAXN];
+int nx;
+int ny;
+
+int px[MAXN];
+int py[MAXN];
+
+int fa[MAXN];
+int openIdx[MAXN];
+
+void sort_int(int a[], int n) {
+  int i;
+  int j;
+  int minPos;
+  int tmp;
+  for (i = 1; i <= n; i = i + 1) {
+    minPos = i;
+    for (j = i + 1; j <= n; j = j + 1) {
+      if (a[j] < a[minPos]) minPos = j;
+    }
+    tmp = a[i];
+    a[i] = a[minPos];
+    a[minPos] = tmp;
+  }
+}
+
+int unique_sorted(int a[], int n) {
+  int i;
+  int m;
+  int last;
+  if (n <= 0) return 0;
+  m = 1;
+  last = a[1];
+  a[1] = last;
+  for (i = 2; i <= n; i = i + 1) {
+    if (a[i] != last) {
+      m = m + 1;
+      last = a[i];
+      a[m] = last;
+    }
+  }
+  return m;
+}
+
+int lower_bound_linear(int a[], int n, int v) {
+  int i;
+  for (i = 1; i <= n; i = i + 1) {
+    if (a[i] == v) return i;
+  }
+  return 1;
+}
+
+void sort_points(int n) {
+  int i;
+  int j;
+  int minPos;
+  int tmp;
+  for (i = 1; i <= n; i = i + 1) {
+    minPos = i;
+    for (j = i + 1; j <= n; j = j + 1) {
+      if (py[j] < py[minPos] || py[j] == py[minPos] && px[j] < px[minPos]) minPos = j;
+    }
+    tmp = px[i];
+    px[i] = px[minPos];
+    px[minPos] = tmp;
+    tmp = py[i];
+    py[i] = py[minPos];
+    py[minPos] = tmp;
+  }
+}
+
+int find_fa(int v) {
+  if (fa[v] == v) return v;
+  fa[v] = find_fa(fa[v]);
+  return fa[v];
+}
+
+void merge_set(int a, int b) {
+  int ra;
+  int rb;
+  ra = find_fa(a);
+  rb = find_fa(b);
+  fa[ra] = rb;
+}
+
+int main() {
+  int T;
+  int case_i;
+  int n;
+  int i;
+  int ok;
+  int ans;
+  int x1;
+  int x2;
+  int k;
+  int j;
+  int e;
+  int pos;
+  int t;
+  int root;
+
+  T = getint();
+  for (case_i = 0; case_i < T; case_i = case_i + 1) {
+    ans = 0;
+    ok = 1;
+
+    n = getint();
+    for (i = 1; i <= n; i = i + 1) {
+      origX[i] = getint();
+      origY[i] = getint();
+      xVal[i] = origX[i];
+      yVal[i] = origY[i];
+      px[i] = origX[i];
+      py[i] = origY[i];
+    }
+
+    if (n % 2 != 0) ok = 0;
+
+    if (ok == 1) {
+      sort_int(xVal, n);
+      nx = unique_sorted(xVal, n);
+      sort_int(yVal, n);
+      ny = unique_sorted(yVal, n);
+
+      for (i = 1; i <= n; i = i + 1) {
+        px[i] = lower_bound_linear(xVal, nx, origX[i]);
+        py[i] = lower_bound_linear(yVal, ny, origY[i]);
+      }
+
+      sort_points(n);
+
+      for (i = 1; i <= n; i = i + 1) fa[i] = i;
+      for (i = 1; i <= nx; i = i + 1) openIdx[i] = 0;
+
+      for (i = 1; i <= n - 1; i = i + 2) {
+        if (ok == 1) {
+          if (py[i] != py[i + 1]) ok = 0;
+          if (ok == 1) {
+            x1 = px[i];
+            x2 = px[i + 1];
+            for (k = x1 + 1; k <= x2 - 1; k = k + 1) {
+              if (openIdx[k] != 0) ok = 0;
+            }
+            for (j = 0; j < 2; j = j + 1) {
+              e = i + j;
+              pos = px[e];
+              t = openIdx[pos];
+              if (t != 0) {
+                ans = ans + (yVal[py[e]] - yVal[py[t]]);
+                merge_set(e, t);
+                openIdx[pos] = 0;
+              } else {
+                openIdx[pos] = e;
+              }
+            }
+            ans = ans + (xVal[x2] - xVal[x1]);
+            merge_set(i, i + 1);
+          }
+        }
+      }
+
+      if (ok == 1) {
+        for (k = 1; k <= nx; k = k + 1) {
+          if (openIdx[k] != 0) ok = 0;
+        }
+      }
+
+      if (ok == 1) {
+        root = find_fa(1);
+        for (i = 2; i <= n; i = i + 1) {
+          if (find_fa(i) != root) ok = 0;
+        }
+      }
+    }
+
+    if (ok == 1) printf("%d\n", ans);
+    else printf("-1\n");
+  }
+  return 0;
+}

@@ -1,0 +1,144 @@
+/* Description:
+ *   Strict SysY testcase adapted from "Where's Wally" (AOJ 1312).
+ *   Input uses Base64 symbols mapped to integers 0..63 (one integer per line),
+ *   each representing 6 bits (MSB -> LSB) for a row segment.
+ */
+
+const int MAX_N = 24;
+const int MAX_M = 24;
+const int MAX_P = 12;
+const int PAT_CNT = 8;
+const int PAT_STRIDE = 144;
+
+int bigBits[576];
+int basePat[144];
+int pats[1152];
+
+void decode6(int x, int out[], int outOffset) {
+    int pow;
+    int k;
+    int bit;
+    pow = 32;
+    for (k = 0; k < 6; k = k + 1) {
+        bit = x / pow;
+        out[outOffset + k] = bit;
+        x = x - bit * pow;
+        pow = pow / 2;
+    }
+    return;
+}
+
+void copyBlock(int src[], int srcOffset, int dst[], int dstOffset, int cnt) {
+    int i;
+    for (i = 0; i < cnt; i = i + 1) {
+        dst[dstOffset + i] = src[srcOffset + i];
+    }
+    return;
+}
+
+void rotate90(int src[], int srcOffset, int dst[], int dstOffset, int p) {
+    int i;
+    int j;
+    for (i = 0; i < p; i = i + 1) {
+        for (j = 0; j < p; j = j + 1) {
+            dst[dstOffset + j * p + (p - 1 - i)] = src[srcOffset + i * p + j];
+        }
+    }
+    return;
+}
+
+void flipH(int src[], int srcOffset, int dst[], int dstOffset, int p) {
+    int i;
+    int j;
+    for (i = 0; i < p; i = i + 1) {
+        for (j = 0; j < p; j = j + 1) {
+            dst[dstOffset + i * p + (p - 1 - j)] = src[srcOffset + i * p + j];
+        }
+    }
+    return;
+}
+
+int matchOne(int top, int left, int n, int p, int patOffset) {
+    int i;
+    int j;
+    int ok;
+    ok = 1;
+    for (i = 0; i < p; i = i + 1) {
+        for (j = 0; j < p; j = j + 1) {
+            if (ok == 1 && bigBits[(top + i) * n + (left + j)] != pats[patOffset + i * p + j]) {
+                ok = 0;
+            }
+        }
+    }
+    return ok;
+}
+
+int main() {
+    int n;
+    int m;
+    int p;
+    int nChars;
+    int pChars;
+    int i;
+    int c;
+    int x;
+    int t;
+    int top;
+    int left;
+    int ans;
+    int found;
+
+    for (;;) {
+        n = getint();
+        m = getint();
+        p = getint();
+        if (m == 0) {
+            break;
+        }
+
+        nChars = n / 6;
+        for (i = 0; i < m; i = i + 1) {
+            for (c = 0; c < nChars; c = c + 1) {
+                x = getint();
+                decode6(x, bigBits, i * n + c * 6);
+            }
+        }
+
+        pChars = p / 6;
+        for (i = 0; i < p; i = i + 1) {
+            for (c = 0; c < pChars; c = c + 1) {
+                x = getint();
+                decode6(x, basePat, i * p + c * 6);
+            }
+        }
+
+        copyBlock(basePat, 0, pats, 0 * PAT_STRIDE, p * p);
+        for (t = 1; t < 4; t = t + 1) {
+            rotate90(pats, (t - 1) * PAT_STRIDE, pats, t * PAT_STRIDE, p);
+        }
+        flipH(basePat, 0, pats, 4 * PAT_STRIDE, p);
+        for (t = 5; t < 8; t = t + 1) {
+            rotate90(pats, (t - 1) * PAT_STRIDE, pats, t * PAT_STRIDE, p);
+        }
+
+        ans = 0;
+        for (top = 0; top <= m - p; top = top + 1) {
+            for (left = 0; left <= n - p; left = left + 1) {
+                found = 0;
+                for (t = 0; t < 8; t = t + 1) {
+                    if (found == 0) {
+                        if (matchOne(top, left, n, p, t * PAT_STRIDE) == 1) {
+                            found = 1;
+                        }
+                    }
+                }
+                if (found == 1) {
+                    ans = ans + 1;
+                }
+            }
+        }
+
+        printf("%d\n", ans);
+    }
+    return 0;
+}

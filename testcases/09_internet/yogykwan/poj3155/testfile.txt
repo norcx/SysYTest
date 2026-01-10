@@ -1,0 +1,250 @@
+/* Description:
+ * POJ 3155: Hard Life (scaled down for Strict SysY)
+ * Find a maximum-density subgraph in an undirected graph using
+ * parametric search + min-cut (Dinic maxflow), implemented with int only.
+ *
+ * Input format (in.txt): one integer per line
+ *   n
+ *   m
+ *   a1
+ *   b1
+ *   ...
+ *   am
+ *   bm
+ *
+ * Output:
+ *   k
+ *   v1
+ *   ...
+ *   vk
+ */
+
+const int MAXN = 60;
+const int MAXM = 260;
+const int MAXV = 70;
+const int SCALE = 1000;
+const int INF = 1000000000;
+const int MAXE = 6000;
+
+int n;
+int m;
+int a[MAXM];
+int b[MAXM];
+int deg[MAXV];
+
+int head[MAXV];
+int to[MAXE];
+int cap[MAXE];
+int nxt[MAXE];
+int ecnt;
+
+int levelArr[MAXV];
+int iterArr[MAXV];
+int qArr[MAXV];
+
+int vis[MAXV];
+int st[MAXV];
+
+void init_graph(int V) {
+    int i;
+    ecnt = 0;
+    for (i = 0; i < V; i = i + 1) head[i] = -1;
+}
+
+void add_edge(int u, int v, int c) {
+    to[ecnt] = v;
+    cap[ecnt] = c;
+    nxt[ecnt] = head[u];
+    head[u] = ecnt;
+    ecnt = ecnt + 1;
+
+    to[ecnt] = u;
+    cap[ecnt] = 0;
+    nxt[ecnt] = head[v];
+    head[v] = ecnt;
+    ecnt = ecnt + 1;
+}
+
+void bfs(int s, int V) {
+    int i;
+    int qh;
+    int qt;
+    int u;
+    int ei;
+    int v;
+
+    for (i = 0; i < V; i = i + 1) levelArr[i] = -1;
+    qh = 0;
+    qt = 0;
+    levelArr[s] = 0;
+    qArr[qt] = s;
+    qt = qt + 1;
+
+    for (; qh < qt; qh = qh + 1) {
+        u = qArr[qh];
+        for (ei = head[u]; ei != -1; ei = nxt[ei]) {
+            v = to[ei];
+            if (cap[ei] > 0 && levelArr[v] < 0) {
+                levelArr[v] = levelArr[u] + 1;
+                qArr[qt] = v;
+                qt = qt + 1;
+            }
+        }
+    }
+}
+
+int dfs(int u, int t, int f) {
+    int ei;
+    int v;
+    int pushed;
+    int minf;
+    int rev;
+
+    if (u == t) return f;
+
+    ei = iterArr[u];
+    for (; ei != -1; ) {
+        v = to[ei];
+        if (cap[ei] > 0 && levelArr[v] == levelArr[u] + 1) {
+            minf = f;
+            if (cap[ei] < minf) minf = cap[ei];
+            pushed = dfs(v, t, minf);
+            if (pushed > 0) {
+                cap[ei] = cap[ei] - pushed;
+                rev = ei - 1;
+                if (ei % 2 == 0) rev = ei + 1;
+                cap[rev] = cap[rev] + pushed;
+                iterArr[u] = ei;
+                return pushed;
+            }
+        }
+        ei = nxt[ei];
+        iterArr[u] = ei;
+    }
+    return 0;
+}
+
+int dinic(int s, int t, int V) {
+    int flow;
+    int i;
+    int pushed;
+
+    flow = 0;
+    for (; 1; ) {
+        bfs(s, V);
+        if (levelArr[t] < 0) break;
+        for (i = 0; i < V; i = i + 1) iterArr[i] = head[i];
+        for (; 1; ) {
+            pushed = dfs(s, t, INF);
+            if (pushed <= 0) break;
+            flow = flow + pushed;
+        }
+    }
+    return flow;
+}
+
+void build_graph(int gScaled, int s, int t, int V) {
+    int i;
+    int cst;
+    int cit;
+
+    init_graph(V);
+
+    for (i = 0; i < m; i = i + 1) {
+        add_edge(a[i], b[i], SCALE);
+        add_edge(b[i], a[i], SCALE);
+    }
+
+    cst = m * SCALE;
+    for (i = 1; i <= n; i = i + 1) {
+        add_edge(s, i, cst);
+        cit = cst + 2 * gScaled - deg[i] * SCALE;
+        add_edge(i, t, cit);
+    }
+}
+
+void mark_reachable(int s, int V) {
+    int i;
+    int top;
+    int u;
+    int ei;
+    int v;
+
+    for (i = 0; i < V; i = i + 1) vis[i] = 0;
+    top = 0;
+    st[0] = s;
+    vis[s] = 1;
+
+    for (; top >= 0; ) {
+        u = st[top];
+        top = top - 1;
+        for (ei = head[u]; ei != -1; ei = nxt[ei]) {
+            v = to[ei];
+            if (cap[ei] > 0 && vis[v] == 0) {
+                vis[v] = 1;
+                top = top + 1;
+                st[top] = v;
+            }
+        }
+    }
+}
+
+int main() {
+    int i;
+    int s;
+    int t;
+    int V;
+    int low;
+    int high;
+    int mid;
+    int flow;
+    int diff;
+    int cnt;
+
+    n = getint();
+    m = getint();
+
+    for (i = 0; i < MAXV; i = i + 1) deg[i] = 0;
+    for (i = 0; i < m; i = i + 1) {
+        a[i] = getint();
+        b[i] = getint();
+        deg[a[i]] = deg[a[i]] + 1;
+        deg[b[i]] = deg[b[i]] + 1;
+    }
+
+    s = 0;
+    t = n + 1;
+    V = n + 2;
+
+    if (m == 0) {
+        printf("1\n");
+        printf("1\n");
+        return 0;
+    }
+
+    low = 0;
+    high = m * SCALE;
+    for (; low + 1 < high; ) {
+        mid = (low + high) / 2;
+        build_graph(mid, s, t, V);
+        flow = dinic(s, t, V);
+        diff = m * n * SCALE - flow;
+        if (diff > 0) low = mid;
+        if (diff <= 0) high = mid;
+    }
+
+    build_graph(low, s, t, V);
+    dinic(s, t, V);
+    mark_reachable(s, V);
+
+    cnt = 0;
+    for (i = 1; i <= n; i = i + 1) {
+        if (vis[i] != 0) cnt = cnt + 1;
+    }
+
+    printf("%d\n", cnt);
+    for (i = 1; i <= n; i = i + 1) {
+        if (vis[i] != 0) printf("%d\n", i);
+    }
+    return 0;
+}
