@@ -1,8 +1,0 @@
-Case 1: 0
-Case 2: 5000
-Case 3: 10361
-Case 4: 26219
-Case 5: 84701
-Case 6: 84701
-Case 7: 100000
-Case 8: 100000

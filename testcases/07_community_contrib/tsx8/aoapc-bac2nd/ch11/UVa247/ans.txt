@@ -1,7 +1,0 @@
-Calling circles for data set 1:
-1, 2
-3, 4, 5
-
-Calling circles for data set 2:
-1
-2, 3

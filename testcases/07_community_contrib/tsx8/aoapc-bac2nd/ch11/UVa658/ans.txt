@@ -1,6 +1,0 @@
-Product 1
-Fastest sequence takes 3 seconds.
-
-Product 2
-Bugs cannot be fixed.
-

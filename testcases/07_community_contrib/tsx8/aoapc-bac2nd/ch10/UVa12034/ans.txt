@@ -1,8 +1,0 @@
-Case 1: 1
-Case 2: 1
-Case 3: 3
-Case 4: 13
-Case 5: 75
-Case 6: 8211
-Case 7: 10011
-Case 8: 2331
