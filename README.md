@@ -135,7 +135,7 @@ git push origin main
 
 ### 方法二：通过邮件发送
 
-将你的测试用例文件夹打包发送到：**YumoJiang@buaa.edu.cn**
+将你的测试用例文件夹打包发送到：**oNya685@outlook.com**
 
 ## 配置说明
 
