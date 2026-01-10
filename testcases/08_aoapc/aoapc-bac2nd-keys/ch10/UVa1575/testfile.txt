@@ -1,0 +1,136 @@
+/* Description:
+ *   Scaled-down SysY version of UVa1575 "Factors":
+ *   Precomputes a small mapping n -> minimal k using multinomial coefficients.
+ */
+const int MAXS = 12;
+const int MAXLEN = 8;
+const int MAXANS = 4096;
+const int INT_MAX_VAL = 2147483647;
+
+const int PRIMES_N = 8;
+int primes[8] = {2, 3, 5, 7, 11, 13, 17, 19};
+
+int e_list[MAXLEN];
+int e_len;
+
+int binom[(MAXS + 1) * (MAXS + 1)];
+
+int keys[MAXANS];
+int vals[MAXANS];
+int ans_len;
+
+int build_binom() {
+  int n;
+  int k;
+  int w;
+  w = MAXS + 1;
+  for (n = 0; n <= MAXS; n = n + 1) {
+    for (k = 0; k <= MAXS; k = k + 1) {
+      binom[n * w + k] = 0;
+    }
+  }
+  for (n = 0; n <= MAXS; n = n + 1) {
+    binom[n * w + 0] = 1;
+    binom[n * w + n] = 1;
+    for (k = 1; k < n; k = k + 1) {
+      binom[n * w + k] = binom[(n - 1) * w + (k - 1)] + binom[(n - 1) * w + k];
+    }
+  }
+  return 0;
+}
+
+int multinomial_from_e_list() {
+  int res;
+  int total;
+  int i;
+  int e;
+  int w;
+  res = 1;
+  total = 0;
+  w = MAXS + 1;
+  for (i = 0; i < e_len; i = i + 1) {
+    e = e_list[i];
+    res = res * binom[(total + e) * w + e];
+    total = total + e;
+  }
+  return res;
+}
+
+int update_ans(int n, int k) {
+  int i;
+  for (i = 0; i < ans_len; i = i + 1) {
+    if (keys[i] == n) {
+      if (k < vals[i]) vals[i] = k;
+      return 0;
+    }
+  }
+  keys[ans_len] = n;
+  vals[ans_len] = k;
+  ans_len = ans_len + 1;
+  return 0;
+}
+
+int find_ans(int n) {
+  int i;
+  for (i = 0; i < ans_len; i = i + 1) {
+    if (keys[i] == n) return vals[i];
+  }
+  return 0;
+}
+
+int dfs(int idx, int last_exp, int total_sum, int current_k) {
+  int n;
+  int exp;
+  int nk;
+  int j;
+  int p;
+
+  if (e_len > 0) {
+    n = multinomial_from_e_list();
+    update_ans(n, current_k);
+  }
+
+  if (idx >= PRIMES_N) return 0;
+  p = primes[idx];
+
+  for (exp = 1; exp <= last_exp; exp = exp + 1) {
+    if (total_sum + exp > MAXS) break;
+
+    nk = current_k;
+    for (j = 0; j < exp; j = j + 1) {
+      if (nk > INT_MAX_VAL / p) {
+        nk = 0;
+        break;
+      }
+      nk = nk * p;
+    }
+    if (nk == 0) break;
+
+    e_list[e_len] = exp;
+    e_len = e_len + 1;
+    dfs(idx + 1, exp, total_sum + exp, nk);
+    e_len = e_len - 1;
+  }
+  return 0;
+}
+
+int main() {
+  int n;
+  int ans;
+
+  build_binom();
+  ans_len = 0;
+  e_len = 0;
+
+  update_ans(1, 2);
+  dfs(0, MAXS, 0, 1);
+
+  for (;;) {
+    n = getint();
+    if (n == 0) break;
+    ans = find_ans(n);
+    printf("%d %d\n", n, ans);
+  }
+
+  return 0;
+}

@@ -1,0 +1,153 @@
+/* Description:
+ * Egyptian fraction decomposition with forbidden denominators.
+ * Strict SysY port of a DFS + iterative deepening solution.
+ */
+
+const int MAX_FORB = 64;
+const int MAX_DEPTH_LIMIT = 12;
+const int MAX_DENO = 2000;
+
+int A;
+int B;
+
+int forb[MAX_FORB];
+int forbCount;
+
+int curDen[MAX_DEPTH_LIMIT + 1];
+int curLen;
+
+int bestDen[MAX_DEPTH_LIMIT + 1];
+int bestLen;
+
+int maxDepth;
+
+int gcd(int a, int b) {
+  if (b == 0) return a;
+  return gcd(b, a % b);
+}
+
+int is_forbidden(int x) {
+  int i;
+  for (i = 0; i < forbCount; i = i + 1) {
+    if (forb[i] == x) return 1;
+  }
+  return 0;
+}
+
+int better(int len) {
+  int i;
+  if (bestLen == 0) return 1;
+  if (len < bestLen) return 1;
+  if (len > bestLen) return 0;
+  for (i = len - 1; i >= 0; i = i - 1) {
+    if (curDen[i] != bestDen[i]) {
+      if (curDen[i] < bestDen[i]) return 1;
+      return 0;
+    }
+  }
+  return 0;
+}
+
+void save_best(int len) {
+  int i;
+  bestLen = len;
+  for (i = 0; i < len; i = i + 1) bestDen[i] = curDen[i];
+}
+
+int get_first(int a, int b, int last) {
+  int num;
+  int den;
+  int c;
+  num = B * b;
+  den = A * b - a * B;
+  c = num / den;
+  if (num % den != 0) c = c + 1;
+  if (c < last + 1) c = last + 1;
+  return c;
+}
+
+void dfs(int a, int b, int d) {
+  int last;
+  int deno;
+  int left;
+  int right;
+  int na;
+  int nb;
+  int g;
+
+  if (d > maxDepth) return;
+  if (a * B > A * b) return;
+
+  if (a == A && b == B) {
+    if (better(curLen) == 1) save_best(curLen);
+    return;
+  }
+
+  last = 1;
+  if (curLen > 0) last = curDen[curLen - 1];
+  deno = get_first(a, b, last);
+
+  for (; ; deno = deno + 1) {
+    if (deno > MAX_DENO) break;
+
+    left = a * B * deno + (maxDepth - d) * B * b;
+    right = A * b * deno;
+    if (left < right) break;
+
+    if (is_forbidden(deno) == 0) {
+      na = a * deno + b;
+      nb = b * deno;
+      g = gcd(na, nb);
+
+      curDen[curLen] = deno;
+      curLen = curLen + 1;
+      dfs(na / g, nb / g, d + 1);
+      curLen = curLen - 1;
+    }
+  }
+}
+
+int main() {
+  int T;
+  int t;
+  int K;
+  int i;
+  int x;
+  int depth;
+
+  T = getint();
+  for (t = 1; t <= T; t = t + 1) {
+    A = getint();
+    B = getint();
+    K = getint();
+
+    forbCount = 0;
+    for (i = 0; i < K; i = i + 1) {
+      x = getint();
+      if (forbCount < MAX_FORB) {
+        forb[forbCount] = x;
+        forbCount = forbCount + 1;
+      }
+    }
+
+    for (depth = 2; depth <= MAX_DEPTH_LIMIT; depth = depth + 1) {
+      maxDepth = depth;
+      curLen = 0;
+      bestLen = 0;
+      dfs(0, 1, 0);
+
+      if (bestLen > 0) {
+        printf("Case %d: %d/%d=", t, A, B);
+        for (i = 0; i < bestLen; i = i + 1) {
+          printf("1/%d", bestDen[i]);
+          if (i == bestLen - 1)
+            printf("\n");
+          else
+            printf("+");
+        }
+        break;
+      }
+    }
+  }
+  return 0;
+}

@@ -1,0 +1,250 @@
+/* Description:
+ *   Strict SysY adaptation of "UVa 163 - City Directions".
+ *
+ *   Input encoding (newline-separated integers):
+ *     op = 1: set location, then x, y, dir
+ *             x: signed (E positive, W negative), y: signed (N positive, S negative)
+ *             dir index: 0=E,1=NE,2=N,3=NW,4=W,5=SW,6=S,7=SE
+ *     op = 2: turn, then d
+ *             d in {-3,-2,-1,1,2,3} meaning 45-degree steps (right negative, left positive)
+ *     op = 3: go, then l (1..99)
+ *     op = 4: stop (prints location or "Illegal stopping place")
+ *     op = 0: end
+ */
+
+const int SIZE = 50;
+
+int dx[8];
+int dy[8];
+
+int posx;
+int posy;
+int dir;
+int locSet;
+
+int tposx;
+int tposy;
+int tdir;
+
+int iabs(int v) {
+    if (v < 0) return -v;
+    return v;
+}
+
+void init_dirs() {
+    dx[0] = 1; dy[0] = 0;
+    dx[1] = 1; dy[1] = 1;
+    dx[2] = 0; dy[2] = 1;
+    dx[3] = -1; dy[3] = 1;
+    dx[4] = -1; dy[4] = 0;
+    dx[5] = -1; dy[5] = -1;
+    dx[6] = 0; dy[6] = -1;
+    dx[7] = 1; dy[7] = -1;
+}
+
+int posValid(int x, int y) {
+    int ok = 1;
+    if (x < -SIZE) ok = 0;
+    if (x > SIZE) ok = 0;
+    if (y < -SIZE) ok = 0;
+    if (y > SIZE) ok = 0;
+    if (ok == 1) return 1;
+    return 0;
+}
+
+int connected(int ax, int ay, int bx, int by) {
+    int dxv;
+    int dyv;
+    int sumA;
+    int sumB;
+    int diffA;
+    int diffB;
+
+    if (posValid(ax, ay) == 0) return 0;
+    if (posValid(bx, by) == 0) return 0;
+
+    dxv = bx - ax;
+    dyv = by - ay;
+
+    if (dxv == 0) {
+        if (iabs(dyv) == 1) return 1;
+    }
+    if (dyv == 0) {
+        if (iabs(dxv) == 1) return 1;
+    }
+
+    if (iabs(dxv) == 1 && iabs(dyv) == 1) {
+        if (dxv == 1 && dyv == -1 || dxv == -1 && dyv == 1) {
+            sumA = ax + ay;
+            sumB = bx + by;
+            if (sumA != sumB) return 0;
+            if (sumA == 0 || sumA == SIZE || sumA == -SIZE) return 1;
+            return 0;
+        }
+        if (dxv == 1 && dyv == 1 || dxv == -1 && dyv == -1) {
+            diffA = ay - ax;
+            diffB = by - bx;
+            if (diffA != diffB) return 0;
+            if (diffA == 0 || diffA == SIZE || diffA == -SIZE) return 1;
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+int onThroughWay(int x, int y, int d) {
+    int x2 = x + dx[d];
+    int y2 = y + dy[d];
+    if (x == 0 && x2 == 0) return 1;
+    if (y == 0 && y2 == 0) return 1;
+    if (x - y == 0 && x2 - y2 == 0) return 1;
+    if (x + y == 0 && x2 + y2 == 0) return 1;
+    if (x == SIZE && x2 == SIZE) return 1;
+    if (x == -SIZE && x2 == -SIZE) return 1;
+    if (y == SIZE && y2 == SIZE) return 1;
+    if (y == -SIZE && y2 == -SIZE) return 1;
+    return 0;
+}
+
+int isDiagDir(int d) {
+    if (iabs(dx[d]) == iabs(dy[d])) return 1;
+    return 0;
+}
+
+int isRoundaboutPoint(int x, int y) {
+    if (x == 0 && y == 0) return 1;
+    if (x == 0 && y == SIZE || x == 0 && y == -SIZE) return 1;
+    if (y == 0 && x == SIZE || y == 0 && x == -SIZE) return 1;
+    if (x == SIZE && y == SIZE || x == SIZE && y == -SIZE) return 1;
+    if (x == -SIZE && y == SIZE || x == -SIZE && y == -SIZE) return 1;
+    return 0;
+}
+
+int tryTurn(int d) {
+    int newDir;
+
+    newDir = (dir + d + 800) % 8;
+    tposx = posx + dx[dir];
+    tposy = posy + dy[dir];
+    tdir = newDir;
+
+    if (posValid(tposx, tposy) == 0) return 0;
+
+    if (posValid(tposx + dx[tdir], tposy + dy[tdir]) == 1) {
+        if (connected(tposx, tposy, tposx + dx[tdir], tposy + dy[tdir]) == 0) return 0;
+    }
+
+    if (isRoundaboutPoint(tposx, tposy) == 1) return 1;
+
+    if (onThroughWay(tposx, tposy, tdir) == 1 && onThroughWay(posx, posy, dir) == 0) {
+        if (isDiagDir(tdir) == 1) {
+            if (d != 3) return 0;
+        } else {
+            if (d != 2) return 0;
+        }
+    }
+
+    if (onThroughWay(posx, posy, dir) == 1 && onThroughWay(tposx, tposy, tdir) == 0) {
+        if (isDiagDir(dir) == 1) {
+            if (d != 3) return 0;
+        } else {
+            if (d != 2) return 0;
+        }
+    }
+
+    return 1;
+}
+
+void printDirName(int d) {
+    if (d == 0) { printf("E"); return; }
+    if (d == 1) { printf("NE"); return; }
+    if (d == 2) { printf("N"); return; }
+    if (d == 3) { printf("NW"); return; }
+    if (d == 4) { printf("W"); return; }
+    if (d == 5) { printf("SW"); return; }
+    if (d == 6) { printf("S"); return; }
+    if (d == 7) { printf("SE"); return; }
+    printf("E");
+}
+
+void printLoc(int x, int y, int d) {
+    printf("A");
+    printf("%d", iabs(x));
+    if (x >= 0) printf("E");
+    else printf("W");
+
+    printf(" S");
+    printf("%d", iabs(y));
+    if (y >= 0) printf("N");
+    else printf("S");
+
+    printf(" ");
+    printDirName(d);
+    printf("\n");
+}
+
+void doStop() {
+    if (onThroughWay(posx, posy, dir) == 1) printf("Illegal stopping place\n");
+    else printLoc(posx, posy, dir);
+}
+
+int main() {
+    int op;
+    int x;
+    int y;
+    int d;
+    int l;
+    int nd;
+    int nx;
+    int ny;
+
+    init_dirs();
+    locSet = 0;
+    posx = 0;
+    posy = 0;
+    dir = 0;
+
+    for (;;) {
+        op = getint();
+        if (op == 0) break;
+
+        if (op == 1) {
+            x = getint();
+            y = getint();
+            nd = getint();
+            if (locSet == 0) {
+                posx = x;
+                posy = y;
+                dir = nd;
+                locSet = 1;
+            }
+        } else if (op == 2) {
+            d = getint();
+            if (locSet == 1) {
+                if (d == -3 || d == -2 || d == -1 || d == 1 || d == 2 || d == 3) {
+                    if (tryTurn(d) == 1) {
+                        posx = tposx;
+                        posy = tposy;
+                        dir = tdir;
+                    }
+                }
+            }
+        } else if (op == 3) {
+            l = getint();
+            if (locSet == 1) {
+                nx = posx + dx[dir] * l;
+                ny = posy + dy[dir] * l;
+                if (posValid(nx, ny) == 1) {
+                    posx = nx;
+                    posy = ny;
+                }
+            }
+        } else if (op == 4) {
+            if (locSet == 1) doStop();
+            locSet = 0;
+        }
+    }
+
+    return 0;
+}

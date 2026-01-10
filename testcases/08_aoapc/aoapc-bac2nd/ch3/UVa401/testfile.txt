@@ -1,0 +1,82 @@
+/*
+  Strict SysY testcase derived from UVa 401 Palindromes.
+
+  Input format (integers only):
+    n
+    len1
+    c1
+    c2
+    ...
+    lenn
+    ...
+
+  Each ci is an ASCII code for an uppercase letter ('A'..'Z') or digit ('0'..'9').
+
+  Output:
+    For each case, print an integer classification code followed by a blank line:
+      0 -> not a palindrome
+      1 -> a regular palindrome
+      2 -> a mirrored string
+      3 -> a mirrored palindrome
+*/
+
+int mirror(int ch) {
+    if (ch == 65) return 65;   /* A -> A */
+    if (ch == 69) return 51;   /* E -> 3 */
+    if (ch == 72) return 72;   /* H -> H */
+    if (ch == 73) return 73;   /* I -> I */
+    if (ch == 74) return 76;   /* J -> L */
+    if (ch == 76) return 74;   /* L -> J */
+    if (ch == 77) return 77;   /* M -> M */
+    if (ch == 79) return 79;   /* O -> O */
+    if (ch == 83) return 50;   /* S -> 2 */
+    if (ch == 84) return 84;   /* T -> T */
+    if (ch == 85) return 85;   /* U -> U */
+    if (ch == 86) return 86;   /* V -> V */
+    if (ch == 87) return 87;   /* W -> W */
+    if (ch == 88) return 88;   /* X -> X */
+    if (ch == 89) return 89;   /* Y -> Y */
+    if (ch == 90) return 53;   /* Z -> 5 */
+
+    if (ch == 49) return 49;   /* 1 -> 1 */
+    if (ch == 50) return 83;   /* 2 -> S */
+    if (ch == 51) return 69;   /* 3 -> E */
+    if (ch == 53) return 90;   /* 5 -> Z */
+    if (ch == 56) return 56;   /* 8 -> 8 */
+
+    return -1;
+}
+
+int main() {
+    int s[30];
+    int n;
+    int t;
+
+    n = getint();
+    for (t = 0; t < n; t = t + 1) {
+        int len;
+        int i;
+        int p;
+        int m;
+        int half;
+        int code;
+
+        len = getint();
+        for (i = 0; i < len; i = i + 1) {
+            s[i] = getint();
+        }
+
+        p = 1;
+        m = 1;
+        half = (len + 1) / 2;
+        for (i = 0; i < half; i = i + 1) {
+            if (s[i] != s[len - 1 - i]) p = 0;
+            if (mirror(s[i]) != s[len - 1 - i]) m = 0;
+        }
+
+        code = m * 2 + p;
+        printf("%d\n", code);
+        printf("\n");
+    }
+    return 0;
+}

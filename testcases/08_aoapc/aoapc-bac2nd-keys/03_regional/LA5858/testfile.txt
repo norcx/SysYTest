@@ -1,0 +1,392 @@
+/* LA5858 - ASCII Expression (Strict SysY conversion) */
+
+const int MOD = 2011;
+const int DOT = 46;
+const int DASH = 45;
+const int PLUS = 43;
+const int STAR = 42;
+const int LP = 40;
+const int RP = 41;
+
+const int MAXN = 24;
+const int MAXW = 128;
+const int STACK_MAX = 256;
+const int OP_NEG = 1001;
+
+int INV[2012];
+int S[MAXN * MAXW];
+int N;
+int W;
+
+int ex_x;
+int ex_y;
+
+int exgcd(int a, int b) {
+    if (b == 0) {
+        ex_x = 1;
+        ex_y = 0;
+        return a;
+    }
+    int g;
+    int x1;
+    int y1;
+
+    g = exgcd(b, a % b);
+
+    x1 = ex_x;
+    y1 = ex_y;
+
+    ex_x = y1;
+    ex_y = x1 - (a / b) * y1;
+
+    return g;
+}
+
+int get_cell(int r, int c) { return S[r * MAXW + c]; }
+void set_cell(int r, int c, int v) { S[r * MAXW + c] = v; }
+
+int is_digit(int c) {
+    if (c >= 48 && c <= 57) return 1;
+    return 0;
+}
+
+int mod_norm(int x) {
+    x = x % MOD;
+    if (x < 0) x = x + MOD;
+    return x;
+}
+
+int mod_pow(int a, int p) {
+    int i;
+    int r;
+    r = 1;
+    for (i = 0; i < p; i = i + 1) r = r * a % MOD;
+    return r;
+}
+
+int precedence(int op) {
+    if (op == OP_NEG) return 3;
+    if (op == STAR) return 2;
+    if (op == PLUS || op == DASH) return 1;
+    return 0;
+}
+
+int base_line(int top, int bottom, int left, int right) {
+    int i;
+    int j;
+    for (i = left; i < right; i = i + 1) {
+        for (j = top; j < bottom; j = j + 1) {
+            if (get_cell(j, i) != DOT) return j;
+        }
+    }
+    return top;
+}
+
+int eval_region(int top, int bottom, int left, int right) {
+    int base;
+    int i;
+    int pos;
+
+    int valStack[STACK_MAX];
+    int opStack[STACK_MAX];
+    int valTop;
+    int opTop;
+    int expectingOperand;
+
+    base = base_line(top, bottom, left, right);
+
+    pos = left;
+    for (i = left; i < right; i = i + 1) {
+        if (get_cell(base, i) != DOT) {
+            pos = i;
+            break;
+        }
+    }
+
+    valTop = 0;
+    opTop = 0;
+    expectingOperand = 1;
+
+    for (;;) {
+        int c;
+        if (pos >= right) break;
+
+        c = get_cell(base, pos);
+        if (c == DOT) {
+            pos = pos + 1;
+            continue;
+        }
+
+        if (expectingOperand == 1) {
+            if (c == DASH) {
+                int c2;
+                c2 = DOT;
+                if (pos + 1 < right) c2 = get_cell(base, pos + 1);
+
+                if (c2 == DASH) {
+                    int leftInner;
+                    int scan;
+                    int nextPos;
+                    int regionRight;
+                    int num;
+                    int den;
+                    int val;
+
+                    leftInner = pos + 1;
+                    scan = pos;
+                    for (; scan < right; scan = scan + 1) {
+                        if (get_cell(base, scan) != DASH) break;
+                    }
+
+                    nextPos = scan + 1;
+                    regionRight = nextPos - 2;
+
+                    num = eval_region(top, base, leftInner, regionRight);
+                    den = eval_region(base + 1, bottom, leftInner, regionRight);
+                    val = num * INV[den] % MOD;
+
+                    valStack[valTop] = val;
+                    valTop = valTop + 1;
+                    pos = nextPos;
+
+                    for (;;) {
+                        int t;
+                        if (opTop > 0 && opStack[opTop - 1] == OP_NEG) {
+                            opTop = opTop - 1;
+                            t = valStack[valTop - 1];
+                            t = mod_norm(0 - t);
+                            valStack[valTop - 1] = t;
+                            continue;
+                        }
+                        break;
+                    }
+
+                    expectingOperand = 0;
+                    continue;
+                }
+
+                if (c2 == DOT) {
+                    opStack[opTop] = OP_NEG;
+                    opTop = opTop + 1;
+                    pos = pos + 2;
+                    expectingOperand = 1;
+                    continue;
+                }
+            }
+
+            if (c == LP) {
+                opStack[opTop] = LP;
+                opTop = opTop + 1;
+                pos = pos + 2;
+                expectingOperand = 1;
+                continue;
+            }
+
+            if (is_digit(c) == 1) {
+                int val;
+                val = c - 48;
+                pos = pos + 2;
+
+                if (base > top) {
+                    int expc;
+                    if (pos - 1 < right) {
+                        expc = get_cell(base - 1, pos - 1);
+                        if (is_digit(expc) == 1 && get_cell(base, pos - 1) == DOT) {
+                            val = mod_pow(val, expc - 48);
+                            pos = pos + 1;
+                        }
+                    }
+                }
+
+                valStack[valTop] = val;
+                valTop = valTop + 1;
+
+                for (;;) {
+                    int t2;
+                    if (opTop > 0 && opStack[opTop - 1] == OP_NEG) {
+                        opTop = opTop - 1;
+                        t2 = valStack[valTop - 1];
+                        t2 = mod_norm(0 - t2);
+                        valStack[valTop - 1] = t2;
+                        continue;
+                    }
+                    break;
+                }
+
+                expectingOperand = 0;
+                continue;
+            }
+
+            pos = pos + 1;
+            continue;
+        }
+
+        if (c == RP) {
+            for (;;) {
+                int op;
+                int a;
+                int b;
+                int res;
+                if (opTop <= 0) break;
+
+                op = opStack[opTop - 1];
+                opTop = opTop - 1;
+                if (op == LP) break;
+
+                if (op == OP_NEG) {
+                    a = valStack[valTop - 1];
+                    a = mod_norm(0 - a);
+                    valStack[valTop - 1] = a;
+                    continue;
+                }
+
+                b = valStack[valTop - 1];
+                valTop = valTop - 1;
+                a = valStack[valTop - 1];
+
+                if (op == STAR) res = a * b % MOD;
+                else if (op == PLUS) res = mod_norm(a + b);
+                else res = mod_norm(a - b);
+                valStack[valTop - 1] = res;
+            }
+
+            pos = pos + 2;
+
+            if (base > top) {
+                int expc2;
+                if (pos - 1 < right) {
+                    expc2 = get_cell(base - 1, pos - 1);
+                    if (is_digit(expc2) == 1 && get_cell(base, pos - 1) == DOT) {
+                        int t3;
+                        t3 = valStack[valTop - 1];
+                        t3 = mod_pow(t3, expc2 - 48);
+                        valStack[valTop - 1] = t3;
+                        pos = pos + 1;
+                    }
+                }
+            }
+
+            for (;;) {
+                int t4;
+                if (opTop > 0 && opStack[opTop - 1] == OP_NEG) {
+                    opTop = opTop - 1;
+                    t4 = valStack[valTop - 1];
+                    t4 = mod_norm(0 - t4);
+                    valStack[valTop - 1] = t4;
+                    continue;
+                }
+                break;
+            }
+
+            expectingOperand = 0;
+            continue;
+        }
+
+        if (c == PLUS || c == DASH || c == STAR) {
+            int currOp;
+            currOp = c;
+
+            for (;;) {
+                int topOp;
+                int a2;
+                int b2;
+                int res2;
+                if (opTop <= 0) break;
+
+                topOp = opStack[opTop - 1];
+                if (topOp == LP) break;
+                if (precedence(topOp) < precedence(currOp)) break;
+
+                opTop = opTop - 1;
+
+                if (topOp == OP_NEG) {
+                    a2 = valStack[valTop - 1];
+                    a2 = mod_norm(0 - a2);
+                    valStack[valTop - 1] = a2;
+                    continue;
+                }
+
+                b2 = valStack[valTop - 1];
+                valTop = valTop - 1;
+                a2 = valStack[valTop - 1];
+
+                if (topOp == STAR) res2 = a2 * b2 % MOD;
+                else if (topOp == PLUS) res2 = mod_norm(a2 + b2);
+                else res2 = mod_norm(a2 - b2);
+                valStack[valTop - 1] = res2;
+            }
+
+            opStack[opTop] = currOp;
+            opTop = opTop + 1;
+            pos = pos + 2;
+            expectingOperand = 1;
+            continue;
+        }
+
+        break;
+    }
+
+    for (;;) {
+        int op2;
+        int a3;
+        int b3;
+        int res3;
+        if (opTop <= 0) break;
+
+        op2 = opStack[opTop - 1];
+        opTop = opTop - 1;
+        if (op2 == LP) continue;
+
+        if (op2 == OP_NEG) {
+            a3 = valStack[valTop - 1];
+            a3 = mod_norm(0 - a3);
+            valStack[valTop - 1] = a3;
+            continue;
+        }
+
+        b3 = valStack[valTop - 1];
+        valTop = valTop - 1;
+        a3 = valStack[valTop - 1];
+
+        if (op2 == STAR) res3 = a3 * b3 % MOD;
+        else if (op2 == PLUS) res3 = mod_norm(a3 + b3);
+        else res3 = mod_norm(a3 - b3);
+        valStack[valTop - 1] = res3;
+    }
+
+    if (valTop <= 0) return 0;
+    return mod_norm(valStack[valTop - 1]);
+}
+
+int mod_inv(int a) {
+    exgcd(a, MOD);
+    return mod_norm(ex_x);
+}
+
+int main() {
+    int i;
+    int j;
+    int r;
+    int c;
+
+    for (i = 1; i < MOD; i = i + 1) {
+        INV[i] = mod_inv(i);
+    }
+
+    for (;;) {
+        int ans;
+        N = getint();
+        if (N == 0) break;
+
+        W = getint();
+        for (r = 0; r < N; r = r + 1) {
+            for (c = 0; c < W; c = c + 1) set_cell(r, c, getint());
+            for (; c < MAXW; c = c + 1) set_cell(r, c, DOT);
+        }
+
+        ans = eval_region(0, N, 0, W);
+        printf("%d\n", ans);
+    }
+
+    return 0;
+}

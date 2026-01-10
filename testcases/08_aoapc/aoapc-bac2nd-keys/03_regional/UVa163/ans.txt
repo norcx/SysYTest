@@ -1,0 +1,5 @@
+Illegal stopping place
+A1E S1N E
+A3W S2N W
+Illegal stopping place
+A1E S2N W

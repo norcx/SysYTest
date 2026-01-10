@@ -1,0 +1,62 @@
+/* Description:
+ *   Ducci Sequence (UVa 1594) converted to Strict SysY.
+ *   Uses a 1000-step cap: if not ZERO by then, reports LOOP.
+ */
+
+int abs_int(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+int is_zero(int a[], int n) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        if (a[i] != 0) return 0;
+    }
+    return 1;
+}
+
+void next_seq(int a[], int n) {
+    int a0;
+    int i;
+    a0 = a[0];
+    for (i = 0; i < n; i = i + 1) {
+        if (i == n - 1) a[i] = abs_int(a[i] - a0);
+        else a[i] = abs_int(a[i] - a[i + 1]);
+    }
+    return;
+}
+
+int main() {
+    int T;
+    int tc;
+    int n;
+    int seq[20];
+    int i;
+    int step;
+    int printed;
+
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        n = getint();
+        for (i = 0; i < n; i = i + 1) seq[i] = getint();
+
+        printed = 0;
+        if (is_zero(seq, n) == 1) {
+            printf("ZERO\n");
+            printed = 1;
+        }
+
+        for (step = 0; step < 1000 && printed == 0; step = step + 1) {
+            next_seq(seq, n);
+            if (is_zero(seq, n) == 1) {
+                printf("ZERO\n");
+                printed = 1;
+            }
+        }
+
+        if (printed == 0) printf("LOOP\n");
+    }
+
+    return 0;
+}

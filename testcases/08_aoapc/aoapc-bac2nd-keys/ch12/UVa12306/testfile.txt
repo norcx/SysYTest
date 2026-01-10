@@ -1,0 +1,571 @@
+/* Description:
+ *   SysY adaptation of a geometric "sketch" manipulator.
+ *   Input is integer-only (one per line): operations add polylines or remove segments near a point.
+ *   Output lists vertices (x,y) and undirected edges by vertex id.
+ */
+
+const int MAXP = 256;
+const int MAXS = 512;
+
+int px[MAXP];
+int py[MAXP];
+int pointCnt;
+
+int sa[MAXS];
+int sb[MAXS];
+int segAlive[MAXS];
+int segCnt;
+
+int degArr[MAXP];
+int inc1[MAXP];
+int inc2[MAXP];
+int pid[MAXP];
+
+int g_ix;
+int g_iy;
+
+int absInt(int x) {
+    if (x < 0) return -x;
+    return x;
+}
+
+int lessXY(int x1, int y1, int x2, int y2) {
+    if (x1 < x2) return 1;
+    if (x1 > x2) return 0;
+    if (y1 < y2) return 1;
+    return 0;
+}
+
+int eqXY(int x1, int y1, int x2, int y2) {
+    if (x1 != x2) return 0;
+    if (y1 != y2) return 0;
+    return 1;
+}
+
+int lessPointIdx(int i, int j) {
+    return lessXY(px[i], py[i], px[j], py[j]);
+}
+
+int eqPointIdx(int i, int j) {
+    return eqXY(px[i], py[i], px[j], py[j]);
+}
+
+int cross2(int ax, int ay, int bx, int by) {
+    return ax * by - ay * bx;
+}
+
+int dot2(int ax, int ay, int bx, int by) {
+    return ax * bx + ay * by;
+}
+
+int getPointId(int x, int y) {
+    int i;
+    for (i = 0; i < pointCnt; i = i + 1) {
+        if (eqXY(px[i], py[i], x, y)) return i;
+    }
+    if (pointCnt >= MAXP) return 0;
+    px[pointCnt] = x;
+    py[pointCnt] = y;
+    pointCnt = pointCnt + 1;
+    return pointCnt - 1;
+}
+
+void setSeg(int idx, int a, int b) {
+    int ax, ay, bx, by;
+    ax = px[a];
+    ay = py[a];
+    bx = px[b];
+    by = py[b];
+    if (lessXY(bx, by, ax, ay)) {
+        sa[idx] = b;
+        sb[idx] = a;
+    } else {
+        sa[idx] = a;
+        sb[idx] = b;
+    }
+    segAlive[idx] = 1;
+}
+
+int segEquals(int s, int a, int b) {
+    int a1, b1;
+    a1 = a;
+    b1 = b;
+    if (lessPointIdx(b1, a1)) {
+        a1 = b;
+        b1 = a;
+    }
+    if (sa[s] != a1) return 0;
+    if (sb[s] != b1) return 0;
+    return 1;
+}
+
+void addSegByPoint(int a, int b) {
+    int i;
+    if (a == b) return;
+    if (segCnt >= MAXS) return;
+    if (lessPointIdx(b, a)) {
+        i = a;
+        a = b;
+        b = i;
+    }
+    for (i = 0; i < segCnt; i = i + 1) {
+        if (segAlive[i] == 1 && segEquals(i, a, b) == 1) return;
+    }
+    setSeg(segCnt, a, b);
+    segCnt = segCnt + 1;
+}
+
+int onSegmentCoords(int ax, int ay, int bx, int by, int x, int y) {
+    int vx, vy, wx, wy;
+    int c, d;
+    vx = bx - ax;
+    vy = by - ay;
+    wx = x - ax;
+    wy = y - ay;
+    c = cross2(vx, vy, wx, wy);
+    if (c != 0) return 0;
+    d = dot2(x - ax, y - ay, x - bx, y - by);
+    if (d <= 0) return 1;
+    return 0;
+}
+
+int onSegmentInteriorCoords(int ax, int ay, int bx, int by, int x, int y) {
+    int d;
+    if (onSegmentCoords(ax, ay, bx, by, x, y) == 0) return 0;
+    if (eqXY(ax, ay, x, y) == 1) return 0;
+    if (eqXY(bx, by, x, y) == 1) return 0;
+    d = dot2(x - ax, y - ay, x - bx, y - by);
+    if (d < 0) return 1;
+    return 0;
+}
+
+int isParallelSeg(int s1, int s2) {
+    int a1, b1, a2, b2;
+    int v1x, v1y, v2x, v2y;
+    a1 = sa[s1];
+    b1 = sb[s1];
+    a2 = sa[s2];
+    b2 = sb[s2];
+    v1x = px[b1] - px[a1];
+    v1y = py[b1] - py[a1];
+    v2x = px[b2] - px[a2];
+    v2y = py[b2] - py[a2];
+    if (cross2(v1x, v1y, v2x, v2y) == 0) return 1;
+    return 0;
+}
+
+int isCollinearSegWithLine(int s, int a, int b) {
+    int p1, p2;
+    int vx, vy, wx, wy;
+    int c1, c2;
+    p1 = sa[s];
+    p2 = sb[s];
+    vx = px[b] - px[a];
+    vy = py[b] - py[a];
+    wx = px[p2] - px[p1];
+    wy = py[p2] - py[p1];
+    c1 = cross2(vx, vy, wx, wy);
+    if (c1 != 0) return 0;
+    c2 = cross2(vx, vy, px[p1] - px[a], py[p1] - py[a]);
+    if (c2 != 0) return 0;
+    return 1;
+}
+
+int overlapCollinear(int a1, int b1, int a2, int b2) {
+    if (lessPointIdx(a1, b2) == 1 && lessPointIdx(a2, b1) == 1) return 1;
+    return 0;
+}
+
+int lineIntersectionInt(int p1, int p2, int q1, int q2) {
+    int vx, vy, wx, wy, ux, uy;
+    int den, tnum;
+    int xnum, ynum;
+    vx = px[p2] - px[p1];
+    vy = py[p2] - py[p1];
+    wx = px[q2] - px[q1];
+    wy = py[q2] - py[q1];
+    ux = px[p1] - px[q1];
+    uy = py[p1] - py[q1];
+    den = cross2(vx, vy, wx, wy);
+    if (den == 0) return 0;
+    tnum = cross2(wx, wy, ux, uy);
+    if (den < 0) {
+        den = -den;
+        tnum = -tnum;
+    }
+    xnum = px[p1] * den + vx * tnum;
+    ynum = py[p1] * den + vy * tnum;
+    if (xnum % den != 0) return 0;
+    if (ynum % den != 0) return 0;
+    g_ix = xnum / den;
+    g_iy = ynum / den;
+    return 1;
+}
+
+void sortPointIdxArr(int a[], int n) {
+    int i, j, minPos, tmp;
+    for (i = 0; i < n; i = i + 1) {
+        minPos = i;
+        for (j = i + 1; j < n; j = j + 1) {
+            if (lessPointIdx(a[j], a[minPos]) == 1) minPos = j;
+        }
+        tmp = a[i];
+        a[i] = a[minPos];
+        a[minPos] = tmp;
+    }
+}
+
+void addSegmentByCoords(int x1, int y1, int x2, int y2) {
+    int a, b;
+    a = getPointId(x1, y1);
+    b = getPointId(x2, y2);
+    if (a == b) return;
+
+    /* 1) merge collinear overlapping segments */
+    for (;;) {
+        int changed;
+        int i;
+        changed = 0;
+        for (i = 0; i < segCnt; i = i + 1) {
+            int s1, s2;
+            if (segAlive[i] == 0) continue;
+            if (isCollinearSegWithLine(i, a, b) == 0) continue;
+            s1 = sa[i];
+            s2 = sb[i];
+            if (overlapCollinear(a, b, s1, s2) == 1) {
+                if (lessPointIdx(s1, a) == 1) a = s1;
+                if (lessPointIdx(b, s2) == 1) b = s2;
+                segAlive[i] = 0;
+                changed = 1;
+                break;
+            }
+        }
+        if (changed == 0) break;
+    }
+
+    /* 2) find intersections and split */
+    {
+        int newPts[64];
+        int newN;
+        int baseSegCnt;
+        int i;
+        newN = 0;
+        baseSegCnt = segCnt;
+        for (i = 0; i < baseSegCnt; i = i + 1) {
+            int p1, p2;
+            int ok;
+            int l1x, l1y, l2x, l2y;
+            int s1x, s1y, s2x, s2y;
+            int ip;
+
+            if (segAlive[i] == 0) continue;
+            p1 = sa[i];
+            p2 = sb[i];
+
+            ok = lineIntersectionInt(p1, p2, a, b);
+            if (ok == 0) continue;
+
+            l1x = px[a];
+            l1y = py[a];
+            l2x = px[b];
+            l2y = py[b];
+            s1x = px[p1];
+            s1y = py[p1];
+            s2x = px[p2];
+            s2y = py[p2];
+
+            if (onSegmentCoords(l1x, l1y, l2x, l2y, g_ix, g_iy) == 0) continue;
+            if (onSegmentCoords(s1x, s1y, s2x, s2y, g_ix, g_iy) == 0) continue;
+
+            ip = getPointId(g_ix, g_iy);
+
+            if (onSegmentInteriorCoords(l1x, l1y, l2x, l2y, g_ix, g_iy) == 1) {
+                if (newN < 64) {
+                    newPts[newN] = ip;
+                    newN = newN + 1;
+                }
+            }
+
+            if (onSegmentInteriorCoords(s1x, s1y, s2x, s2y, g_ix, g_iy) == 1) {
+                segAlive[i] = 0;
+                addSegByPoint(p1, ip);
+                addSegByPoint(ip, p2);
+            }
+        }
+
+        newPts[newN] = a;
+        newN = newN + 1;
+        newPts[newN] = b;
+        newN = newN + 1;
+
+        sortPointIdxArr(newPts, newN);
+
+        /* unique */
+        {
+            int uniq[64];
+            int m;
+            m = 0;
+            for (i = 0; i < newN; i = i + 1) {
+                if (m == 0) {
+                    uniq[m] = newPts[i];
+                    m = m + 1;
+                } else {
+                    if (eqPointIdx(uniq[m - 1], newPts[i]) == 0) {
+                        uniq[m] = newPts[i];
+                        m = m + 1;
+                    }
+                }
+            }
+            for (i = 0; i + 1 < m; i = i + 1) {
+                addSegByPoint(uniq[i], uniq[i + 1]);
+            }
+        }
+    }
+}
+
+int segDistLeq(int seg, int x, int y, int d) {
+    int a, b;
+    int ax, ay, bx, by;
+    int dx, dy;
+    int vx, vy, wx, wy;
+    int dot1, dotB;
+    int d2;
+    int crossv;
+    int len2;
+    int left, right;
+    if (segAlive[seg] == 0) return 0;
+    a = sa[seg];
+    b = sb[seg];
+    ax = px[a];
+    ay = py[a];
+    bx = px[b];
+    by = py[b];
+    dx = bx - ax;
+    dy = by - ay;
+    vx = x - ax;
+    vy = y - ay;
+    wx = x - bx;
+    wy = y - by;
+    dot1 = dot2(dx, dy, vx, vy);
+    dotB = dot2(dx, dy, wx, wy);
+    d2 = d * d;
+    if (dot1 <= 0) {
+        if (vx * vx + vy * vy <= d2) return 1;
+        return 0;
+    }
+    len2 = dx * dx + dy * dy;
+    if (dotB >= 0) {
+        if (wx * wx + wy * wy <= d2) return 1;
+        return 0;
+    }
+    crossv = cross2(dx, dy, vx, vy);
+    crossv = absInt(crossv);
+    left = crossv * crossv;
+    right = d2 * len2;
+    if (left <= right) return 1;
+    return 0;
+}
+
+void removeNearPoint(int x, int y, int d) {
+    int i;
+    for (i = 0; i < segCnt; i = i + 1) {
+        if (segDistLeq(i, x, y, d) == 1) segAlive[i] = 0;
+    }
+}
+
+void recomputeDegrees() {
+    int i;
+    for (i = 0; i < pointCnt; i = i + 1) {
+        degArr[i] = 0;
+        inc1[i] = -1;
+        inc2[i] = -1;
+    }
+    for (i = 0; i < segCnt; i = i + 1) {
+        int a, b;
+        if (segAlive[i] == 0) continue;
+        a = sa[i];
+        b = sb[i];
+        if (degArr[a] == 0) inc1[a] = i;
+        else if (degArr[a] == 1) inc2[a] = i;
+        degArr[a] = degArr[a] + 1;
+        if (degArr[b] == 0) inc1[b] = i;
+        else if (degArr[b] == 1) inc2[b] = i;
+        degArr[b] = degArr[b] + 1;
+    }
+}
+
+void combineCollinear() {
+    for (;;) {
+        int merged;
+        int i;
+        merged = 0;
+        recomputeDegrees();
+        for (i = 0; i < pointCnt; i = i + 1) {
+            int s1, s2;
+            int o1, o2;
+            int v1x, v1y, v2x, v2y;
+            if (degArr[i] != 2) continue;
+            s1 = inc1[i];
+            s2 = inc2[i];
+            if (s1 < 0 || s2 < 0) continue;
+            if (segAlive[s1] == 0 || segAlive[s2] == 0) continue;
+            if (sa[s1] == i) o1 = sb[s1]; else o1 = sa[s1];
+            if (sa[s2] == i) o2 = sb[s2]; else o2 = sa[s2];
+            v1x = px[o1] - px[i];
+            v1y = py[o1] - py[i];
+            v2x = px[o2] - px[i];
+            v2y = py[o2] - py[i];
+            if (cross2(v1x, v1y, v2x, v2y) == 0) {
+                segAlive[s1] = 0;
+                segAlive[s2] = 0;
+                addSegByPoint(o1, o2);
+                merged = 1;
+                break;
+            }
+        }
+        if (merged == 0) break;
+    }
+}
+
+void initCase() {
+    int i;
+    pointCnt = 0;
+    segCnt = 0;
+    for (i = 0; i < MAXS; i = i + 1) segAlive[i] = 0;
+}
+
+void sortUsedPoints(int usedIdx[], int n) {
+    int i, j, minPos, tmp;
+    for (i = 0; i < n; i = i + 1) {
+        minPos = i;
+        for (j = i + 1; j < n; j = j + 1) {
+            if (lessPointIdx(usedIdx[j], usedIdx[minPos]) == 1) minPos = j;
+        }
+        tmp = usedIdx[i];
+        usedIdx[i] = usedIdx[minPos];
+        usedIdx[minPos] = tmp;
+    }
+}
+
+void sortEdges(int ea[], int eb[], int n) {
+    int i, j, minPos;
+    int ta, tb;
+    for (i = 0; i < n; i = i + 1) {
+        minPos = i;
+        for (j = i + 1; j < n; j = j + 1) {
+            if (ea[j] < ea[minPos] || ea[j] == ea[minPos] && eb[j] < eb[minPos]) minPos = j;
+        }
+        ta = ea[i];
+        tb = eb[i];
+        ea[i] = ea[minPos];
+        eb[i] = eb[minPos];
+        ea[minPos] = ta;
+        eb[minPos] = tb;
+    }
+}
+
+int main() {
+    int n;
+    for (;;) {
+        int i;
+        n = getint();
+        if (n == 0) break;
+        initCase();
+        for (i = 0; i < n; i = i + 1) {
+            int op;
+            op = getint();
+            if (op == 1) {
+                int k;
+                int j;
+                int lastId;
+                k = getint();
+                lastId = -1;
+                for (j = 0; j < k; j = j + 1) {
+                    int x, y;
+                    int curId;
+                    x = getint();
+                    y = getint();
+                    curId = getPointId(x, y);
+                    if (lastId >= 0) {
+                        addSegmentByCoords(px[lastId], py[lastId], px[curId], py[curId]);
+                    }
+                    lastId = curId;
+                }
+            } else {
+                if (op == 2) {
+                    int x, y, d;
+                    x = getint();
+                    y = getint();
+                    d = getint();
+                    removeNearPoint(x, y, d);
+                }
+            }
+            combineCollinear();
+        }
+
+        for (;;) {
+            int t;
+            t = getint();
+            if (t == 999) break;
+        }
+
+        recomputeDegrees();
+
+        {
+            int usedIdx[256];
+            int usedN;
+            int eA[512];
+            int eB[512];
+            int eN;
+            int s;
+
+            usedN = 0;
+            for (i = 0; i < pointCnt; i = i + 1) {
+                pid[i] = 0;
+                if (degArr[i] > 0) {
+                    usedIdx[usedN] = i;
+                    usedN = usedN + 1;
+                }
+            }
+
+            sortUsedPoints(usedIdx, usedN);
+
+            for (i = 0; i < usedN; i = i + 1) {
+                pid[usedIdx[i]] = i + 1;
+            }
+
+            printf("%d\n", usedN);
+            for (i = 0; i < usedN; i = i + 1) {
+                int idx;
+                idx = usedIdx[i];
+                printf("%d %d\n", px[idx], py[idx]);
+            }
+
+            eN = 0;
+            for (s = 0; s < segCnt; s = s + 1) {
+                int a, b;
+                if (segAlive[s] == 0) continue;
+                a = pid[sa[s]];
+                b = pid[sb[s]];
+                if (a == 0 || b == 0) continue;
+                if (a > b) {
+                    int tmp;
+                    tmp = a;
+                    a = b;
+                    b = tmp;
+                }
+                eA[eN] = a;
+                eB[eN] = b;
+                eN = eN + 1;
+            }
+
+            sortEdges(eA, eB, eN);
+
+            printf("%d\n", eN);
+            for (i = 0; i < eN; i = i + 1) {
+                printf("%d %d\n", eA[i], eB[i]);
+            }
+        }
+    }
+    return 0;
+}

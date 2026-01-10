@@ -1,0 +1,283 @@
+const int SIZE = 60013;
+const int QMAX = 30000;
+
+const int DEP1 = 20;
+const int DEP2 = 9;
+
+int key[SIZE];
+int dist1[SIZE];
+int dist2[SIZE];
+
+int q1_idx[QMAX];
+int q1_pos[QMAX];
+int q2_idx[QMAX];
+int q2_pos[QMAX];
+int q1h, q1t, q2h, q2t;
+
+int pow7[9];
+
+int tar[9];
+int target_empty;
+
+int Move[28] = {
+    0, 0, 0, 0,
+    3, 6, 3, 6,
+    5, 4, 5, 4,
+    1, 5, 1, 5,
+    6, 2, 6, 2,
+    2, 3, 2, 3,
+    4, 1, 4, 1
+};
+
+int dx[4] = {-1, 0, 1, 0};
+int dy[4] = {0, -1, 0, 1};
+
+void init_pow7() {
+    int i;
+    pow7[0] = 1;
+    for (i = 1; i < 9; i = i + 1) {
+        pow7[i] = pow7[i - 1] * 7;
+    }
+}
+
+void init_hash() {
+    int i;
+    for (i = 0; i < SIZE; i = i + 1) {
+        key[i] = -1;
+        dist1[i] = -1;
+        dist2[i] = -1;
+    }
+}
+
+int find_index(int state) {
+    int idx;
+    idx = state % SIZE;
+    for (;;) {
+        if (key[idx] == -1) {
+            key[idx] = state;
+            return idx;
+        }
+        if (key[idx] == state) return idx;
+        idx = idx + 1;
+        if (idx == SIZE) idx = 0;
+    }
+    return 0;
+}
+
+int get_digit(int state, int pos) {
+    return (state / pow7[pos]) % 7;
+}
+
+int valid(int x, int y) {
+    if (0 <= x && x < 3 && 0 <= y && y < 3) return 1;
+    return 0;
+}
+
+int move_code(int code, int dir) {
+    return Move[code * 4 + dir];
+}
+
+int build_start_state(int empty_pos) {
+    int state;
+    int i;
+    state = 0;
+    for (i = 0; i < 9; i = i + 1) {
+        if (i != empty_pos) state = state + pow7[i];
+    }
+    return state;
+}
+
+void qinit() {
+    q1h = 0;
+    q1t = 0;
+    q2h = 0;
+    q2t = 0;
+}
+
+void dfs_end(int d, int state) {
+    int v1, v2;
+    int idx;
+    if (d == 9) {
+        idx = find_index(state);
+        if (dist2[idx] == -1) {
+            dist2[idx] = 0;
+            if (q2t < QMAX) {
+                q2_idx[q2t] = idx;
+                q2_pos[q2t] = target_empty;
+                q2t = q2t + 1;
+            }
+        }
+        return;
+    }
+
+    if (tar[d] == 0) {
+        dfs_end(d + 1, state);
+        return;
+    }
+
+    if (tar[d] == 1) {
+        v1 = 1;
+        v2 = 2;
+    } else if (tar[d] == 2) {
+        v1 = 3;
+        v2 = 4;
+    } else {
+        v1 = 5;
+        v2 = 6;
+    }
+
+    dfs_end(d + 1, state + v1 * pow7[d]);
+    dfs_end(d + 1, state + v2 * pow7[d]);
+}
+
+void bfs_fill_end() {
+    int idx, pos, dist;
+    int row, col, dir, nx, ny, np;
+    int state, src, nbit, nstate, nidx;
+    for (; q2h < q2t; q2h = q2h + 1) {
+        idx = q2_idx[q2h];
+        pos = q2_pos[q2h];
+        dist = dist2[idx];
+        if (dist >= DEP2) continue;
+
+        state = key[idx];
+        row = pos / 3;
+        col = pos % 3;
+        for (dir = 0; dir < 4; dir = dir + 1) {
+            nx = row + dx[dir];
+            ny = col + dy[dir];
+            if (!valid(nx, ny)) continue;
+            np = nx * 3 + ny;
+
+            src = get_digit(state, np);
+            if (src == 0) continue;
+            nbit = move_code(src, dir);
+            nstate = state - src * pow7[np] + nbit * pow7[pos];
+
+            nidx = find_index(nstate);
+            if (dist2[nidx] == -1) {
+                dist2[nidx] = dist + 1;
+                if (q2t < QMAX) {
+                    q2_idx[q2t] = nidx;
+                    q2_pos[q2t] = np;
+                    q2t = q2t + 1;
+                }
+            }
+        }
+    }
+}
+
+int bfs_from_start(int start_state, int start_pos) {
+    int ans;
+    int start_idx;
+    int idx, pos, dist;
+    int row, col, dir, nx, ny, np;
+    int state, src, nbit, nstate, nidx;
+
+    ans = 1000000000;
+
+    start_idx = find_index(start_state);
+    dist1[start_idx] = 0;
+    if (q1t < QMAX) {
+        q1_idx[q1t] = start_idx;
+        q1_pos[q1t] = start_pos;
+        q1t = q1t + 1;
+    }
+    if (dist2[start_idx] != -1) ans = dist2[start_idx];
+
+    for (; q1h < q1t; q1h = q1h + 1) {
+        idx = q1_idx[q1h];
+        pos = q1_pos[q1h];
+        dist = dist1[idx];
+        if (dist >= DEP1) continue;
+
+        state = key[idx];
+        row = pos / 3;
+        col = pos % 3;
+        for (dir = 0; dir < 4; dir = dir + 1) {
+            nx = row + dx[dir];
+            ny = col + dy[dir];
+            if (!valid(nx, ny)) continue;
+            np = nx * 3 + ny;
+
+            src = get_digit(state, np);
+            if (src == 0) continue;
+            nbit = move_code(src, dir);
+            nstate = state - src * pow7[np] + nbit * pow7[pos];
+
+            nidx = find_index(nstate);
+            if (dist1[nidx] == -1) {
+                dist1[nidx] = dist + 1;
+                if (q1t < QMAX) {
+                    q1_idx[q1t] = nidx;
+                    q1_pos[q1t] = np;
+                    q1t = q1t + 1;
+                }
+                if (dist2[nidx] != -1) {
+                    if (dist1[nidx] + dist2[nidx] < ans) ans = dist1[nidx] + dist2[nidx];
+                }
+            }
+        }
+    }
+
+    if (ans == 1000000000) return -1;
+    return ans;
+}
+
+int solve(int start_pos) {
+    int start_state;
+    int ans;
+
+    init_hash();
+    qinit();
+
+    start_state = build_start_state(start_pos);
+
+    dfs_end(0, 0);
+    bfs_fill_end();
+
+    ans = bfs_from_start(start_state, start_pos);
+    return ans;
+}
+
+int main() {
+    int ex, ey;
+    int start_pos;
+    int i;
+    int ok;
+
+    init_pow7();
+
+    for (;;) {
+        ex = getint();
+        ey = getint();
+        if (ex == 0 || ey == 0) break;
+
+        ex = ex - 1;
+        ey = ey - 1;
+        start_pos = ey * 3 + ex;
+
+        target_empty = 0;
+        for (i = 0; i < 9; i = i + 1) {
+            tar[i] = getint();
+            if (tar[i] == 0) target_empty = i;
+        }
+
+        ok = 1;
+        for (i = 0; i < 9; i = i + 1) {
+            if (tar[i] == 1 && i != start_pos) {
+            } else if (tar[i] == 0 && i == start_pos) {
+            } else {
+                ok = 0;
+            }
+        }
+
+        if (ok == 1) {
+            printf("0\n");
+        } else {
+            printf("%d\n", solve(start_pos));
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,174 @@
+/*
+  UVa 820 - Internet Bandwidth
+  Dinic maxflow (scaled to small MAXN/MAXE), Strict SysY version.
+*/
+
+const int MAXN = 128;
+const int MAXE = 4096;
+const int INF = 1000000000;
+
+int N;
+int S;
+int T;
+int ecnt;
+
+int head[MAXN];
+int to[MAXE];
+int cap[MAXE];
+int flow[MAXE];
+int nxt[MAXE];
+int rev[MAXE];
+
+int dist[MAXN];
+int q[MAXN];
+
+int min2(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+void init_graph(int n) {
+    int i;
+    N = n;
+    ecnt = 0;
+    for (i = 0; i < N; i = i + 1) head[i] = -1;
+}
+
+void add_edge_dir(int u, int v, int c) {
+    int a;
+    int b;
+    a = ecnt;
+    ecnt = ecnt + 1;
+    b = ecnt;
+    ecnt = ecnt + 1;
+
+    to[a] = v;
+    cap[a] = c;
+    flow[a] = 0;
+    nxt[a] = head[u];
+    head[u] = a;
+    rev[a] = b;
+
+    to[b] = u;
+    cap[b] = 0;
+    flow[b] = 0;
+    nxt[b] = head[v];
+    head[v] = b;
+    rev[b] = a;
+}
+
+int bfs() {
+    int i;
+    int headq;
+    int tailq;
+    int x;
+    int e;
+    int v;
+
+    for (i = 0; i < N; i = i + 1) dist[i] = -1;
+    headq = 0;
+    tailq = 0;
+    q[tailq] = S;
+    tailq = tailq + 1;
+    dist[S] = 0;
+
+    for (headq = 0; headq < tailq; headq = headq + 1) {
+        x = q[headq];
+        for (e = head[x]; e != -1; e = nxt[e]) {
+            v = to[e];
+            if (dist[v] == -1 && cap[e] > flow[e]) {
+                dist[v] = dist[x] + 1;
+                q[tailq] = v;
+                tailq = tailq + 1;
+            }
+        }
+    }
+
+    if (dist[T] == -1) return 0;
+    return 1;
+}
+
+int dfs(int x, int a) {
+    int e;
+    int v;
+    int remain;
+    int f;
+
+    if (x == T) return a;
+
+    for (e = head[x]; e != -1; e = nxt[e]) {
+        v = to[e];
+        if (dist[v] == dist[x] + 1 && cap[e] > flow[e]) {
+            remain = cap[e] - flow[e];
+            f = dfs(v, min2(a, remain));
+            if (f > 0) {
+                flow[e] = flow[e] + f;
+                flow[rev[e]] = flow[rev[e]] - f;
+                return f;
+            }
+        }
+    }
+    return 0;
+}
+
+int maxflow(int s, int t) {
+    int total;
+    int pushed;
+    int ok;
+
+    S = s;
+    T = t;
+    total = 0;
+    for (;;) {
+        ok = bfs();
+        if (ok == 0) break;
+        for (;;) {
+            pushed = dfs(S, INF);
+            if (pushed == 0) break;
+            total = total + pushed;
+        }
+    }
+    return total;
+}
+
+int main() {
+    int kase;
+    int n;
+    int s;
+    int t;
+    int c;
+    int i;
+    int from;
+    int to2;
+    int cp;
+    int ans;
+
+    kase = 1;
+    for (;;) {
+        n = getint();
+        if (n == 0) break;
+
+        init_graph(n);
+        s = getint();
+        t = getint();
+        c = getint();
+        s = s - 1;
+        t = t - 1;
+
+        for (i = 0; i < c; i = i + 1) {
+            from = getint();
+            to2 = getint();
+            cp = getint();
+            from = from - 1;
+            to2 = to2 - 1;
+            add_edge_dir(from, to2, cp);
+            add_edge_dir(to2, from, cp);
+        }
+
+        ans = maxflow(s, t);
+        printf("Network %d\nThe bandwidth is %d.\n\n", kase, ans);
+        kase = kase + 1;
+    }
+
+    return 0;
+}

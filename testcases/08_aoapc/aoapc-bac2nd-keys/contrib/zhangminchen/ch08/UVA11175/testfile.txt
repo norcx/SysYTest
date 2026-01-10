@@ -1,0 +1,125 @@
+/* Description:
+ * Convert the given C++ graph-checking program to Strict SysY.
+ *
+ * Input:
+ *   T
+ *   For each case:
+ *     n k
+ *     k lines: u v
+ *
+ * Output:
+ *   Case #i: Yes/No
+ */
+
+const int MAXN = 305;
+const int MAXM = 100000;
+
+int n;
+int k;
+
+int g_head[MAXN];
+int g_to[MAXM];
+int g_next[MAXM];
+int g_cnt;
+
+int rg_head[MAXN];
+int rg_to[MAXM];
+int rg_next[MAXM];
+int rg_cnt;
+
+int indeg[MAXN];
+int pred_cnt[MAXN];
+
+void init_graph(int nn) {
+    int i;
+    for (i = 0; i < nn; i = i + 1) {
+        g_head[i] = -1;
+        rg_head[i] = -1;
+        pred_cnt[i] = 0;
+    }
+    g_cnt = 0;
+    rg_cnt = 0;
+    return;
+}
+
+void add_edge(int u, int v) {
+    g_to[g_cnt] = v;
+    g_next[g_cnt] = g_head[u];
+    g_head[u] = g_cnt;
+    g_cnt = g_cnt + 1;
+
+    rg_to[rg_cnt] = u;
+    rg_next[rg_cnt] = rg_head[v];
+    rg_head[v] = rg_cnt;
+    rg_cnt = rg_cnt + 1;
+    pred_cnt[v] = pred_cnt[v] + 1;
+    return;
+}
+
+int check(int nn) {
+    int u;
+    int i;
+    int e;
+    int e2;
+    int s;
+    int x;
+    int v;
+
+    for (u = 0; u < nn; u = u + 1) {
+        for (i = 0; i < nn; i = i + 1) {
+            indeg[i] = 0;
+        }
+
+        for (e = rg_head[u]; e != -1; e = rg_next[e]) {
+            s = rg_to[e];
+            for (e2 = g_head[s]; e2 != -1; e2 = g_next[e2]) {
+                x = g_to[e2];
+                indeg[x] = indeg[x] + 1;
+            }
+        }
+
+        for (v = 0; v < nn; v = v + 1) {
+            if (v == u) {
+                continue;
+            }
+            if (indeg[v] == 0) {
+                continue;
+            }
+            if (indeg[v] == pred_cnt[u]) {
+                continue;
+            }
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int main() {
+    int T;
+    int kase;
+    int i;
+    int u;
+    int v;
+    int ok;
+
+    T = getint();
+    for (kase = 1; kase <= T; kase = kase + 1) {
+        n = getint();
+        k = getint();
+        init_graph(n);
+
+        for (i = 0; i < k; i = i + 1) {
+            u = getint();
+            v = getint();
+            add_edge(u, v);
+        }
+
+        ok = check(n);
+        if (ok == 1) {
+            printf("Case #%d: Yes\n", kase);
+        } else {
+            printf("Case #%d: No\n", kase);
+        }
+    }
+    return 0;
+}

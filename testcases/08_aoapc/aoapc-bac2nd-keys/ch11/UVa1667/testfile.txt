@@ -1,0 +1,161 @@
+// UVa1667 Network Mess (converted to Strict SysY)
+const int MAXN = 55;
+
+int N;
+int A[3025];
+int Pa[55];
+int D[55];
+int Dsz;
+
+int idx(int i, int j) { return i * MAXN + j; }
+
+int find_pa(int u) {
+  if (u == Pa[u]) return u;
+  Pa[u] = find_pa(Pa[u]);
+  return Pa[u];
+}
+
+void solve_group(int G[], int gsz, int pa) {
+  int i;
+  int j;
+  int k;
+  int u;
+  int v;
+  int deg;
+
+  for (i = 0; i < gsz; i = i + 1) {
+    u = G[i];
+    Pa[u] = u;
+  }
+
+  deg = 1;
+  for (i = 0; i < gsz; i = i + 1) {
+    u = G[i];
+    if (A[idx(0, u)] == 1) {
+      deg = deg + 1;
+    } else {
+      for (j = i + 1; j < gsz; j = j + 1) {
+        v = G[j];
+        if (A[idx(0, v)] == 1) {
+        } else {
+          if (A[idx(0, u)] + A[idx(0, v)] > A[idx(u, v)]) {
+            Pa[v] = u;
+          }
+        }
+      }
+    }
+  }
+
+  int roots[55];
+  int rootsz;
+  int ru;
+  int found;
+  rootsz = 0;
+  for (i = 0; i < gsz; i = i + 1) {
+    u = G[i];
+    if (A[idx(u, 0)] == 1) {
+    } else {
+      ru = find_pa(u);
+      found = 0;
+      for (k = 0; k < rootsz; k = k + 1) {
+        if (roots[k] == ru) found = 1;
+      }
+      if (found == 0) {
+        roots[rootsz] = ru;
+        rootsz = rootsz + 1;
+      }
+    }
+  }
+
+  deg = deg + rootsz;
+  if (pa != -1) {
+    D[Dsz] = deg;
+    Dsz = Dsz + 1;
+  }
+
+  int subG[55];
+  int subSz;
+  int r;
+  for (k = 0; k < rootsz; k = k + 1) {
+    r = roots[k];
+    subSz = 0;
+    for (i = 0; i < gsz; i = i + 1) {
+      u = G[i];
+      if (A[idx(u, 0)] == 1) {
+      } else {
+        if (find_pa(u) == r) {
+          subG[subSz] = u;
+          subSz = subSz + 1;
+        }
+      }
+    }
+
+    for (i = 0; i < subSz; i = i + 1) {
+      u = subG[i];
+      A[idx(0, u)] = A[idx(0, u)] - 1;
+      A[idx(u, 0)] = A[idx(u, 0)] - 1;
+    }
+    solve_group(subG, subSz, 0);
+  }
+}
+
+void solve_all() {
+  int G[55];
+  int gsz;
+  int i;
+  Dsz = 0;
+  gsz = 0;
+  for (i = 1; i < N; i = i + 1) {
+    G[gsz] = i;
+    gsz = gsz + 1;
+  }
+  solve_group(G, gsz, -1);
+}
+
+void sort_D() {
+  int i;
+  int j;
+  int t;
+  for (i = 0; i < Dsz; i = i + 1) {
+    for (j = i + 1; j < Dsz; j = j + 1) {
+      if (D[i] > D[j]) {
+        t = D[i];
+        D[i] = D[j];
+        D[j] = t;
+      }
+    }
+  }
+}
+
+int main() {
+  int i;
+  int j;
+
+  for (;;) {
+    N = getint();
+    if (N == 0) break;
+
+    for (i = 0; i < N; i = i + 1) {
+      for (j = 0; j < N; j = j + 1) {
+        A[idx(i, j)] = getint();
+      }
+    }
+
+    solve_all();
+    sort_D();
+
+    if (Dsz == 0) {
+      printf("\n");
+    } else {
+      for (i = 0; i < Dsz; i = i + 1) {
+        if (i == Dsz - 1) {
+          printf("%d\n", D[i]);
+        } else {
+          printf("%d ", D[i]);
+        }
+      }
+    }
+  }
+
+  return 0;
+}

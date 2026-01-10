@@ -1,0 +1,104 @@
+/*
+  Strict SysY testcase converted from:
+  UVa 12508 - Triangles in the Grid
+*/
+
+int n;
+int m;
+int A;
+int B;
+
+int max2(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+int min2(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+int floor_div(int a, int b) {
+    if (b < 0) {
+        a = 0 - a;
+        b = 0 - b;
+    }
+    if (a >= 0) return a / b;
+    return 0 - (((0 - a) + b - 1) / b);
+}
+
+int ceil_div(int a, int b) {
+    if (b < 0) {
+        a = 0 - a;
+        b = 0 - b;
+    }
+    if (a >= 0) return (a + b - 1) / b;
+    return 0 - ((0 - a) / b);
+}
+
+int solve_range(int left, int right, int k) {
+    if (left > right) return 0;
+    left = ceil_div(left, k);
+    right = floor_div(right, k);
+    if (left > right) return 0;
+    return right - left + 1;
+}
+
+int solve_rect(int r, int c) {
+    int cnt;
+    int area;
+    int i;
+    cnt = 0;
+    area = r * c;
+
+    if (A <= area && area <= B) cnt = cnt + 4;
+    if (A <= area && area <= B) cnt = cnt + (2 * (r - 1) + 2 * (c - 1));
+
+    cnt = cnt + 4 * solve_range(max2(A, r), min2(B, r * c - r), r);
+    cnt = cnt + 4 * solve_range(max2(A, c), min2(B, r * c - c), c);
+
+    for (i = 1; i < r; i = i + 1) {
+        cnt = cnt + 4 * solve_range(
+            max2(r, area - B - c * i),
+            min2(area - r, area - A - c * i),
+            r
+        );
+    }
+    for (i = 1; i < c; i = i + 1) {
+        cnt = cnt + 4 * solve_range(
+            max2(i, area - B),
+            min2(i * r - i, area - A),
+            i
+        );
+    }
+    return cnt;
+}
+
+int solve_all() {
+    int cnt;
+    int r;
+    int c;
+    cnt = 0;
+    for (r = 1; r <= n; r = r + 1) {
+        for (c = 1; c <= m; c = c + 1) {
+            cnt = cnt + solve_rect(r, c) * (n - r + 1) * (m - c + 1);
+        }
+    }
+    return cnt;
+}
+
+int main() {
+    int T;
+    int t;
+    T = getint();
+    for (t = 0; t < T; t = t + 1) {
+        n = getint();
+        m = getint();
+        A = getint();
+        B = getint();
+        A = A * 2;
+        B = B * 2;
+        printf("%d\n", solve_all());
+    }
+    return 0;
+}

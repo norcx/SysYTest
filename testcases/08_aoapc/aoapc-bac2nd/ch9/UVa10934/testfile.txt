@@ -1,0 +1,63 @@
+/* Description:
+ *   Strict SysY version of UVa10934 "Dropping water balloons".
+ *   Scaled-down to 32-bit `int` only:
+ *     - balloons: 1..20
+ *     - trials:   1..31
+ *     - floors n: positive int (saturated at 2,000,000,000)
+ *
+ *   Input: repeated pairs (k, n) as integers, terminated by k == 0.
+ *          Each integer is on its own line in in.txt.
+ *   Output: minimal trials needed, or "More than 31 trials needed."
+ */
+
+const int MAXK = 20;
+const int MAXA = 31;
+const int LIMIT = 2000000000;
+
+int d[(MAXK + 1) * (MAXA + 1)];
+
+int idx(int i, int j) {
+    return i * (MAXA + 1) + j;
+}
+
+int sat_add(int a, int b) {
+    if (a > LIMIT - b) return LIMIT;
+    return a + b;
+}
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int n;
+    int ans;
+    int total;
+
+    total = (MAXK + 1) * (MAXA + 1);
+    for (i = 0; i < total; i = i + 1) d[i] = 0;
+
+    for (i = 1; i <= MAXK; i = i + 1) {
+        for (j = 1; j <= MAXA; j = j + 1) {
+            d[idx(i, j)] = sat_add(sat_add(d[idx(i - 1, j - 1)], 1), d[idx(i, j - 1)]);
+        }
+    }
+
+    for (;;) {
+        k = getint();
+        n = getint();
+        if (k == 0) break;
+
+        ans = -1;
+        for (i = 1; i <= MAXA; i = i + 1) {
+            if (d[idx(k, i)] >= n) {
+                ans = i;
+                break;
+            }
+        }
+
+        if (ans < 0) printf("More than %d trials needed.\n", MAXA);
+        else printf("%d\n", ans);
+    }
+
+    return 0;
+}

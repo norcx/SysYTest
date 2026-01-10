@@ -1,0 +1,192 @@
+/*
+  Strict SysY translation of:
+  UVa12742 - Mining in Starcraft
+*/
+
+const int MAXT = 50;
+const int MAXK = 20;
+const int CMDMAX = 6000;
+
+int t1, t2, t3, p1, p2;
+int found;
+
+int mineCnt[MAXT + 4];
+int gasTime[MAXK];
+
+int newScvCount[MAXT + 4];
+int newScvId[(MAXT + 4) * MAXK];
+
+int cmdCnt;
+int cmdTime[CMDMAX];
+int cmdType[CMDMAX];
+int cmdId[CMDMAX];
+
+void push_cmd(int time, int type, int id) {
+    cmdTime[cmdCnt] = time;
+    cmdType[cmdCnt] = type;
+    cmdId[cmdCnt] = id;
+    cmdCnt = cmdCnt + 1;
+}
+
+void add_new_scv(int time, int id) {
+    int idx;
+    idx = time * MAXK + newScvCount[time];
+    newScvId[idx] = id;
+    newScvCount[time] = newScvCount[time] + 1;
+}
+
+int cmd_less(int a, int b) {
+    if (cmdTime[a] < cmdTime[b]) return 1;
+    if (cmdTime[a] > cmdTime[b]) return 0;
+    if (cmdType[a] < cmdType[b]) return 1;
+    if (cmdType[a] > cmdType[b]) return 0;
+    if (cmdId[a] < cmdId[b]) return 1;
+    return 0;
+}
+
+void sort_cmds() {
+    int i, j, minIdx;
+    int tt, ty, id;
+    for (i = 0; i < cmdCnt; i = i + 1) {
+        minIdx = i;
+        for (j = i + 1; j < cmdCnt; j = j + 1) {
+            if (cmd_less(j, minIdx) == 1) minIdx = j;
+        }
+        tt = cmdTime[i];
+        ty = cmdType[i];
+        id = cmdId[i];
+        cmdTime[i] = cmdTime[minIdx];
+        cmdType[i] = cmdType[minIdx];
+        cmdId[i] = cmdId[minIdx];
+        cmdTime[minIdx] = tt;
+        cmdType[minIdx] = ty;
+        cmdId[minIdx] = id;
+    }
+}
+
+void dfs(int i, int G, int genCmds, int TEnd, int SCV) {
+    int gStart, g;
+    int t, j, k, tid, id, s, tt;
+    int sCnt, valid, mineSum, lastScvT;
+
+    if (i < SCV) {
+        if (i == SCV - 1) gStart = G;
+        else {
+            if (i >= 4) gStart = 1;
+            else gStart = 0;
+        }
+        for (g = gStart; g <= G && TEnd - t2 * g >= 0; g = g + 1) {
+            gasTime[i] = TEnd - t2 * g;
+            dfs(i + 1, G - g, genCmds, TEnd, SCV);
+            if (found == 1) return;
+        }
+        return;
+    }
+
+    if (genCmds == 1) cmdCnt = 0;
+    for (t = 0; t < MAXT + 4; t = t + 1) {
+        mineCnt[t] = 0;
+        newScvCount[t] = 0;
+    }
+
+    sCnt = 4;
+    for (j = 0; j < sCnt; j = j + 1) add_new_scv(0, j);
+    mineCnt[0] = 50;
+
+    valid = 1;
+    mineSum = 0;
+    lastScvT = 0;
+
+    for (t = 0; t <= TEnd; t = t + 1) {
+        if (sCnt < SCV && t + t3 > TEnd) {
+            valid = 0;
+            break;
+        }
+
+        for (k = 0; k < newScvCount[t]; k = k + 1) {
+            id = newScvId[t * MAXK + k];
+            for (tid = t; tid + t1 <= gasTime[id]; tid = tid + t1) {
+                mineCnt[tid + t1] = mineCnt[tid + t1] + 8;
+                if (genCmds == 1) push_cmd(tid, 1, id + 1);
+            }
+        }
+
+        mineSum = mineSum + mineCnt[t];
+
+        if (sCnt < SCV && mineSum >= 50 && lastScvT <= t) {
+            mineSum = mineSum - 50;
+            if (t + t3 > gasTime[sCnt]) {
+                valid = 0;
+                break;
+            }
+            lastScvT = t + t3;
+            add_new_scv(t + t3, sCnt);
+            sCnt = sCnt + 1;
+            if (genCmds == 1) push_cmd(t, 0, sCnt);
+        }
+    }
+
+    if (valid == 1 && mineSum >= p1 && sCnt == SCV) {
+        found = 1;
+        if (genCmds == 1) {
+            for (s = 0; s < SCV; s = s + 1) {
+                for (tt = gasTime[s]; tt < TEnd; tt = tt + t2) push_cmd(tt, 2, s + 1);
+            }
+        }
+    }
+}
+
+int main() {
+    int caseNo;
+    int G, L, R, last, M;
+    int scvMax, SCV;
+    int i;
+
+    caseNo = 1;
+    for (;;) {
+        t1 = getint();
+        if (t1 <= 0) break;
+        t2 = getint();
+        t3 = getint();
+        p1 = getint();
+        p2 = getint();
+
+        cmdCnt = 0;
+        G = (p2 + 7) / 8;
+        L = -1;
+        R = MAXT;
+        last = 0;
+
+        for (;;) {
+            if (last == 1) M = R;
+            else M = (L + R) / 2;
+
+            scvMax = G + 1;
+            if (scvMax < 4) scvMax = 4;
+            if (scvMax > MAXK) scvMax = MAXK;
+
+            found = 0;
+            for (SCV = 4; SCV <= scvMax; SCV = SCV + 1) {
+                for (i = 0; i < MAXK; i = i + 1) gasTime[i] = -1;
+                dfs(0, G, last, M, SCV);
+                if (found == 1) break;
+            }
+
+            if (last == 1) break;
+            if (found == 1) R = M;
+            else L = M;
+            if (L + 1 == R) last = 1;
+        }
+
+        printf("Case %d: %d\n", caseNo, R);
+        sort_cmds();
+        for (i = 0; i < cmdCnt; i = i + 1) {
+            if (cmdType[i] == 0) printf("%d %d\n", cmdTime[i], cmdType[i]);
+            else printf("%d %d %d\n", cmdTime[i], cmdId[i], cmdType[i]);
+        }
+        printf("\n");
+
+        caseNo = caseNo + 1;
+    }
+    return 0;
+}

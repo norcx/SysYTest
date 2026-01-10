@@ -1,0 +1,124 @@
+/* Description:
+ *   SysY adaptation of "UVa400 Unix ls" (column formatting).
+ *   Since Strict SysY uses integer-only I/O, filenames are represented as integers.
+ *
+ * Input format (all integers, one per line):
+ *   T
+ *   n
+ *   a1
+ *   ...
+ *   an
+ *   (repeat for T cases)
+ *
+ * Output:
+ *   For each case:
+ *     60 hyphens, then the sorted numbers printed in columns within width 60.
+ */
+
+const int MAXCOL = 60;
+const int MAXN = 105;
+
+int filenames[MAXN];
+
+int int_len(int x) {
+    int y;
+    int sign;
+    int digits;
+    sign = 0;
+    y = x;
+    if (y < 0) {
+        sign = 1;
+        y = 0 - y;
+    }
+    if (y == 0) return sign + 1;
+    digits = 0;
+    for (digits = 0; y > 0; digits = digits + 1) {
+        y = y / 10;
+    }
+    return sign + digits;
+}
+
+void print_spaces(int cnt) {
+    int i;
+    if (cnt <= 0) return;
+    for (i = 0; i < cnt; i = i + 1) {
+        printf(" ");
+    }
+    return;
+}
+
+void print_line() {
+    int i;
+    for (i = 0; i < MAXCOL; i = i + 1) {
+        printf("-");
+    }
+    printf("\n");
+    return;
+}
+
+void print_int_padded(int x, int width) {
+    int pad;
+    printf("%d", x);
+    pad = width - int_len(x);
+    print_spaces(pad);
+    return;
+}
+
+void sort_ints(int a[], int n) {
+    int i;
+    int j;
+    int key;
+    for (i = 1; i < n; i = i + 1) {
+        key = a[i];
+        for (j = i - 1; j >= 0 && a[j] > key; j = j - 1) {
+            a[j + 1] = a[j];
+        }
+        a[j + 1] = key;
+    }
+    return;
+}
+
+int main() {
+    int t;
+    int case_id;
+    int n;
+    int i;
+    int M;
+    int cols;
+    int rows;
+    int r;
+    int c;
+    int idx;
+    int width;
+    int len;
+
+    t = getint();
+    for (case_id = 0; case_id < t; case_id = case_id + 1) {
+        n = getint();
+        M = 0;
+        for (i = 0; i < n; i = i + 1) {
+            filenames[i] = getint();
+            len = int_len(filenames[i]);
+            if (len > M) M = len;
+        }
+
+        cols = (MAXCOL - M) / (M + 2) + 1;
+        rows = (n - 1) / cols + 1;
+
+        print_line();
+        sort_ints(filenames, n);
+
+        for (r = 0; r < rows; r = r + 1) {
+            for (c = 0; c < cols; c = c + 1) {
+                idx = c * rows + r;
+                if (idx < n) {
+                    width = M + 2;
+                    if (c == cols - 1) width = M;
+                    print_int_padded(filenames[idx], width);
+                }
+            }
+            printf("\n");
+        }
+    }
+    return 0;
+}

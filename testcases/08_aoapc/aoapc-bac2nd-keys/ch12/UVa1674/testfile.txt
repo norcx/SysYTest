@@ -1,0 +1,196 @@
+/*
+UVa1674 Lightning Energy Report (scaled-down Strict SysY version)
+
+Input format:
+T
+For each case:
+  N
+  N-1 edges (u, v), 0-based
+  Q
+  Q queries (u, v, w), 0-based, add w to all nodes on path u-v
+
+Output:
+Case #k:
+value(node0)
+...
+value(nodeN-1)
+*/
+
+const int MAXN = 10005;
+const int MAXE = 20010;
+const int MAXSEG = 40020;
+
+int N;
+int intSz;
+
+int Fa[MAXN];
+int HcHead[MAXN];
+int Depth[MAXN];
+int HSon[MAXN];
+int SZ[MAXN];
+int ID[MAXN];
+
+int add[MAXSEG];
+
+int head[MAXN];
+int to[MAXE];
+int nxt[MAXE];
+int edgeCnt;
+
+void graph_init(int n) {
+  int i;
+  for (i = 1; i <= n; i = i + 1) head[i] = 0;
+  edgeCnt = 0;
+  return;
+}
+
+void addEdge(int u, int v) {
+  edgeCnt = edgeCnt + 1;
+  to[edgeCnt] = v;
+  nxt[edgeCnt] = head[u];
+  head[u] = edgeCnt;
+  return;
+}
+
+void Tree_update(int o, int L, int R, int qL, int qR, int val) {
+  int M;
+  if (qL <= L && R <= qR) {
+    add[o] = add[o] + val;
+    return;
+  }
+  M = (L + R) / 2;
+  if (qL <= M) Tree_update(o * 2, L, M, qL, qR, val);
+  if (M < qR) Tree_update(o * 2 + 1, M + 1, R, qL, qR, val);
+  return;
+}
+
+void Tree_add(int qL, int qR, int val) {
+  Tree_update(1, 1, N, qL, qR, val);
+  return;
+}
+
+void Tree_init(int o, int L, int R) {
+  int M;
+  add[o] = 0;
+  if (L == R) return;
+  M = (L + R) / 2;
+  Tree_init(o * 2, L, M);
+  Tree_init(o * 2 + 1, M + 1, R);
+  return;
+}
+
+int Tree_query(int o, int L, int R, int qv, int addv) {
+  int M;
+  if (L == R) return addv + add[o];
+  M = (L + R) / 2;
+  if (qv <= M) return Tree_query(o * 2, L, M, qv, addv + add[o]);
+  return Tree_query(o * 2 + 1, M + 1, R, qv, addv + add[o]);
+}
+
+int dfs(int u, int fa) {
+  int e;
+  int v;
+  SZ[u] = 1;
+  Fa[u] = fa;
+  HSon[u] = 0;
+  Depth[u] = Depth[fa] + 1;
+  for (e = head[u]; e != 0; e = nxt[e]) {
+    v = to[e];
+    if (v != fa) {
+      SZ[u] = SZ[u] + dfs(v, u);
+      if (SZ[v] > SZ[HSon[u]]) HSon[u] = v;
+    }
+  }
+  return SZ[u];
+}
+
+void hld(int u, int fa, int x) {
+  int e;
+  int v;
+  intSz = intSz + 1;
+  ID[u] = intSz;
+  HcHead[u] = x;
+  if (HSon[u] != 0) hld(HSon[u], u, x);
+  for (e = head[u]; e != 0; e = nxt[e]) {
+    v = to[e];
+    if (v != fa && v != HSon[u]) hld(v, u, v);
+  }
+  return;
+}
+
+void addPath(int u, int v, int w) {
+  int hu;
+  int hv;
+  int tmp;
+  for (;;) {
+    hu = HcHead[u];
+    hv = HcHead[v];
+    if (hu == hv) break;
+    if (Depth[hu] < Depth[hv]) {
+      tmp = u;
+      u = v;
+      v = tmp;
+      tmp = hu;
+      hu = hv;
+      hv = tmp;
+    }
+    Tree_add(ID[hu], ID[u], w);
+    u = Fa[hu];
+  }
+  if (Depth[u] < Depth[v]) {
+    tmp = u;
+    u = v;
+    v = tmp;
+  }
+  Tree_add(ID[v], ID[u], w);
+  return;
+}
+
+int main() {
+  int T;
+  int kase;
+  int Q;
+  int i;
+  int u;
+  int v;
+  int w;
+
+  T = getint();
+  for (kase = 1; kase <= T; kase = kase + 1) {
+    N = getint();
+    Tree_init(1, 1, N);
+    graph_init(N);
+
+    SZ[0] = 0;
+    Depth[1] = 0;
+
+    for (i = 1; i < N; i = i + 1) {
+      u = getint();
+      v = getint();
+      u = u + 1;
+      v = v + 1;
+      addEdge(u, v);
+      addEdge(v, u);
+    }
+
+    dfs(1, 1);
+    intSz = 0;
+    hld(1, 1, 1);
+
+    Q = getint();
+    for (i = 0; i < Q; i = i + 1) {
+      u = getint();
+      v = getint();
+      w = getint();
+      u = u + 1;
+      v = v + 1;
+      addPath(u, v, w);
+    }
+
+    printf("Case #%d:\n", kase);
+    for (i = 1; i <= N; i = i + 1) {
+      printf("%d\n", Tree_query(1, 1, N, ID[i], 0));
+    }
+  }
+  return 0;
+}

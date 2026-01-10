@@ -1,0 +1,74 @@
+/* Box (UVa 1587): determine if 6 rectangles can form a box. */
+const int N = 6;
+int rx[6];
+int ry[6];
+
+void sort_rects() {
+  int i;
+  int j;
+  int tx;
+  int ty;
+  for (i = 0; i < N; i = i + 1) {
+    for (j = i + 1; j < N; j = j + 1) {
+      if (rx[j] < rx[i] || rx[j] == rx[i] && ry[j] < ry[i]) {
+        tx = rx[i];
+        ty = ry[i];
+        rx[i] = rx[j];
+        ry[i] = ry[j];
+        rx[j] = tx;
+        ry[j] = ty;
+      }
+    }
+  }
+  return;
+}
+
+int solve() {
+  int i;
+  sort_rects();
+  for (i = 0; i < 3; i = i + 1) {
+    if (rx[2 * i] != rx[2 * i + 1] || ry[2 * i] != ry[2 * i + 1]) {
+      return 0;
+    }
+  }
+  if (rx[1] != rx[3]) {
+    return 0;
+  }
+  if (ry[1] != rx[5]) {
+    return 0;
+  }
+  if (ry[3] != ry[5]) {
+    return 0;
+  }
+  return 1;
+}
+
+int main() {
+  int t;
+  int caseIndex;
+  int i;
+  int a;
+  int b;
+  int tmp;
+  t = getint();
+  for (caseIndex = 0; caseIndex < t; caseIndex = caseIndex + 1) {
+    for (i = 0; i < N; i = i + 1) {
+      a = getint();
+      b = getint();
+      if (a > b) {
+        tmp = a;
+        a = b;
+        b = tmp;
+      }
+      rx[i] = a;
+      ry[i] = b;
+    }
+
+    if (solve() == 1) {
+      printf("POSSIBLE\n");
+    } else {
+      printf("IMPOSSIBLE\n");
+    }
+  }
+  return 0;
+}

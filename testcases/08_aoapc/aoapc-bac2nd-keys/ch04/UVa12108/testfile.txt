@@ -1,0 +1,116 @@
+/* Description:
+ *   UVa12108 - Extraordinarily Tired Students (converted to Strict SysY)
+ */
+const int MAXN = 10;
+const int MAX_STATES = 50000;
+const int HASH_SIZE = 10007;
+
+int n;
+int a[MAXN];
+int b[MAXN];
+int c[MAXN];
+
+int head[HASH_SIZE];
+int next_idx[MAX_STATES];
+int states[MAX_STATES * MAXN];
+int state_cnt;
+
+int hash_state() {
+    int h;
+    int i;
+    h = 0;
+    i = 0;
+    for (i = 0; i < n; i = i + 1) {
+        h = (h * 131 + c[i]) % HASH_SIZE;
+    }
+    return h;
+}
+
+int seen_or_add() {
+    int h;
+    int idx;
+    int i;
+    int same;
+    h = hash_state();
+    idx = head[h];
+    for (; idx != -1; idx = next_idx[idx]) {
+        same = 1;
+        for (i = 0; i < n; i = i + 1) {
+            if (states[idx * MAXN + i] != c[i]) same = 0;
+        }
+        if (same == 1) return 1;
+    }
+
+    if (state_cnt >= MAX_STATES) return 1;
+    idx = state_cnt;
+    state_cnt = state_cnt + 1;
+    for (i = 0; i < n; i = i + 1) {
+        states[idx * MAXN + i] = c[i];
+    }
+    for (i = n; i < MAXN; i = i + 1) {
+        states[idx * MAXN + i] = 0;
+    }
+    next_idx[idx] = head[h];
+    head[h] = idx;
+    return 0;
+}
+
+int action(int kase, int t) {
+    int wake;
+    int sleep;
+    int i;
+
+    if (seen_or_add() == 1) {
+        printf("Case %d: -1\n", kase);
+        return 1;
+    }
+
+    wake = 0;
+    for (i = 0; i < n; i = i + 1) {
+        if (c[i] <= a[i]) wake = wake + 1;
+    }
+    sleep = n - wake;
+
+    if (sleep == 0) {
+        printf("Case %d: %d\n", kase, t);
+        return 1;
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+        c[i] = c[i] + 1;
+        if (c[i] == a[i] + b[i] + 1) c[i] = 1;
+        if (c[i] == a[i] + 1 && wake >= sleep) c[i] = 1;
+    }
+
+    return 0;
+}
+
+int main() {
+    int kase;
+    int i;
+    int t;
+
+    kase = 1;
+    for (;;) {
+        n = getint();
+        if (n == 0) break;
+
+        for (i = 0; i < HASH_SIZE; i = i + 1) head[i] = -1;
+        state_cnt = 0;
+
+        for (i = 0; i < n; i = i + 1) {
+            a[i] = getint();
+            b[i] = getint();
+            c[i] = getint();
+        }
+
+        t = 1;
+        for (;;) {
+            if (action(kase, t) == 1) break;
+            t = t + 1;
+        }
+        kase = kase + 1;
+    }
+
+    return 0;
+}

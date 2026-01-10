@@ -1,0 +1,78 @@
+/* Description:
+ *   UVa10570 - Meeting with Aliens
+ *   Convert C++ solution to Strict SysY.
+ */
+
+int N;
+int O[504];
+int OC[504];
+int Pos[504];
+
+int solve() {
+    int ans;
+    int i;
+    int p;
+    int tmp;
+
+    ans = 0;
+    for (i = 0; i < N; i = i + 1) {
+        p = Pos[i];
+        if (p != i) {
+            tmp = OC[i];
+            Pos[tmp] = p;
+            Pos[i] = i;
+            OC[i] = OC[p];
+            OC[p] = tmp;
+            ans = ans + 1;
+        }
+    }
+    return ans;
+}
+
+void do_copy(int st, int step) {
+    int i;
+    int idx;
+    int a;
+    for (i = 0; i < N; i = i + 1) {
+        idx = st + step * i + N;
+        idx = idx % N;
+        a = O[idx];
+        OC[i] = a;
+        Pos[a] = i;
+    }
+    return;
+}
+
+int main() {
+    int i;
+    int ans;
+    int tmp;
+
+    for (;;) {
+        N = getint();
+        if (N == 0) {
+            break;
+        }
+        for (i = 0; i < N; i = i + 1) {
+            O[i] = getint() - 1;
+        }
+
+        ans = 504;
+        for (i = 0; i < N; i = i + 1) {
+            do_copy(i, 1);
+            tmp = solve();
+            if (tmp < ans) {
+                ans = tmp;
+            }
+
+            do_copy(i, -1);
+            tmp = solve();
+            if (tmp < ans) {
+                ans = tmp;
+            }
+        }
+
+        printf("%d\n", ans);
+    }
+    return 0;
+}

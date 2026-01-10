@@ -1,0 +1,85 @@
+/* Description:
+ *   Converted from UVa1632 Alibaba (C++), adapted for Strict SysY.
+ *   Input format (this testcase):
+ *     Repeated testcases, terminated by N == 0.
+ *     For each testcase:
+ *       N
+ *       D[0]
+ *       T[0]
+ *       ...
+ *       D[N-1]
+ *       T[N-1]
+ *   Output:
+ *     One line per testcase: minimal value or "No solution".
+ */
+
+const int MAXN = 10004;
+const int INF = 1000000000;
+const int DP_SIZE = 2 * MAXN * 2;
+
+int N;
+int D[MAXN];
+int T[MAXN];
+int DP[DP_SIZE];
+
+int min_int(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+int dp_index(int layer, int j, int side) {
+    return (layer * MAXN + j) * 2 + side;
+}
+
+int main() {
+    int i;
+    int j;
+    int cur;
+    int next;
+    int ans;
+
+    for (;;) {
+        N = getint();
+        if (N == 0) break;
+
+        for (i = 0; i < N; i = i + 1) {
+            D[i] = getint();
+            T[i] = getint();
+        }
+
+        for (i = 0; i < DP_SIZE; i = i + 1) DP[i] = 0;
+
+        cur = 0;
+        for (i = N - 1; i >= 0; i = i - 1) {
+            next = 1 - cur;
+            for (j = i + 1; j < N; j = j + 1) {
+                int val0;
+                int val1;
+
+                val0 = min_int(
+                    DP[dp_index(next, j, 0)] + D[i + 1] - D[i],
+                    DP[dp_index(next, j, 1)] + D[j] - D[i]
+                );
+                if (val0 >= T[i]) val0 = INF;
+                DP[dp_index(cur, j, 0)] = val0;
+
+                val1 = min_int(
+                    DP[dp_index(cur, j - 1, 1)] + D[j] - D[j - 1],
+                    DP[dp_index(cur, j - 1, 0)] + D[j] - D[i]
+                );
+                if (val1 >= T[j]) val1 = INF;
+                DP[dp_index(cur, j, 1)] = val1;
+            }
+            cur = 1 - cur;
+        }
+
+        ans = min_int(DP[dp_index(1 - cur, N - 1, 0)], DP[dp_index(1 - cur, N - 1, 1)]);
+        if (ans == INF) {
+            printf("No solution\n");
+        } else {
+            printf("%d\n", ans);
+        }
+    }
+
+    return 0;
+}

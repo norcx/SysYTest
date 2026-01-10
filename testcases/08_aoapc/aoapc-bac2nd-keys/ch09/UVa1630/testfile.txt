@@ -1,0 +1,108 @@
+/*
+  Folding (UVa 1630) adapted to Strict SysY:
+  - Input uses integer-encoded characters.
+  - Output is the minimal encoded length (not the encoded string).
+
+  Input format:
+    t
+    n1
+    s1[0]
+    ...
+    s1[n1-1]
+    n2
+    ...
+*/
+
+const int MAXN = 110;
+const int MAXNN = 12100;
+const int INF = 1000000000;
+
+int s[110];
+int dp[12100];
+
+int idx(int l, int r) {
+    return l * MAXN + r;
+}
+
+int digitCount(int x) {
+    int cnt;
+    if (x == 0) return 1;
+    cnt = 0;
+    for (; x > 0; x = x / 10) {
+        cnt = cnt + 1;
+    }
+    return cnt;
+}
+
+int getMinCycle(int l, int r) {
+    int segLen;
+    int cycle;
+    int j;
+    int flag;
+
+    segLen = r - l + 1;
+    for (cycle = 1; cycle <= segLen / 2; cycle = cycle + 1) {
+        if (segLen % cycle != 0) continue;
+        flag = 1;
+        for (j = l; j <= r - cycle; j = j + 1) {
+            if (s[j] == s[j + cycle]) continue;
+            flag = 0;
+            break;
+        }
+        if (flag == 1) return cycle;
+    }
+    return 0;
+}
+
+int solveLen(int l, int r) {
+    int id;
+    int i;
+    int len;
+    int ansLen;
+    int cycle;
+    int k;
+    int tmp;
+
+    id = idx(l, r);
+    if (dp[id] != -1) return dp[id];
+    if (l == r) {
+        dp[id] = 1;
+        return 1;
+    }
+
+    ansLen = INF;
+    for (i = l; i < r; i = i + 1) {
+        len = solveLen(l, i) + solveLen(i + 1, r);
+        if (len < ansLen) ansLen = len;
+    }
+
+    cycle = getMinCycle(l, r);
+    if (cycle != 0) {
+        k = (r - l + 1) / cycle;
+        tmp = digitCount(k) + 2 + solveLen(l, l + cycle - 1);
+        if (tmp < ansLen) ansLen = tmp;
+    }
+
+    dp[id] = ansLen;
+    return ansLen;
+}
+
+int main() {
+    int t;
+    int cas;
+    int n;
+    int i;
+
+    t = getint();
+    for (cas = 0; cas < t; cas = cas + 1) {
+        n = getint();
+        for (i = 0; i < n; i = i + 1) {
+            s[i] = getint();
+        }
+        for (i = 0; i < MAXNN; i = i + 1) {
+            dp[i] = -1;
+        }
+        printf("%d\n", solveLen(0, n - 1));
+    }
+    return 0;
+}

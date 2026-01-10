@@ -1,0 +1,207 @@
+/*
+  UVa1349 Optimal Bus Route Design (scaled-down testcase)
+  Min-cost perfect matching via Min-Cost Max-Flow (SPFA).
+*/
+
+const int INF = 1000000000;
+
+const int MAXV = 130;
+const int MAXE = 8000;
+const int QSIZE = 4096;
+
+int head[MAXV];
+int to[MAXE];
+int nxt[MAXE];
+int cap[MAXE];
+int flow[MAXE];
+int cost[MAXE];
+int rev[MAXE];
+int fromv[MAXE];
+int edge_cnt;
+
+int distv[MAXV];
+int inq[MAXV];
+int pree[MAXV];
+int prevv[MAXV];
+int aug[MAXV];
+int q[QSIZE];
+
+int last_cost;
+
+void init_graph(int V) {
+  int i;
+  edge_cnt = 0;
+  for (i = 0; i < V; i = i + 1) head[i] = -1;
+}
+
+void add_edge(int u, int v, int c, int w) {
+  int e1;
+  int e2;
+
+  e1 = edge_cnt;
+  to[e1] = v;
+  fromv[e1] = u;
+  cap[e1] = c;
+  flow[e1] = 0;
+  cost[e1] = w;
+  nxt[e1] = head[u];
+  head[u] = e1;
+  edge_cnt = edge_cnt + 1;
+
+  e2 = edge_cnt;
+  to[e2] = u;
+  fromv[e2] = v;
+  cap[e2] = 0;
+  flow[e2] = 0;
+  cost[e2] = 0 - w;
+  nxt[e2] = head[v];
+  head[v] = e2;
+  edge_cnt = edge_cnt + 1;
+
+  rev[e1] = e2;
+  rev[e2] = e1;
+}
+
+int spfa(int s, int t, int V) {
+  int i;
+  int qh;
+  int qt;
+
+  for (i = 0; i < V; i = i + 1) {
+    distv[i] = INF;
+    inq[i] = 0;
+    pree[i] = -1;
+    prevv[i] = -1;
+    aug[i] = 0;
+  }
+
+  distv[s] = 0;
+  inq[s] = 1;
+  aug[s] = INF;
+
+  qh = 0;
+  qt = 0;
+  q[qt] = s;
+  qt = qt + 1;
+  if (qt == QSIZE) qt = 0;
+
+  for (; qh != qt;) {
+    int u;
+    int e;
+
+    u = q[qh];
+    qh = qh + 1;
+    if (qh == QSIZE) qh = 0;
+    inq[u] = 0;
+
+    for (e = head[u]; e != -1; e = nxt[e]) {
+      int v;
+      int nd;
+
+      if (cap[e] > flow[e]) {
+        v = to[e];
+        nd = distv[u] + cost[e];
+        if (distv[v] > nd) {
+          int residual;
+          int mn;
+
+          distv[v] = nd;
+          pree[v] = e;
+          prevv[v] = u;
+
+          residual = cap[e] - flow[e];
+          mn = aug[u];
+          if (mn > residual) mn = residual;
+          aug[v] = mn;
+
+          if (inq[v] == 0) {
+            q[qt] = v;
+            qt = qt + 1;
+            if (qt == QSIZE) qt = 0;
+            inq[v] = 1;
+          }
+        }
+      }
+    }
+  }
+
+  if (distv[t] == INF) return 0;
+  return 1;
+}
+
+int mincost_maxflow(int s, int t, int V) {
+  int total_flow;
+  int ok;
+
+  total_flow = 0;
+  last_cost = 0;
+
+  for (;;) {
+    ok = spfa(s, t, V);
+    if (ok == 0) break;
+
+    {
+      int f;
+      int v;
+
+      f = aug[t];
+      total_flow = total_flow + f;
+      last_cost = last_cost + distv[t] * f;
+
+      for (v = t; v != s; v = prevv[v]) {
+        int e;
+        int r;
+        e = pree[v];
+        r = rev[e];
+        flow[e] = flow[e] + f;
+        flow[r] = flow[r] - f;
+      }
+    }
+  }
+
+  return total_flow;
+}
+
+int main() {
+  int n;
+
+  n = getint();
+  for (; n != 0;) {
+    int V;
+    int s;
+    int t;
+    int i;
+    int u;
+    int got_flow;
+
+    V = n * 2 + 2;
+    s = 0;
+    t = n * 2 + 1;
+
+    init_graph(V);
+
+    for (u = 1; u <= n; u = u + 1) {
+      add_edge(s, u, 1, 0);
+      add_edge(n + u, t, 1, 0);
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+      for (;;) {
+        int j;
+        int d;
+        j = getint();
+        if (j == 0) break;
+        d = getint();
+        add_edge(i, n + j, 1, d);
+      }
+    }
+
+    got_flow = mincost_maxflow(s, t, V);
+    if (got_flow < n) printf("N\n");
+    else printf("%d\n", last_cost);
+
+    n = getint();
+  }
+
+  return 0;
+}

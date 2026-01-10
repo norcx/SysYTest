@@ -1,0 +1,172 @@
+// Guarding the Chessboard (UVa 11214) - Strict SysY adaptation
+// Input format (integers only, one per line):
+// n
+// m
+// then n*m integers: 1 means 'X', 0 means '.'
+// repeat; terminates with n=0, m=0
+
+const int MAXC = 81;
+
+int n;
+int m;
+int cells;
+
+int target[MAXC];
+int covers[MAXC * MAXC];
+int covCount[MAXC];
+int best;
+
+int dirx[8] = {-1, 1, 1, -1, 1, -1, 0, 0};
+int diry[8] = {-1, 1, -1, 1, 0, 0, 1, -1};
+
+int isValid(int x, int y) {
+  if (x < 0) return 0;
+  if (x >= n) return 0;
+  if (y < 0) return 0;
+  if (y >= m) return 0;
+  return 1;
+}
+
+void clearArr(int a[], int len) {
+  int i;
+  for (i = 0; i < len; i = i + 1) a[i] = 0;
+}
+
+int allCovered() {
+  int i;
+  for (i = 0; i < cells; i = i + 1) {
+    if (target[i] != 0 && covCount[i] == 0) return 0;
+  }
+  return 1;
+}
+
+void applyQueen(int pos, int delta) {
+  int i;
+  int base;
+  base = pos * MAXC;
+  for (i = 0; i < cells; i = i + 1) {
+    if (covers[base + i] != 0) covCount[i] = covCount[i] + delta;
+  }
+}
+
+int usefulPos(int pos) {
+  int i;
+  int base;
+  base = pos * MAXC;
+  for (i = 0; i < cells; i = i + 1) {
+    if (target[i] != 0 && covCount[i] == 0 && covers[base + i] != 0) return 1;
+  }
+  return 0;
+}
+
+void dfs(int ci, int depth) {
+  if (depth >= best) return;
+  if (allCovered() != 0) {
+    best = depth;
+    return;
+  }
+  if (ci >= cells) return;
+
+  dfs(ci + 1, depth);
+
+  if (depth + 1 >= best) return;
+  if (usefulPos(ci) == 0) return;
+
+  applyQueen(ci, 1);
+  dfs(ci + 1, depth + 1);
+  applyQueen(ci, -1);
+}
+
+int main() {
+  int caseNo;
+  int i;
+  int j;
+  int pos;
+  int d;
+  int step;
+  int x;
+  int y;
+  int v;
+
+  caseNo = 1;
+  for (; ; ) {
+    n = getint();
+    m = getint();
+    if (n == 0 && m == 0) break;
+
+    cells = n * m;
+    clearArr(target, MAXC);
+    clearArr(covers, MAXC * MAXC);
+    clearArr(covCount, MAXC);
+
+    for (i = 0; i < n; i = i + 1) {
+      for (j = 0; j < m; j = j + 1) {
+        v = getint();
+        if (v != 0) target[i * m + j] = 1;
+      }
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+      for (j = 0; j < m; j = j + 1) {
+        pos = i * m + j;
+        for (d = 0; d < 8; d = d + 1) {
+          for (step = 0; step < MAXC; step = step + 1) {
+            x = i + step * dirx[d];
+            y = j + step * diry[d];
+            if (isValid(x, y) == 0) break;
+            covers[pos * MAXC + x * m + y] = 1;
+          }
+        }
+      }
+    }
+
+    // Greedy upper bound to prune DFS.
+    {
+      int greedyCov[MAXC];
+      int cnt;
+      int t;
+      int uncovered;
+      int bestPos;
+      int bestGain;
+      int gain;
+
+      clearArr(greedyCov, MAXC);
+      cnt = 0;
+      for (t = 0; t < cells + 1; t = t + 1) {
+        uncovered = 0;
+        for (i = 0; i < cells; i = i + 1) {
+          if (target[i] != 0 && greedyCov[i] == 0) uncovered = 1;
+        }
+        if (uncovered == 0) break;
+
+        bestPos = 0;
+        bestGain = -1;
+        for (pos = 0; pos < cells; pos = pos + 1) {
+          gain = 0;
+          for (i = 0; i < cells; i = i + 1) {
+            if (target[i] != 0 && greedyCov[i] == 0 && covers[pos * MAXC + i] != 0) gain = gain + 1;
+          }
+          if (gain > bestGain) {
+            bestGain = gain;
+            bestPos = pos;
+          }
+        }
+
+        cnt = cnt + 1;
+        for (i = 0; i < cells; i = i + 1) {
+          if (covers[bestPos * MAXC + i] != 0) greedyCov[i] = 1;
+        }
+      }
+
+      best = cnt;
+      if (best < 0) best = cells + 1;
+      if (best > cells) best = cells + 1;
+    }
+
+    dfs(0, 0);
+    printf("Case %d: %d\n", caseNo, best);
+    caseNo = caseNo + 1;
+  }
+
+  return 0;
+}

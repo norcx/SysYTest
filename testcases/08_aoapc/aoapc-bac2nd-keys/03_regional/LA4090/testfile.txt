@@ -1,0 +1,210 @@
+/*
+  Strict SysY testcase converted from:
+  LA4090 - Let's Go to the Movies
+
+  Input format (integers, one per line):
+    Repeated testcases:
+      S
+      F
+      n
+      For i = 0..n-1:
+        k_i
+        child_1
+        ...
+        child_k_i
+    Terminator:
+      0
+      0
+
+  Output:
+    t. NS NF T
+*/
+
+const int MAXN = 128;
+const int MAXE = 512;
+const int INF = 1000000000;
+
+int S;
+int F;
+
+int head[MAXN];
+int to[MAXE];
+int nxt[MAXE];
+int indeg[MAXN];
+int ecnt;
+
+int dp_done[MAXN * 2];
+int dp_ns[MAXN * 2];
+int dp_nf[MAXN * 2];
+int dp_t[MAXN * 2];
+
+void graph_init(int n) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        head[i] = -1;
+        indeg[i] = 0;
+    }
+    ecnt = 0;
+}
+
+void add_edge(int u, int v) {
+    to[ecnt] = v;
+    nxt[ecnt] = head[u];
+    head[u] = ecnt;
+    ecnt = ecnt + 1;
+    indeg[v] = indeg[v] + 1;
+}
+
+int better(int ansT, int ansNS, int ansNF, int candT, int candNS, int candNF) {
+    if (candT < ansT) return 1;
+    if (candT > ansT) return 0;
+    if (candNS + candNF < ansNS + ansNF) return 1;
+    return 0;
+}
+
+void dp_calc(int u, int f) {
+    int idx;
+    int e;
+    int v;
+
+    int bestNS;
+    int bestNF;
+    int bestT;
+
+    int candNS;
+    int candNF;
+    int candT;
+
+    idx = u * 2 + f;
+    if (dp_done[idx] != 0) return;
+    dp_done[idx] = 1;
+
+    if (head[u] == -1) {
+        if (f == 0) {
+            bestNS = 1;
+            bestNF = 0;
+            bestT = S;
+            candNS = 0;
+            candNF = 1;
+            candT = F;
+            if (better(bestT, bestNS, bestNF, candT, candNS, candNF) != 0) {
+                bestNS = candNS;
+                bestNF = candNF;
+                bestT = candT;
+            }
+        } else {
+            bestNS = 0;
+            bestNF = 0;
+            bestT = 0;
+        }
+        dp_ns[idx] = bestNS;
+        dp_nf[idx] = bestNF;
+        dp_t[idx] = bestT;
+        return;
+    }
+
+    bestNS = 0;
+    bestNF = 1;
+    bestT = F;
+    e = head[u];
+    for (; e != -1; e = nxt[e]) {
+        v = to[e];
+        dp_calc(v, 1);
+        bestNS = bestNS + dp_ns[v * 2 + 1];
+        bestNF = bestNF + dp_nf[v * 2 + 1];
+        bestT = bestT + dp_t[v * 2 + 1];
+    }
+
+    candNS = 1;
+    candNF = 0;
+    candT = S;
+    e = head[u];
+    for (; e != -1; e = nxt[e]) {
+        v = to[e];
+        dp_calc(v, 0);
+        candNS = candNS + dp_ns[v * 2 + 0];
+        candNF = candNF + dp_nf[v * 2 + 0];
+        candT = candT + dp_t[v * 2 + 0];
+    }
+    if (better(bestT, bestNS, bestNF, candT, candNS, candNF) != 0) {
+        bestNS = candNS;
+        bestNF = candNF;
+        bestT = candT;
+    }
+
+    if (f != 0) {
+        candNS = 0;
+        candNF = 0;
+        candT = 0;
+        e = head[u];
+        for (; e != -1; e = nxt[e]) {
+            v = to[e];
+            dp_calc(v, 0);
+            candNS = candNS + dp_ns[v * 2 + 0];
+            candNF = candNF + dp_nf[v * 2 + 0];
+            candT = candT + dp_t[v * 2 + 0];
+        }
+        if (better(bestT, bestNS, bestNF, candT, candNS, candNF) != 0) {
+            bestNS = candNS;
+            bestNF = candNF;
+            bestT = candT;
+        }
+    }
+
+    dp_ns[idx] = bestNS;
+    dp_nf[idx] = bestNF;
+    dp_t[idx] = bestT;
+}
+
+int main() {
+    int tc;
+    int n;
+    int i;
+    int j;
+    int k;
+    int child;
+    int ansNS;
+    int ansNF;
+    int ansT;
+
+    tc = 1;
+    for (;;) {
+        S = getint();
+        F = getint();
+        if (S == 0 && F == 0) break;
+
+        n = getint();
+        graph_init(n);
+
+        for (i = 0; i < n; i = i + 1) {
+            k = getint();
+            for (j = 0; j < k; j = j + 1) {
+                child = getint();
+                add_edge(i, child);
+            }
+        }
+
+        for (i = 0; i < n * 2; i = i + 1) {
+            dp_done[i] = 0;
+            dp_ns[i] = 0;
+            dp_nf[i] = 0;
+            dp_t[i] = 0;
+        }
+
+        ansNS = 0;
+        ansNF = 0;
+        ansT = 0;
+        for (i = 0; i < n; i = i + 1) {
+            if (indeg[i] == 0) {
+                dp_calc(i, 0);
+                ansNS = ansNS + dp_ns[i * 2 + 0];
+                ansNF = ansNF + dp_nf[i * 2 + 0];
+                ansT = ansT + dp_t[i * 2 + 0];
+            }
+        }
+
+        printf("%d. %d %d %d\n", tc, ansNS, ansNF, ansT);
+        tc = tc + 1;
+    }
+    return 0;
+}

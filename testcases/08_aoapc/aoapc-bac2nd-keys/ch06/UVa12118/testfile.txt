@@ -1,0 +1,116 @@
+/* Description:
+ *   UVa12118 Inspector's Dilemma (translated to Strict SysY)
+ *   Input ends with: 0 0 0
+ */
+
+const int MAXV = 1005;
+const int MAXE2 = 10000;
+
+int head[MAXV];
+int to[MAXE2];
+int nxt[MAXE2];
+int deg[MAXV];
+int vis[MAXV];
+int st[MAXV];
+int edge_cnt;
+
+void add_edge(int u, int v) {
+  to[edge_cnt] = v;
+  nxt[edge_cnt] = head[u];
+  head[u] = edge_cnt;
+  edge_cnt = edge_cnt + 1;
+  return;
+}
+
+int main() {
+  int V;
+  int E;
+  int T;
+  int case_no;
+  int i;
+  int a;
+  int b;
+  int u;
+  int v;
+  int nc;
+  int ans;
+  int cur;
+  int odd_cnt;
+  int top;
+  int e;
+  int extra;
+  int result;
+
+  case_no = 1;
+  for (;;) {
+    V = getint();
+    E = getint();
+    T = getint();
+    if (V == 0 && E == 0 && T == 0) {
+      break;
+    }
+
+    for (i = 0; i < MAXV; i = i + 1) {
+      head[i] = -1;
+      deg[i] = 0;
+      vis[i] = 0;
+    }
+    edge_cnt = 0;
+
+    for (i = 0; i < E; i = i + 1) {
+      a = getint();
+      b = getint();
+      u = a - 1;
+      v = b - 1;
+      add_edge(u, v);
+      add_edge(v, u);
+      deg[u] = deg[u] + 1;
+      deg[v] = deg[v] + 1;
+    }
+
+    nc = 0;
+    ans = 0;
+    for (u = 0; u < V; u = u + 1) {
+      if (deg[u] > 0 && vis[u] == 0) {
+        odd_cnt = 0;
+        top = 0;
+        st[0] = u;
+        vis[u] = 1;
+
+        for (; top >= 0;) {
+          cur = st[top];
+          top = top - 1;
+
+          if (deg[cur] % 2 != 0) {
+            odd_cnt = odd_cnt + 1;
+          }
+
+          e = head[cur];
+          for (; e != -1;) {
+            v = to[e];
+            if (vis[v] == 0) {
+              vis[v] = 1;
+              top = top + 1;
+              st[top] = v;
+            }
+            e = nxt[e];
+          }
+        }
+
+        if (odd_cnt > 2) {
+          ans = ans + (odd_cnt - 2) / 2;
+        }
+        nc = nc + 1;
+      }
+    }
+
+    extra = nc - 1;
+    if (extra < 0) {
+      extra = 0;
+    }
+    result = T * (E + ans + extra);
+    printf("Case %d: %d\n", case_no, result);
+    case_no = case_no + 1;
+  }
+  return 0;
+}

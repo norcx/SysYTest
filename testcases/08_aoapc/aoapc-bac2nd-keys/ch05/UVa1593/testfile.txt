@@ -1,0 +1,82 @@
+/* Description:
+ *   Converted from "Alignment of Code" (UVa 1593).
+ *   Strings are mapped to integers; alignment uses printed digit width.
+ *
+ * Input format:
+ *   L
+ *   W1 a11 a12 ... a1W1
+ *   ...
+ *   WL aL1 ... aLWL
+ *
+ * Each value is provided via getint() (1 integer per line in in.txt).
+ */
+
+const int MAX_LINES = 100;
+const int MAX_WORDS = 2000;
+const int MAX_COLS = 50;
+
+int words[MAX_WORDS];
+int lineStart[MAX_LINES];
+int lineLen[MAX_LINES];
+int maxWidth[MAX_COLS];
+
+int num_len(int x) {
+    int len;
+    int t;
+    len = 0;
+    t = x;
+    if (t == 0) return 1;
+    if (t < 0) {
+        len = len + 1;
+        t = -t;
+    }
+    for (; t > 0; t = t / 10) len = len + 1;
+    return len;
+}
+
+int main() {
+    int L;
+    int i;
+    int j;
+    int k;
+    int pos;
+    int W;
+
+    for (i = 0; i < MAX_COLS; i = i + 1) maxWidth[i] = 0;
+
+    L = getint();
+    pos = 0;
+    for (i = 0; i < L; i = i + 1) {
+        lineStart[i] = pos;
+        W = getint();
+        lineLen[i] = W;
+        for (j = 0; j < W; j = j + 1) {
+            int x;
+            int l;
+            x = getint();
+            words[pos] = x;
+            pos = pos + 1;
+            l = num_len(x);
+            if (l > maxWidth[j]) maxWidth[j] = l;
+        }
+    }
+
+    for (i = 0; i < L; i = i + 1) {
+        int start;
+        start = lineStart[i];
+        W = lineLen[i];
+        for (j = 0; j < W; j = j + 1) {
+            int x;
+            int pad;
+            x = words[start + j];
+            printf("%d", x);
+            if (j != W - 1) {
+                pad = maxWidth[j] + 1 - num_len(x);
+                for (k = 0; k < pad; k = k + 1) printf(" ");
+            }
+        }
+        printf("\n");
+    }
+
+    return 0;
+}

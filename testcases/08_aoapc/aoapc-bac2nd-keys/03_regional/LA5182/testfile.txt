@@ -1,0 +1,178 @@
+/* Description:
+ * Theseus and the Minotaur (II) simulation, translated to Strict SysY.
+ *
+ * Input encoding (all integers, one per line):
+ * t
+ * for each case:
+ *   n
+ *   for i in [0..n-1]:
+ *     deg_i
+ *     deg_i neighbors (in given cyclic order)
+ *   Theseus_from Theseus_to Minotaur_from Minotaur_to
+ *
+ * Nodes are numbered 0..n-1 (instead of 'A'..).
+ *
+ * Output:
+ *   The Minotaur is slain in X
+ *   or
+ *   Theseus is killed between A and B
+ */
+
+const int MAXN = 32;
+const int MAXDEG = 32;
+
+int deg[MAXN];
+int adj[MAXN * MAXDEG];
+
+int candle[MAXN];
+int lastMTarget[MAXN];
+int TVis[MAXN * MAXN];
+int MVis[MAXN * MAXN];
+
+int TS_from;
+int TS_to;
+int MS_from;
+int MS_to;
+
+int idx2(int a, int b) {
+    return a * MAXN + b;
+}
+
+int adjAt(int node, int k) {
+    return adj[node * MAXDEG + k];
+}
+
+int inSameEdge(int f1, int t1, int f2, int t2) {
+    if (f1 == f2 && t1 == t2) return 1;
+    if (f1 == t2 && t1 == f2) return 1;
+    return 0;
+}
+
+int findNext(int node, int from, int clockWise) {
+    int sz;
+    int x;
+    int i;
+    int step;
+    int cnt;
+    int a;
+
+    sz = deg[node];
+    x = -1;
+    for (i = 0; i < sz; i = i + 1) {
+        if (adjAt(node, i) == from) x = i;
+    }
+
+    step = 1;
+    if (clockWise == 1) step = -1;
+
+    i = x + step;
+    i = (i + sz) % sz;
+    for (cnt = 0; cnt < sz; cnt = cnt + 1) {
+        a = adjAt(node, i);
+        if (clockWise == 1) {
+            if (MVis[idx2(node, a)] == 0) return a;
+        } else {
+            if (TVis[idx2(node, a)] == 0) return a;
+        }
+        i = i + step;
+        i = (i + sz) % sz;
+    }
+
+    return adjAt(node, 0);
+}
+
+int stepOnce() {
+    int pM;
+    int pT;
+    int nextT;
+    int nextM;
+    int tmp;
+
+    pM = MS_to;
+    if (candle[pM] == 1) {
+        pM = MS_from;
+        tmp = MS_from;
+        MS_from = MS_to;
+        MS_to = tmp;
+    }
+
+    pT = TS_to;
+    if (pM == pT) {
+        printf("The Minotaur is slain in %d\n", pM);
+        return 1;
+    }
+    if (lastMTarget[pT] >= 0) {
+        candle[pT] = 1;
+    }
+
+    nextT = 0;
+    if (lastMTarget[pT] >= 0) {
+        nextT = lastMTarget[pT];
+    } else {
+        nextT = findNext(pT, TS_from, 0);
+    }
+    TS_from = pT;
+    TS_to = nextT;
+    TVis[idx2(pT, nextT)] = 1;
+
+    nextM = findNext(pM, MS_from, 1);
+    MS_from = pM;
+    MS_to = nextM;
+    if (inSameEdge(TS_from, TS_to, MS_from, MS_to) == 1) {
+        printf("Theseus is killed between %d and %d\n", TS_from, TS_to);
+        return 1;
+    }
+
+    MVis[idx2(pM, nextM)] = 1;
+    lastMTarget[pM] = nextM;
+    return 0;
+}
+
+int main() {
+    int t;
+    int casei;
+    int n;
+    int i;
+    int j;
+    int k;
+
+    t = getint();
+    for (casei = 0; casei < t; casei = casei + 1) {
+        n = getint();
+
+        for (i = 0; i < MAXN; i = i + 1) {
+            deg[i] = 0;
+            candle[i] = 0;
+            lastMTarget[i] = -1;
+        }
+        for (i = 0; i < MAXN * MAXN; i = i + 1) {
+            TVis[i] = 0;
+            MVis[i] = 0;
+        }
+
+        for (i = 0; i < n; i = i + 1) {
+            deg[i] = getint();
+            for (j = 0; j < deg[i]; j = j + 1) {
+                adj[i * MAXDEG + j] = getint();
+            }
+            for (k = deg[i]; k < MAXDEG; k = k + 1) {
+                adj[i * MAXDEG + k] = 0;
+            }
+        }
+
+        TS_from = getint();
+        TS_to = getint();
+        MS_from = getint();
+        MS_to = getint();
+
+        if (inSameEdge(TS_from, TS_to, MS_from, MS_to) == 1) {
+            printf("Theseus is killed between %d and %d\n", TS_from, TS_to);
+        } else {
+            for (;;) {
+                if (stepOnce() == 1) break;
+            }
+        }
+    }
+
+    return 0;
+}

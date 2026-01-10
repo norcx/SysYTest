@@ -1,0 +1,6 @@
+Case 1: 65
+Case 2: 68
+Case 3: 197
+Case 4: 316
+Case 5: 0
+Case 6: 3

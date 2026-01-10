@@ -1,0 +1,152 @@
+/*
+  UVa 1649 - Binomial coefficients (scaled to int SysY)
+
+  For each given M, output all (n,k) such that C(n,k)=M, plus (M,1) and (M,M-1).
+*/
+
+const int INT_MAX = 2147483647;
+const int ANS_MAX = 2048;
+
+int ans_n[ANS_MAX];
+int ans_k[ANS_MAX];
+
+int gcd(int a, int b) {
+  int t;
+  for (; b != 0;) {
+    t = a % b;
+    a = b;
+    b = t;
+  }
+  return a;
+}
+
+int binomial_cmp(int n, int k, int m) {
+  int C;
+  int i;
+  int a;
+  int g;
+  int b;
+  int div;
+
+  C = 1;
+  for (i = 1; i <= k; i = i + 1) {
+    a = n - i + 1;
+    g = gcd(a, i);
+    b = a / g;
+    div = i / g;
+
+    C = C / div;
+    if (b != 0 && C > INT_MAX / b) return 1;
+    C = C * b;
+    if (C > m) return 1;
+  }
+  if (C == m) return 0;
+  return -1;
+}
+
+int has_pair(int cnt, int ns[], int ks[], int n, int k) {
+  int i;
+  for (i = 0; i < cnt; i = i + 1) {
+    if (ns[i] == n && ks[i] == k) return 1;
+  }
+  return 0;
+}
+
+int add_pair(int cnt, int ns[], int ks[], int n, int k) {
+  if (has_pair(cnt, ns, ks, n, k) == 0) {
+    if (cnt < ANS_MAX) {
+      ns[cnt] = n;
+      ks[cnt] = k;
+      cnt = cnt + 1;
+    }
+  }
+  return cnt;
+}
+
+void sort_pairs(int cnt, int ns[], int ks[]) {
+  int i;
+  int j;
+  int tn;
+  int tk;
+
+  for (i = 1; i < cnt; i = i + 1) {
+    tn = ns[i];
+    tk = ks[i];
+    j = i - 1;
+    for (; j >= 0; j = j - 1) {
+      if (ns[j] > tn || ns[j] == tn && ks[j] > tk) {
+        ns[j + 1] = ns[j];
+        ks[j + 1] = ks[j];
+      } else {
+        break;
+      }
+    }
+    ns[j + 1] = tn;
+    ks[j + 1] = tk;
+  }
+  return;
+}
+
+int solve(int M, int ns[], int ks[]) {
+  int cnt;
+  int k;
+  int L;
+  int R;
+  int n;
+  int mid;
+  int cmp;
+
+  cnt = 0;
+  cnt = add_pair(cnt, ns, ks, M, 1);
+  cnt = add_pair(cnt, ns, ks, M, M - 1);
+
+  for (k = 2;; k = k + 1) {
+    L = 2 * k;
+    R = M;
+    n = 0;
+
+    if (L > R) break;
+    if (binomial_cmp(L, k, M) > 0) break;
+
+    for (; L <= R && n == 0;) {
+      mid = L + (R - L) / 2;
+      cmp = binomial_cmp(mid, k, M);
+      if (cmp == 0) {
+        n = mid;
+      } else if (cmp < 0) {
+        L = mid + 1;
+      } else {
+        R = mid - 1;
+      }
+    }
+
+    if (n != 0) {
+      cnt = add_pair(cnt, ns, ks, n, k);
+      cnt = add_pair(cnt, ns, ks, n, n - k);
+    }
+  }
+
+  sort_pairs(cnt, ns, ks);
+  return cnt;
+}
+
+int main() {
+  int T;
+  int t;
+  int M;
+  int cnt;
+  int i;
+
+  T = getint();
+  for (t = 0; t < T; t = t + 1) {
+    M = getint();
+    cnt = solve(M, ans_n, ans_k);
+    printf("%d\n", cnt);
+    for (i = 0; i < cnt; i = i + 1) {
+      if (i > 0) printf(" ");
+      printf("%d,%d", ans_n[i], ans_k[i]);
+    }
+    printf("\n");
+  }
+  return 0;
+}

@@ -1,0 +1,65 @@
+/* Description:
+ *   [Add description here]
+ */
+
+const int NN = 8;
+const int MAXLEAF = 256;
+
+int N;
+int dx[NN];
+int leaf[MAXLEAF];
+int bits[NN];
+
+int main() {
+  int t;
+  int i;
+  int pow2;
+  int m;
+  int q;
+  int u;
+  int d;
+  int idx;
+
+  t = 1;
+  for (;; t = t + 1) {
+    N = getint();
+    if (N == 0) {
+      return 0;
+    }
+
+    printf("S-Tree #%d:\n", t);
+
+    for (i = 0; i < N; i = i + 1) {
+      dx[i] = getint() - 1;
+    }
+
+    pow2 = 1;
+    for (i = 0; i < N; i = i + 1) {
+      pow2 = pow2 * 2;
+    }
+
+    for (i = 0; i < pow2; i = i + 1) {
+      leaf[i] = getint();
+    }
+
+    m = getint();
+
+    for (q = 0; q < m; q = q + 1) {
+      for (i = 0; i < N; i = i + 1) {
+        bits[i] = getint();
+      }
+
+      u = 1;
+      for (d = 0; d < N; d = d + 1) {
+        u = u * 2 + bits[dx[d]];
+      }
+
+      idx = u - pow2;
+      printf("%d", leaf[idx]);
+    }
+
+    printf("\n\n");
+  }
+
+  return 0;
+}

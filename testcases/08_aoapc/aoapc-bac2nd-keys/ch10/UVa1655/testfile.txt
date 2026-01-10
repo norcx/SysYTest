@@ -1,0 +1,44 @@
+/* Description:
+ *   Count ordered triples (x, y, z) of positive integers such that x*y*z <= N.
+ *   Input: multiple N values, terminated by a final 0.
+ *   Output: "Case k: ans" per N.
+ */
+
+int main() {
+    int N;
+    int kase;
+    int ans;
+    int a;
+    int b;
+    int c;
+
+    kase = 1;
+    for (;;) {
+        N = getint();
+        if (N == 0) {
+            break;
+        }
+
+        ans = 0;
+        for (a = 1; a * a * a <= N; a = a + 1) {
+            for (b = a; b * b <= N / a; b = b + 1) {
+                c = N / (a * b);
+                if (c < b) {
+                    break;
+                }
+                if (a < b) {
+                    ans = ans + 3;
+                    ans = ans + 6 * (c - b);
+                } else {
+                    ans = ans + 1;
+                    ans = ans + 3 * (c - b);
+                }
+            }
+        }
+
+        printf("Case %d: %d\n", kase, ans);
+        kase = kase + 1;
+    }
+
+    return 0;
+}

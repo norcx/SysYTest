@@ -1,0 +1,78 @@
+const int MAXN = 20000;
+const int HASH_SIZE = 40009;
+
+int A[MAXN];
+int hKey[HASH_SIZE];
+int hVal[HASH_SIZE];
+int hTag[HASH_SIZE];
+int curTag = 1;
+
+int map_get(int key) {
+  int pos;
+  pos = key % HASH_SIZE;
+  if (pos < 0) pos = pos + HASH_SIZE;
+
+  for (;;) {
+    if (hTag[pos] != curTag) return 0;
+    if (hKey[pos] == key) return hVal[pos];
+    pos = pos + 1;
+    if (pos == HASH_SIZE) pos = 0;
+  }
+  return 0;
+}
+
+void map_put(int key, int val) {
+  int pos;
+  pos = key % HASH_SIZE;
+  if (pos < 0) pos = pos + HASH_SIZE;
+
+  for (;;) {
+    if (hTag[pos] != curTag) {
+      hTag[pos] = curTag;
+      hKey[pos] = key;
+      hVal[pos] = val;
+      break;
+    }
+    if (hKey[pos] == key) {
+      hVal[pos] = val;
+      break;
+    }
+    pos = pos + 1;
+    if (pos == HASH_SIZE) pos = 0;
+  }
+  return;
+}
+
+int main() {
+  int T;
+  int tc;
+  int n;
+  int i;
+  int L;
+  int ans;
+  int last;
+  int len;
+
+  T = getint();
+  for (tc = 0; tc < T; tc = tc + 1) {
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+      A[i] = getint();
+    }
+
+    curTag = curTag + 1;
+
+    L = 0;
+    ans = 0;
+    for (i = 0; i < n; i = i + 1) {
+      last = map_get(A[i]);
+      if (last > L) L = last;
+      map_put(A[i], i + 1);
+      len = i - L + 1;
+      if (len > ans) ans = len;
+    }
+
+    printf("%d\n", ans);
+  }
+  return 0;
+}

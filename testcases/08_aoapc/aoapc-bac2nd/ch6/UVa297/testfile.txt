@@ -1,0 +1,68 @@
+const int LEN = 32;
+const int AREA = 1024;
+const int MAXSEQ = 2048;
+
+int buf[AREA];
+int seq[MAXSEQ];
+int cnt;
+
+int draw(int a[], int p, int r, int c, int w) {
+  int ch;
+  int i;
+  int j;
+  int idx;
+  int half;
+
+  ch = a[p];
+  p = p + 1;
+
+  if (ch == 1) {
+    half = w / 2;
+    p = draw(a, p, r, c + half, half);
+    p = draw(a, p, r, c, half);
+    p = draw(a, p, r + half, c, half);
+    p = draw(a, p, r + half, c + half, half);
+  } else {
+    if (ch == 2) {
+      for (i = r; i < r + w; i = i + 1) {
+        for (j = c; j < c + w; j = j + 1) {
+          idx = i * LEN + j;
+          if (buf[idx] == 0) {
+            buf[idx] = 1;
+            cnt = cnt + 1;
+          }
+        }
+      }
+    }
+  }
+
+  return p;
+}
+
+int main() {
+  int t;
+  int case_i;
+  int k;
+  int i;
+  int n;
+
+  t = getint();
+  for (case_i = 0; case_i < t; case_i = case_i + 1) {
+    for (i = 0; i < AREA; i = i + 1) {
+      buf[i] = 0;
+    }
+    cnt = 0;
+
+    for (k = 0; k < 2; k = k + 1) {
+      n = getint();
+      for (i = 0; i < n; i = i + 1) {
+        seq[i] = getint();
+      }
+      draw(seq, 0, 0, 0, LEN);
+    }
+
+    printf("There are %d black pixels.\n", cnt);
+  }
+
+  return 0;
+}

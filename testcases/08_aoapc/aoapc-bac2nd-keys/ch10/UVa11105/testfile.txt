@@ -1,0 +1,81 @@
+/* Description:
+ *   Semi-prime H-numbers (scaled-down for Strict SysY)
+ */
+// Semi-prime H-numbers (scaled for Strict SysY)
+
+const int MAXN = 25000;
+const int MAXP = 100001;
+
+int primes[25001];
+int prime_cnt;
+int vis[25001];
+int cnt[25001];
+
+void sieve() {
+  int i;
+  int j;
+
+  for (i = 0; i <= MAXN; i = i + 1) {
+    vis[i] = 0;
+  }
+  prime_cnt = 0;
+
+  for (i = 1; i <= MAXN; i = i + 1) {
+    if (vis[i] == 0) {
+      int hi;
+      hi = 4 * i + 1;
+      primes[prime_cnt] = hi;
+      prime_cnt = prime_cnt + 1;
+
+      if (hi <= MAXP / hi) {
+        int start;
+        start = hi * hi;
+        for (j = start; j <= MAXP; j = j + hi) {
+          if (j % 4 == 1) {
+            vis[(j - 1) / 4] = 1;
+          }
+        }
+      }
+    }
+  }
+
+  for (i = 0; i < prime_cnt; i = i + 1) {
+    int pi;
+    pi = primes[i];
+    for (j = i; j < prime_cnt; j = j + 1) {
+      int pj;
+      int prod;
+      pj = primes[j];
+      if (pi > MAXP / pj) {
+        break;
+      }
+      prod = pi * pj;
+      vis[(prod - 1) / 4] = 2;
+    }
+  }
+
+  cnt[0] = 0;
+  for (i = 1; i <= MAXN; i = i + 1) {
+    cnt[i] = cnt[i - 1];
+    if (vis[i] == 2) {
+      cnt[i] = cnt[i] + 1;
+    }
+  }
+
+  return;
+}
+
+int main() {
+  int h;
+  sieve();
+
+  for (;;) {
+    h = getint();
+    if (h == 0) {
+      break;
+    }
+    printf("%d %d\n", h, cnt[(h - 1) / 4]);
+  }
+
+  return 0;
+}

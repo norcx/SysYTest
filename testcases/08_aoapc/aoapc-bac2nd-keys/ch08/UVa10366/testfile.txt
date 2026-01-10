@@ -1,0 +1,173 @@
+/*
+ * Converted from UVA10366 "Faucet Flow" reference solution.
+ * Input: multiple test cases, each ends with sentinel leftx=0 or rightx=0.
+ * Output: one integer per test case.
+ */
+
+const int MAXD = 1000 + 4;
+const int INF = 1000000000;
+
+int LHs[MAXD];
+int RHs[MAXD];
+int L;
+int R;
+int LH;
+int RH;
+int LHi;
+int RHi;
+
+int imax(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+int imin(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+int solve() {
+    int lt;
+    int rt;
+    int i;
+    int h;
+
+    if (LH == RH) {
+        lt = 0;
+        rt = 0;
+
+        h = LHs[L];
+        for (i = L; i > LHi; i = i - 1) {
+            lt = lt + h;
+            h = imax(h, LHs[i - 1]);
+        }
+
+        h = RHs[R];
+        for (i = R; i > RHi; i = i - 1) {
+            rt = rt + h;
+            h = imax(h, RHs[i - 1]);
+        }
+
+        return (LHi + RHi + 1) * LH * 2 + imin(lt, rt) * 4;
+    }
+
+    {
+        int T;
+        int LTi;
+        int RTi;
+        int t;
+
+        T = imin(LH, RH);
+        LTi = 0;
+        RTi = 0;
+
+        for (; LTi < L && LHs[LTi] < T; LTi = LTi + 1) {
+        }
+        for (; RTi < R && RHs[RTi] < T; RTi = RTi + 1) {
+        }
+
+        lt = 0;
+        rt = 0;
+        t = 0;
+
+        if (LH < RH) {
+            h = LHs[L];
+            for (i = L; i > LHi; i = i - 1) {
+                lt = lt + h;
+                h = imax(LHs[i - 1], h);
+            }
+
+            h = T;
+            for (i = RTi; RHs[i] <= T; i = i + 1) {
+                rt = rt + h;
+                h = imax(RHs[i + 1], h);
+            }
+
+            if (lt > rt) t = lt + rt;
+            else t = 2 * lt;
+        }
+
+        if (LH > RH) {
+            h = RHs[R];
+            for (i = R; i > RHi; i = i - 1) {
+                rt = rt + h;
+                h = imax(RHs[i - 1], h);
+            }
+
+            h = T;
+            for (i = LTi; LHs[i] <= T; i = i + 1) {
+                lt = lt + h;
+                h = imax(h, LHs[i + 1]);
+            }
+
+            if (rt > lt) t = rt + lt;
+            else t = 2 * rt;
+        }
+
+        return t * 2 + (RTi + LTi + 1) * T * 2;
+    }
+
+    return 0;
+}
+
+int main() {
+    int leftx;
+    int rightx;
+
+    for (;;) {
+        leftx = getint();
+        rightx = getint();
+
+        if (leftx == 0) break;
+        if (rightx == 0) break;
+
+        LH = 0;
+        RH = 0;
+        LHi = 0;
+        RHi = 0;
+
+        L = (0 - leftx) / 2;
+        R = rightx / 2;
+
+        {
+            int k;
+            for (k = 0; k < MAXD; k = k + 1) {
+                LHs[k] = 0;
+                RHs[k] = 0;
+            }
+        }
+
+        {
+            int x;
+            int xi;
+            for (x = leftx; x < 0; x = x + 2) {
+                xi = (0 - x) / 2;
+                LHs[xi] = getint();
+                if (LH <= LHs[xi]) {
+                    LH = LHs[xi];
+                    LHi = xi;
+                }
+            }
+        }
+
+        {
+            int x;
+            int xi;
+            for (x = 1; x <= rightx; x = x + 2) {
+                xi = x / 2;
+                RHs[xi] = getint();
+                if (RH < RHs[xi]) {
+                    RH = RHs[xi];
+                    RHi = xi;
+                }
+            }
+        }
+
+        LHs[L + 1] = INF;
+        RHs[R + 1] = INF;
+
+        printf("%d\n", solve());
+    }
+
+    return 0;
+}

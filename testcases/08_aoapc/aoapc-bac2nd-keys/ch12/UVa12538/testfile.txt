@@ -1,0 +1,128 @@
+const int MAXV = 64;
+const int MAXLEN = 256;
+
+int buf[MAXV * MAXLEN];
+int len[MAXV];
+
+int main() {
+  int n;
+  int d;
+  int verCount;
+  int i;
+
+  n = getint();
+  d = 0;
+  verCount = 0;
+  len[0] = 0;
+
+  for (i = 0; i < n; i = i + 1) {
+    int opt;
+    opt = getint();
+
+    if (opt == 1) {
+      int pInput;
+      int p;
+      int L;
+      int cur;
+      int newv;
+      int baseCur;
+      int baseNew;
+      int j;
+
+      pInput = getint();
+      L = getint();
+      p = pInput - d;
+
+      cur = verCount;
+      newv = verCount + 1;
+      baseCur = cur * MAXLEN;
+      baseNew = newv * MAXLEN;
+      len[newv] = len[cur] + L;
+
+      for (j = 0; j < p; j = j + 1) {
+        buf[baseNew + j] = buf[baseCur + j];
+      }
+      for (j = 0; j < L; j = j + 1) {
+        int code;
+        code = getint();
+        buf[baseNew + p + j] = code;
+      }
+      for (j = p; j < len[cur]; j = j + 1) {
+        buf[baseNew + L + j] = buf[baseCur + j];
+      }
+
+      verCount = newv;
+    } else if (opt == 2) {
+      int pInput;
+      int cInput;
+      int p;
+      int c;
+      int start;
+      int cur;
+      int newv;
+      int baseCur;
+      int baseNew;
+      int j;
+
+      pInput = getint();
+      cInput = getint();
+      p = pInput - d;
+      c = cInput - d;
+
+      start = p - 1;
+      cur = verCount;
+      newv = verCount + 1;
+      baseCur = cur * MAXLEN;
+      baseNew = newv * MAXLEN;
+      len[newv] = len[cur] - c;
+
+      for (j = 0; j < start; j = j + 1) {
+        buf[baseNew + j] = buf[baseCur + j];
+      }
+      for (j = start + c; j < len[cur]; j = j + 1) {
+        buf[baseNew + j - c] = buf[baseCur + j];
+      }
+
+      verCount = newv;
+    } else if (opt == 3) {
+      int vInput;
+      int pInput;
+      int cInput;
+      int v;
+      int p;
+      int c;
+      int start;
+      int base;
+      int j;
+      int first;
+
+      vInput = getint();
+      pInput = getint();
+      cInput = getint();
+      v = vInput - d;
+      p = pInput - d;
+      c = cInput - d;
+
+      start = p - 1;
+      base = v * MAXLEN;
+      first = 1;
+      for (j = 0; j < c; j = j + 1) {
+        int code;
+        code = buf[base + start + j];
+
+        if (first == 0) {
+          printf(" ");
+        }
+        printf("%d", code);
+
+        if (code == 99) {
+          d = d + 1;
+        }
+        first = 0;
+      }
+      printf("\n");
+    }
+  }
+
+  return 0;
+}

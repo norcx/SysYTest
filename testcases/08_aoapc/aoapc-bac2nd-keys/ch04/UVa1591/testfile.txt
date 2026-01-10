@@ -1,0 +1,68 @@
+/* Description:
+ *   Converted from UVa1591 Data Mining (scaled down).
+ *   Reads multiple testcases until a trailing sentinel "0 0 0".
+ *   For each (N, SP, SQ), searches a,b in [0,15] to minimize:
+ *     f(SP*(N-1), a, b) + SQ
+ *   subject to f(SP, a, b) >= SQ, where
+ *     f(x,a,b) = floor( x * (1 + 2^a) / 2^b ).
+ */
+
+int pow2[16];
+
+int f(int x, int a, int b) {
+  int mul;
+  int num;
+  mul = 1 + pow2[a];
+  num = x * mul;
+  return num / pow2[b];
+}
+
+int main() {
+  int i;
+  int N;
+  int SP;
+  int SQ;
+
+  pow2[0] = 1;
+  for (i = 1; i <= 15; i = i + 1) {
+    pow2[i] = pow2[i - 1] * 2;
+  }
+
+  for (;;) {
+    int A;
+    int B;
+    int K;
+    int a;
+    int b;
+    int xN;
+
+    N = getint();
+    SP = getint();
+    SQ = getint();
+    if (N == 0 && SP == 0 && SQ == 0) break;
+
+    A = 64;
+    B = 64;
+    K = 2147483647;
+    xN = SP * (N - 1);
+
+    for (a = 0; a <= 15; a = a + 1) {
+      for (b = 0; b <= 15; b = b + 1) {
+        int t;
+        int k;
+        t = f(SP, a, b);
+        if (t < SQ) continue;
+        k = f(xN, a, b) + SQ;
+        if (k < K) {
+          K = k;
+          A = a;
+          B = b;
+        }
+      }
+    }
+
+    printf("%d %d %d\n", K, A, B);
+  }
+
+  return 0;
+}

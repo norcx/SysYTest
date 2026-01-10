@@ -1,0 +1,42 @@
+/* Description:
+ *   UVa1648 Business Center (refactored): reads T test cases, each with n, m, then m pairs (u, d).
+ *   Computes the minimum value defined by the original formula and prints one answer per case.
+ */
+const int INF = 2147483647;
+
+int main() {
+  int t;
+  int case_i;
+  int n;
+  int m;
+  int u;
+  int d;
+  int i;
+  int ans;
+  int a;
+  int denom;
+  int tmp;
+
+  t = getint();
+  for (case_i = 0; case_i < t; case_i = case_i + 1) {
+    n = getint();
+    m = getint();
+
+    ans = INF;
+
+    for (i = 0; i < m; i = i + 1) {
+      u = getint();
+      d = getint();
+
+      denom = u + d;
+      a = (n * d) / denom + 1;
+      if (a <= n) {
+        tmp = a * u - (n - a) * d;
+        if (tmp < ans) ans = tmp;
+      }
+    }
+
+    printf("%d\n", ans);
+  }
+  return 0;
+}

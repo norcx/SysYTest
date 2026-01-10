@@ -1,0 +1,206 @@
+/*
+  Strict SysY testcase converted from:
+  UVa1634 The Picnic (original C++11 solution).
+
+  Output format:
+  - Prints the maximal area with exactly one decimal digit.
+  - Since the area is always multiple of 0.5 for integer coordinates, we print:
+    "%d.0\n" for even (double-area), "%d.5\n" for odd.
+*/
+
+const int MAXN = 104;
+const int STRIDE = 104;
+const int NEG_INF = -2000000000;
+
+int N;
+int Dx[MAXN];
+int Dy[MAXN];
+int Qx[MAXN];
+int Qy[MAXN];
+int F[MAXN * STRIDE];
+
+int max2(int a, int b) {
+  if (a > b) return a;
+  return b;
+}
+
+int abs_int(int x) {
+  if (x < 0) return 0 - x;
+  return x;
+}
+
+int dot2(int ax, int ay, int bx, int by) { return ax * bx + ay * by; }
+
+int cross2(int ax, int ay, int bx, int by) { return ax * by - ay * bx; }
+
+int area2(int ax, int ay, int bx, int by, int cx, int cy) {
+  int abx = bx - ax;
+  int aby = by - ay;
+  int acx = cx - ax;
+  int acy = cy - ay;
+  return abs_int(cross2(abx, aby, acx, acy));
+}
+
+int point_eq(int ax, int ay, int bx, int by) {
+  if (ax != bx) return 0;
+  if (ay != by) return 0;
+  return 1;
+}
+
+int in_triangle(int px, int py, int ax, int ay, int bx, int by, int cx, int cy) {
+  int s = area2(ax, ay, bx, by, cx, cy);
+  int s0 = area2(px, py, ax, ay, bx, by);
+  int s1 = area2(px, py, ax, ay, cx, cy);
+  int s2 = area2(px, py, bx, by, cx, cy);
+  if (s0 == 0) return 0;
+  if (s1 == 0) return 0;
+  if (s2 == 0) return 0;
+  if (s0 + s1 + s2 == s) return 1;
+  return 0;
+}
+
+void sort_points(int n) {
+  int i;
+  for (i = 0; i < n; i = i + 1) {
+    int best = i;
+    int j;
+    for (j = i + 1; j < n; j = j + 1) {
+      if (Dx[j] < Dx[best]) best = j;
+      if (Dx[j] == Dx[best] && Dy[j] < Dy[best]) best = j;
+    }
+    if (best != i) {
+      int tx = Dx[i];
+      int ty = Dy[i];
+      Dx[i] = Dx[best];
+      Dy[i] = Dy[best];
+      Dx[best] = tx;
+      Dy[best] = ty;
+    }
+  }
+}
+
+int angle_less(int ax, int ay, int bx, int by) {
+  int c = cross2(ax, ay, bx, by);
+  if (c > 0) return 1;
+  if (c < 0) return 0;
+  int da = dot2(ax, ay, ax, ay);
+  int db = dot2(bx, by, bx, by);
+  if (da < db) return 1;
+  if (da > db) return 0;
+  if (ax < bx) return 1;
+  if (ax > bx) return 0;
+  if (ay < by) return 1;
+  return 0;
+}
+
+void sort_vectors(int m) {
+  int i;
+  for (i = 1; i <= m; i = i + 1) {
+    int best = i;
+    int j;
+    for (j = i + 1; j <= m; j = j + 1) {
+      if (angle_less(Qx[j], Qy[j], Qx[best], Qy[best]) == 1) best = j;
+    }
+    if (best != i) {
+      int tx = Qx[i];
+      int ty = Qy[i];
+      Qx[i] = Qx[best];
+      Qy[i] = Qy[best];
+      Qx[best] = tx;
+      Qy[best] = ty;
+    }
+  }
+}
+
+int idx_f(int j, int i) { return j * STRIDE + i; }
+
+int dp(int m) {
+  int ans = 0;
+  int i;
+  int j;
+
+  for (i = 0; i < MAXN; i = i + 1) {
+    for (j = 0; j < STRIDE; j = j + 1) {
+      F[i * STRIDE + j] = 0;
+    }
+  }
+
+  for (i = 1; i <= m; i = i + 1) {
+    for (j = 1; j < i; j = j + 1) {
+      int k;
+      for (k = j + 1; k < i; k = k + 1) {
+        if (point_eq(Qx[k], Qy[k], Qx[i], Qy[i]) == 0 && point_eq(Qx[k], Qy[k], Qx[j], Qy[j]) == 0) {
+          if (in_triangle(Qx[k], Qy[k], 0, 0, Qx[j], Qy[j], Qx[i], Qy[i]) == 1) {
+            F[idx_f(j, i)] = NEG_INF;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  for (i = 1; i <= m; i = i + 1) {
+    for (j = 1; j <= i; j = j + 1) {
+      int index = idx_f(j, i);
+      if (F[index] == 0) {
+        int s = cross2(Qx[j], Qy[j], Qx[i], Qy[i]);
+        int f = s;
+        int k;
+        for (k = j - 1; k >= 1; k = k - 1) {
+          int v1x = Qx[j] - Qx[k];
+          int v1y = Qy[j] - Qy[k];
+          int v2x = Qx[i] - Qx[j];
+          int v2y = Qy[i] - Qy[j];
+          if (cross2(v1x, v1y, v2x, v2y) >= 0) {
+            int cand = s + F[idx_f(k, j)];
+            if (cand > f) f = cand;
+          }
+          if (cross2(Qx[k], Qy[k], Qx[j], Qy[j]) == 0) break;
+        }
+        F[index] = f;
+        if (f > ans) ans = f;
+      }
+    }
+  }
+
+  return ans;
+}
+
+int solve() {
+  int ans = 0;
+  sort_points(N);
+
+  int i;
+  for (i = 0; i < N; i = i + 1) {
+    int m = 0;
+    int j;
+    for (j = i + 1; j < N; j = j + 1) {
+      m = m + 1;
+      Qx[m] = Dx[j] - Dx[i];
+      Qy[m] = Dy[j] - Dy[i];
+    }
+    sort_vectors(m);
+    ans = max2(ans, dp(m));
+  }
+  return ans;
+}
+
+int main() {
+  int T = getint();
+  int tc;
+  for (tc = 0; tc < T; tc = tc + 1) {
+    N = getint();
+    int i;
+    for (i = 0; i < N; i = i + 1) {
+      Dx[i] = getint();
+      Dy[i] = getint();
+    }
+    int ans2 = solve();
+    if (ans2 % 2 == 0) {
+      printf("%d.0\n", ans2 / 2);
+    } else {
+      printf("%d.5\n", ans2 / 2);
+    }
+  }
+  return 0;
+}

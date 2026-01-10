@@ -1,0 +1,537 @@
+/* Description:
+ * Strict SysY translation of an event-driven trucking simulation (UVa 252 - Trucking),
+ * scaled for small fixed limits and using only ints + 1D arrays.
+ */
+
+const int MAXN = 110;
+const int MAXD = 16;
+const int MAXM = 128;
+const int MAXS = 16;
+const int MAXWAIT = 128;
+const int MAXLATE = 512;
+const int MAXE = 8192;
+const int POOL = 8192;
+
+const int EVT_TL_ARRIVED = 0;
+const int EVT_RD_FREE = 1;
+const int EVT_SM_STRIPPED = 2;
+
+int centerId[MAXN];
+int centerS[MAXN];
+int centerD[MAXN];
+int centerIndexOfId[256];
+
+int stripUsed[MAXN * MAXD];
+int trailerHead[MAXN];
+int trailerNext[MAXM];
+
+int waitCnt[MAXN];
+int waitTimes[MAXN * MAXWAIT];
+
+int lateCnt[MAXN];
+int lateId[MAXN * MAXLATE];
+int lateOrigin[MAXN * MAXLATE];
+int lateDest[MAXN * MAXLATE];
+int lateVol[MAXN * MAXLATE];
+
+int rdDest[MAXN * MAXD];
+int rdVol[MAXN * MAXD];
+int rdDeadline[MAXN * MAXD];
+int rdHead[MAXN * MAXD];
+int rdTail[MAXN * MAXD];
+
+int trArr[MAXM];
+int trCenterId[MAXM];
+int trCenterIdx[MAXM];
+int trSCount[MAXM];
+int trRelay[MAXM];
+int trMaxT[MAXM];
+
+int trSmId[MAXM * MAXS];
+int trSmOrigin[MAXM * MAXS];
+int trSmNext[MAXM * MAXS];
+int trSmV[MAXM * MAXS];
+int trSmT[MAXM * MAXS];
+
+int evCount;
+int evType[MAXE];
+int evTime[MAXE];
+int evTrailer[MAXE];
+int evCenter[MAXE];
+int evSDoor[MAXE];
+int evSmId[MAXE];
+int evSmOrigin[MAXE];
+int evSmNext[MAXE];
+int evSmV[MAXE];
+int evSmT[MAXE];
+
+int poolFree;
+int poolNext[POOL];
+int poolId[POOL];
+int poolOrigin[POOL];
+int poolDest[POOL];
+int poolV[POOL];
+int poolT[POOL];
+
+void initPool() {
+    int i;
+    poolFree = 0;
+    for (i = 0; i < POOL - 1; i = i + 1) {
+        poolNext[i] = i + 1;
+    }
+    poolNext[POOL - 1] = -1;
+}
+
+int allocNode() {
+    int idx;
+    idx = poolFree;
+    if (idx == -1) return -1;
+    poolFree = poolNext[idx];
+    poolNext[idx] = -1;
+    return idx;
+}
+
+void freeNode(int idx) {
+    poolNext[idx] = poolFree;
+    poolFree = idx;
+}
+
+void pushEvent(int typ, int tim, int tr, int cidx, int sdoor, int sid, int sori, int sdest, int sv, int st) {
+    int i;
+    i = evCount;
+    evCount = evCount + 1;
+    evType[i] = typ;
+    evTime[i] = tim;
+    evTrailer[i] = tr;
+    evCenter[i] = cidx;
+    evSDoor[i] = sdoor;
+    evSmId[i] = sid;
+    evSmOrigin[i] = sori;
+    evSmNext[i] = sdest;
+    evSmV[i] = sv;
+    evSmT[i] = st;
+}
+
+int betterTrailer(int a, int b) {
+    if (trRelay[a] == 1 && trRelay[b] == 1) {
+        if (trMaxT[a] == trMaxT[b]) {
+            if (trArr[a] < trArr[b]) return 1;
+            return 0;
+        }
+        if (trMaxT[a] > trMaxT[b]) return 1;
+        return 0;
+    }
+    if (trRelay[a] == 1 && trRelay[b] == 0) return 1;
+    if (trRelay[a] == 0 && trRelay[b] == 1) return 0;
+    if (trArr[a] < trArr[b]) return 1;
+    return 0;
+}
+
+void addTrailerToCenterQueue(int cidx, int tr) {
+    trailerNext[tr] = trailerHead[cidx];
+    trailerHead[cidx] = tr;
+}
+
+int popBestTrailerFromCenterQueue(int cidx) {
+    int cur;
+    int prev;
+    int best;
+    int bestPrev;
+    cur = trailerHead[cidx];
+    prev = -1;
+    best = -1;
+    bestPrev = -1;
+    for (; cur != -1; ) {
+        if (best == -1) {
+            best = cur;
+            bestPrev = prev;
+        } else {
+            if (betterTrailer(cur, best) == 1) {
+                best = cur;
+                bestPrev = prev;
+            }
+        }
+        prev = cur;
+        cur = trailerNext[cur];
+    }
+    if (best == -1) return -1;
+    if (bestPrev == -1) trailerHead[cidx] = trailerNext[best];
+    if (bestPrev != -1) trailerNext[bestPrev] = trailerNext[best];
+    trailerNext[best] = -1;
+    return best;
+}
+
+void addWaitTime(int cidx, int w) {
+    int pos;
+    pos = cidx * MAXWAIT + waitCnt[cidx];
+    waitTimes[pos] = w;
+    waitCnt[cidx] = waitCnt[cidx] + 1;
+}
+
+void addLateShipment(int cidx, int sid, int sori, int sdest, int sv) {
+    int pos;
+    pos = cidx * MAXLATE + lateCnt[cidx];
+    lateId[pos] = sid;
+    lateOrigin[pos] = sori;
+    lateDest[pos] = sdest;
+    lateVol[pos] = sv;
+    lateCnt[cidx] = lateCnt[cidx] + 1;
+}
+
+int findRelayDoorGlobal(int cidx, int dest) {
+    int i;
+    int d;
+    d = centerD[cidx];
+    for (i = 0; i < d; i = i + 1) {
+        int rd;
+        rd = cidx * MAXD + i;
+        if (rdDest[rd] == dest) return rd;
+    }
+    return -1;
+}
+
+void appendShipmentToRelayDoor(int rd, int sid, int sori, int sdest, int sv, int st) {
+    int node;
+    node = allocNode();
+    if (node == -1) return;
+    poolId[node] = sid;
+    poolOrigin[node] = sori;
+    poolDest[node] = sdest;
+    poolV[node] = sv;
+    poolT[node] = st;
+    poolNext[node] = -1;
+    if (rdHead[rd] == -1) {
+        rdHead[rd] = node;
+        rdTail[rd] = node;
+    } else {
+        poolNext[rdTail[rd]] = node;
+        rdTail[rd] = node;
+    }
+}
+
+void sendTrailerShipments(int cidx, int rd, int time, int head) {
+    int cur;
+    cur = head;
+    for (; cur != -1; ) {
+        int nxt;
+        if (time + poolT[cur] > rdDeadline[rd]) {
+            addLateShipment(cidx, poolId[cur], poolOrigin[cur], poolDest[cur], poolV[cur]);
+        }
+        rdVol[rd] = rdVol[rd] - poolV[cur];
+        nxt = poolNext[cur];
+        freeNode(cur);
+        cur = nxt;
+    }
+}
+
+void relayDoorProcess(int cidx, int rd, int time) {
+    int cur;
+    int tempHead;
+    int tempTail;
+    int tempVol;
+    cur = rdHead[rd];
+    if (cur == -1) return;
+    rdHead[rd] = -1;
+    rdTail[rd] = -1;
+    tempHead = -1;
+    tempTail = -1;
+    tempVol = 0;
+
+    for (; cur != -1; ) {
+        int nxt;
+        int total;
+        nxt = poolNext[cur];
+        poolNext[cur] = -1;
+        total = tempVol + poolV[cur];
+
+        if (total < 100) {
+            if (tempHead == -1) {
+                tempHead = cur;
+                tempTail = cur;
+            } else {
+                poolNext[tempTail] = cur;
+                tempTail = cur;
+            }
+            tempVol = total;
+            cur = nxt;
+        } else if (total == 100) {
+            if (tempHead == -1) {
+                tempHead = cur;
+                tempTail = cur;
+            } else {
+                poolNext[tempTail] = cur;
+                tempTail = cur;
+            }
+            tempVol = 100;
+            sendTrailerShipments(cidx, rd, time, tempHead);
+            tempHead = -1;
+            tempTail = -1;
+            tempVol = 0;
+            cur = nxt;
+        } else {
+            int remain;
+            int leftover;
+            int id;
+            int ori;
+            int dest;
+            int tt;
+            int leftoverV;
+            remain = 100 - tempVol;
+
+            id = poolId[cur];
+            ori = poolOrigin[cur];
+            dest = poolDest[cur];
+            tt = poolT[cur];
+            leftoverV = poolV[cur] - remain;
+
+            leftover = allocNode();
+            if (leftover == -1) return;
+            poolId[leftover] = id;
+            poolOrigin[leftover] = ori;
+            poolDest[leftover] = dest;
+            poolT[leftover] = tt;
+            poolV[leftover] = leftoverV;
+            poolNext[leftover] = nxt;
+
+            poolV[cur] = remain;
+            if (tempHead == -1) {
+                tempHead = cur;
+                tempTail = cur;
+            } else {
+                poolNext[tempTail] = cur;
+                tempTail = cur;
+            }
+            tempVol = 100;
+            sendTrailerShipments(cidx, rd, time, tempHead);
+            tempHead = -1;
+            tempTail = -1;
+            tempVol = 0;
+            cur = leftover;
+        }
+    }
+
+    if (tempHead == -1) return;
+    if (tempVol == rdVol[rd]) {
+        sendTrailerShipments(cidx, rd, time, tempHead);
+        return;
+    }
+    rdHead[rd] = tempHead;
+    rdTail[rd] = tempTail;
+}
+
+void relayAllCenter(int cidx, int time) {
+    int i;
+    int d;
+    d = centerD[cidx];
+    for (i = 0; i < d; i = i + 1) {
+        relayDoorProcess(cidx, cidx * MAXD + i, time);
+    }
+}
+
+void stripTrailer(int tr, int time, int cidx, int sdoor) {
+    int i;
+    stripUsed[cidx * MAXD + sdoor] = 1;
+    pushEvent(EVT_RD_FREE, time + 120, -1, cidx, sdoor, 0, 0, 0, 0, 0);
+
+    if (trArr[tr] != time) {
+        addWaitTime(cidx, time - trArr[tr]);
+    }
+
+    for (i = 0; i < trSCount[tr]; i = i + 1) {
+        int base;
+        int dest;
+        base = tr * MAXS + i;
+        dest = trSmNext[base];
+        if (dest != centerId[cidx]) {
+            pushEvent(EVT_SM_STRIPPED, time + 120, -1, cidx, 0,
+                      trSmId[base], trSmOrigin[base], trSmNext[base], trSmV[base], trSmT[base]);
+        }
+    }
+}
+
+void stripAllCenter(int cidx, int time) {
+    int si;
+    int s;
+    s = centerS[cidx];
+    for (si = 0; si < s; si = si + 1) {
+        if (stripUsed[cidx * MAXD + si] == 0) {
+            int tr;
+            tr = popBestTrailerFromCenterQueue(cidx);
+            if (tr == -1) return;
+            stripTrailer(tr, time, cidx, si);
+        }
+    }
+}
+
+void procEventAt(int idx) {
+    int typ;
+    int last;
+    typ = evType[idx];
+    if (typ == EVT_TL_ARRIVED) {
+        addTrailerToCenterQueue(trCenterIdx[evTrailer[idx]], evTrailer[idx]);
+    }
+    if (typ == EVT_RD_FREE) {
+        stripUsed[evCenter[idx] * MAXD + evSDoor[idx]] = 0;
+    }
+    if (typ == EVT_SM_STRIPPED) {
+        int rd;
+        rd = findRelayDoorGlobal(evCenter[idx], evSmNext[idx]);
+        if (rd != -1) {
+            appendShipmentToRelayDoor(rd, evSmId[idx], evSmOrigin[idx], evSmNext[idx], evSmV[idx], evSmT[idx]);
+        }
+    }
+
+    last = evCount - 1;
+    evCount = last;
+    if (idx != last) {
+        evType[idx] = evType[last];
+        evTime[idx] = evTime[last];
+        evTrailer[idx] = evTrailer[last];
+        evCenter[idx] = evCenter[last];
+        evSDoor[idx] = evSDoor[last];
+        evSmId[idx] = evSmId[last];
+        evSmOrigin[idx] = evSmOrigin[last];
+        evSmNext[idx] = evSmNext[last];
+        evSmV[idx] = evSmV[last];
+        evSmT[idx] = evSmT[last];
+    }
+}
+
+int main() {
+    int i;
+    int j;
+    initPool();
+
+    for (; ; ) {
+        int n;
+        int m;
+        n = getint();
+        if (n == 0) break;
+
+        for (i = 0; i < 256; i = i + 1) centerIndexOfId[i] = -1;
+        for (i = 0; i < n; i = i + 1) {
+            int c;
+            int s;
+            int d;
+            c = getint();
+            s = getint();
+            d = getint();
+            centerId[i] = c;
+            centerS[i] = s;
+            centerD[i] = d;
+            if (c >= 0 && c < 256) centerIndexOfId[c] = i;
+
+            trailerHead[i] = -1;
+            waitCnt[i] = 0;
+            lateCnt[i] = 0;
+            for (j = 0; j < MAXD; j = j + 1) stripUsed[i * MAXD + j] = 0;
+
+            for (j = 0; j < d; j = j + 1) {
+                int rd;
+                rd = i * MAXD + j;
+                rdDest[rd] = getint();
+                rdVol[rd] = getint();
+                rdDeadline[rd] = getint();
+                rdHead[rd] = -1;
+                rdTail[rd] = -1;
+            }
+            for (j = d; j < MAXD; j = j + 1) {
+                int rd;
+                rd = i * MAXD + j;
+                rdDest[rd] = 0;
+                rdVol[rd] = 0;
+                rdDeadline[rd] = 0;
+                rdHead[rd] = -1;
+                rdTail[rd] = -1;
+            }
+        }
+
+        initPool();
+        evCount = 0;
+
+        m = getint();
+        for (i = 0; i < m; i = i + 1) {
+            int cidx;
+            trArr[i] = getint();
+            trCenterId[i] = getint();
+            cidx = -1;
+            if (trCenterId[i] >= 0 && trCenterId[i] < 256) cidx = centerIndexOfId[trCenterId[i]];
+            trCenterIdx[i] = cidx;
+            trSCount[i] = getint();
+            trRelay[i] = 0;
+            trMaxT[i] = -1;
+
+            for (j = 0; j < trSCount[i]; j = j + 1) {
+                int base;
+                base = i * MAXS + j;
+                trSmId[base] = getint();
+                trSmOrigin[base] = getint();
+                trSmNext[base] = getint();
+                trSmV[base] = getint();
+                trSmT[base] = getint();
+                if (trSmT[base] > trMaxT[i]) trMaxT[i] = trSmT[base];
+                if (trSmNext[base] != trCenterId[i]) trRelay[i] = 1;
+            }
+
+            pushEvent(EVT_TL_ARRIVED, trArr[i], i, trCenterIdx[i], 0, 0, 0, 0, 0, 0);
+        }
+
+        for (; evCount > 0; ) {
+            int time;
+            time = evTime[0];
+            for (i = 1; i < evCount; i = i + 1) {
+                if (evTime[i] < time) time = evTime[i];
+            }
+
+            for (; ; ) {
+                int pick;
+                pick = -1;
+                for (i = 0; i < evCount; i = i + 1) {
+                    if (evTime[i] == time) {
+                        if (pick == -1) pick = i;
+                        else if (evType[i] > evType[pick]) pick = i;
+                    }
+                }
+                if (pick == -1) break;
+                procEventAt(pick);
+            }
+
+            for (i = 0; i < n; i = i + 1) {
+                stripAllCenter(i, time);
+                relayAllCenter(i, time);
+            }
+        }
+
+        for (i = 0; i < n; i = i + 1) {
+            int c;
+            c = centerId[i];
+            if (waitCnt[i] == 0) {
+                printf("There is no wait for a stripping door at ICPC %d.\n", c);
+            } else {
+                int sum;
+                int sum10;
+                int a;
+                int b;
+                sum = 0;
+                for (j = 0; j < waitCnt[i]; j = j + 1) sum = sum + waitTimes[i * MAXWAIT + j];
+                sum10 = sum * 10;
+                sum10 = sum10 / waitCnt[i];
+                a = sum10 / 10;
+                b = sum10 % 10;
+                printf("The average wait for a stripping door at ICPC %d is %d.%d minutes.\n", c, a, b);
+            }
+        }
+
+        printf("\nThe late shipments are:\nId Origin Destination Volume\n");
+        for (i = 0; i < n; i = i + 1) {
+            int k;
+            for (k = 0; k < lateCnt[i]; k = k + 1) {
+                int pos;
+                pos = i * MAXLATE + k;
+                printf("%d %d %d %d\n", lateId[pos], lateOrigin[pos], lateDest[pos], lateVol[pos]);
+            }
+        }
+    }
+
+    return 0;
+}

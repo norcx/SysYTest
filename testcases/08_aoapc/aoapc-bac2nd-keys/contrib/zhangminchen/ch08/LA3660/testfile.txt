@@ -1,0 +1,110 @@
+/* Description:
+ *   [Add description here]
+ */
+
+int mymax(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+int solve(int n, int m, int cntn, int cnts, int cntw, int cnte) {
+    int ans;
+    int t;
+    ans = 0;
+
+    if (cnts > cntn) {
+        t = cnts;
+        cnts = cntn;
+        cntn = t;
+    }
+    if (cnte > cntw) {
+        t = cnte;
+        cnte = cntw;
+        cntw = t;
+    }
+
+    if (cntn != 0) {
+        ans = ans + n * m;
+        n = n - 1;
+        cntn = cntn - cnts;
+
+        if (cntn == 0) ans = ans + n * m * (2 * cnts - 1);
+        else {
+            ans = ans + n * m * 2 * cnts;
+            cntn = cntn - 1;
+        }
+
+        cnts = 0;
+    }
+
+    if (cntw != 0) {
+        cntw = cntw - cnte;
+        if (cntw == 0) cnte = cnte * 2 - 1;
+        else {
+            cnte = cnte * 2;
+            cntw = cntw - 1;
+        }
+
+        for (;;) {
+            if (m + (m - 1) * cnte <= n && cntn != 0) {
+                ans = ans + n * m;
+                cntn = cntn - 1;
+                n = n - 1;
+            } else break;
+        }
+
+        ans = ans + n * m;
+        m = m - 1;
+
+        ans = ans + n * m * cnte;
+        cnte = 0;
+    }
+
+    for (;;) {
+        if (n * m > 0 && cntw + cntn > 0) {
+            ans = ans + n * m;
+            if (n > m && cntn != 0 || cntw == 0) {
+                cntn = cntn - 1;
+                n = n - 1;
+            } else {
+                cntw = cntw - 1;
+                m = m - 1;
+            }
+        } else break;
+    }
+
+    return ans;
+}
+
+int main() {
+    int n;
+    int m;
+    int cntn;
+    int cnts;
+    int cntw;
+    int cnte;
+    int kase;
+    int res1;
+    int res2;
+    int res;
+
+    kase = 0;
+    for (;;) {
+        n = getint();
+        m = getint();
+        if (n == 0 || m == 0) break;
+
+        cntn = getint();
+        cnts = getint();
+        cntw = getint();
+        cnte = getint();
+
+        res1 = solve(n, m, cntn, cnts, cntw, cnte);
+        res2 = solve(m, n, cnte, cntw, cntn, cnts);
+        res = mymax(res1, res2);
+
+        kase = kase + 1;
+        printf("Case %d: %d\n", kase, res);
+    }
+    return 0;
+}

@@ -1,0 +1,123 @@
+/* UVa 1629 / ICPC Nanjing 2007: Cake Slicing
+ * Strict SysY version: 1D arrays only, O(1) cherry counting.
+ */
+const int MAXN = 21;
+const int P_SIZE = 441;
+const int SIZE = 194481;
+
+int n;
+int m;
+int k;
+
+int D[SIZE];
+int P[P_SIZE];
+
+int idx(int r, int c, int w, int h) {
+  return (((r * MAXN + c) * MAXN + w) * MAXN + h);
+}
+
+int CR_Cnt(int r, int c, int width, int height) {
+  return P[(r + height) * MAXN + (c + width)] 
+       - P[r * MAXN + (c + width)] 
+       - P[(r + height) * MAXN + c] 
+       + P[r * MAXN + c];
+}
+
+int dp(int r, int c, int W, int H) {
+  int index;
+  int ans;
+  int h;
+  int w;
+  int cand;
+
+  index = idx(r, c, W, H);
+  ans = D[index];
+  if (ans != -1) return ans;
+
+  if (CR_Cnt(r, c, W, H) == 1) {
+    D[index] = 0;
+    return 0;
+  }
+
+  ans = 1000000000;
+
+  for (h = 1; h < H; h = h + 1) {
+    if (CR_Cnt(r, c, W, h) >= 1) {
+      if (CR_Cnt(r + h, c, W, H - h) >= 1) {
+        cand = W + dp(r + h, c, W, H - h) + dp(r, c, W, h);
+        if (cand < ans) ans = cand;
+      }
+    }
+  }
+
+  for (w = 1; w < W; w = w + 1) {
+    if (CR_Cnt(r, c, w, H) >= 1) {
+      if (CR_Cnt(r, c + w, W - w, H) >= 1) {
+        cand = H + dp(r, c, w, H) + dp(r, c + w, W - w, H);
+        if (cand < ans) ans = cand;
+      }
+    }
+  }
+
+  D[index] = ans;
+  return ans;
+}
+
+void reset_case() {
+  int i;
+  for (i = 0; i < SIZE; i = i + 1) {
+    D[i] = -1;
+  }
+}
+
+void init_cells() {
+  int i;
+  for (i = 0; i < P_SIZE; i = i + 1) {
+    P[i] = 0;
+  }
+}
+
+int main() {
+  int kase;
+  int r;
+  int c;
+  int i;
+  int j;
+  int cur;
+  int top;
+  int left;
+  int topleft;
+
+  kase = 1;
+  for (;;) {
+    n = getint();
+    if (n == 0) break;
+    m = getint();
+    k = getint();
+
+    reset_case();
+    init_cells();
+
+    for (i = 0; i < k; i = i + 1) {
+      r = getint();
+      c = getint();
+      P[r * MAXN + c] = 1;
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+      for (j = 1; j <= m; j = j + 1) {
+        cur = i * MAXN + j;
+        top = (i - 1) * MAXN + j;
+        left = i * MAXN + (j - 1);
+        topleft = (i - 1) * MAXN + (j - 1);
+        
+        P[cur] = P[cur] + P[top] + P[left] - P[topleft];
+      }
+    }
+
+    printf("Case %d: %d\n", kase, dp(0, 0, m, n));
+    kase = kase + 1;
+  }
+
+  return 0;
+}

@@ -1,0 +1,362 @@
+/*
+  LA4409 Ironman Race in Treeland (scaled-down SysY version)
+
+  Input (newline-separated ints only):
+    T
+    For each case:
+      N
+      M
+      (N-1) edges:
+        u
+        v
+        d   (cost)
+        l   (distance)
+
+  Output:
+    Case k: <max_distance>
+*/
+
+const int MAXN = 2105;
+const int MAXE = 4205;
+const int QS_MAX = 128;
+
+int N;
+int M;
+
+int head[MAXN];
+int to[MAXE];
+int nxt[MAXE];
+int ecost[MAXE];
+int elen[MAXE];
+int edge_cnt;
+
+int visited[MAXN];
+
+int parent_arr[MAXN];
+int order_arr[MAXN];
+int stack_node[MAXN];
+int sub_sz[MAXN];
+int max_sub[MAXN];
+
+int stack_cost[MAXN];
+int stack_dist[MAXN];
+
+int u_cost[MAXN];
+int u_dist[MAXN];
+int u_cnt;
+
+int v_cost[MAXN];
+int v_dist[MAXN];
+int v_cnt;
+
+int qs_l[QS_MAX];
+int qs_r[QS_MAX];
+
+int ans_max;
+
+void add_edge(int u, int v, int d, int l) {
+  to[edge_cnt] = v;
+  ecost[edge_cnt] = d;
+  elen[edge_cnt] = l;
+  nxt[edge_cnt] = head[u];
+  head[u] = edge_cnt;
+  edge_cnt = edge_cnt + 1;
+  return;
+}
+
+int pair_less(int c1, int d1, int c2, int d2) {
+  if (c1 < c2) return 1;
+  if (c1 > c2) return 0;
+  if (d1 < d2) return 1;
+  return 0;
+}
+
+void sort_vdeps(int n) {
+  int sp;
+  int l;
+  int r;
+  int i;
+  int j;
+  int pivot_c;
+  int pivot_d;
+  int tc;
+  int td;
+  if (n <= 1) return;
+
+  qs_l[0] = 0;
+  qs_r[0] = n - 1;
+  sp = 1;
+
+  for (; sp > 0;) {
+    sp = sp - 1;
+    l = qs_l[sp];
+    r = qs_r[sp];
+
+    i = l;
+    j = r;
+    pivot_c = v_cost[(l + r) / 2];
+    pivot_d = v_dist[(l + r) / 2];
+
+    for (;;) {
+      for (;;) {
+        if (pair_less(v_cost[i], v_dist[i], pivot_c, pivot_d) == 1) i = i + 1;
+        else break;
+      }
+      for (;;) {
+        if (pair_less(pivot_c, pivot_d, v_cost[j], v_dist[j]) == 1) j = j - 1;
+        else break;
+      }
+
+      if (i <= j) {
+        tc = v_cost[i];
+        v_cost[i] = v_cost[j];
+        v_cost[j] = tc;
+        td = v_dist[i];
+        v_dist[i] = v_dist[j];
+        v_dist[j] = td;
+        i = i + 1;
+        j = j - 1;
+      }
+      if (i > j) break;
+    }
+
+    if (l < j) {
+      qs_l[sp] = l;
+      qs_r[sp] = j;
+      sp = sp + 1;
+    }
+    if (i < r) {
+      qs_l[sp] = i;
+      qs_r[sp] = r;
+      sp = sp + 1;
+    }
+  }
+  return;
+}
+
+int upper_bound_vcost(int n, int limit) {
+  int l;
+  int r;
+  int mid;
+  l = 0;
+  r = n;
+  for (; l < r;) {
+    mid = (l + r) / 2;
+    if (v_cost[mid] <= limit) l = mid + 1;
+    else r = mid;
+  }
+  return l;
+}
+
+int get_centroid(int start) {
+  int top;
+  int cnt;
+  int u;
+  int e;
+  int v;
+  int i;
+  int p;
+  int rest;
+  int heart;
+
+  top = 0;
+  stack_node[0] = start;
+  top = 1;
+  parent_arr[start] = 0;
+  cnt = 0;
+
+  for (; top > 0;) {
+    top = top - 1;
+    u = stack_node[top];
+    order_arr[cnt] = u;
+    cnt = cnt + 1;
+
+    e = head[u];
+    for (; e != -1; e = nxt[e]) {
+      v = to[e];
+      if (v == parent_arr[u] || visited[v] == 1) continue;
+      parent_arr[v] = u;
+      stack_node[top] = v;
+      top = top + 1;
+    }
+  }
+
+  i = 0;
+  for (; i < cnt; i = i + 1) {
+    u = order_arr[i];
+    sub_sz[u] = 1;
+    max_sub[u] = 0;
+  }
+
+  i = cnt - 1;
+  for (; i >= 0; i = i - 1) {
+    u = order_arr[i];
+    p = parent_arr[u];
+    if (p != 0) {
+      sub_sz[p] = sub_sz[p] + sub_sz[u];
+      if (sub_sz[u] > max_sub[p]) max_sub[p] = sub_sz[u];
+    }
+  }
+
+  heart = order_arr[0];
+  i = 0;
+  for (; i < cnt; i = i + 1) {
+    u = order_arr[i];
+    rest = cnt - sub_sz[u];
+    if (rest > max_sub[u]) max_sub[u] = rest;
+    if (max_sub[u] < max_sub[heart]) heart = u;
+  }
+  return heart;
+}
+
+void collect_subtree(int start, int par, int init_cost, int init_dist) {
+  int top;
+  int u;
+  int cu;
+  int du;
+  int e;
+  int v;
+
+  v_cnt = 0;
+  top = 0;
+  stack_node[0] = start;
+  stack_cost[0] = init_cost;
+  stack_dist[0] = init_dist;
+  parent_arr[start] = par;
+  top = 1;
+
+  for (; top > 0;) {
+    top = top - 1;
+    u = stack_node[top];
+    cu = stack_cost[top];
+    du = stack_dist[top];
+
+    v_cost[v_cnt] = cu;
+    v_dist[v_cnt] = du;
+    v_cnt = v_cnt + 1;
+
+    e = head[u];
+    for (; e != -1; e = nxt[e]) {
+      v = to[e];
+      if (v == parent_arr[u] || visited[v] == 1) continue;
+      parent_arr[v] = u;
+      stack_node[top] = v;
+      stack_cost[top] = cu + ecost[e];
+      stack_dist[top] = du + elen[e];
+      top = top + 1;
+    }
+  }
+  return;
+}
+
+void count_centroid(int c) {
+  int e;
+  int v;
+  int j;
+  int limit;
+  int idx;
+  int pos;
+  int cand;
+  int i;
+
+  u_cnt = 1;
+  u_cost[0] = 0;
+  u_dist[0] = 0;
+
+  e = head[c];
+  for (; e != -1; e = nxt[e]) {
+    v = to[e];
+    if (visited[v] == 1) continue;
+
+    collect_subtree(v, c, ecost[e], elen[e]);
+    sort_vdeps(v_cnt);
+
+    i = 1;
+    for (; i < v_cnt; i = i + 1) {
+      if (v_dist[i] < v_dist[i - 1]) v_dist[i] = v_dist[i - 1];
+    }
+
+    j = 0;
+    for (; j < u_cnt; j = j + 1) {
+      if (u_cost[j] > M) continue;
+      limit = M - u_cost[j];
+      idx = upper_bound_vcost(v_cnt, limit);
+      pos = idx - 1;
+      if (pos < 0) continue;
+      cand = u_dist[j] + v_dist[pos];
+      if (cand > ans_max) ans_max = cand;
+    }
+
+    j = 0;
+    for (; j < v_cnt; j = j + 1) {
+      if (j == 0) {
+        u_cost[u_cnt] = v_cost[j];
+        u_dist[u_cnt] = v_dist[j];
+        u_cnt = u_cnt + 1;
+      } else {
+        if (v_cost[j] != v_cost[j - 1] || v_dist[j] != v_dist[j - 1]) {
+          u_cost[u_cnt] = v_cost[j];
+          u_dist[u_cnt] = v_dist[j];
+          u_cnt = u_cnt + 1;
+        }
+      }
+    }
+  }
+  return;
+}
+
+void decompose(int start) {
+  int c;
+  int e;
+  int v;
+  c = get_centroid(start);
+  count_centroid(c);
+  visited[c] = 1;
+
+  e = head[c];
+  for (; e != -1; e = nxt[e]) {
+    v = to[e];
+    if (visited[v] == 1) continue;
+    decompose(v);
+  }
+  return;
+}
+
+int main() {
+  int T;
+  int kase;
+  int i;
+  int u;
+  int v;
+  int d;
+  int l;
+
+  T = getint();
+  kase = 1;
+  for (; kase <= T; kase = kase + 1) {
+    N = getint();
+    M = getint();
+
+    i = 1;
+    for (; i <= N; i = i + 1) {
+      head[i] = -1;
+      visited[i] = 0;
+    }
+    edge_cnt = 0;
+
+    i = 1;
+    for (; i <= N - 1; i = i + 1) {
+      u = getint();
+      v = getint();
+      d = getint();
+      l = getint();
+      add_edge(u, v, d, l);
+      add_edge(v, u, d, l);
+    }
+
+    ans_max = 0;
+    decompose(1);
+    printf("Case %d: %d\n", kase, ans_max);
+  }
+  return 0;
+}

@@ -1,0 +1,134 @@
+/* Description:
+ *   Egyptian fraction decomposition (iterative deepening DFS).
+ *   Input: pairs a, b (one integer per line), terminated by "0 0".
+ *   Output format matches the original C++ program.
+ */
+
+const int MAXN = 105;
+const int INF = 2000000000;
+
+int a;
+int b;
+int maxd;
+
+int v[MAXN];
+int ans[MAXN];
+
+int gcd(int x, int y) {
+    if (y == 0) return x;
+    return gcd(y, x % y);
+}
+
+int max2(int x, int y) {
+    if (x > y) return x;
+    return y;
+}
+
+int get_first(int aa, int bb) {
+    return bb / aa + 1;
+}
+
+int better(int d) {
+    int i;
+    for (i = d; i >= 0; i = i - 1) {
+        if (v[i] != ans[i]) {
+            if (ans[i] == -1) return 1;
+            if (v[i] < ans[i]) return 1;
+            return 0;
+        }
+    }
+    return 0;
+}
+
+void save_answer(int d) {
+    int i;
+    for (i = 0; i <= d; i = i + 1) ans[i] = v[i];
+}
+
+int dfs(int d, int from, int aa, int bb) {
+    if (d == maxd) {
+        if (bb % aa != 0) return 0;
+        v[d] = bb / aa;
+        if (better(d) != 0) save_answer(d);
+        return 1;
+    }
+
+    int ok;
+    int i;
+    int remain;
+    int start;
+
+    ok = 0;
+    start = get_first(aa, bb);
+    from = max2(from, start);
+    remain = maxd + 1 - d;
+
+    for (i = from;; i = i + 1) {
+        int left;
+        int right;
+        int b2;
+        int a2;
+        int g;
+
+        if (aa <= 0) break;
+        if (i > INF / aa) break;
+        if (i > INF / bb) break;
+
+        if (bb <= INF / remain) {
+            left = bb * remain;
+            right = i * aa;
+            if (left <= right) break;
+        }
+
+        v[d] = i;
+
+        b2 = bb * i;
+        a2 = aa * i - bb;
+        if (a2 <= 0) continue;
+
+        g = gcd(a2, b2);
+        a2 = a2 / g;
+        b2 = b2 / g;
+
+        if (dfs(d + 1, i + 1, a2, b2) != 0) ok = 1;
+    }
+
+    return ok;
+}
+
+int main() {
+    int kase;
+    int i;
+    kase = 0;
+
+    for (;; ) {
+        a = getint();
+        b = getint();
+        if (a == 0 && b == 0) break;
+
+        int ok;
+        int md;
+
+        ok = 0;
+        for (md = 1; md <= 20; md = md + 1) {
+            maxd = md;
+            for (i = 0; i < MAXN; i = i + 1) ans[i] = -1;
+            if (dfs(0, get_first(a, b), a, b) != 0) {
+                ok = 1;
+                break;
+            }
+        }
+
+        printf("Case %d: ", kase + 1);
+        kase = kase + 1;
+        if (ok != 0) {
+            printf("%d/%d=", a, b);
+            for (i = 0; i < maxd; i = i + 1) printf("1/%d+", ans[i]);
+            printf("1/%d\n", ans[maxd]);
+        } else {
+            printf("No solution.\n");
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,89 @@
+/* Description:
+ *   UVa294 Divisors (Strict SysY)
+ */
+
+const int MAXP = 100000;
+const int MAXPRIMES = 10000;
+const int SQRT_MAXP = 316;
+
+int vis[MAXP];
+int primes[MAXPRIMES];
+int prime_cnt = 0;
+
+void sieve() {
+    int i;
+    int j;
+
+    for (i = 0; i < MAXP; i = i + 1) {
+        vis[i] = 0;
+    }
+    prime_cnt = 0;
+
+    for (i = 2; i < MAXP; i = i + 1) {
+        if (vis[i] == 0) {
+            primes[prime_cnt] = i;
+            prime_cnt = prime_cnt + 1;
+
+            if (i <= SQRT_MAXP) {
+                j = i * i;
+                for (; j < MAXP; j = j + i) {
+                    vis[j] = 1;
+                }
+            }
+        }
+    }
+    return;
+}
+
+int div_num(int n) {
+    int ans;
+    int pi;
+    int p;
+    int pp;
+
+    ans = 1;
+    for (pi = 0; pi < prime_cnt && n >= 2; pi = pi + 1) {
+        p = primes[pi];
+        pp = 0;
+        for (; n % p == 0; ) {
+            n = n / p;
+            pp = pp + 1;
+        }
+        ans = ans * (pp + 1);
+    }
+    if (n > 1) {
+        ans = ans * 2;
+    }
+    return ans;
+}
+
+int main() {
+    int N;
+    int t;
+    int L;
+    int H;
+    int P;
+    int D;
+    int i;
+    int d;
+
+    sieve();
+    N = getint();
+    for (t = 0; t < N; t = t + 1) {
+        L = getint();
+        H = getint();
+
+        P = L;
+        D = 1;
+        for (i = L; i <= H; i = i + 1) {
+            d = div_num(i);
+            if (d > D) {
+                P = i;
+                D = d;
+            }
+        }
+
+        printf("Between %d and %d, %d has a maximum of %d divisors.\n", L, H, P, D);
+    }
+    return 0;
+}

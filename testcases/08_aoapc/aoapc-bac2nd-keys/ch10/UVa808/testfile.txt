@@ -1,0 +1,98 @@
+/* UVa808 Bee Breeding (Strict SysY)
+ *
+ * Input: repeat pairs (n, m), terminated by n == 0.
+ * Output: "The distance between cells n and m is d."
+ */
+
+const int MAXN = 10330;
+
+int posx[MAXN + 1];
+int posy[MAXN + 1];
+int dirx[6];
+int diry[6];
+int pi;
+
+int my_abs(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+int my_max(int a, int b) {
+    if (a < b) return b;
+    return a;
+}
+
+int dist(int dx, int dy) {
+    int adx;
+    int ady;
+    int s;
+    if (dx < 0 && dy > 0 || dx > 0 && dy < 0) {
+        adx = my_abs(dx);
+        ady = my_abs(dy);
+        return my_max(adx, ady);
+    }
+    s = dx + dy;
+    return my_abs(s);
+}
+
+void calPos(int dir, int l) {
+    int step;
+    pi = pi + 1;
+    for (step = 0; step < l; step = step + 1) {
+        posx[pi] = posx[pi - 1] + dirx[dir];
+        posy[pi] = posy[pi - 1] + diry[dir];
+        pi = pi + 1;
+    }
+    pi = pi - 1;
+    return;
+}
+
+int main() {
+    int l;
+    int dir;
+    int n;
+    int m;
+    int dx;
+    int dy;
+    int d;
+
+    posx[1] = 0;
+    posy[1] = 0;
+
+    dirx[0] = -1;
+    diry[0] = 0;
+    dirx[1] = -1;
+    diry[1] = 1;
+    dirx[2] = 0;
+    diry[2] = 1;
+    dirx[3] = 1;
+    diry[3] = 0;
+    dirx[4] = 1;
+    diry[4] = -1;
+    dirx[5] = 0;
+    diry[5] = -1;
+
+    pi = 2;
+    posx[pi] = 1;
+    posy[pi] = -1;
+
+    for (l = 1; l <= 58; l = l + 1) {
+        for (dir = 0; dir < 4; dir = dir + 1) {
+            calPos(dir, l);
+        }
+        calPos(4, l + 1);
+        calPos(5, l);
+    }
+
+    for (;;) {
+        n = getint();
+        if (n == 0) break;
+        m = getint();
+        dx = posx[n] - posx[m];
+        dy = posy[n] - posy[m];
+        d = dist(dx, dy);
+        printf("The distance between cells %d and %d is %d.\n", n, m, d);
+    }
+
+    return 0;
+}

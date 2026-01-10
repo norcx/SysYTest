@@ -1,0 +1,112 @@
+/* Description:
+ * Puzzle (UVa 227) refactored to Strict SysY.
+ *
+ * Input (all integers, one per line):
+ * - Repeating cases:
+ *   - has_case (0 ends all input, 1 continues)
+ *   - 25 integers: 5x5 grid row-major; 0 denotes the blank cell
+ *   - move commands: 1=Up(A), 2=Down(B), 3=Left(L), 4=Right(R), terminated by 0
+ *
+ * Output:
+ * - Prints "Puzzle #k:" then either the final 5x5 grid (numbers) or the
+ *   "no final configuration" message; blank line between puzzles.
+ */
+
+const int G = 5;
+
+int grid[25];
+int ex;
+int ey;
+
+int dx[5] = {0, -1, 1, 0, 0};
+int dy[5] = {0, 0, 0, -1, 1};
+
+int valid(int x, int y) {
+    if (x < 0) return 0;
+    if (x >= G) return 0;
+    if (y < 0) return 0;
+    if (y >= G) return 0;
+    return 1;
+}
+
+void printGrid() {
+    int i;
+    int j;
+    int idx;
+    for (i = 0; i < G; i = i + 1) {
+        idx = i * G;
+        printf("%d", grid[idx]);
+        for (j = 1; j < G; j = j + 1) {
+            printf(" %d", grid[idx + j]);
+        }
+        printf("\n");
+    }
+}
+
+int tryMove(int cmd) {
+    int nx;
+    int ny;
+    int nidx;
+    int eidx;
+    int tmp;
+    if (cmd < 1) return 0;
+    if (cmd > 4) return 0;
+    nx = ex + dx[cmd];
+    ny = ey + dy[cmd];
+    if (valid(nx, ny) == 0) return 0;
+
+    nidx = nx * G + ny;
+    eidx = ex * G + ey;
+    tmp = grid[nidx];
+    grid[nidx] = grid[eidx];
+    grid[eidx] = tmp;
+    ex = nx;
+    ey = ny;
+    return 1;
+}
+
+int main() {
+    int t;
+    int has;
+    int i;
+    int v;
+    int cmd;
+    int legal;
+
+    t = 1;
+    for (;;) {
+        has = getint();
+        if (has == 0) break;
+
+        ex = -1;
+        ey = -1;
+        for (i = 0; i < 25; i = i + 1) {
+            v = getint();
+            grid[i] = v;
+            if (v == 0) {
+                ex = i / G;
+                ey = i - ex * G;
+            }
+        }
+
+        legal = 1;
+        for (;;) {
+            cmd = getint();
+            if (cmd == 0) break;
+            if (legal == 1) {
+                if (tryMove(cmd) == 0) legal = 0;
+            }
+        }
+
+        if (t > 1) printf("\n");
+        printf("Puzzle #%d:\n", t);
+        t = t + 1;
+
+        if (legal == 1) {
+            printGrid();
+        } else {
+            printf("This puzzle has no final configuration.\n");
+        }
+    }
+    return 0;
+}

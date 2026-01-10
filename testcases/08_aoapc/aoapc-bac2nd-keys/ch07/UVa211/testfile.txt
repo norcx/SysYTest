@@ -1,0 +1,164 @@
+/* Domino tiling solver (scaled to 7x8) */
+const int ROW = 4;
+const int COL = 5;
+const int CELLS = 20;
+const int BONE_CNT = 10;
+
+int grid[20];
+int result_map[20];
+int used[10];
+int bone_index[16];
+
+int used_cnt;
+int ans_cnt;
+
+int get_bone_index(int a, int b) {
+  int t;
+  if (a > b) {
+    t = a;
+    a = b;
+    b = t;
+  }
+  return bone_index[a * ROW + b];
+}
+
+void init_bones() {
+  int i;
+  int j;
+  int cur;
+  for (i = 0; i < ROW * ROW; i = i + 1) {
+    bone_index[i] = -1;
+  }
+  cur = 0;
+  for (i = 0; i < ROW; i = i + 1) {
+    for (j = i; j < ROW; j = j + 1) {
+      bone_index[i * ROW + j] = cur;
+      bone_index[j * ROW + i] = cur;
+      cur = cur + 1;
+    }
+  }
+}
+
+void reset_state() {
+  int i;
+  for (i = 0; i < CELLS; i = i + 1) {
+    result_map[i] = -1;
+  }
+  for (i = 0; i < BONE_CNT; i = i + 1) {
+    used[i] = 0;
+  }
+  used_cnt = 0;
+  ans_cnt = 0;
+}
+
+void solve(int pos) {
+  int p;
+  int r;
+  int c;
+  int b;
+
+  if (used_cnt == BONE_CNT) {
+    ans_cnt = ans_cnt + 1;
+    return;
+  }
+
+  p = pos;
+  for (; p < CELLS; p = p + 1) {
+    if (result_map[p] == -1) {
+      break;
+    }
+  }
+  if (p >= CELLS) {
+    return;
+  }
+
+  r = p / COL;
+  c = p - r * COL;
+
+  if (c + 1 < COL) {
+    if (result_map[p + 1] == -1) {
+      b = get_bone_index(grid[p], grid[p + 1]);
+      if (b != -1) {
+        if (used[b] == 0) {
+          used[b] = 1;
+          used_cnt = used_cnt + 1;
+          result_map[p] = b;
+          result_map[p + 1] = b;
+
+          solve(p + 1);
+
+          used[b] = 0;
+          used_cnt = used_cnt - 1;
+          result_map[p] = -1;
+          result_map[p + 1] = -1;
+        }
+      }
+    }
+  }
+
+  if (r + 1 < ROW) {
+    if (result_map[p + COL] == -1) {
+      b = get_bone_index(grid[p], grid[p + COL]);
+      if (b != -1) {
+        if (used[b] == 0) {
+          used[b] = 1;
+          used_cnt = used_cnt + 1;
+          result_map[p] = b;
+          result_map[p + COL] = b;
+
+          solve(p + 1);
+
+          used[b] = 0;
+          used_cnt = used_cnt - 1;
+          result_map[p] = -1;
+          result_map[p + COL] = -1;
+        }
+      }
+    }
+  }
+}
+
+void print_layout(int t) {
+  int i;
+  int r;
+  int c;
+  printf("layout %d\n", t);
+  for (r = 0; r < ROW; r = r + 1) {
+    for (c = 0; c < COL; c = c + 1) {
+      i = r * COL + c;
+      if (c != 0) {
+        printf(" ");
+      }
+      printf("%d", grid[i]);
+    }
+    printf("\n");
+  }
+}
+
+int main() {
+  int t;
+  int first;
+  int i;
+  init_bones();
+  t = 1;
+
+  for (;;) {
+    first = getint();
+    if (first < 0) {
+      break;
+    }
+    grid[0] = first;
+    for (i = 1; i < CELLS; i = i + 1) {
+      grid[i] = getint();
+    }
+
+    reset_state();
+    solve(0);
+
+    print_layout(t);
+    printf("solutions %d\n", ans_cnt);
+    t = t + 1;
+  }
+
+  return 0;
+}

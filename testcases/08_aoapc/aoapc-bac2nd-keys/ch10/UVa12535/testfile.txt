@@ -1,0 +1,86 @@
+/* UVa12535 / LA6142: count triangles containing the center
+ * Input angles are scaled by 1000 (degrees * 1000).
+ */
+const int SCALE = 1000;
+const int DEG360 = 360 * SCALE;
+const int DEG180 = 180 * SCALE;
+
+int angs[500];
+
+void sort_int(int a[], int len) {
+  int i;
+  int j;
+  int minIndex;
+  int tmp;
+  for (i = 0; i < len; i = i + 1) {
+    minIndex = i;
+    for (j = i + 1; j < len; j = j + 1) {
+      if (a[j] < a[minIndex]) minIndex = j;
+    }
+    tmp = a[i];
+    a[i] = a[minIndex];
+    a[minIndex] = tmp;
+  }
+  return;
+}
+
+int upper_bound_from(int a[], int left, int right, int value) {
+  int l;
+  int r;
+  int mid;
+  l = left;
+  r = right;
+  for (; l < r;) {
+    mid = (l + r) / 2;
+    if (a[mid] <= value) {
+      l = mid + 1;
+    } else {
+      r = mid;
+    }
+  }
+  return l;
+}
+
+int main() {
+  int N;
+  int R;
+  int t;
+  int i;
+  int len;
+  int ang;
+  int ans;
+  int threshold;
+  int ub;
+  int M;
+
+  t = 1;
+  for (;;) {
+    N = getint();
+    R = getint();
+    if (N == 0) break;
+    if (R == 0) break;
+
+    len = 0;
+    for (i = 0; i < N; i = i + 1) {
+      ang = getint();
+      angs[len] = ang;
+      angs[len + 1] = ang + DEG360;
+      len = len + 2;
+    }
+
+    sort_int(angs, len);
+    ans = N * (N - 1) * (N - 2) / 6;
+
+    for (i = 0; i < N; i = i + 1) {
+      threshold = angs[i] + DEG180;
+      ub = upper_bound_from(angs, i + 1, len, threshold);
+      M = ub - (i + 1);
+      ans = ans - M * (M - 1) / 2;
+    }
+
+    printf("Case %d: %d\n", t, ans);
+    t = t + 1;
+  }
+
+  return 0;
+}

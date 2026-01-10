@@ -1,0 +1,123 @@
+/* Description:
+ *   Storage Keepers (UVa 10163), converted to Strict SysY.
+ */
+
+const int MAXN = 128;
+const int MAXM = 32;
+const int STRIDE = MAXN + 1;
+const int SIZE = (MAXM + 1) * (MAXN + 1);
+const int INF = 1061109567;
+
+int N;
+int M;
+int mx;
+int P[MAXM + 1];
+int F[SIZE];
+int G[SIZE];
+
+int max2(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+int min2(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+int idx(int i, int j) {
+    return i * STRIDE + j;
+}
+
+int dpF(int i, int j) {
+    int pos;
+    int d;
+    int k;
+    int v1;
+    int v2;
+    int tmp;
+
+    pos = idx(i, j);
+    d = F[pos];
+    if (d >= 0) return d;
+
+    if (j == 0) {
+        F[pos] = INF;
+        return INF;
+    }
+    if (i == 1) {
+        d = P[1] / j;
+        F[pos] = d;
+        return d;
+    }
+
+    d = dpF(i - 1, j);
+    for (k = 1; k <= j; k = k + 1) {
+        v1 = dpF(i - 1, j - k);
+        v2 = P[i] / k;
+        tmp = min2(v1, v2);
+        d = max2(d, tmp);
+    }
+
+    F[pos] = d;
+    return d;
+}
+
+int dpG(int i, int j) {
+    int pos;
+    int d;
+    int k;
+    int tmp;
+
+    pos = idx(i, j);
+    d = G[pos];
+    if (d >= 0) return d;
+
+    if (j == 0) {
+        G[pos] = 0;
+        return 0;
+    }
+    if (i == 1) {
+        if (P[1] / j >= mx) d = P[1];
+        if (P[1] / j < mx) d = INF;
+        G[pos] = d;
+        return d;
+    }
+
+    d = dpG(i - 1, j);
+    for (k = 1; k <= j; k = k + 1) {
+        if (P[i] / k >= mx) {
+            tmp = dpG(i - 1, j - k);
+            if (tmp < INF) tmp = tmp + P[i];
+            if (tmp >= INF) tmp = INF;
+            d = min2(d, tmp);
+        }
+    }
+
+    G[pos] = d;
+    return d;
+}
+
+int main() {
+    int i;
+    int t;
+
+    for (;;) {
+        N = getint();
+        M = getint();
+        if (N == 0) break;
+
+        for (t = 0; t < SIZE; t = t + 1) {
+            F[t] = -1;
+            G[t] = -1;
+        }
+
+        for (i = 1; i <= M; i = i + 1) P[i] = getint();
+
+        mx = dpF(M, N);
+        if (mx == 0) printf("0 0\n");
+        if (mx != 0) printf("%d %d\n", mx, dpG(M, N));
+    }
+
+    return 0;
+}

@@ -1,0 +1,204 @@
+/* Description:
+ *   Converted from "Morse Mismatches" (UVa 508).
+ *
+ *   Original uses strings/maps and prints matching words with optional suffix:
+ *     - exact match: WORD (and "!" if ambiguous)
+ *     - mismatch: closest prefix match: WORD?
+ *
+ *   Strict SysY adaptation:
+ *     - Input is integer-only: morse bits are 0/1, words are sequences of symbol IDs.
+ *     - Output per query is two lines:
+ *         1) selected word id (1-based, insertion order)
+ *         2) suffix code: 0 = exact unique, 1 = exact ambiguous (!), 2 = mismatch (?)
+ */
+
+const int MAX_SYMBOLS = 32;
+const int MAX_CODE_BITS = 512;
+const int MAX_WORDS = 64;
+const int MAX_WORD_BITS = 4096;
+const int MAX_CTX = 64;
+const int MAX_QUERY_BITS = 512;
+const int INF = 1000000000;
+
+int codeStart[MAX_SYMBOLS];
+int codeLen[MAX_SYMBOLS];
+int codeBits[MAX_CODE_BITS];
+int codeBitsUsed;
+
+int wordStart[MAX_WORDS];
+int wordLenBits[MAX_WORDS];
+int wordBits[MAX_WORD_BITS];
+int wordBitsUsed;
+
+int ctxStart[MAX_CTX];
+int ctxLenBits[MAX_CTX];
+int ctxFirstWord[MAX_CTX];
+int ctxDupCount[MAX_CTX];
+int ctxCount;
+
+int queryBits[MAX_QUERY_BITS];
+
+int findContext(int wStart, int wLen) {
+    int i;
+    int j;
+    int same;
+    for (i = 0; i < ctxCount; i = i + 1) {
+        if (ctxLenBits[i] == wLen) {
+            same = 1;
+            for (j = 0; j < wLen; j = j + 1) {
+                if (wordBits[ctxStart[i] + j] != wordBits[wStart + j]) {
+                    same = 0;
+                }
+            }
+            if (same == 1) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+void solveQuery(int qLen) {
+    int i;
+    int j;
+    int same;
+    int bestDiff;
+    int bestWord;
+    int diff;
+    int ok;
+
+    for (i = 0; i < ctxCount; i = i + 1) {
+        if (ctxLenBits[i] == qLen) {
+            same = 1;
+            for (j = 0; j < qLen; j = j + 1) {
+                if (wordBits[ctxStart[i] + j] != queryBits[j]) {
+                    same = 0;
+                }
+            }
+            if (same == 1) {
+                printf("%d\n", ctxFirstWord[i]);
+                if (ctxDupCount[i] > 1) {
+                    printf("%d\n", 1);
+                } else {
+                    printf("%d\n", 0);
+                }
+                return;
+            }
+        }
+    }
+
+    bestDiff = INF;
+    bestWord = 0;
+
+    for (i = 0; i < ctxCount; i = i + 1) {
+        diff = -1;
+        if (qLen < ctxLenBits[i]) {
+            ok = 1;
+            for (j = 0; j < qLen; j = j + 1) {
+                if (queryBits[j] != wordBits[ctxStart[i] + j]) {
+                    ok = 0;
+                }
+            }
+            if (ok == 1) {
+                diff = ctxLenBits[i] - qLen;
+            }
+        } else if (ctxLenBits[i] < qLen) {
+            ok = 1;
+            for (j = 0; j < ctxLenBits[i]; j = j + 1) {
+                if (wordBits[ctxStart[i] + j] != queryBits[j]) {
+                    ok = 0;
+                }
+            }
+            if (ok == 1) {
+                diff = qLen - ctxLenBits[i];
+            }
+        }
+
+        if (diff >= 0) {
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                bestWord = ctxFirstWord[i];
+            }
+        }
+    }
+
+    printf("%d\n", bestWord);
+    printf("%d\n", 2);
+}
+
+int main() {
+    int nSymbols;
+    int nWords;
+    int nQueries;
+    int i;
+    int j;
+    int k;
+    int id;
+    int len;
+    int bit;
+    int wordLetters;
+    int sym;
+    int wStart;
+    int wId;
+    int ctxIdx;
+    int qLen;
+
+    nSymbols = getint();
+    codeBitsUsed = 0;
+
+    for (i = 0; i < nSymbols; i = i + 1) {
+        id = getint();
+        len = getint();
+        codeStart[id] = codeBitsUsed;
+        codeLen[id] = len;
+        for (j = 0; j < len; j = j + 1) {
+            bit = getint();
+            codeBits[codeBitsUsed] = bit;
+            codeBitsUsed = codeBitsUsed + 1;
+        }
+    }
+
+    nWords = getint();
+    wordBitsUsed = 0;
+    ctxCount = 0;
+
+    for (i = 0; i < nWords; i = i + 1) {
+        wId = i + 1;
+        wordLetters = getint();
+
+        wStart = wordBitsUsed;
+        wordStart[wId] = wStart;
+
+        for (j = 0; j < wordLetters; j = j + 1) {
+            sym = getint();
+            for (k = 0; k < codeLen[sym]; k = k + 1) {
+                wordBits[wordBitsUsed] = codeBits[codeStart[sym] + k];
+                wordBitsUsed = wordBitsUsed + 1;
+            }
+        }
+
+        wordLenBits[wId] = wordBitsUsed - wStart;
+
+        ctxIdx = findContext(wStart, wordLenBits[wId]);
+        if (ctxIdx >= 0) {
+            ctxDupCount[ctxIdx] = ctxDupCount[ctxIdx] + 1;
+        } else {
+            ctxStart[ctxCount] = wStart;
+            ctxLenBits[ctxCount] = wordLenBits[wId];
+            ctxFirstWord[ctxCount] = wId;
+            ctxDupCount[ctxCount] = 1;
+            ctxCount = ctxCount + 1;
+        }
+    }
+
+    nQueries = getint();
+    for (i = 0; i < nQueries; i = i + 1) {
+        qLen = getint();
+        for (j = 0; j < qLen; j = j + 1) {
+            queryBits[j] = getint();
+        }
+        solveQuery(qLen);
+    }
+
+    return 0;
+}

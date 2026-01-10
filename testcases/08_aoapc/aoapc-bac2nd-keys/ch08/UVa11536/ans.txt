@@ -1,0 +1,5 @@
+Case 1: 3
+Case 2: 7
+Case 3: sequence nai
+Case 4: 241
+Case 5: 1

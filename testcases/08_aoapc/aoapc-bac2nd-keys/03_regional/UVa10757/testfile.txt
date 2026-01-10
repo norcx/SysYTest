@@ -1,0 +1,453 @@
+/* Description:
+ *   SysY adaptation of a tiny SQL-like engine:
+ *   - Tables (integer columns only)
+ *   - INNER JOIN on equality
+ *   - WHERE as postfix boolean expression
+ *   - ORDER BY (stable) on integer keys
+ *
+ * Input format (all integers, one per line):
+ *   T
+ *   For each case:
+ *     K
+ *     Repeat K times:
+ *       tableId
+ *       M
+ *       N
+ *       Repeat M times: colId, colType(ignored)
+ *       Repeat N*M times: cellValue
+ *     selectCount (0 means '*')
+ *       If selectCount>0: selectCount colId(s)
+ *     joinCount (1 or 2)
+ *       If 1: fromTableId
+ *       If 2: leftTableId, rightTableId, leftJoinColId, rightJoinColId
+ *     whereTokenLen (postfix tokens)
+ *       Each token:
+ *         tokType (1=COMP, 2=AND, 3=OR, 4=NOT)
+ *         If COMP: lhsColId, op(1< 2<= 3> 4>= 5== 6!=), rhsType(0=const 1=col), rhsVal
+ *     orderCount
+ *       Repeat orderCount times: orderColId, ascFlag(1=ASC 0=DESC)
+ *
+ * Output:
+ *   outColCount outRowCount
+ *   outColId (one per line)
+ *   then each row values (space-separated)
+ */
+
+const int MAXK = 2;
+const int MAXM = 6;
+const int MAXN = 8;
+const int MAXJOIN = 64;
+const int MAXTOK = 32;
+const int MAXORDER = 4;
+const int MAXRES = 64;
+
+int gK;
+int gTableId[MAXK];
+int gTableM[MAXK];
+int gTableN[MAXK];
+int gTableColId[MAXK * MAXM];
+int gTableVal[MAXK * MAXN * MAXM];
+
+int gJoinM;
+int gJoinN;
+int gJoinColId[MAXM];
+int gJoinVal[MAXJOIN * MAXM];
+
+int gSelCount;
+int gSelColId[MAXM];
+
+int gTokLen;
+int gTokType[MAXTOK];
+int gTokLhsCol[MAXTOK];
+int gTokOp[MAXTOK];
+int gTokRhsType[MAXTOK];
+int gTokRhsVal[MAXTOK];
+
+int gOrderCount;
+int gOrderCol[MAXORDER];
+int gOrderAsc[MAXORDER];
+
+int table_col_pos(int tableIndex, int colIndex) {
+    return tableIndex * MAXM + colIndex;
+}
+
+int table_val_pos(int tableIndex, int rowIndex, int colIndex) {
+    return tableIndex * (MAXN * MAXM) + rowIndex * MAXM + colIndex;
+}
+
+int join_val_pos(int rowIndex, int colIndex) {
+    return rowIndex * MAXM + colIndex;
+}
+
+int find_table_index(int tableId) {
+    int i;
+    for (i = 0; i < gK; i = i + 1) {
+        if (gTableId[i] == tableId) return i;
+    }
+    return -1;
+}
+
+int find_col_index_in_table(int tableIndex, int colId) {
+    int m;
+    for (m = 0; m < gTableM[tableIndex]; m = m + 1) {
+        if (gTableColId[table_col_pos(tableIndex, m)] == colId) return m;
+    }
+    return -1;
+}
+
+int get_table_value(int tableIndex, int rowIndex, int colId) {
+    int ci;
+    ci = find_col_index_in_table(tableIndex, colId);
+    if (ci < 0) return 0;
+    return gTableVal[table_val_pos(tableIndex, rowIndex, ci)];
+}
+
+int find_col_index_in_join(int colId) {
+    int i;
+    for (i = 0; i < gJoinM; i = i + 1) {
+        if (gJoinColId[i] == colId) return i;
+    }
+    return -1;
+}
+
+int get_join_value(int rowIndex, int colId) {
+    int ci;
+    ci = find_col_index_in_join(colId);
+    if (ci < 0) return 0;
+    return gJoinVal[join_val_pos(rowIndex, ci)];
+}
+
+int cmp_int(int a, int b, int op) {
+    if (op == 1) {
+        if (a < b) return 1;
+        return 0;
+    }
+    if (op == 2) {
+        if (a <= b) return 1;
+        return 0;
+    }
+    if (op == 3) {
+        if (a > b) return 1;
+        return 0;
+    }
+    if (op == 4) {
+        if (a >= b) return 1;
+        return 0;
+    }
+    if (op == 5) {
+        if (a == b) return 1;
+        return 0;
+    }
+    if (op == 6) {
+        if (a != b) return 1;
+        return 0;
+    }
+    return 0;
+}
+
+void build_join_one(int tableIndex) {
+    int i;
+    int r;
+    int c;
+    gJoinM = gTableM[tableIndex];
+    gJoinN = gTableN[tableIndex];
+    for (i = 0; i < gJoinM; i = i + 1) {
+        gJoinColId[i] = gTableColId[table_col_pos(tableIndex, i)];
+    }
+    for (r = 0; r < gJoinN; r = r + 1) {
+        for (c = 0; c < gJoinM; c = c + 1) {
+            gJoinVal[join_val_pos(r, c)] = gTableVal[table_val_pos(tableIndex, r, c)];
+        }
+    }
+}
+
+void build_join_two(int leftIndex, int rightIndex, int leftJoinCol, int rightJoinCol) {
+    int i;
+    int lr;
+    int rr;
+    int lc;
+    int rc;
+    int leftM;
+    int rightM;
+    int lv;
+    int rv;
+
+    leftM = gTableM[leftIndex];
+    rightM = gTableM[rightIndex];
+    gJoinM = leftM + rightM;
+    gJoinN = 0;
+
+    for (i = 0; i < leftM; i = i + 1) {
+        gJoinColId[i] = gTableColId[table_col_pos(leftIndex, i)];
+    }
+    for (i = 0; i < rightM; i = i + 1) {
+        gJoinColId[leftM + i] = gTableColId[table_col_pos(rightIndex, i)];
+    }
+
+    for (lr = 0; lr < gTableN[leftIndex]; lr = lr + 1) {
+        lv = get_table_value(leftIndex, lr, leftJoinCol);
+        for (rr = 0; rr < gTableN[rightIndex]; rr = rr + 1) {
+            rv = get_table_value(rightIndex, rr, rightJoinCol);
+            if (lv == rv) {
+                if (gJoinN < MAXJOIN) {
+                    for (lc = 0; lc < leftM; lc = lc + 1) {
+                        gJoinVal[join_val_pos(gJoinN, lc)] =
+                            gTableVal[table_val_pos(leftIndex, lr, lc)];
+                    }
+                    for (rc = 0; rc < rightM; rc = rc + 1) {
+                        gJoinVal[join_val_pos(gJoinN, leftM + rc)] =
+                            gTableVal[table_val_pos(rightIndex, rr, rc)];
+                    }
+                    gJoinN = gJoinN + 1;
+                }
+            }
+        }
+    }
+}
+
+int eval_where_row(int rowIndex) {
+    int st[64];
+    int sp;
+    int i;
+    int a;
+    int b;
+    int r;
+    int lhs;
+    int rhs;
+
+    if (gTokLen == 0) return 1;
+    sp = 0;
+
+    for (i = 0; i < gTokLen; i = i + 1) {
+        if (gTokType[i] == 1) {
+            lhs = get_join_value(rowIndex, gTokLhsCol[i]);
+            if (gTokRhsType[i] == 0) rhs = gTokRhsVal[i];
+            else rhs = get_join_value(rowIndex, gTokRhsVal[i]);
+            st[sp] = cmp_int(lhs, rhs, gTokOp[i]);
+            sp = sp + 1;
+        } else if (gTokType[i] == 2) {
+            if (sp < 2) return 0;
+            b = st[sp - 1];
+            a = st[sp - 2];
+            sp = sp - 2;
+            r = 0;
+            if (a == 1) {
+                if (b == 1) r = 1;
+            }
+            st[sp] = r;
+            sp = sp + 1;
+        } else if (gTokType[i] == 3) {
+            if (sp < 2) return 0;
+            b = st[sp - 1];
+            a = st[sp - 2];
+            sp = sp - 2;
+            r = 0;
+            if (a == 1) r = 1;
+            else {
+                if (b == 1) r = 1;
+            }
+            st[sp] = r;
+            sp = sp + 1;
+        } else if (gTokType[i] == 4) {
+            if (sp < 1) return 0;
+            a = st[sp - 1];
+            sp = sp - 1;
+            r = 0;
+            if (a == 0) r = 1;
+            st[sp] = r;
+            sp = sp + 1;
+        } else {
+            return 0;
+        }
+    }
+
+    if (sp != 1) return 0;
+    return st[0];
+}
+
+int row_less(int rowA, int rowB) {
+    int k;
+    int va;
+    int vb;
+    int asc;
+    for (k = 0; k < gOrderCount; k = k + 1) {
+        va = get_join_value(rowA, gOrderCol[k]);
+        vb = get_join_value(rowB, gOrderCol[k]);
+        if (va == vb) {
+        } else {
+            asc = gOrderAsc[k];
+            if (asc == 1) {
+                if (va < vb) return 1;
+                return 0;
+            } else {
+                if (va > vb) return 1;
+                return 0;
+            }
+        }
+    }
+    return 0;
+}
+
+void stable_sort_rows(int rows[], int n) {
+    int i;
+    int j;
+    int key;
+    for (i = 1; i < n; i = i + 1) {
+        key = rows[i];
+        j = i - 1;
+        for (; j >= 0; j = j - 1) {
+            if (row_less(key, rows[j]) == 1) {
+                rows[j + 1] = rows[j];
+            } else {
+                break;
+            }
+        }
+        rows[j + 1] = key;
+    }
+}
+
+int main() {
+    int T;
+    int tc;
+    int k;
+    int m;
+    int n;
+    int r;
+    int c;
+    int dummyType;
+
+    int selectCount;
+    int joinCount;
+    int fromId;
+    int leftId;
+    int rightId;
+    int leftJoinCol;
+    int rightJoinCol;
+    int leftIndex;
+    int rightIndex;
+
+    int i;
+    int outCount;
+    int outCol[MAXM];
+    int resIdx[MAXRES];
+    int resN;
+
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        if (tc > 0) printf("\n");
+
+        gK = getint();
+        if (gK > MAXK) gK = MAXK;
+
+        for (k = 0; k < gK; k = k + 1) {
+            gTableId[k] = getint();
+            gTableM[k] = getint();
+            gTableN[k] = getint();
+            if (gTableM[k] > MAXM) gTableM[k] = MAXM;
+            if (gTableN[k] > MAXN) gTableN[k] = MAXN;
+
+            for (m = 0; m < gTableM[k]; m = m + 1) {
+                gTableColId[table_col_pos(k, m)] = getint();
+                dummyType = getint();
+                dummyType = dummyType + 0;
+            }
+
+            for (r = 0; r < gTableN[k]; r = r + 1) {
+                for (c = 0; c < gTableM[k]; c = c + 1) {
+                    gTableVal[table_val_pos(k, r, c)] = getint();
+                }
+            }
+        }
+
+        selectCount = getint();
+        gSelCount = selectCount;
+        if (gSelCount > MAXM) gSelCount = MAXM;
+        if (gSelCount > 0) {
+            for (i = 0; i < gSelCount; i = i + 1) {
+                gSelColId[i] = getint();
+            }
+        }
+
+        joinCount = getint();
+        if (joinCount == 1) {
+            fromId = getint();
+            leftIndex = find_table_index(fromId);
+            if (leftIndex < 0) leftIndex = 0;
+            build_join_one(leftIndex);
+        } else {
+            leftId = getint();
+            rightId = getint();
+            leftJoinCol = getint();
+            rightJoinCol = getint();
+            leftIndex = find_table_index(leftId);
+            rightIndex = find_table_index(rightId);
+            if (leftIndex < 0) leftIndex = 0;
+            if (rightIndex < 0) rightIndex = 0;
+            build_join_two(leftIndex, rightIndex, leftJoinCol, rightJoinCol);
+        }
+
+        gTokLen = getint();
+        if (gTokLen > MAXTOK) gTokLen = MAXTOK;
+        for (i = 0; i < gTokLen; i = i + 1) {
+            gTokType[i] = getint();
+            if (gTokType[i] == 1) {
+                gTokLhsCol[i] = getint();
+                gTokOp[i] = getint();
+                gTokRhsType[i] = getint();
+                gTokRhsVal[i] = getint();
+            }
+        }
+
+        gOrderCount = getint();
+        if (gOrderCount > MAXORDER) gOrderCount = MAXORDER;
+        for (i = 0; i < gOrderCount; i = i + 1) {
+            gOrderCol[i] = getint();
+            gOrderAsc[i] = getint();
+        }
+
+        outCount = 0;
+        if (gSelCount == 0) {
+            outCount = gJoinM;
+            for (i = 0; i < outCount; i = i + 1) {
+                outCol[i] = gJoinColId[i];
+            }
+        } else {
+            outCount = gSelCount;
+            for (i = 0; i < outCount; i = i + 1) {
+                outCol[i] = gSelColId[i];
+            }
+        }
+
+        resN = 0;
+        for (r = 0; r < gJoinN; r = r + 1) {
+            if (eval_where_row(r) == 1) {
+                if (resN < MAXRES) {
+                    resIdx[resN] = r;
+                    resN = resN + 1;
+                }
+            }
+        }
+
+        if (gOrderCount > 0) stable_sort_rows(resIdx, resN);
+
+        printf("%d", outCount);
+        printf(" ");
+        printf("%d", resN);
+        printf("\n");
+
+        for (i = 0; i < outCount; i = i + 1) {
+            printf("%d", outCol[i]);
+            printf("\n");
+        }
+
+        for (i = 0; i < resN; i = i + 1) {
+            for (c = 0; c < outCount; c = c + 1) {
+                if (c > 0) printf(" ");
+                printf("%d", get_join_value(resIdx[i], outCol[c]));
+            }
+            printf("\n");
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,237 @@
+/* Description:
+ *   Strict SysY testcase converted from:
+ *   "Rent a Car" (UVa 12433), min-cost max-flow solution.
+ */
+
+int INF = 1000000000;
+
+int N;
+int C;
+int R;
+int S;
+int T;
+
+int Gid[60];
+int Qid[60];
+int need[60];
+int toSinkEdge[60];
+
+int nNodes;
+int edgeCnt;
+int head[120];
+int eu[20000];
+int ev[20000];
+int enext[20000];
+int ecap[20000];
+int eflow[20000];
+int ecost[20000];
+int erev[20000];
+
+int distArr[120];
+int inq[120];
+int prevEdge[120];
+int aug[120];
+int q[120];
+
+int flowTotal;
+int costTotal;
+
+void graph_init(int nodes) {
+    int i;
+    nNodes = nodes;
+    edgeCnt = 0;
+    for (i = 0; i < nodes; i = i + 1) {
+        head[i] = -1;
+    }
+}
+
+void add_edge(int u, int v, int cap, int cost) {
+    int e1;
+    int e2;
+
+    e1 = edgeCnt;
+    e2 = edgeCnt + 1;
+
+    eu[e1] = u;
+    ev[e1] = v;
+    ecap[e1] = cap;
+    eflow[e1] = 0;
+    ecost[e1] = cost;
+    erev[e1] = e2;
+    enext[e1] = head[u];
+    head[u] = e1;
+
+    eu[e2] = v;
+    ev[e2] = u;
+    ecap[e2] = 0;
+    eflow[e2] = 0;
+    ecost[e2] = 0 - cost;
+    erev[e2] = e1;
+    enext[e2] = head[v];
+    head[v] = e2;
+
+    edgeCnt = edgeCnt + 2;
+}
+
+int bellman_ford(int s, int t) {
+    int i;
+    int qh;
+    int qt;
+    int u;
+    int v;
+    int e;
+    int nd;
+    int add;
+    int rem;
+
+    for (i = 0; i < nNodes; i = i + 1) {
+        distArr[i] = INF;
+        inq[i] = 0;
+        prevEdge[i] = -1;
+        aug[i] = 0;
+    }
+
+    distArr[s] = 0;
+    inq[s] = 1;
+    aug[s] = INF;
+
+    qh = 0;
+    qt = 0;
+    q[qt] = s;
+    qt = qt + 1;
+
+    for (; qh != qt;) {
+        u = q[qh];
+        qh = qh + 1;
+        if (qh == 120) qh = 0;
+        inq[u] = 0;
+
+        e = head[u];
+        for (; e != -1;) {
+            if (ecap[e] > eflow[e]) {
+                v = ev[e];
+                nd = distArr[u] + ecost[e];
+                if (nd < distArr[v]) {
+                    distArr[v] = nd;
+                    prevEdge[v] = e;
+                    rem = ecap[e] - eflow[e];
+                    aug[v] = aug[u];
+                    if (rem < aug[v]) aug[v] = rem;
+                    if (inq[v] == 0) {
+                        q[qt] = v;
+                        qt = qt + 1;
+                        if (qt == 120) qt = 0;
+                        inq[v] = 1;
+                    }
+                }
+            }
+            e = enext[e];
+        }
+    }
+
+    if (distArr[t] == INF) return 0;
+
+    add = aug[t];
+    flowTotal = flowTotal + add;
+    costTotal = costTotal + distArr[t] * add;
+
+    v = t;
+    for (;;) {
+        if (v == s) return 1;
+        e = prevEdge[v];
+        eflow[e] = eflow[e] + add;
+        eflow[erev[e]] = eflow[erev[e]] - add;
+        v = eu[e];
+    }
+    return 0;
+}
+
+int mincost(int s, int t) {
+    int ok;
+    flowTotal = 0;
+    costTotal = 0;
+    for (;;) {
+        ok = bellman_ford(s, t);
+        if (ok == 0) return costTotal;
+    }
+    return 0;
+}
+
+void init_ids() {
+    int id;
+    int i;
+    id = 0;
+    S = id;
+    id = id + 1;
+    for (i = 0; i < N; i = i + 1) {
+        Gid[i] = id;
+        id = id + 1;
+    }
+    for (i = 0; i < N; i = i + 1) {
+        Qid[i] = id;
+        id = id + 1;
+    }
+    T = id;
+    id = id + 1;
+    graph_init(id);
+}
+
+int main() {
+    int K;
+    int tc;
+    int i;
+    int j;
+    int r;
+    int c;
+    int p;
+    int d;
+    int s;
+    int ans;
+    int valid;
+
+    K = getint();
+    for (tc = 1; tc <= K; tc = tc + 1) {
+        N = getint();
+        C = getint();
+        R = getint();
+
+        init_ids();
+
+        for (i = 0; i < N; i = i + 1) {
+            r = getint();
+            need[i] = r;
+
+            toSinkEdge[i] = edgeCnt;
+            add_edge(Gid[i], T, r, 0);
+            add_edge(S, Qid[i], r, 0);
+
+            if (i > 0) add_edge(Gid[i - 1], Gid[i], INF, 0);
+        }
+
+        for (i = 0; i < C; i = i + 1) {
+            c = getint();
+            p = getint();
+            add_edge(S, Gid[0], c, p);
+        }
+
+        for (i = 0; i < R; i = i + 1) {
+            d = getint();
+            s = getint();
+            for (j = 0; j + d + 1 < N; j = j + 1) {
+                add_edge(Qid[j], Gid[j + d + 1], INF, s);
+            }
+        }
+
+        ans = mincost(S, T);
+
+        valid = 1;
+        for (i = 0; i < N; i = i + 1) {
+            if (eflow[toSinkEdge[i]] != need[i]) valid = 0;
+        }
+
+        if (valid == 0) printf("Case %d: impossible\n", tc);
+        if (valid == 1) printf("Case %d: %d\n", tc, ans);
+    }
+
+    return 0;
+}

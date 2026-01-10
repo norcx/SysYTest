@@ -1,0 +1,39 @@
+/* Description:
+ *   Molar mass calculator (fixed-point, x1000).
+ *   Input encoding:
+ *     T
+ *     for each case:
+ *       G
+ *       (code, count) repeated G times
+ *   code: 1=C, 2=H, 3=O, 4=N
+ */
+int weight(int code) {
+  if (code == 1) return 12010;
+  if (code == 2) return 1008;
+  if (code == 3) return 16000;
+  if (code == 4) return 14010;
+  return 0;
+}
+
+int main() {
+  int T;
+  int t;
+  int groups;
+  int i;
+  int code;
+  int cnt;
+  int ans;
+
+  T = getint();
+  for (t = 0; t < T; t = t + 1) {
+    groups = getint();
+    ans = 0;
+    for (i = 0; i < groups; i = i + 1) {
+      code = getint();
+      cnt = getint();
+      ans = ans + weight(code) * cnt;
+    }
+    printf("%d\n", ans);
+  }
+  return 0;
+}

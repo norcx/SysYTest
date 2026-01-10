@@ -1,0 +1,275 @@
+/* Description:
+ *   Converted from LA3846 - Typesetting (C++).
+ *   Original input uses '.' '#' '0' glyph rows; this SysY testcase encodes each
+ *   cell as an integer: '.' -> 0, '#' -> 1, '0' -> 2.
+ *
+ *   Input format (newline-separated integers):
+ *     Repeat:
+ *       N
+ *       gn
+ *       for each glyph k in [0, gn):
+ *         width
+ *         N * width cell values (row-major)
+ *     End with N = 0.
+ *
+ *   Output format:
+ *     case_index
+ *     N lines of '.' and '#'
+ */
+
+const int MAXN = 24;
+const int MAXG = 24;
+const int MAXW = 128;
+
+int N;
+int gn;
+
+int g_width[MAXG];
+int g_segl[MAXG * MAXN];
+int g_segr[MAXG * MAXN];
+int g_cell[MAXG * MAXN * MAXW];
+
+int idx_seg(int g, int r) {
+    return g * MAXN + r;
+}
+
+int idx_cell(int g, int r, int c) {
+    return g * MAXN * MAXW + r * MAXW + c;
+}
+
+int cell_get(int g, int r, int c) {
+    return g_cell[idx_cell(g, r, c)];
+}
+
+void cell_set(int g, int r, int c, int v) {
+    g_cell[idx_cell(g, r, c)] = v;
+}
+
+void set_seg(int g, int r) {
+    int l;
+    int rr;
+    int c;
+    int v;
+    l = MAXW;
+    rr = -1;
+    for (c = 0; c < g_width[g]; c = c + 1) {
+        v = cell_get(g, r, c);
+        if (v != 0) {
+            if (c < l) l = c;
+            if (c > rr) rr = c;
+        }
+    }
+    g_segl[idx_seg(g, r)] = l;
+    g_segr[idx_seg(g, r)] = rr;
+}
+
+int can_put(int col, int rhs) {
+    int r;
+    int tl;
+    int tr;
+    int rl;
+    int rr;
+    for (r = 0; r < N; r = r + 1) {
+        tl = g_segl[idx_seg(0, r)];
+        tr = g_segr[idx_seg(0, r)];
+        rl = g_segl[idx_seg(rhs, r)];
+        rr = g_segr[idx_seg(rhs, r)];
+        if (rr == -1 || tr == -1) {
+        } else {
+            rl = rl + col;
+            rr = rr + col;
+            if (tr + 1 >= rl) return 0;
+        }
+    }
+    return 1;
+}
+
+void pack_into_0(int rhs) {
+    int c;
+    int aw;
+    int oldw;
+    int nw;
+    int r;
+    int j;
+    int v;
+    int cur;
+
+    for (c = 0 - g_width[rhs]; c <= g_width[0] + 1; c = c + 1) {
+        if (can_put(c, rhs) == 1) break;
+    }
+
+    if (c < 0) {
+        aw = 0 - c;
+        oldw = g_width[0];
+        if (oldw + aw > MAXW) aw = MAXW - oldw;
+        g_width[0] = oldw + aw;
+        for (r = 0; r < N; r = r + 1) {
+            for (j = oldw - 1; j >= 0; j = j - 1) {
+                v = cell_get(0, r, j);
+                cell_set(0, r, j + aw, v);
+            }
+            for (j = 0; j < aw; j = j + 1) {
+                cell_set(0, r, j, 0);
+            }
+            if (g_segr[idx_seg(0, r)] != -1) {
+                g_segl[idx_seg(0, r)] = g_segl[idx_seg(0, r)] + aw;
+                g_segr[idx_seg(0, r)] = g_segr[idx_seg(0, r)] + aw;
+            }
+        }
+        c = 0;
+    }
+
+    nw = c + g_width[rhs];
+    if (nw > MAXW) nw = MAXW;
+    if (nw > g_width[0]) {
+        for (r = 0; r < N; r = r + 1) {
+            for (j = g_width[0]; j < nw; j = j + 1) {
+                cell_set(0, r, j, 0);
+            }
+        }
+        g_width[0] = nw;
+    }
+
+    for (r = 0; r < N; r = r + 1) {
+        for (j = 0; j < g_width[rhs]; j = j + 1) {
+            if (j + c >= 0 && j + c < MAXW) {
+                cur = cell_get(0, r, j + c);
+                if (cur == 0) {
+                    v = cell_get(rhs, r, j);
+                    cell_set(0, r, j + c, v);
+                }
+            }
+        }
+        set_seg(0, r);
+    }
+}
+
+int is_col_empty(int col) {
+    int r;
+    for (r = 0; r < N; r = r + 1) {
+        if (cell_get(0, r, col) == 1) return 0;
+    }
+    return 1;
+}
+
+void pre_out_0() {
+    int width;
+    int c;
+    int sj;
+    int r;
+    int j;
+    int v;
+
+    width = g_width[0];
+
+    for (c = width - 1; c >= 0; c = c - 1) {
+        if (is_col_empty(c) == 1) {
+            width = width - 1;
+        } else {
+            break;
+        }
+    }
+    if (width < 0) width = 0;
+
+    sj = 0;
+    for (sj = 0; sj < width; sj = sj + 1) {
+        if (is_col_empty(sj) == 0) break;
+    }
+
+    if (sj > 0) {
+        for (r = 0; r < N; r = r + 1) {
+            for (j = 0; j < width - sj; j = j + 1) {
+                v = cell_get(0, r, j + sj);
+                cell_set(0, r, j, v);
+            }
+            for (j = width - sj; j < width; j = j + 1) {
+                cell_set(0, r, j, 0);
+            }
+        }
+        width = width - sj;
+    }
+
+    for (r = 0; r < N; r = r + 1) {
+        for (j = 0; j < width; j = j + 1) {
+            v = cell_get(0, r, j);
+            if (v == 2) cell_set(0, r, j, 0);
+        }
+    }
+
+    g_width[0] = width;
+}
+
+void print_case(int t) {
+    int r;
+    int c;
+    int v;
+    printf("%d\n", t);
+    for (r = 0; r < N; r = r + 1) {
+        for (c = 0; c < g_width[0]; c = c + 1) {
+            v = cell_get(0, r, c);
+            if (v == 1) {
+                printf("#");
+            } else {
+                printf(".");
+            }
+        }
+        printf("\n");
+    }
+}
+
+void clear_case() {
+    int g;
+    int r;
+    int c;
+    for (g = 0; g < gn; g = g + 1) {
+        g_width[g] = 0;
+        for (r = 0; r < N; r = r + 1) {
+            g_segl[idx_seg(g, r)] = MAXW;
+            g_segr[idx_seg(g, r)] = -1;
+            for (c = 0; c < MAXW; c = c + 1) {
+                cell_set(g, r, c, 0);
+            }
+        }
+    }
+}
+
+int main() {
+    int t;
+    int g;
+    int r;
+    int c;
+    int w;
+    int v;
+
+    t = 1;
+    for (;;) {
+        N = getint();
+        if (N == 0) break;
+        gn = getint();
+        if (gn > MAXG) gn = MAXG;
+        clear_case();
+
+        for (g = 0; g < gn; g = g + 1) {
+            w = getint();
+            if (w > MAXW) w = MAXW;
+            g_width[g] = w;
+            for (r = 0; r < N; r = r + 1) {
+                for (c = 0; c < w; c = c + 1) {
+                    v = getint();
+                    cell_set(g, r, c, v);
+                }
+                set_seg(g, r);
+            }
+        }
+
+        for (g = 1; g < gn; g = g + 1) {
+            pack_into_0(g);
+        }
+
+        pre_out_0();
+        print_case(t);
+        t = t + 1;
+    }
+
+    return 0;
+}

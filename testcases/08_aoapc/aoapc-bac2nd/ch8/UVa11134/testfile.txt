@@ -1,0 +1,70 @@
+/* UVa11134 Fabled Rooks (scaled SysY testcase)
+ *
+ * Input format (newline-separated ints):
+ * n
+ * x1 y1 x2 y2 (repeated n times)
+ * ... more cases ...
+ * 0 (sentinel)
+ */
+
+const int MAXN = 5005;
+
+int n;
+int x1[MAXN];
+int y1[MAXN];
+int x2[MAXN];
+int y2[MAXN];
+int x[MAXN];
+int y[MAXN];
+
+int solve(int a[], int b[], int c[], int n_) {
+    int i;
+    int col;
+    int rook;
+    int minb;
+
+    for (i = 0; i < n_; i = i + 1) {
+        c[i] = -1;
+    }
+
+    for (col = 1; col <= n_; col = col + 1) {
+        rook = -1;
+        minb = n_ + 1;
+        for (i = 0; i < n_; i = i + 1) {
+            if (c[i] < 0 && b[i] < minb && col >= a[i]) {
+                rook = i;
+                minb = b[i];
+            }
+        }
+        if (rook < 0 || col > minb) {
+            return 0;
+        }
+        c[rook] = col;
+    }
+    return 1;
+}
+
+int main() {
+    int i;
+    for (; 1; ) {
+        n = getint();
+        if (n == 0) {
+            break;
+        }
+        for (i = 0; i < n; i = i + 1) {
+            x1[i] = getint();
+            y1[i] = getint();
+            x2[i] = getint();
+            y2[i] = getint();
+        }
+
+        if (solve(x1, x2, x, n) == 1 && solve(y1, y2, y, n) == 1) {
+            for (i = 0; i < n; i = i + 1) {
+                printf("%d %d\n", x[i], y[i]);
+            }
+        } else {
+            printf("IMPOSSIBLE\n");
+        }
+    }
+    return 0;
+}

@@ -1,0 +1,43 @@
+/* Description:
+ *   UVa11059 Maximum Product
+ *   Read multiple cases: n then n integers, terminated by n==0.
+ *   For each case, compute the maximum product of a contiguous subsequence.
+ */
+
+int main() {
+    int S[20];
+    int kase;
+    int n;
+    int i;
+    int j;
+    int ans;
+    int v;
+
+    kase = 0;
+    for (;;) {
+        n = getint();
+        if (n == 0) {
+            break;
+        }
+
+        for (i = 0; i < n; i = i + 1) {
+            S[i] = getint();
+        }
+
+        ans = 0;
+        for (i = 0; i < n; i = i + 1) {
+            v = 1;
+            for (j = i; j < n; j = j + 1) {
+                v = v * S[j];
+                if (v > ans) {
+                    ans = v;
+                }
+            }
+        }
+
+        kase = kase + 1;
+        printf("Case #%d: The maximum product is %d.\n\n", kase, ans);
+    }
+
+    return 0;
+}

@@ -1,0 +1,8 @@
+location 201 at detail level 1 using map 102
+location 201 at detail level 2 using map 101
+location 201 at detail level 3 using map 103
+location 201 at detail level 4 no map at that detail level; using map 103
+location 202 at detail level 1 using map 102
+location 202 at detail level 2 no map at that detail level; using map 102
+location 203 at detail level 1 no map contains that location
+location 999 at detail level 1 unknown location

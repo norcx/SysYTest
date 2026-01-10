@@ -1,0 +1,119 @@
+/* Description:
+ *   UVa10824 Regular Polygon (integer-angle variant for Strict SysY)
+ *
+ *   Original solution uses floating-point angles (atan2) and EPS matching.
+ *   Strict SysY allows only int/void, so this testcase replaces each (x,y)
+ *   point with an integer "angle unit" in [0, D).
+ *
+ *   Input format:
+ *     Repeated test cases:
+ *       N
+ *       a0
+ *       a1
+ *       ...
+ *       a(N-1)
+ *     Terminator: N == 0
+ *
+ *   D = 27720 = lcm(1..12), so D % K == 0 for all K in [1, 12].
+ *   With N <= 12 in provided input, step = D / K is always integral.
+ */
+
+const int D = 27720;
+const int MAXN = 64;
+
+int Angs[MAXN];
+int Vis[MAXN];
+int Ans[MAXN];
+
+void sort_angles(int n) {
+    int i;
+    int j;
+    int key;
+    for (i = 1; i < n; i = i + 1) {
+        key = Angs[i];
+        for (j = i - 1; j >= 0; j = j - 1) {
+            if (Angs[j] > key) {
+                Angs[j + 1] = Angs[j];
+            } else {
+                break;
+            }
+        }
+        Angs[j + 1] = key;
+    }
+}
+
+int bsearch_angle(int n, int val) {
+    int l;
+    int r;
+    int mid;
+    l = 0;
+    r = n - 1;
+    for (;;) {
+        if (l > r) break;
+        mid = (l + r) / 2;
+        if (Angs[mid] == val) return mid;
+        if (Angs[mid] < val) {
+            l = mid + 1;
+        } else {
+            r = mid - 1;
+        }
+    }
+    return -1;
+}
+
+int main() {
+    int t;
+    int N;
+    int i;
+    int K;
+    int p;
+    int pt;
+    int step;
+    int want;
+    int idx;
+
+    t = 1;
+    for (;;) {
+        N = getint();
+        if (N == 0) break;
+
+        for (i = 0; i < N; i = i + 1) {
+            Angs[i] = getint();
+            Vis[i] = 0;
+        }
+        for (i = 0; i <= N; i = i + 1) {
+            Ans[i] = 0;
+        }
+
+        sort_angles(N);
+
+        for (K = 3; K <= N; K = K + 1) {
+            if (D % K == 0) {
+                step = D / K;
+                for (i = 0; i < N; i = i + 1) {
+                    if (Vis[i] != K) {
+                        pt = 1;
+                        Vis[i] = K;
+                        for (p = 1; p < K; p = p + 1) {
+                            want = Angs[i] + step * p;
+                            if (want >= D) want = want % D;
+                            idx = bsearch_angle(N, want);
+                            if (idx < 0) break;
+                            Vis[idx] = K;
+                            pt = pt + 1;
+                        }
+                        if (pt == K) Ans[K] = Ans[K] + 1;
+                    }
+                }
+            }
+        }
+
+        printf("Case %d:\n", t);
+        for (K = 3; K <= N; K = K + 1) {
+            if (Ans[K] != 0) printf("%d %d\n", K, Ans[K]);
+        }
+        t = t + 1;
+    }
+
+    return 0;
+}

@@ -1,0 +1,9 @@
+Image 1
+1 9 14 19
+Total number of black nodes = 4
+
+Image 2
+**..
+**..
+..**
+..*.

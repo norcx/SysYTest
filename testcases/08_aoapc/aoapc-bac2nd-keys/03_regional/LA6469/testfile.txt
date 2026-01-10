@@ -1,0 +1,55 @@
+// Strict SysY testcase for LA6469 - Deranged Exams
+const int MAXN = 20;
+
+int C[MAXN * MAXN];
+int Fac[MAXN];
+
+int idx(int i, int j) {
+  return i * MAXN + j;
+}
+
+void init() {
+  int i;
+  int j;
+  Fac[0] = 1;
+  Fac[1] = 1;
+  C[idx(1, 0)] = 1;
+  C[idx(1, 1)] = 1;
+  for (i = 2; i < MAXN; i = i + 1) {
+    Fac[i] = Fac[i - 1] * i;
+    C[idx(i, 0)] = 1;
+    C[idx(i, i)] = 1;
+    for (j = 1; j < i; j = j + 1) {
+      C[idx(i, j)] = C[idx(i - 1, j)] + C[idx(i - 1, j - 1)];
+    }
+  }
+}
+
+int main() {
+  int P;
+  int d;
+  int N;
+  int k;
+  int t;
+  int i;
+  int ans;
+
+  init();
+  P = getint();
+  for (t = 0; t < P; t = t + 1) {
+    d = getint();
+    N = getint();
+    k = getint();
+
+    ans = Fac[N];
+    for (i = 1; i <= k; i = i + 1) {
+      if (i % 2 == 1) {
+        ans = ans - C[idx(k, i)] * Fac[N - i];
+      } else {
+        ans = ans + C[idx(k, i)] * Fac[N - i];
+      }
+    }
+    printf("%d %d\n", d, ans);
+  }
+  return 0;
+}

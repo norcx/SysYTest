@@ -1,0 +1,175 @@
+// Strict SysY testcase for "Sum of powers" (scaled: k <= 8)
+
+const int KMAX = 8;
+const int MAXK = 9;   // 0..KMAX
+const int MAXS = 10;  // 0..KMAX+1
+const int MAXC = 10;  // 0..KMAX+1
+
+int C[MAXC * MAXC];
+int Sa[MAXK * MAXS];
+int Sb[MAXK * MAXS];
+int M[MAXK];
+
+int abs_int(int x) {
+  if (x < 0) return 0 - x;
+  return x;
+}
+
+int gcd(int a, int b) {
+  a = abs_int(a);
+  b = abs_int(b);
+  if (b == 0) return a;
+  return gcd(b, a % b);
+}
+
+int lcm(int a, int b) {
+  int g;
+  a = abs_int(a);
+  b = abs_int(b);
+  if (a == 0) return 0;
+  if (b == 0) return 0;
+  g = gcd(a, b);
+  return (a / g) * b;
+}
+
+void reduce_idx(int idx) {
+  int a;
+  int b;
+  int g;
+  a = Sa[idx];
+  b = Sb[idx];
+  if (a == 0) {
+    Sb[idx] = 1;
+    return;
+  }
+  if (b < 0) {
+    a = 0 - a;
+    b = 0 - b;
+  }
+  g = gcd(a, b);
+  Sa[idx] = a / g;
+  Sb[idx] = b / g;
+}
+
+void rat_set(int k, int i, int a, int b) {
+  int idx;
+  idx = k * MAXS + i;
+  Sa[idx] = a;
+  Sb[idx] = b;
+  reduce_idx(idx);
+}
+
+void rat_add_int(int idx, int x) {
+  int na;
+  int nb;
+  na = Sa[idx] + x * Sb[idx];
+  nb = Sb[idx];
+  Sa[idx] = na;
+  Sb[idx] = nb;
+  reduce_idx(idx);
+}
+
+void rat_sub_mul_int(int dst, int src, int m) {
+  int a;
+  int b;
+  int c;
+  int d;
+  int na;
+  int nb;
+  a = Sa[dst];
+  b = Sb[dst];
+  c = Sa[src] * m;
+  d = Sb[src];
+  na = a * d - b * c;
+  nb = b * d;
+  Sa[dst] = na;
+  Sb[dst] = nb;
+  reduce_idx(dst);
+}
+
+void rat_div_int(int idx, int x) {
+  Sa[idx] = Sa[idx];
+  Sb[idx] = Sb[idx] * x;
+  reduce_idx(idx);
+}
+
+void init_comb() {
+  int k;
+  int i;
+  C[0 * MAXC + 0] = 1;
+  C[1 * MAXC + 0] = 1;
+  C[1 * MAXC + 1] = 1;
+  for (k = 2; k <= KMAX + 1; k = k + 1) {
+    C[k * MAXC + 0] = 1;
+    for (i = 1; i <= k; i = i + 1) {
+      C[k * MAXC + i] =
+          C[(k - 1) * MAXC + i] + C[(k - 1) * MAXC + (i - 1)];
+    }
+  }
+}
+
+void build_tables() {
+  int i;
+  int j;
+  int k;
+  int idx;
+  int row;
+
+  for (i = 0; i < MAXK; i = i + 1) {
+    for (j = 0; j < MAXS; j = j + 1) {
+      idx = i * MAXS + j;
+      Sa[idx] = 0;
+      Sb[idx] = 1;
+    }
+  }
+
+  M[0] = 1;
+  rat_set(0, 1, 1, 1);
+
+  for (k = 1; k <= KMAX; k = k + 1) {
+    row = (k + 1) * MAXC;
+    for (i = 1; i <= k + 1; i = i + 1) {
+      idx = k * MAXS + i;
+      rat_add_int(idx, C[row + i]);
+    }
+
+    for (i = 0; i < k; i = i + 1) {
+      for (j = 0; j <= k + 1; j = j + 1) {
+        rat_sub_mul_int(k * MAXS + j, i * MAXS + j, C[row + i]);
+      }
+    }
+
+    M[k] = 1;
+    for (i = 0; i <= k + 1; i = i + 1) {
+      idx = k * MAXS + i;
+      rat_div_int(idx, k + 1);
+      M[k] = lcm(M[k], Sb[idx]);
+    }
+  }
+}
+
+int main() {
+  int T;
+  int t;
+  int k;
+  int i;
+  int idx;
+  int coeff;
+
+  init_comb();
+  build_tables();
+
+  T = getint();
+  for (t = 0; t < T; t = t + 1) {
+    k = getint();
+    if (t != 0) printf("\n");
+    printf("%d", M[k]);
+    for (i = k + 1; i >= 0; i = i - 1) {
+      idx = k * MAXS + i;
+      coeff = (M[k] / Sb[idx]) * Sa[idx];
+      printf(" %d", coeff);
+    }
+    printf("\n");
+  }
+  return 0;
+}

@@ -1,0 +1,42 @@
+/* Description:
+ *   Digit Counting (UVa 1225).
+ *   For each query n, print the total occurrences of digits 0..9
+ *   in the decimal representations of all numbers from 1 to n.
+ */
+
+const int MAXN = 10001;
+int C[100010];
+
+int main() {
+    int i;
+    int k;
+    int n;
+    int d;
+    int T;
+    int idx;
+
+    for (i = 1; i < MAXN; i = i + 1) {
+        for (k = 0; k < 10; k = k + 1) {
+            C[i * 10 + k] = C[(i - 1) * 10 + k];
+        }
+        n = i;
+        for (; n > 0; n = n / 10) {
+            d = n % 10;
+            idx = i * 10 + d;
+            C[idx] = C[idx] + 1;
+        }
+    }
+
+    T = getint();
+    for (; T > 0; T = T - 1) {
+        n = getint();
+        for (i = 0; i < 10; i = i + 1) {
+            if (i != 0) {
+                printf(" ");
+            }
+            printf("%d", C[n * 10 + i]);
+        }
+        printf("\n");
+    }
+    return 0;
+}

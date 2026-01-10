@@ -1,0 +1,240 @@
+/*
+ * UVa 246 - 10-20-30 (simulation)
+ * Strict SysY adaptation.
+ */
+
+const int CN = 52;
+const int PILE_N = 7;
+const int MAXDECK = 128;
+const int MAXPLEN = 64;
+
+const int VIS_SIZE = 200003;
+
+int deck[MAXDECK];
+int deck_head;
+int deck_size;
+
+int pile_cards[PILE_N * MAXPLEN];
+int pile_len[PILE_N];
+
+int pile_order[PILE_N];
+int pile_cnt;
+
+int vis_key1[VIS_SIZE];
+int vis_h2[VIS_SIZE];
+
+int cur_h1;
+int cur_h2;
+
+int deck_pop_front() {
+    int v = deck[deck_head];
+    deck_head = (deck_head + 1) % MAXDECK;
+    deck_size = deck_size - 1;
+    return v;
+}
+
+void deck_push_back(int v) {
+    int idx = (deck_head + deck_size) % MAXDECK;
+    deck[idx] = v;
+    deck_size = deck_size + 1;
+}
+
+void clear_visited() {
+    int i;
+    for (i = 0; i < VIS_SIZE; i = i + 1) {
+        vis_key1[i] = 0;
+        vis_h2[i] = 0;
+    }
+}
+
+void encode_state() {
+    int h1 = 1;
+    int h2 = 7;
+    int i;
+    int j;
+    for (i = 0; i < pile_cnt; i = i + 1) {
+        int pid = pile_order[i];
+        int base = pid * MAXPLEN;
+        for (j = 0; j < pile_len[pid]; j = j + 1) {
+            int v = pile_cards[base + j];
+            h1 = h1 * 131 + v + 1;
+            h2 = h2 * 137 + v + 1;
+        }
+        h1 = h1 * 131 + 1007;
+        h2 = h2 * 137 + 1009;
+    }
+    for (i = 0; i < deck_size; i = i + 1) {
+        int v = deck[(deck_head + i) % MAXDECK];
+        h1 = h1 * 131 + v + 17;
+        h2 = h2 * 137 + v + 19;
+    }
+    cur_h1 = h1;
+    cur_h2 = h2;
+}
+
+int visited_has(int h1, int h2) {
+    int key = h1 + 1;
+    int idx = key % VIS_SIZE;
+    int step = 1 + (key % 97);
+    int k;
+    if (idx < 0) idx = idx + VIS_SIZE;
+    if (step < 0) step = step + 97;
+    for (k = 0; k < VIS_SIZE; k = k + 1) {
+        if (vis_key1[idx] == 0) return 0;
+        if (vis_key1[idx] == key && vis_h2[idx] == h2) return 1;
+        idx = idx + step;
+        if (idx >= VIS_SIZE) idx = idx - VIS_SIZE;
+    }
+    return 1;
+}
+
+void visited_add(int h1, int h2) {
+    int key = h1 + 1;
+    int idx = key % VIS_SIZE;
+    int step = 1 + (key % 97);
+    int k;
+    if (idx < 0) idx = idx + VIS_SIZE;
+    if (step < 0) step = step + 97;
+    for (k = 0; k < VIS_SIZE; k = k + 1) {
+        if (vis_key1[idx] == 0) {
+            vis_key1[idx] = key;
+            vis_h2[idx] = h2;
+            return;
+        }
+        if (vis_key1[idx] == key && vis_h2[idx] == h2) return;
+        idx = idx + step;
+        if (idx >= VIS_SIZE) idx = idx - VIS_SIZE;
+    }
+}
+
+void proc_pile(int pid) {
+    int base = pid * MAXPLEN;
+    for (;;) {
+        int n = pile_len[pid];
+        if (n < 3) break;
+
+        if ((pile_cards[base] + pile_cards[base + 1] + pile_cards[base + n - 1]) % 10 == 0) {
+            int x = pile_cards[base];
+            int y = pile_cards[base + 1];
+            int z = pile_cards[base + n - 1];
+            int j;
+            deck_push_back(x);
+            deck_push_back(y);
+            deck_push_back(z);
+            for (j = 2; j < n - 1; j = j + 1) {
+                pile_cards[base + j - 2] = pile_cards[base + j];
+            }
+            pile_len[pid] = n - 3;
+            continue;
+        }
+
+        if ((pile_cards[base] + pile_cards[base + n - 2] + pile_cards[base + n - 1]) % 10 == 0) {
+            int x = pile_cards[base];
+            int y = pile_cards[base + n - 2];
+            int z = pile_cards[base + n - 1];
+            int j;
+            deck_push_back(x);
+            deck_push_back(y);
+            deck_push_back(z);
+            for (j = 1; j < n - 2; j = j + 1) {
+                pile_cards[base + j - 1] = pile_cards[base + j];
+            }
+            pile_len[pid] = n - 3;
+            continue;
+        }
+
+        if ((pile_cards[base + n - 3] + pile_cards[base + n - 2] + pile_cards[base + n - 1]) % 10 == 0) {
+            int x = pile_cards[base + n - 3];
+            int y = pile_cards[base + n - 2];
+            int z = pile_cards[base + n - 1];
+            deck_push_back(x);
+            deck_push_back(y);
+            deck_push_back(z);
+            pile_len[pid] = n - 3;
+            continue;
+        }
+
+        break;
+    }
+}
+
+int simulate(int time) {
+    if (pile_cnt == 0) {
+        printf("Win : %d\n", time);
+        return 0;
+    }
+    if (deck_size == 0) {
+        printf("Loss: %d\n", time);
+        return 0;
+    }
+
+    encode_state();
+    if (visited_has(cur_h1, cur_h2) == 1) {
+        printf("Draw: %d\n", time);
+        return 0;
+    }
+    visited_add(cur_h1, cur_h2);
+
+    {
+        int c = deck_pop_front();
+        int first = pile_order[0];
+        int i;
+        for (i = 1; i < pile_cnt; i = i + 1) {
+            pile_order[i - 1] = pile_order[i];
+        }
+        pile_order[pile_cnt - 1] = first;
+
+        {
+            int pid = pile_order[pile_cnt - 1];
+            int base = pid * MAXPLEN;
+            pile_cards[base + pile_len[pid]] = c;
+            pile_len[pid] = pile_len[pid] + 1;
+            proc_pile(pid);
+            if (pile_len[pid] == 0) {
+                pile_cnt = pile_cnt - 1;
+            }
+        }
+    }
+
+    return 1;
+}
+
+void init_case_with_first(int first) {
+    int i;
+    int c;
+    deck_head = 0;
+    deck_size = 0;
+    deck_push_back(first);
+    for (i = 1; i < CN; i = i + 1) {
+        c = getint();
+        deck_push_back(c);
+    }
+
+    for (i = 0; i < PILE_N; i = i + 1) {
+        pile_len[i] = 0;
+    }
+    pile_cnt = PILE_N;
+    for (i = 0; i < PILE_N; i = i + 1) {
+        int v = deck_pop_front();
+        pile_cards[i * MAXPLEN] = v;
+        pile_len[i] = 1;
+        pile_order[i] = i;
+    }
+    clear_visited();
+}
+
+int main() {
+    for (;;) {
+        int first = getint();
+        int t;
+        if (first == 0) return 0;
+        init_case_with_first(first);
+        t = 7;
+        for (;;) {
+            int cont = simulate(t);
+            t = t + 1;
+            if (cont == 0) break;
+        }
+    }
+    return 0;
+}

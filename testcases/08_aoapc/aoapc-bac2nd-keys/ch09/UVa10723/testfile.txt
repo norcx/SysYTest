@@ -1,0 +1,107 @@
+/*
+  UVa10723 Cyborg Genes (scaled / encoded)
+
+  Input encoding (integers, 1 per line):
+    T
+    For each case:
+      len1
+      s1[1], ..., s1[len1]
+      len2
+      s2[1], ..., s2[len2]
+
+  Each s[i] is an integer "character code" (e.g. A=1..Z=26).
+*/
+
+const int MAXL = 32;
+const int STRIDE = 33;
+
+int S1[33];
+int S2[33];
+int Pa[33 * 33];
+int Pac[33 * 33];
+
+int idx(int i, int j) { return i * STRIDE + j; }
+
+void computePa(int len1, int len2) {
+  int i;
+  int j;
+  for (i = 0; i <= len1; i = i + 1) {
+    for (j = 0; j <= len2; j = j + 1) {
+      int k;
+      k = idx(i, j);
+      if (i == 0 || j == 0) {
+        int m;
+        m = j;
+        if (i > j)
+          m = i;
+        Pa[k] = m;
+      } else if (S1[i] == S2[j]) {
+        Pa[k] = Pa[idx(i - 1, j - 1)] + 1;
+      } else {
+        int a;
+        int b;
+        int m;
+        a = Pa[idx(i - 1, j)];
+        b = Pa[idx(i, j - 1)];
+        m = b;
+        if (a < b)
+          m = a;
+        Pa[k] = m + 1;
+      }
+    }
+  }
+}
+
+void computePac(int len1, int len2) {
+  int i;
+  int j;
+  for (i = 0; i <= len1; i = i + 1) {
+    for (j = 0; j <= len2; j = j + 1) {
+      int k;
+      k = idx(i, j);
+      if (i == 0 || j == 0) {
+        Pac[k] = 1;
+      } else if (S1[i] == S2[j]) {
+        Pac[k] = Pac[idx(i - 1, j - 1)];
+      } else {
+        int sl1;
+        int sl2;
+        sl1 = Pa[idx(i - 1, j)];
+        sl2 = Pa[idx(i, j - 1)];
+        if (sl1 == sl2) {
+          Pac[k] = Pac[idx(i - 1, j)] + Pac[idx(i, j - 1)];
+        } else if (sl1 < sl2) {
+          Pac[k] = Pac[idx(i - 1, j)];
+        } else {
+          Pac[k] = Pac[idx(i, j - 1)];
+        }
+      }
+    }
+  }
+}
+
+int main() {
+  int T;
+  int t;
+  T = getint();
+
+  for (t = 1; t <= T; t = t + 1) {
+    int len1;
+    int len2;
+    int i;
+
+    len1 = getint();
+    for (i = 1; i <= len1; i = i + 1)
+      S1[i] = getint();
+
+    len2 = getint();
+    for (i = 1; i <= len2; i = i + 1)
+      S2[i] = getint();
+
+    computePa(len1, len2);
+    computePac(len1, len2);
+
+    printf("Case #%d: %d %d\n", t, Pa[idx(len1, len2)], Pac[idx(len1, len2)]);
+  }
+  return 0;
+}

@@ -1,0 +1,444 @@
+/* Description:
+ * Converted from a C++ simulation (LA5519 Department) into Strict SysY.
+ *
+ * Input (one integer per line):
+ * - Repeated agent blocks, terminated by a single 0:
+ *   code
+ *   start_time_seconds
+ *   (room_id duration_seconds)*, terminated by room_id = 0
+ * - After the last agent, a final code = 0 ends input.
+ *
+ * room_id = floor * 100 + room, with floor/room in [1, 11].
+ *
+ * Output:
+ * - For each agent, sorted by code ascending:
+ *   code exit_time_seconds
+ */
+
+const int MAXN = 8;
+const int MAXROOMS = 8;
+const int MAXX = 12;
+const int MAXEVENTS = 20000;
+
+const int AOutRoom = 0;
+const int AOutElev = 1;
+const int AReachElev = 2;
+const int AReachRoom = 3;
+const int ElevNext = 4;
+
+const int Entry = 0;
+const int InRoom = 1;
+const int InElev = 2;
+const int InRoomQ = 3;
+const int InElevQ = 4;
+const int InTrans = 5;
+const int AExit = 6;
+
+int n;
+int codeA[MAXN];
+int lastTimeA[MAXN];
+int floorA[MAXN];
+int nextRoomA[MAXN];
+int curStateA[MAXN];
+int roomCountA[MAXN];
+int roomFloorA[MAXN * MAXROOMS];
+int roomNumA[MAXN * MAXROOMS];
+int roomLenA[MAXN * MAXROOMS];
+
+int roomAid[MAXX * MAXX];
+int roomQSize[MAXX * MAXX];
+int roomQData[MAXX * MAXX * MAXN];
+
+int elevAid;
+int elevQSize;
+int elevQData[MAXN];
+
+int evSize;
+int evType[MAXEVENTS + 1];
+int evId[MAXEVENTS + 1];
+int evTime[MAXEVENTS + 1];
+
+int absInt(int x) {
+    if (x < 0) return -x;
+    return x;
+}
+
+int nextFloor(int id) {
+    int nr;
+    nr = nextRoomA[id];
+    if (nr < roomCountA[id]) return roomFloorA[id * MAXROOMS + nr];
+    return 1;
+}
+
+void elevQueuePush(int id) {
+    int size;
+    int base;
+    int i;
+    int cur;
+    int pos;
+    size = elevQSize;
+    base = 0;
+    pos = size;
+    for (i = size - 1; i >= 0; i = i - 1) {
+        cur = elevQData[base + i];
+        if (cur <= id) break;
+        elevQData[base + i + 1] = cur;
+        pos = i;
+    }
+    elevQData[base + pos] = id;
+    elevQSize = size + 1;
+}
+
+int elevQueuePop() {
+    int res;
+    int i;
+    int size;
+    res = elevQData[0];
+    size = elevQSize;
+    for (i = 1; i < size; i = i + 1) {
+        elevQData[i - 1] = elevQData[i];
+    }
+    elevQSize = size - 1;
+    return res;
+}
+
+void roomQueuePush(int ridx, int id) {
+    int size;
+    int base;
+    int i;
+    int cur;
+    int pos;
+    size = roomQSize[ridx];
+    base = ridx * MAXN;
+    pos = size;
+    for (i = size - 1; i >= 0; i = i - 1) {
+        cur = roomQData[base + i];
+        if (cur <= id) break;
+        roomQData[base + i + 1] = cur;
+        pos = i;
+    }
+    roomQData[base + pos] = id;
+    roomQSize[ridx] = size + 1;
+}
+
+int roomQueuePop(int ridx) {
+    int base;
+    int res;
+    int size;
+    int i;
+    base = ridx * MAXN;
+    res = roomQData[base];
+    size = roomQSize[ridx];
+    for (i = 1; i < size; i = i + 1) {
+        roomQData[base + i - 1] = roomQData[base + i];
+    }
+    roomQSize[ridx] = size - 1;
+    return res;
+}
+
+void evPush(int id, int time, int type) {
+    int i;
+    int p;
+    int cid;
+    int ctime;
+    int ctype;
+    evSize = evSize + 1;
+    i = evSize;
+    cid = id;
+    ctime = time;
+    ctype = type;
+    for (; i > 1; ) {
+        p = i / 2;
+        if (evTime[p] < ctime) break;
+        if (evTime[p] == ctime && evId[p] <= cid) break;
+        evTime[i] = evTime[p];
+        evId[i] = evId[p];
+        evType[i] = evType[p];
+        i = p;
+    }
+    evTime[i] = ctime;
+    evId[i] = cid;
+    evType[i] = ctype;
+}
+
+void evPop() {
+    int lastId;
+    int lastTime;
+    int lastType;
+    int i;
+    int child;
+    lastId = evId[evSize];
+    lastTime = evTime[evSize];
+    lastType = evType[evSize];
+    evSize = evSize - 1;
+    if (evSize == 0) return;
+    i = 1;
+    for (; ; ) {
+        child = i * 2;
+        if (child > evSize) break;
+        if (child + 1 <= evSize) {
+            if (evTime[child + 1] < evTime[child]) child = child + 1;
+            else if (evTime[child + 1] == evTime[child] && evId[child + 1] < evId[child]) child = child + 1;
+        }
+        if (evTime[child] < lastTime) {
+            evTime[i] = evTime[child];
+            evId[i] = evId[child];
+            evType[i] = evType[child];
+            i = child;
+        }
+        else if (evTime[child] == lastTime && evId[child] < lastId) {
+            evTime[i] = evTime[child];
+            evId[i] = evId[child];
+            evType[i] = evType[child];
+            i = child;
+        }
+        else break;
+    }
+    evTime[i] = lastTime;
+    evId[i] = lastId;
+    evType[i] = lastType;
+}
+
+void changeState(int id, int st, int time) {
+    curStateA[id] = st;
+    lastTimeA[id] = time;
+}
+
+void gotoFloor(int id, int targetFloor, int time) {
+    int dt;
+    dt = 10;
+    if (curStateA[id] == Entry) dt = 30;
+    evPush(id, time + dt, AReachElev);
+}
+
+void gotoNextRoom(int id, int time) {
+    int nr;
+    int idx;
+    int nf;
+    int dt;
+    nr = nextRoomA[id];
+    if (nr < roomCountA[id]) {
+        idx = id * MAXROOMS + nr;
+        nf = roomFloorA[idx];
+        dt = 10;
+        if (curStateA[id] == Entry) dt = 30;
+        if (nf == floorA[id]) evPush(id, time + dt, AReachRoom);
+        else gotoFloor(id, nf, time);
+        return;
+    }
+    if (floorA[id] != 1) gotoFloor(id, 1, time);
+    else changeState(id, AExit, time + 30);
+}
+
+void roomGetNextAgent(int ridx, int time) {
+    int nid;
+    int aidx;
+    int len;
+    if (roomQSize[ridx] == 0) return;
+    nid = roomQueuePop(ridx);
+    roomAid[ridx] = nid;
+    aidx = nid * MAXROOMS + nextRoomA[nid];
+    len = roomLenA[aidx];
+    evPush(nid, time + len, AOutRoom);
+    changeState(nid, InRoom, time);
+}
+
+void onRoomOut(int id, int time) {
+    int idx;
+    int rf;
+    int rr;
+    int ridx;
+    idx = id * MAXROOMS + nextRoomA[id];
+    rf = roomFloorA[idx];
+    rr = roomNumA[idx];
+    ridx = rf * MAXX + rr;
+    roomAid[ridx] = -1;
+    changeState(id, InTrans, time);
+    roomGetNextAgent(ridx, time);
+    nextRoomA[id] = nextRoomA[id] + 1;
+    gotoNextRoom(id, time);
+}
+
+void onElevOut(int id, int time) {
+    changeState(id, InTrans, time);
+    if (nextRoomA[id] < roomCountA[id]) floorA[id] = roomFloorA[id * MAXROOMS + nextRoomA[id]];
+    else floorA[id] = 1;
+    gotoNextRoom(id, time);
+}
+
+void onReachElev(int id, int time) {
+    int sec;
+    int mod;
+    sec = time % 60;
+    mod = sec % 5;
+    if (mod != 0) {
+        changeState(id, InElevQ, time);
+        elevQueuePush(id);
+        evPush(0, time + (5 - mod), ElevNext);
+        return;
+    }
+    if (elevAid != -1) {
+        changeState(id, InElevQ, time);
+        elevQueuePush(id);
+        return;
+    }
+    changeState(id, InElev, time);
+    elevAid = id;
+    evPush(id, time + 30 * absInt(floorA[id] - nextFloor(id)), AOutElev);
+    evPush(0, time + 5, ElevNext);
+}
+
+void onReachRoom(int id, int time) {
+    int idx;
+    int rf;
+    int rr;
+    int ridx;
+    idx = id * MAXROOMS + nextRoomA[id];
+    rf = roomFloorA[idx];
+    rr = roomNumA[idx];
+    ridx = rf * MAXX + rr;
+    if (roomAid[ridx] != -1) {
+        changeState(id, InRoomQ, time);
+        roomQueuePush(ridx, id);
+        return;
+    }
+    changeState(id, InRoom, time);
+    roomAid[ridx] = id;
+    evPush(id, time + roomLenA[idx], AOutRoom);
+}
+
+void procEvent(int type, int id, int time) {
+    int nid;
+    if (type == AOutRoom) {
+        onRoomOut(id, time);
+        return;
+    }
+    if (type == AOutElev) {
+        onElevOut(id, time);
+        return;
+    }
+    if (type == AReachElev) {
+        onReachElev(id, time);
+        return;
+    }
+    if (type == AReachRoom) {
+        onReachRoom(id, time);
+        return;
+    }
+    if (type == ElevNext) {
+        elevAid = -1;
+        if (elevQSize != 0) {
+            nid = elevQueuePop();
+            elevAid = nid;
+            changeState(nid, InElev, time);
+            evPush(nid, time + 30 * absInt(floorA[nid] - nextFloor(nid)), AOutElev);
+            evPush(0, time + 5, ElevNext);
+        }
+        return;
+    }
+}
+
+void swapAgent(int a, int b) {
+    int t;
+    int j;
+    t = codeA[a]; codeA[a] = codeA[b]; codeA[b] = t;
+    t = lastTimeA[a]; lastTimeA[a] = lastTimeA[b]; lastTimeA[b] = t;
+    t = floorA[a]; floorA[a] = floorA[b]; floorA[b] = t;
+    t = nextRoomA[a]; nextRoomA[a] = nextRoomA[b]; nextRoomA[b] = t;
+    t = curStateA[a]; curStateA[a] = curStateA[b]; curStateA[b] = t;
+    t = roomCountA[a]; roomCountA[a] = roomCountA[b]; roomCountA[b] = t;
+    for (j = 0; j < MAXROOMS; j = j + 1) {
+        t = roomFloorA[a * MAXROOMS + j];
+        roomFloorA[a * MAXROOMS + j] = roomFloorA[b * MAXROOMS + j];
+        roomFloorA[b * MAXROOMS + j] = t;
+
+        t = roomNumA[a * MAXROOMS + j];
+        roomNumA[a * MAXROOMS + j] = roomNumA[b * MAXROOMS + j];
+        roomNumA[b * MAXROOMS + j] = t;
+
+        t = roomLenA[a * MAXROOMS + j];
+        roomLenA[a * MAXROOMS + j] = roomLenA[b * MAXROOMS + j];
+        roomLenA[b * MAXROOMS + j] = t;
+    }
+}
+
+int main() {
+    int i;
+    int j;
+    int c;
+    int t;
+    int rid;
+    int len;
+    int f;
+    int r;
+    int k;
+    int type;
+    int id;
+    int time;
+
+    n = 0;
+    evSize = 0;
+    elevAid = -1;
+    elevQSize = 0;
+    for (i = 0; i < MAXX * MAXX; i = i + 1) {
+        roomAid[i] = -1;
+        roomQSize[i] = 0;
+    }
+
+    for (; ; ) {
+        c = getint();
+        if (c == 0) break;
+        t = getint();
+        if (n >= MAXN) break;
+        codeA[n] = c;
+        lastTimeA[n] = t;
+        floorA[n] = 1;
+        nextRoomA[n] = 0;
+        curStateA[n] = Entry;
+        roomCountA[n] = 0;
+        for (j = 0; j < MAXROOMS; j = j + 1) {
+            roomFloorA[n * MAXROOMS + j] = 0;
+            roomNumA[n * MAXROOMS + j] = 0;
+            roomLenA[n * MAXROOMS + j] = 0;
+        }
+
+        for (; ; ) {
+            rid = getint();
+            if (rid == 0) break;
+            len = getint();
+            f = rid / 100;
+            r = rid % 100;
+            k = roomCountA[n];
+            if (k < MAXROOMS) {
+                roomFloorA[n * MAXROOMS + k] = f;
+                roomNumA[n * MAXROOMS + k] = r;
+                roomLenA[n * MAXROOMS + k] = len;
+                roomCountA[n] = k + 1;
+            }
+        }
+        n = n + 1;
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+        for (j = i + 1; j < n; j = j + 1) {
+            if (codeA[j] < codeA[i]) swapAgent(i, j);
+        }
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+        gotoNextRoom(i, lastTimeA[i]);
+    }
+
+    for (; evSize > 0; ) {
+        type = evType[1];
+        id = evId[1];
+        time = evTime[1];
+        evPop();
+        procEvent(type, id, time);
+    }
+
+    for (i = 0; i < n; i = i + 1) {
+        printf("%d %d\n", codeA[i], lastTimeA[i]);
+    }
+    return 0;
+}

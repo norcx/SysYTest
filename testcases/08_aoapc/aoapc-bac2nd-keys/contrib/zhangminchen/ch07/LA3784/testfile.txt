@@ -1,0 +1,236 @@
+/* Description:
+ * Convert the given C++ solver into Strict SysY.
+ *
+ * Input encoding (integers only):
+ * For each case:
+ *   len0
+ *   len1
+ *   len2
+ *   len0 symbols  (-1 for '*', 0..9 for digit)
+ *   len1 symbols
+ *   len2 symbols
+ * Sentinel: len0 == 0 ends input.
+ *
+ * Output:
+ *   Case k: <token0> <token1> <token2>\n
+ */
+
+const int BUFLEN = 11;
+const int MAXL = 32;
+
+int bufSym[MAXL];
+int sym[MAXL];
+int len0;
+int len1;
+int len2;
+int totalLen;
+int g_cnt;
+
+void init_buf() {
+    int i;
+    bufSym[0] = -1;
+    for (i = 1; i < BUFLEN; i = i + 1) {
+        bufSym[i] = i - 1;
+    }
+}
+
+int cal(int from, int to) {
+    int ans;
+    int base;
+    int i;
+    ans = 0;
+    base = 1;
+    for (i = from; i <= to; i = i + 1) {
+        ans = ans * base;
+        ans = ans + sym[i];
+        base = base * 10;
+    }
+    return ans;
+}
+
+int equal_product() {
+    int a;
+    int b;
+    int c;
+    int tmp;
+    int rev[MAXL];
+    int prod[MAXL];
+    int prodLen;
+    int i;
+    int j;
+    int idx;
+
+    a = cal(0, len0 - 1);
+    b = cal(len0, len0 + len1 - 1);
+    c = a * b;
+
+    prodLen = 0;
+    tmp = c;
+    for (;;) {
+        rev[prodLen] = tmp % 10;
+        prodLen = prodLen + 1;
+        tmp = tmp / 10;
+        if (tmp == 0) {
+            break;
+        }
+    }
+
+    for (i = 0; i < prodLen; i = i + 1) {
+        prod[i] = rev[prodLen - 1 - i];
+    }
+
+    if (prodLen != len2) {
+        return 0;
+    }
+
+    idx = len0 + len1;
+    for (j = 0; j < len2; j = j + 1) {
+        if (sym[idx + j] != -1) {
+            if (sym[idx + j] != prod[j]) {
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
+void check_rec(int pos) {
+    int k;
+    int old;
+    if (g_cnt > 1) {
+        return;
+    }
+
+    if (pos == len0 + len1) {
+        if (equal_product() != 0) {
+            g_cnt = g_cnt + 1;
+        }
+        return;
+    }
+
+    if (sym[pos] != -1) {
+        check_rec(pos + 1);
+        return;
+    }
+
+    for (k = 1; k < BUFLEN; k = k + 1) {
+        if (k == 1 && pos == 0 || k == 1 && pos == len0) {
+            continue;
+        }
+        old = sym[pos];
+        sym[pos] = bufSym[k];
+        check_rec(pos + 1);
+        sym[pos] = old;
+        if (g_cnt > 1) {
+            return;
+        }
+    }
+}
+
+int dfs(int pos, int depth, int maxDepth) {
+    int k;
+    int old;
+
+    if (depth == maxDepth) {
+        g_cnt = 0;
+        check_rec(0);
+        if (g_cnt == 1) {
+            return 1;
+        }
+        return 0;
+    }
+
+    if (pos == totalLen) {
+        return 0;
+    }
+    if (totalLen - pos < maxDepth - depth) {
+        return 0;
+    }
+
+    old = sym[pos];
+    for (k = 0; k < BUFLEN; k = k + 1) {
+        if (k == 1) {
+            if (pos == 0 || pos == len0 || pos == len0 + len1) continue;
+        }
+        if (old == bufSym[k]) {
+            if (dfs(pos + 1, depth, maxDepth) != 0) {
+                return 1;
+            }
+        } else {
+            sym[pos] = bufSym[k];
+            if (dfs(pos + 1, depth + 1, maxDepth) != 0) {
+                return 1;
+            }
+            sym[pos] = old;
+        }
+    }
+
+    return 0;
+}
+
+void solve_inplace() {
+    int maxd;
+    for (maxd = 0;; maxd = maxd + 1) {
+        if (dfs(0, 0, maxd) != 0) {
+            break;
+        }
+    }
+}
+
+void print_symbol(int v) {
+    if (v == -1) {
+        printf("*");
+    } else {
+        printf("%d", v);
+    }
+}
+
+void print_case(int kase) {
+    int i;
+    printf("Case %d: ", kase);
+    for (i = 0; i < len0; i = i + 1) {
+        print_symbol(sym[i]);
+    }
+    printf(" ");
+    for (i = len0; i < len0 + len1; i = i + 1) {
+        print_symbol(sym[i]);
+    }
+    printf(" ");
+    for (i = len0 + len1; i < totalLen; i = i + 1) {
+        print_symbol(sym[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int kase;
+    int i;
+
+    init_buf();
+    kase = 1;
+    for (;;) {
+        len0 = getint();
+        if (len0 == 0) {
+            break;
+        }
+        len1 = getint();
+        len2 = getint();
+        totalLen = len0 + len1 + len2;
+
+        for (i = 0; i < len0; i = i + 1) {
+            sym[i] = getint();
+        }
+        for (i = 0; i < len1; i = i + 1) {
+            sym[len0 + i] = getint();
+        }
+        for (i = 0; i < len2; i = i + 1) {
+            sym[len0 + len1 + i] = getint();
+        }
+
+        solve_inplace();
+        print_case(kase);
+        kase = kase + 1;
+    }
+
+    return 0;
+}

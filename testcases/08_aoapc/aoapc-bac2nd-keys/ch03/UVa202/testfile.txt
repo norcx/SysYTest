@@ -1,0 +1,125 @@
+/*
+ * Repeating Decimals (UVa 202)
+ * Input format for this SysY testcase:
+ *   T
+ *   a1
+ *   b1
+ *   a2
+ *   b2
+ *   ...
+ */
+
+const int MAXD = 40005;
+
+int pos[MAXD];
+int digits[MAXD];
+
+int digit_count;
+int cycle_start;
+int is_terminating;
+int trunc_digit_count;
+
+int build_decimal(int rem, int d) {
+    int i;
+    int cycle_len;
+
+    for (i = 0; i < MAXD; i = i + 1) {
+        pos[i] = 0;
+    }
+
+    digit_count = 0;
+    cycle_start = 0;
+    is_terminating = 0;
+    trunc_digit_count = 0;
+
+    cycle_len = 1;
+
+    for (;;) {
+        if (pos[rem] != 0) {
+            cycle_start = pos[rem] - 1;
+            cycle_len = digit_count - cycle_start;
+            trunc_digit_count = digit_count;
+            if (cycle_len > 50) {
+                trunc_digit_count = cycle_start + 50;
+            }
+            break;
+        }
+
+        pos[rem] = digit_count + 1;
+
+        rem = rem * 10;
+        digits[digit_count] = rem / d;
+        digit_count = digit_count + 1;
+        rem = rem % d;
+
+        if (rem == 0) {
+            is_terminating = 1;
+            cycle_len = 1;
+            trunc_digit_count = digit_count;
+            break;
+        }
+    }
+
+    return cycle_len;
+}
+
+void print_decimal_part() {
+    int i;
+
+    printf(".");
+
+    if (is_terminating == 1) {
+        for (i = 0; i < digit_count; i = i + 1) {
+            printf("%d", digits[i]);
+        }
+        printf("(0)");
+        return;
+    }
+
+    for (i = 0; i < trunc_digit_count; i = i + 1) {
+        if (i == cycle_start) {
+            printf("(");
+        }
+        printf("%d", digits[i]);
+    }
+    if (digit_count > trunc_digit_count) {
+        printf("...");
+    }
+    printf(")");
+}
+
+int main() {
+    int t;
+    int case_i;
+
+    t = getint();
+    for (case_i = 0; case_i < t; case_i = case_i + 1) {
+        int a;
+        int b;
+        int int_part;
+        int rem;
+        int cycle_len;
+
+        a = getint();
+        b = getint();
+
+        int_part = a / b;
+        rem = a % b;
+
+        cycle_len = 1;
+        if (rem != 0) {
+            cycle_len = build_decimal(rem, b);
+        }
+
+        printf("%d/%d = %d", a, b, int_part);
+        if (rem == 0) {
+            printf(".(0)\n");
+        } else {
+            print_decimal_part();
+            printf("\n");
+        }
+        printf("   %d = number of digits in repeating cycle\n\n", cycle_len);
+    }
+
+    return 0;
+}

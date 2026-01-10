@@ -1,0 +1,190 @@
+/* Description:
+ *   LA7007 Finding Competitive Products (scaled)
+ *   Converted to Strict SysY (int/void only, 1D arrays, for-loops only).
+ */
+
+const int MAXD = 8;
+const int MAXW = 32;
+const int MAXEP = 32;
+const int MAXPP = 64;
+const int MAXK = 16;
+
+int d;
+int t;
+int k;
+int wSize;
+int epSize;
+int ppSize;
+int m;
+
+int ws[MAXW * MAXD];
+int ep[MAXEP * MAXD];
+int pp[MAXPP * MAXD];
+
+int epScores[MAXW * MAXK];
+int epLens[MAXW];
+
+int topCnts[MAXPP];
+
+int tmpAll[MAXEP];
+int tmpScores[MAXK + MAXPP + 5];
+int tmpIdx[MAXK + MAXPP + 5];
+
+void readProd(int a[], int off) {
+    int i;
+    for (i = 0; i < d; i = i + 1) {
+        a[off + i] = getint();
+    }
+}
+
+int dotProd(int a[], int offA, int b[], int offB) {
+    int i;
+    int s;
+    s = 0;
+    for (i = 0; i < d; i = i + 1) {
+        s = s + a[offA + i] * b[offB + i];
+    }
+    return s;
+}
+
+void sortAsc(int a[], int n) {
+    int i;
+    int j;
+    int key;
+    for (i = 1; i < n; i = i + 1) {
+        key = a[i];
+        j = i - 1;
+        for (; j >= 0 && a[j] > key; j = j - 1) {
+            a[j + 1] = a[j];
+        }
+        a[j + 1] = key;
+    }
+}
+
+void buildEPScores() {
+    int wi;
+    int ei;
+    int i;
+    int len;
+    for (wi = 0; wi < wSize; wi = wi + 1) {
+        for (ei = 0; ei < epSize; ei = ei + 1) {
+            tmpAll[ei] = dotProd(ws, wi * d, ep, ei * d);
+        }
+        sortAsc(tmpAll, epSize);
+        len = epSize;
+        if (len > k) {
+            len = k;
+        }
+        epLens[wi] = len;
+        for (i = 0; i < len; i = i + 1) {
+            epScores[wi * MAXK + i] = tmpAll[i];
+        }
+    }
+}
+
+int solveOneQuery() {
+    int wi;
+    int pi;
+    int i;
+    int pos;
+    int j;
+    int ns;
+    int maxS;
+    int tmpLen;
+    int maxPos;
+    int tmp;
+    int ans;
+
+    for (pi = 0; pi < ppSize; pi = pi + 1) {
+        topCnts[pi] = 0;
+    }
+
+    for (wi = 0; wi < wSize; wi = wi + 1) {
+        tmpLen = epLens[wi];
+        for (i = 0; i < tmpLen; i = i + 1) {
+            tmpScores[i] = epScores[wi * MAXK + i];
+            tmpIdx[i] = -1;
+        }
+
+        for (pi = 0; pi < ppSize; pi = pi + 1) {
+            ns = dotProd(ws, wi * d, pp, pi * d);
+            maxS = tmpScores[tmpLen - 1];
+
+            if (ns > maxS && tmpLen >= k) {
+            } else if (ns >= maxS) {
+                tmpScores[tmpLen] = ns;
+                tmpIdx[tmpLen] = pi;
+                tmpLen = tmpLen + 1;
+            } else {
+                pos = tmpLen;
+                for (i = 0; i < tmpLen; i = i + 1) {
+                    if (pos == tmpLen && ns <= tmpScores[i]) {
+                        pos = i;
+                    }
+                }
+                for (j = tmpLen; j > pos; j = j - 1) {
+                    tmpScores[j] = tmpScores[j - 1];
+                    tmpIdx[j] = tmpIdx[j - 1];
+                }
+                tmpScores[pos] = ns;
+                tmpIdx[pos] = pi;
+                tmpLen = tmpLen + 1;
+
+                if (tmpLen > k && tmpScores[k] != tmpScores[k - 1]) {
+                    tmpLen = k;
+                }
+            }
+        }
+
+        for (i = 0; i < tmpLen; i = i + 1) {
+            if (tmpIdx[i] != -1) {
+                topCnts[tmpIdx[i]] = topCnts[tmpIdx[i]] + 1;
+            }
+        }
+    }
+
+    ans = 0;
+    for (i = 0; i < m; i = i + 1) {
+        maxPos = i;
+        for (j = i + 1; j < ppSize; j = j + 1) {
+            if (topCnts[j] > topCnts[maxPos]) {
+                maxPos = j;
+            }
+        }
+        tmp = topCnts[i];
+        topCnts[i] = topCnts[maxPos];
+        topCnts[maxPos] = tmp;
+        ans = ans + topCnts[i];
+    }
+    return ans;
+}
+
+int main() {
+    int i;
+    int ti;
+
+    t = getint();
+    d = getint();
+    k = getint();
+    wSize = getint();
+
+    for (i = 0; i < wSize; i = i + 1) {
+        readProd(ws, i * d);
+    }
+
+    epSize = getint();
+    for (i = 0; i < epSize; i = i + 1) {
+        readProd(ep, i * d);
+    }
+    buildEPScores();
+
+    for (ti = 0; ti < t; ti = ti + 1) {
+        m = getint();
+        ppSize = getint();
+        for (i = 0; i < ppSize; i = i + 1) {
+            readProd(pp, i * d);
+        }
+        printf("%d\n", solveOneQuery());
+    }
+    return 0;
+}

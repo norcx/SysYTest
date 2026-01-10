@@ -1,0 +1,320 @@
+/* Description:
+ *   Strict SysY conversion of a discrete-event simulation:
+ *   "Use of Hospital Facilities" (UVa 212, ACM/ICPC WF 1991).
+ *
+ *   Input format (all integers, one per line):
+ *     nOp
+ *     nRe
+ *     T0
+ *     tTrans
+ *     tPreOp
+ *     tPreRe
+ *     nPat
+ *     repeat nPat times:
+ *       nameId
+ *       surgeryTime
+ *       recoveryTime
+ *   Repeat testcases; terminate with nOp == 0.
+ */
+
+const int MAX_OP = 10;
+const int MAX_RE = 30;
+const int MAX_PAT = 100;
+const int MAX_EV = 1000;
+const int INF = 1000000000;
+
+const int EV_OP_FREE = 0;
+const int EV_OP_END = 1;
+const int EV_RE_FREE = 3;
+const int EV_RE_END = 4;
+
+int nOp;
+int nRe;
+int T0;
+int tTrans;
+int tPreOp;
+int tPreRe;
+int nPat;
+int allTime;
+
+int opRoomPat[MAX_OP];
+int opRoomMinutes[MAX_OP];
+int reRoomPat[MAX_RE];
+int reRoomMinutes[MAX_RE];
+int opFree[MAX_OP];
+int reFree[MAX_RE];
+
+int patName[MAX_PAT];
+int patSurgery[MAX_PAT];
+int patRecovery[MAX_PAT];
+int patOpRoom[MAX_PAT];
+int patOpBegin[MAX_PAT];
+int patOpEnd[MAX_PAT];
+int patReRoom[MAX_PAT];
+int patReBegin[MAX_PAT];
+int patReEnd[MAX_PAT];
+int patReWaiting[MAX_PAT];
+
+int nextOpPat;
+
+int evTime[MAX_EV];
+int evId[MAX_EV];
+int evType[MAX_EV];
+int evN;
+
+void pushEvent(int t, int id, int type) {
+    if (evN < MAX_EV) {
+        evTime[evN] = t;
+        evId[evN] = id;
+        evType[evN] = type;
+        evN = evN + 1;
+    }
+}
+
+int getMinEventTime() {
+    int i;
+    int mn;
+    mn = INF;
+    for (i = 0; i < evN; i = i + 1) {
+        if (evTime[i] < mn) mn = evTime[i];
+    }
+    return mn;
+}
+
+int findMinFreeOpRoom() {
+    int i;
+    for (i = 0; i < nOp; i = i + 1) {
+        if (opFree[i] == 1) return i;
+    }
+    return -1;
+}
+
+int findMinFreeReRoom() {
+    int i;
+    for (i = 0; i < nRe; i = i + 1) {
+        if (reFree[i] == 1) return i;
+    }
+    return -1;
+}
+
+int findNextWaitingPatient() {
+    int i;
+    int best;
+    best = -1;
+    for (i = 0; i < nPat; i = i + 1) {
+        if (patReWaiting[i] == 1) {
+            if (best == -1) {
+                best = i;
+            } else {
+                if (patOpRoom[i] < patOpRoom[best]) {
+                    best = i;
+                } else {
+                    if (patOpRoom[i] == patOpRoom[best]) {
+                        if (i < best) best = i;
+                    }
+                }
+            }
+        }
+    }
+    return best;
+}
+
+void printTime(int t) {
+    int h;
+    int m;
+    h = t / 60 + T0;
+    m = t % 60;
+    if (h < 10) printf(" ");
+    printf("%d:", h);
+    if (m < 10) printf("0");
+    printf("%d", m);
+}
+
+void printPercent2(int minutes) {
+    int percent100;
+    int whole;
+    int frac;
+    percent100 = 0;
+    if (allTime > 0) percent100 = minutes * 10000 / allTime;
+    whole = percent100 / 100;
+    frac = percent100 - whole * 100;
+    printf("%d.", whole);
+    if (frac < 10) printf("0");
+    printf("%d", frac);
+}
+
+void processEventsAtTime(int t) {
+    int i;
+    for (i = 0; i < evN; ) {
+        if (evTime[i] == t) {
+            int id;
+            int type;
+            int pid;
+            id = evId[i];
+            type = evType[i];
+            pid = -1;
+
+            if (type == EV_OP_FREE) {
+                opFree[id] = 1;
+            } else {
+                if (type == EV_OP_END) {
+                    pid = opRoomPat[id];
+                    if (pid >= 0) patReWaiting[pid] = 1;
+                    opRoomPat[id] = -1;
+                    pushEvent(t + tPreOp, id, EV_OP_FREE);
+                } else {
+                    if (type == EV_RE_FREE) {
+                        reFree[id] = 1;
+                    } else {
+                        if (type == EV_RE_END) {
+                            reRoomPat[id] = -1;
+                            pushEvent(t + tPreRe, id, EV_RE_FREE);
+                        }
+                    }
+                }
+            }
+
+            evN = evN - 1;
+            evTime[i] = evTime[evN];
+            evId[i] = evId[evN];
+            evType[i] = evType[evN];
+        } else {
+            i = i + 1;
+        }
+    }
+}
+
+void assignAtTime(int t) {
+    for (;;) {
+        int rid;
+        int pid;
+        if (nextOpPat >= nPat) break;
+        rid = findMinFreeOpRoom();
+        if (rid < 0) break;
+        pid = nextOpPat;
+        nextOpPat = nextOpPat + 1;
+
+        opFree[rid] = 0;
+        opRoomPat[rid] = pid;
+
+        patOpRoom[pid] = rid;
+        patOpBegin[pid] = t;
+        patOpEnd[pid] = t + patSurgery[pid];
+
+        opRoomMinutes[rid] = opRoomMinutes[rid] + patSurgery[pid];
+        pushEvent(patOpEnd[pid], rid, EV_OP_END);
+    }
+
+    for (;;) {
+        int rid;
+        int pid;
+        pid = findNextWaitingPatient();
+        if (pid < 0) break;
+        rid = findMinFreeReRoom();
+        if (rid < 0) break;
+
+        patReWaiting[pid] = 0;
+        reFree[rid] = 0;
+        reRoomPat[rid] = pid;
+
+        patReRoom[pid] = rid;
+        patReBegin[pid] = t + tTrans;
+        patReEnd[pid] = patReBegin[pid] + patRecovery[pid];
+
+        reRoomMinutes[rid] = reRoomMinutes[rid] + patRecovery[pid];
+        pushEvent(patReEnd[pid], rid, EV_RE_END);
+        if (patReEnd[pid] > allTime) allTime = patReEnd[pid];
+    }
+}
+
+void runOneCase() {
+    int i;
+    evN = 0;
+    allTime = 0;
+    nextOpPat = 0;
+
+    for (i = 0; i < nOp; i = i + 1) {
+        opRoomPat[i] = -1;
+        opRoomMinutes[i] = 0;
+        opFree[i] = 1;
+    }
+    for (i = 0; i < nRe; i = i + 1) {
+        reRoomPat[i] = -1;
+        reRoomMinutes[i] = 0;
+        reFree[i] = 1;
+    }
+
+    for (i = 0; i < nPat; i = i + 1) {
+        patOpRoom[i] = -1;
+        patReRoom[i] = -1;
+        patReWaiting[i] = 0;
+    }
+
+    assignAtTime(0);
+    for (;;) {
+        int t;
+        if (evN == 0) break;
+        t = getMinEventTime();
+        processEventsAtTime(t);
+        assignAtTime(t);
+    }
+}
+
+void printCase() {
+    int i;
+    printf("PatientSchedule\n");
+    printf("idx name opRoom opBegin opEnd reBed reBegin reEnd\n");
+    for (i = 0; i < nPat; i = i + 1) {
+        printf("%d ", i + 1);
+        printf("%d ", patName[i]);
+        printf("%d ", patOpRoom[i] + 1);
+        printTime(patOpBegin[i]);
+        printf(" ");
+        printTime(patOpEnd[i]);
+        printf(" ");
+        printf("%d ", patReRoom[i] + 1);
+        printTime(patReBegin[i]);
+        printf(" ");
+        printTime(patReEnd[i]);
+        printf("\n");
+    }
+    printf("\n");
+
+    printf("FacilityUtilization\n");
+    printf("Type idx minutes percent\n");
+    for (i = 0; i < nOp; i = i + 1) {
+        printf("OpRoom %d %d ", i + 1, opRoomMinutes[i]);
+        printPercent2(opRoomMinutes[i]);
+        printf("\n");
+    }
+    for (i = 0; i < nRe; i = i + 1) {
+        printf("ReBed %d %d ", i + 1, reRoomMinutes[i]);
+        printPercent2(reRoomMinutes[i]);
+        printf("\n");
+    }
+    printf("\n");
+}
+
+int main() {
+    for (;;) {
+        int i;
+        nOp = getint();
+        if (nOp == 0) break;
+        nRe = getint();
+        T0 = getint();
+        tTrans = getint();
+        tPreOp = getint();
+        tPreRe = getint();
+        nPat = getint();
+
+        for (i = 0; i < nPat; i = i + 1) {
+            patName[i] = getint();
+            patSurgery[i] = getint();
+            patRecovery[i] = getint();
+        }
+
+        runOneCase();
+        printCase();
+    }
+    return 0;
+}

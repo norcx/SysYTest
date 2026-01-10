@@ -1,0 +1,82 @@
+// Scaled-down "Double Patience" (UVa 1637) variant for Strict SysY.
+// - 5 piles, 4 cards per pile (20 cards total)
+// - Each card is an integer rank; two top cards match if ranks equal
+// - Output is win probability scaled by 1,000,000 (rounded), printed as an integer
+
+const int PILES = 5;
+const int SIZE = 4;
+const int TOTAL = 20;
+const int BASE = 5;      // SIZE + 1
+const int STATES = 3125; // BASE^PILES = 5^5
+const int SCALE = 1000000;
+
+int card[TOTAL];
+int memo[STATES];
+int vis[STATES];
+
+int encode(int c0, int c1, int c2, int c3, int c4) {
+  return c0 + c1 * 5 + c2 * 25 + c3 * 125 + c4 * 625;
+}
+
+int top_rank(int pile, int cnt) {
+  return card[pile * SIZE + cnt - 1];
+}
+
+int dp(int c0, int c1, int c2, int c3, int c4, int left) {
+  int idx;
+  int tot;
+  int sum;
+  int i;
+  int j;
+  int cnt[5];
+  if (left == 0) return SCALE;
+
+  idx = encode(c0, c1, c2, c3, c4);
+  if (vis[idx] != 0) return memo[idx];
+  vis[idx] = 1;
+
+  cnt[0] = c0;
+  cnt[1] = c1;
+  cnt[2] = c2;
+  cnt[3] = c3;
+  cnt[4] = c4;
+
+  tot = 0;
+  sum = 0;
+  for (i = 0; i < PILES; i = i + 1)
+    if (cnt[i] > 0)
+      for (j = i + 1; j < PILES; j = j + 1)
+        if (cnt[j] > 0 && top_rank(i, cnt[i]) == top_rank(j, cnt[j])) {
+          tot = tot + 1;
+          cnt[i] = cnt[i] - 1;
+          cnt[j] = cnt[j] - 1;
+          sum = sum + dp(cnt[0], cnt[1], cnt[2], cnt[3], cnt[4], left - 2);
+          cnt[i] = cnt[i] + 1;
+          cnt[j] = cnt[j] + 1;
+        }
+
+  if (tot == 0) memo[idx] = 0;
+  else memo[idx] = (sum + tot / 2) / tot;
+  return memo[idx];
+}
+
+int read_case() {
+  int first;
+  int t;
+  first = getint();
+  if (first == 0) return 0;
+  card[0] = first;
+  for (t = 1; t < TOTAL; t = t + 1) card[t] = getint();
+  return 1;
+}
+
+int main() {
+  int i;
+  int ans;
+  for (;read_case() != 0;) {
+    for (i = 0; i < STATES; i = i + 1) vis[i] = 0;
+    ans = dp(SIZE, SIZE, SIZE, SIZE, SIZE, TOTAL);
+    printf("%d\n", ans);
+  }
+  return 0;
+}

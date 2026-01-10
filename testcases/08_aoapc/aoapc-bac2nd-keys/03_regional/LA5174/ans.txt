@@ -1,0 +1,11 @@
+Paragraph 1
+Line 1: 1677554 ... 1677554 (5 whitespace)
+Line 2: 1729433 ... 1729433 (5 whitespace)
+Line 3: 1781312 ... 1781312 (2 whitespace)
+Line 4: 314492959 (-16 whitespace)
+Line 5: 1677554 (-7 whitespace)
+Line 6: 1677554 (-7 whitespace)
+Line 7: 1729433 (-4 whitespace)
+Paragraph 2
+Line 1: 12805 ... 1712140 (12 whitespace)
+Line 2: 231086594 ... 1677554 (2 whitespace)

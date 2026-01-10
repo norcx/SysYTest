@@ -1,0 +1,2 @@
+Disk set 1 is valid, contents are: 9ED68
+Disk set 2 is invalid.

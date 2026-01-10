@@ -1,0 +1,181 @@
+/* Description:
+ *   Golygons (UVa 225) path enumeration with obstacles.
+ *   Strict SysY translation (int-only, 1D arrays, for-loops only).
+ *
+ * Input format (newline-separated integers):
+ *   K
+ *   repeat K times:
+ *     N
+ *     k
+ *     k lines: xi, yi
+ *
+ * Output matches the reference solution:
+ *   prints each valid path (letters e/n/s/w), then:
+ *   Found X golygon(s).
+ *   blank line
+ */
+
+const int MAXX = 256;
+const int DIM = 512;
+const int VIS_SIZE = 262144;
+const int MAX_BLOCKS = 64;
+const int MAX_N = 26;
+
+int vis[VIS_SIZE];
+int blocksX[MAX_BLOCKS];
+int blocksY[MAX_BLOCKS];
+int blocksCount;
+
+int dirX[4];
+int dirY[4];
+
+int pathDir[MAX_N];
+int N;
+int golygonCount;
+
+int absInt(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+int inRange(int x, int left, int right) {
+    int l;
+    int r;
+    int t;
+    l = left;
+    r = right;
+    if (l > r) {
+        t = l;
+        l = r;
+        r = t;
+    }
+    if (l <= x && x <= r) return 1;
+    return 0;
+}
+
+int visIndex(int x, int y) {
+    return (x + MAXX) * DIM + (y + MAXX);
+}
+
+int isBlocked(int sx, int sy, int ex, int ey) {
+    int i;
+    if (sx == ex) {
+        for (i = 0; i < blocksCount; i = i + 1) {
+            if (blocksX[i] == sx && inRange(blocksY[i], sy, ey) == 1) return 1;
+        }
+        return 0;
+    }
+    if (sy == ey) {
+        for (i = 0; i < blocksCount; i = i + 1) {
+            if (blocksY[i] == sy && inRange(blocksX[i], sx, ex) == 1) return 1;
+        }
+        return 0;
+    }
+    return 0;
+}
+
+void clearVis() {
+    int i;
+    for (i = 0; i < VIS_SIZE; i = i + 1) {
+        vis[i] = 0;
+    }
+}
+
+void printDir(int d) {
+    if (d == 0) printf("e");
+    if (d == 1) printf("n");
+    if (d == 2) printf("s");
+    if (d == 3) printf("w");
+}
+
+void printPath(int len) {
+    int i;
+    for (i = 0; i < len; i = i + 1) {
+        printDir(pathDir[i]);
+    }
+    printf("\n");
+}
+
+int isOpposite(int a, int b) {
+    if (a == 0 && b == 3) return 1;
+    if (a == 3 && b == 0) return 1;
+    if (a == 1 && b == 2) return 1;
+    if (a == 2 && b == 1) return 1;
+    return 0;
+}
+
+void solve(int x, int y, int step, int lastDir) {
+    int dist;
+    int walks;
+    int dir;
+    int len;
+    int nx;
+    int ny;
+    int idx;
+
+    if (step == N) {
+        if (x == 0 && y == 0) {
+            printPath(step);
+            golygonCount = golygonCount + 1;
+        }
+        return;
+    }
+
+    dist = absInt(x) + absInt(y);
+    walks = (N - step) * (step + 1 + N) / 2;
+    if (walks < dist) return;
+
+    len = step + 1;
+    for (dir = 0; dir < 4; dir = dir + 1) {
+        if (lastDir != -1) {
+            if (dir == lastDir) continue;
+            if (isOpposite(lastDir, dir) == 1) continue;
+        }
+
+        nx = x + dirX[dir] * len;
+        ny = y + dirY[dir] * len;
+
+        if (isBlocked(x, y, nx, ny) == 1) continue;
+
+        idx = visIndex(nx, ny);
+        if (vis[idx] == 1) continue;
+        vis[idx] = 1;
+
+        pathDir[step] = dir;
+        solve(nx, ny, step + 1, dir);
+
+        vis[idx] = 0;
+    }
+}
+
+int main() {
+    int K;
+    int caseNo;
+    int i;
+
+    dirX[0] = 1;
+    dirY[0] = 0;
+    dirX[1] = 0;
+    dirY[1] = 1;
+    dirX[2] = 0;
+    dirY[2] = 0 - 1;
+    dirX[3] = 0 - 1;
+    dirY[3] = 0;
+
+    K = getint();
+    for (caseNo = 0; caseNo < K; caseNo = caseNo + 1) {
+        N = getint();
+        blocksCount = getint();
+        if (blocksCount > MAX_BLOCKS) blocksCount = MAX_BLOCKS;
+        for (i = 0; i < blocksCount; i = i + 1) {
+            blocksX[i] = getint();
+            blocksY[i] = getint();
+        }
+
+        clearVis();
+        golygonCount = 0;
+        solve(0, 0, 0, 0 - 1);
+        printf("Found %d golygon(s).\n\n", golygonCount);
+    }
+    return 0;
+}

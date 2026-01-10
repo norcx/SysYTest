@@ -1,0 +1,139 @@
+/* Description:
+ *   SysY translation of UVa 11186 "Circum Triangle", restricted to input angles
+ *   being multiples of 90 degrees (0/90/180/270), so all trig reduces to small
+ *   constants and can be computed with integer arithmetic.
+ *
+ *   Input format per case (newline-separated integers):
+ *     N
+ *     R
+ *     a0
+ *     a1
+ *     ...
+ *     a(N-1)
+ *   Terminates with:
+ *     0
+ *     0
+ */
+
+const int SCALE = 10000;
+const int PI_SCALED = 31416; /* round(pi * SCALE) */
+
+int abs_int(int x) {
+  if (x < 0) return -x;
+  return x;
+}
+
+void sort_int(int a[], int n) {
+  int i;
+  int j;
+  for (i = 1; i < n; i = i + 1) {
+    int key;
+    key = a[i];
+    j = i - 1;
+    for (; j >= 0 && a[j] > key; j = j - 1) {
+      a[j + 1] = a[j];
+    }
+    a[j + 1] = key;
+  }
+}
+
+int choose3(int n) {
+  return n * (n - 1) * (n - 2) / 6;
+}
+
+int main() {
+  int n;
+  int r;
+  int angles[64];
+  int i;
+  int j;
+
+  for (;;) {
+    n = getint();
+    r = getint();
+    if (n == 0 && r == 0) break;
+
+    for (i = 0; i < n; i = i + 1) {
+      angles[i] = getint();
+      angles[i] = angles[i] % 360;
+      if (angles[i] < 0) angles[i] = angles[i] + 360;
+    }
+
+    sort_int(angles, n);
+
+    /* Represent ans as: ans = pi * (p4/4) + (c2/2) */
+    int p4;
+    int c2;
+    p4 = 4 * choose3(n);
+    c2 = 0;
+
+    for (i = 0; i < n; i = i + 1) {
+      for (j = i + 1; j < n; j = j + 1) {
+        int k;
+        int diff;
+        int area_p4;
+        int area_c2;
+        int t;
+        int delta_p4;
+        int delta_c2;
+
+        k = j - i;
+        diff = angles[j] - angles[i];
+
+        /* Supported diffs: 0, 90, 180, 270 (since input angles are multiples of 90). */
+        area_p4 = 0;
+        area_c2 = 0;
+
+        if (diff == 0) {
+          area_p4 = 0;
+          area_c2 = 0;
+        } else if (diff == 90) {
+          /* area = pi/4 - 1/2 */
+          area_p4 = 1;
+          area_c2 = -1;
+        } else if (diff == 180) {
+          /* area = pi/2 */
+          area_p4 = 2;
+          area_c2 = 0;
+        } else if (diff == 270) {
+          /* area = 3pi/4 + 1/2 */
+          area_p4 = 3;
+          area_c2 = 1;
+        } else {
+          /* Fallback: treat as 0 (keeps program in integer-only SysY). */
+          area_p4 = 0;
+          area_c2 = 0;
+        }
+
+        t = n - 2 * k;
+        delta_p4 = (k - 1) * 4 + t * area_p4;
+        delta_c2 = t * area_c2;
+
+        p4 = p4 - delta_p4;
+        c2 = c2 - delta_c2;
+      }
+    }
+
+    /* value = (pi * p4 / 4 + c2 / 2) * r^2 */
+    int rr;
+    int den;
+    int total4_scaled;
+    int out;
+
+    rr = r * r;
+    den = 4 * SCALE;
+    total4_scaled = PI_SCALED * p4 * rr + (2 * SCALE) * c2 * rr;
+
+    if (total4_scaled < 0) {
+      total4_scaled = -total4_scaled;
+      out = (total4_scaled + den / 2) / den;
+      out = -out;
+    } else {
+      out = (total4_scaled + den / 2) / den;
+    }
+
+    printf("%d\n", out);
+  }
+
+  return 0;
+}

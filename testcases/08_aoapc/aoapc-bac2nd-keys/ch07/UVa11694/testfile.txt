@@ -1,0 +1,322 @@
+/* Description:
+ *   UVa11694 / Gokigen Naname solver (ported to Strict SysY).
+ *   Input (all integers, one per line):
+ *     T
+ *     For each case:
+ *       N
+ *       (N+1)*(N+1) degrees in row-major order, -1 for "no clue"
+ *   Output:
+ *     For each case:
+ *       N
+ *       N*N cell values in row-major order (1 for '\\', -1 for '/', 0 for empty)
+ */
+const int MAXN = 9;
+const int MAXP = 81;
+const int MAXC = 64;
+const int MAXADJ = 6561;
+
+const int CDX[4] = {-1, -1, 0, 0};
+const int CDY[4] = {-1, 0, -1, 0};
+const int CG[4] = {1, -1, -1, 1};
+
+int N;
+int P;
+int TotalCells;
+
+int G[MAXC];          // 0 empty, 1 '\', -1 '/'
+int DegWant[MAXP];    // -1 means unconstrained
+int DegCur[MAXP];     // current degree in point graph
+int Done[MAXP];
+int Adj[MAXADJ];      // adjacency matrix: Adj[u*MAXP+v] in {0,1}
+
+int PtX[MAXP];
+int PtY[MAXP];
+int PtId[MAXP];
+int PtCnt;
+
+int Vis[MAXP];
+int Q[MAXP];
+
+int pointId(int x, int y) { return x * (N + 1) + y; }
+
+int validP(int x, int y) {
+  if (x < 0) return 0;
+  if (x > N) return 0;
+  if (y < 0) return 0;
+  if (y > N) return 0;
+  return 1;
+}
+
+int validG(int x, int y) {
+  if (x < 0) return 0;
+  if (x >= N) return 0;
+  if (y < 0) return 0;
+  if (y >= N) return 0;
+  return 1;
+}
+
+void addEdge(int u, int v) {
+  int idx1;
+  int idx2;
+  idx1 = u * MAXP + v;
+  idx2 = v * MAXP + u;
+  if (Adj[idx1] == 0) {
+    Adj[idx1] = 1;
+    Adj[idx2] = 1;
+    DegCur[u] = DegCur[u] + 1;
+    DegCur[v] = DegCur[v] + 1;
+  }
+}
+
+void removeEdge(int u, int v) {
+  int idx1;
+  int idx2;
+  idx1 = u * MAXP + v;
+  idx2 = v * MAXP + u;
+  if (Adj[idx1] == 1) {
+    Adj[idx1] = 0;
+    Adj[idx2] = 0;
+    DegCur[u] = DegCur[u] - 1;
+    DegCur[v] = DegCur[v] - 1;
+  }
+}
+
+int connected(int s, int t) {
+  int i;
+  int head;
+  int tail;
+  int cur;
+  int v;
+  if (s == t) return 1;
+  for (i = 0; i < P; i = i + 1) Vis[i] = 0;
+  head = 0;
+  tail = 0;
+  Vis[s] = 1;
+  Q[tail] = s;
+  tail = tail + 1;
+  for (;;) {
+    if (head == tail) break;
+    cur = Q[head];
+    head = head + 1;
+    for (v = 0; v < P; v = v + 1) {
+      if (Adj[cur * MAXP + v] == 1) {
+        if (Vis[v] == 0) {
+          if (v == t) return 1;
+          Vis[v] = 1;
+          Q[tail] = v;
+          tail = tail + 1;
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+int okPoint(int pid) {
+  if (DegWant[pid] == -1) return 1;
+  if (DegWant[pid] >= DegCur[pid] + 1) return 1;
+  return 0;
+}
+
+void connectCell(int cx, int cy, int g) {
+  int cell;
+  int u;
+  int v;
+  cell = cx * N + cy;
+  if (g == 1) {
+    u = pointId(cx, cy);
+    v = pointId(cx + 1, cy + 1);
+  } else {
+    u = pointId(cx, cy + 1);
+    v = pointId(cx + 1, cy);
+  }
+  G[cell] = g;
+  addEdge(u, v);
+}
+
+int dfs(int idx) {
+  int x;
+  int y;
+  int px;
+  int py;
+  int pid;
+  int cell;
+  int u;
+  int v;
+  int i;
+  int j;
+  if (idx >= TotalCells) {
+    for (i = 0; i < PtCnt; i = i + 1) {
+      pid = PtId[i];
+      if (DegCur[pid] != DegWant[pid]) return 0;
+    }
+    return 1;
+  }
+
+  x = idx / N;
+  y = idx - x * N;
+  px = x - 1;
+  py = y - 1;
+  if (validP(px, py) == 1) {
+    pid = pointId(px, py);
+    if (DegWant[pid] != -1) {
+      if (DegCur[pid] != DegWant[pid]) return 0;
+    }
+  }
+
+  cell = x * N + y;
+  if (G[cell] != 0) return dfs(idx + 1);
+
+  u = pointId(x, y);
+  v = pointId(x + 1, y + 1);
+  if (okPoint(u) == 1) {
+    if (okPoint(v) == 1) {
+      if (connected(u, v) == 0) {
+        G[cell] = 1;
+        addEdge(u, v);
+        if (dfs(idx + 1) == 1) return 1;
+        removeEdge(u, v);
+        G[cell] = 0;
+      }
+    }
+  }
+
+  u = pointId(x + 1, y);
+  v = pointId(x, y + 1);
+  if (okPoint(u) == 1) {
+    if (okPoint(v) == 1) {
+      if (connected(u, v) == 0) {
+        G[cell] = -1;
+        addEdge(u, v);
+        if (dfs(idx + 1) == 1) return 1;
+        removeEdge(u, v);
+        G[cell] = 0;
+      }
+    }
+  }
+
+  return 0;
+}
+
+void solve() {
+  int change;
+  int i;
+  int k;
+  int x;
+  int y;
+  int d;
+  int c;
+  int freec;
+  int cx;
+  int cy;
+  int cell;
+  change = 1;
+  for (;;) {
+    if (change == 0) break;
+    change = 0;
+    for (i = 0; i < PtCnt; i = i + 1) {
+      int pid;
+      pid = PtId[i];
+      if (Done[pid] == 1) {
+      } else {
+        x = PtX[i];
+        y = PtY[i];
+        d = DegWant[pid];
+        c = 0;
+        freec = 0;
+        for (k = 0; k < 4; k = k + 1) {
+          cx = x + CDX[k];
+          cy = y + CDY[k];
+          if (validG(cx, cy) == 1) {
+            cell = cx * N + cy;
+            if (G[cell] == 0) freec = freec + 1;
+            if (G[cell] == CG[k]) c = c + 1;
+          }
+        }
+
+        if (c == d) {
+          if (freec > 0) {
+            for (k = 0; k < 4; k = k + 1) {
+              cx = x + CDX[k];
+              cy = y + CDY[k];
+              if (validG(cx, cy) == 1) {
+                cell = cx * N + cy;
+                if (G[cell] == 0) connectCell(cx, cy, 0 - CG[k]);
+              }
+            }
+            Done[pid] = 1;
+            change = 1;
+          }
+        } else {
+          if (c + freec == d) {
+            for (k = 0; k < 4; k = k + 1) {
+              cx = x + CDX[k];
+              cy = y + CDY[k];
+              if (validG(cx, cy) == 1) {
+                cell = cx * N + cy;
+                if (G[cell] == 0) connectCell(cx, cy, CG[k]);
+              }
+            }
+            Done[pid] = 1;
+            change = 1;
+          }
+        }
+      }
+    }
+  }
+  dfs(0);
+}
+
+void resetCase() {
+  int i;
+  for (i = 0; i < MAXC; i = i + 1) G[i] = 0;
+  for (i = 0; i < MAXP; i = i + 1) {
+    DegWant[i] = -1;
+    DegCur[i] = 0;
+    Done[i] = 0;
+  }
+  for (i = 0; i < MAXADJ; i = i + 1) Adj[i] = 0;
+  PtCnt = 0;
+}
+
+int main() {
+  int T;
+  int t;
+  int x;
+  int y;
+  int deg;
+  int pid;
+  int cell;
+  int i;
+  int j;
+  T = getint();
+  for (t = 0; t < T; t = t + 1) {
+    N = getint();
+    P = (N + 1) * (N + 1);
+    TotalCells = N * N;
+    resetCase();
+    for (x = 0; x <= N; x = x + 1) {
+      for (y = 0; y <= N; y = y + 1) {
+        deg = getint();
+        pid = pointId(x, y);
+        DegWant[pid] = deg;
+        if (deg != -1) {
+          PtX[PtCnt] = x;
+          PtY[PtCnt] = y;
+          PtId[PtCnt] = pid;
+          PtCnt = PtCnt + 1;
+        }
+      }
+    }
+    solve();
+
+    printf("%d\n", N);
+    for (i = 0; i < N; i = i + 1) {
+      for (j = 0; j < N; j = j + 1) {
+        cell = i * N + j;
+        printf("%d\n", G[cell]);
+      }
+    }
+  }
+  return 0;
+}

@@ -1,0 +1,134 @@
+const int MAXN = 12;
+const int MAXM = 25;
+const int MAXS = 4096;
+const int INF = 1000000000;
+
+int n;
+int m;
+int t[MAXM];
+int beforeArr[MAXM * MAXN];
+int afterArr[MAXM * MAXN];
+int distArr[MAXS];
+int visArr[MAXS];
+int pow2Arr[MAXN + 1];
+
+void initPow2() {
+  int i;
+  pow2Arr[0] = 1;
+  for (i = 1; i <= MAXN; i = i + 1) {
+    pow2Arr[i] = pow2Arr[i - 1] * 2;
+  }
+}
+
+int isPatchable(int state, int p) {
+  int j;
+  for (j = 0; j < n; j = j + 1) {
+    int req;
+    int bit;
+    req = beforeArr[p * MAXN + j];
+    bit = (state / pow2Arr[j]) % 2;
+    if (req == 1 && bit == 1) return 0;
+    if (req == 2 && bit == 0) return 0;
+  }
+  return 1;
+}
+
+int applyAfter(int state, int p) {
+  int j;
+  int newState;
+  newState = state;
+  for (j = 0; j < n; j = j + 1) {
+    int act;
+    int bit;
+    act = afterArr[p * MAXN + j];
+    bit = (newState / pow2Arr[j]) % 2;
+    if (act == 1 && bit == 1) newState = newState - pow2Arr[j];
+    if (act == 2 && bit == 0) newState = newState + pow2Arr[j];
+  }
+  return newState;
+}
+
+int solve() {
+  int S;
+  int i;
+  int start;
+
+  S = pow2Arr[n];
+  for (i = 0; i < S; i = i + 1) {
+    distArr[i] = INF;
+    visArr[i] = 0;
+  }
+
+  start = S - 1;
+  distArr[start] = 0;
+
+  for (i = 0; i < S; i = i + 1) {
+    int u;
+    int best;
+    int s;
+    int p;
+
+    u = -1;
+    best = INF;
+    for (s = 0; s < S; s = s + 1) {
+      if (visArr[s] == 0) {
+        if (distArr[s] < best) {
+          best = distArr[s];
+          u = s;
+        }
+      }
+    }
+
+    if (u < 0) break;
+    if (u == 0) return distArr[0];
+    visArr[u] = 1;
+
+    for (p = 0; p < m; p = p + 1) {
+      if (isPatchable(u, p) == 1) {
+        int v;
+        int nd;
+        v = applyAfter(u, p);
+        nd = distArr[u] + t[p];
+        if (nd < distArr[v]) distArr[v] = nd;
+      }
+    }
+  }
+
+  if (distArr[0] >= INF) return -1;
+  return distArr[0];
+}
+
+int main() {
+  int kase;
+  initPow2();
+  kase = 0;
+
+  for (; ; ) {
+    int p;
+    int j;
+    int ans;
+
+    n = getint();
+    if (n == 0) break;
+    m = getint();
+
+    for (p = 0; p < m; p = p + 1) {
+      t[p] = getint();
+      for (j = 0; j < n; j = j + 1) beforeArr[p * MAXN + j] = getint();
+      for (j = 0; j < n; j = j + 1) afterArr[p * MAXN + j] = getint();
+    }
+
+    ans = solve();
+    kase = kase + 1;
+    printf("Product %d\n", kase);
+    if (ans < 0) {
+      printf("Bugs cannot be fixed.\n");
+      printf("\n");
+    } else {
+      printf("Fastest sequence takes %d seconds.\n", ans);
+      printf("\n");
+    }
+  }
+
+  return 0;
+}

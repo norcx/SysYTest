@@ -1,0 +1,14 @@
+/* Description:
+ *   Converted from C/C++ source containing a struct Point (double x,y) and a
+ *   stub dist(Point, Point) that always returns 0. Strict SysY allows only int
+ *   and void types, so Point is removed and dist is rewritten with int
+ *   coordinates.
+ */
+
+int dist(int ax, int ay, int bx, int by) {
+    return 0;
+}
+
+int main() {
+    return 0;
+}

@@ -1,0 +1,143 @@
+/*
+  Converted from UVa 122 "Trees on the level".
+
+  Input encoding (strict SysY: one integer per line):
+    cmd:
+      1 -> insert a node: followed by v, len, then len directions (0=L, 1=R)
+      0 -> end of current tree: output BFS or "not complete", then reset
+     -1 -> end of all input
+*/
+
+const int MAXN = 300;
+
+int leftc[MAXN];
+int rightc[MAXN];
+int have[MAXN];
+int val[MAXN];
+int nodecnt;
+int failed;
+
+void init_tree() {
+  int i;
+  nodecnt = 1;
+  i = 1;
+  leftc[i] = 0;
+  rightc[i] = 0;
+  have[i] = 0;
+  val[i] = 0;
+  failed = 0;
+}
+
+int new_node() {
+  if (nodecnt + 1 >= MAXN) {
+    failed = 1;
+    return 0;
+  }
+  nodecnt = nodecnt + 1;
+  leftc[nodecnt] = 0;
+  rightc[nodecnt] = 0;
+  have[nodecnt] = 0;
+  val[nodecnt] = 0;
+  return nodecnt;
+}
+
+void add_node(int v, int len) {
+  int u;
+  int i;
+  int dir;
+  int nn;
+  u = 1;
+  for (i = 0; i < len; i = i + 1) {
+    dir = getint();
+    if (dir == 0) {
+      if (leftc[u] == 0) {
+        nn = new_node();
+        leftc[u] = nn;
+      }
+      u = leftc[u];
+    } else {
+      if (rightc[u] == 0) {
+        nn = new_node();
+        rightc[u] = nn;
+      }
+      u = rightc[u];
+    }
+    if (u == 0) {
+      return;
+    }
+  }
+  if (have[u] != 0) {
+    failed = 1;
+  }
+  val[u] = v;
+  have[u] = 1;
+}
+
+int bfs(int ans[]) {
+  int q[MAXN];
+  int head;
+  int tail;
+  int size;
+  int u;
+  head = 0;
+  tail = 0;
+  size = 0;
+  q[tail] = 1;
+  tail = tail + 1;
+  for (head = 0; head < tail; head = head + 1) {
+    u = q[head];
+    if (have[u] == 0) {
+      return -1;
+    }
+    ans[size] = val[u];
+    size = size + 1;
+    if (leftc[u] != 0) {
+      q[tail] = leftc[u];
+      tail = tail + 1;
+    }
+    if (rightc[u] != 0) {
+      q[tail] = rightc[u];
+      tail = tail + 1;
+    }
+  }
+  return size;
+}
+
+int main() {
+  int ans[MAXN];
+  int ans_size;
+  int i;
+  int cmd;
+  int v;
+  int len;
+
+  init_tree();
+  for (cmd = getint(); cmd != -1; cmd = getint()) {
+    if (cmd == 1) {
+      v = getint();
+      len = getint();
+      add_node(v, len);
+    } else {
+      ans_size = -1;
+      if (failed == 0) {
+        ans_size = bfs(ans);
+        if (ans_size < 0) {
+          failed = 1;
+        }
+      }
+      if (failed != 0) {
+        printf("not complete\n");
+      } else {
+        for (i = 0; i < ans_size; i = i + 1) {
+          if (i != 0) {
+            printf(" ");
+          }
+          printf("%d", ans[i]);
+        }
+        printf("\n");
+      }
+      init_tree();
+    }
+  }
+  return 0;
+}

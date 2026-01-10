@@ -1,0 +1,55 @@
+/* Description:
+ *   UVa 136 (Ugly Numbers): print the 1500'th ugly number.
+ */
+const int N = 1500;
+const int INF = 2147483647;
+
+int mul_cap(int a, int b) {
+  int lim;
+  lim = INF / b;
+  if (a > lim) return INF;
+  return a * b;
+}
+
+int min2(int a, int b) {
+  if (a < b) return a;
+  return b;
+}
+
+int min3(int a, int b, int c) {
+  int m;
+  m = min2(a, b);
+  m = min2(m, c);
+  return m;
+}
+
+int main() {
+  int u[1501];
+  int i2;
+  int i3;
+  int i5;
+  int i;
+
+  u[1] = 1;
+  i2 = 1;
+  i3 = 1;
+  i5 = 1;
+
+  for (i = 2; i <= N; i = i + 1) {
+    int c2;
+    int c3;
+    int c5;
+    int next;
+    c2 = mul_cap(u[i2], 2);
+    c3 = mul_cap(u[i3], 3);
+    c5 = mul_cap(u[i5], 5);
+    next = min3(c2, c3, c5);
+    u[i] = next;
+    if (next == c2) i2 = i2 + 1;
+    if (next == c3) i3 = i3 + 1;
+    if (next == c5) i5 = i5 + 1;
+  }
+
+  printf("The 1500'th ugly number is %d.\n", u[N]);
+  return 0;
+}

@@ -1,0 +1,121 @@
+// Strict SysY testcase (integer-only input version of UVa1220 "Party at Hali-Bula")
+//
+// Input format (all integers, one per line):
+// For each testcase:
+//   n
+//   root
+//   (child, parent) repeated (n-1) times, each as two integers
+// Terminate with:
+//   0
+
+const int MAXN = 205;
+const int MAXE = 205;
+
+int n;
+int root;
+
+int head[MAXN];
+int to[MAXE];
+int nxt[MAXE];
+int ecnt;
+
+int d0[MAXN];
+int d1[MAXN];
+int f0[MAXN];
+int f1[MAXN];
+int vis0[MAXN];
+int vis1[MAXN];
+
+void init_graph(int nodes) {
+  int i;
+  for (i = 0; i < nodes; i = i + 1) {
+    head[i] = -1;
+    vis0[i] = 0;
+    vis1[i] = 0;
+  }
+  ecnt = 0;
+}
+
+void add_edge(int u, int v) {
+  to[ecnt] = v;
+  nxt[ecnt] = head[u];
+  head[u] = ecnt;
+  ecnt = ecnt + 1;
+}
+
+int max2(int a, int b) {
+  if (a > b) return a;
+  return b;
+}
+
+int dp(int u, int k) {
+  int i;
+  int v;
+  int a0;
+  int a1;
+
+  if (k == 0) {
+    if (vis0[u] != 0) return d0[u];
+    vis0[u] = 1;
+    f0[u] = 1;
+    d0[u] = 0;
+    for (i = head[u]; i != -1; i = nxt[i]) {
+      v = to[i];
+      a0 = dp(v, 0);
+      a1 = dp(v, 1);
+      d0[u] = d0[u] + max2(a0, a1);
+      if (a0 == a1) f0[u] = 0;
+      else if (a0 > a1 && f0[v] == 0) f0[u] = 0;
+      else if (a1 > a0 && f1[v] == 0) f0[u] = 0;
+    }
+    return d0[u];
+  }
+
+  if (vis1[u] != 0) return d1[u];
+  vis1[u] = 1;
+  f1[u] = 1;
+  d1[u] = 1;
+  for (i = head[u]; i != -1; i = nxt[i]) {
+    v = to[i];
+    d1[u] = d1[u] + dp(v, 0);
+    if (f0[v] == 0) f1[u] = 0;
+  }
+  return d1[u];
+}
+
+int main() {
+  int i;
+  int child;
+  int parent;
+  int ans0;
+  int ans1;
+  int best;
+  int unique;
+
+  for (;;) {
+    n = getint();
+    if (n == 0) break;
+
+    root = getint();
+    init_graph(n);
+
+    for (i = 0; i < n - 1; i = i + 1) {
+      child = getint();
+      parent = getint();
+      add_edge(parent, child);
+    }
+
+    ans0 = dp(root, 0);
+    ans1 = dp(root, 1);
+    best = max2(ans0, ans1);
+    printf("%d ", best);
+
+    unique = 0;
+    if (ans0 > ans1 && f0[root] != 0) unique = 1;
+    if (ans1 > ans0 && f1[root] != 0) unique = 1;
+    if (unique != 0) printf("Yes\n");
+    else printf("No\n");
+  }
+
+  return 0;
+}

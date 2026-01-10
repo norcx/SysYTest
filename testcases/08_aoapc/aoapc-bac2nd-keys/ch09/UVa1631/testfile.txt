@@ -1,0 +1,142 @@
+/* UVa1631 Locker (SysY adapted, 1D array version)
+ * Input format (per case):
+ *   n
+ *   S[0..n-1] digits, one per line
+ *   T[0..n-1] digits, one per line
+ * Terminator: n = 0
+ */
+const int MAXN = 128;
+const int INF = 1000000000;
+
+int s[MAXN];
+int t[MAXN];
+int dpv[MAXN * 1000];
+
+int uv[1000];
+int dv[1000];
+
+int up(int v, int c) { return (v + c) % 10; }
+int down(int v, int c) { return (v - c + 20) % 10; }
+
+int mymin(int a, int b) {
+  if (a < b) return a;
+  return b;
+}
+
+int dist10(int a, int b) {
+  int x;
+  int y;
+  x = (a - b + 10) % 10;
+  y = (b - a + 10) % 10;
+  if (x < y) return x;
+  return y;
+}
+
+int idx(int i, int a, int b, int c) { return i * 1000 + a * 100 + b * 10 + c; }
+
+int idx_pre(int k, int b, int c) { return k * 100 + b * 10 + c; }
+
+int main() {
+  int n;
+  int N;
+  int i;
+  int a;
+  int b;
+  int c;
+  int ti;
+  int s3;
+  int kup;
+  int kdown;
+  int k1;
+  int k2;
+  int cur;
+  int next;
+  int best;
+  int cand;
+  int ans;
+  int pre_idx;
+  int prev_pre_idx;
+
+  for (;;) {
+    n = getint();
+    if (n == 0) break;
+
+    N = n;
+    if (N < 3) N = 3;
+
+    for (i = 0; i < N; i = i + 1) {
+      s[i] = 0;
+      t[i] = 0;
+    }
+    for (i = 0; i < n; i = i + 1) s[i] = getint();
+    for (i = 0; i < n; i = i + 1) t[i] = getint();
+
+    for (i = N - 1; i >= 0; i = i - 1) {
+      ti = t[i];
+      if (i + 3 < N)
+        s3 = s[i + 3];
+      else
+        s3 = 0;
+
+      if (i < N - 1) {
+        for (b = 0; b < 10; b = b + 1) {
+          for (c = 0; c < 10; c = c + 1) {
+            cand = dpv[idx(i + 1, b, c, s3)];
+            pre_idx = idx_pre(0, b, c);
+            uv[pre_idx] = cand;
+            dv[pre_idx] = cand;
+          }
+        }
+        
+        for (k1 = 1; k1 < 10; k1 = k1 + 1) {
+          for (b = 0; b < 10; b = b + 1) {
+            for (c = 0; c < 10; c = c + 1) {
+              pre_idx = idx_pre(k1, b, c);
+              prev_pre_idx = idx_pre(k1 - 1, b, c);
+
+              best = uv[prev_pre_idx];
+              for (k2 = 0; k2 <= k1; k2 = k2 + 1) {
+                cand = dpv[idx(i + 1, up(b, k1), up(c, k2), s3)];
+                if (cand < best) best = cand;
+              }
+              uv[pre_idx] = best;
+
+              best = dv[prev_pre_idx];
+              for (k2 = 0; k2 <= k1; k2 = k2 + 1) {
+                cand = dpv[idx(i + 1, down(b, k1), down(c, k2), s3)];
+                if (cand < best) best = cand;
+              }
+              dv[pre_idx] = best;
+            }
+          }
+        }
+      }
+
+      for (a = 0; a < 10; a = a + 1) {
+        for (b = 0; b < 10; b = b + 1) {
+          for (c = 0; c < 10; c = c + 1) {
+            cur = idx(i, a, b, c);
+            if (i == N - 1) {
+              dpv[cur] = dist10(a, ti);
+            } else {
+              kup = (ti - a + 10) % 10;
+              kdown = (a - ti + 10) % 10;
+              
+              best = kup + uv[idx_pre(kup, b, c)];
+              cand = kdown + dv[idx_pre(kdown, b, c)];
+              
+              if (cand < best) best = cand;
+              
+              dpv[cur] = best;
+            }
+          }
+        }
+      }
+    }
+
+    ans = dpv[idx(0, s[0], s[1], s[2])];
+    printf("%d\n", ans);
+  }
+
+  return 0;
+}

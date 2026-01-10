@@ -1,0 +1,223 @@
+/*
+  Xiangqi (UVa 1589) converted to Strict SysY.
+
+  Input format (integers only; one per line):
+    Repeated testcases:
+      N
+      blackX
+      blackY
+      Then N pieces, each as:
+        typeCode  (1=G, 2=R, 3=H, 4=C)
+        x
+        y
+    Terminator:
+      0
+*/
+
+const int CODE_G = 1;
+const int CODE_R = 2;
+const int CODE_H = 3;
+const int CODE_C = 4;
+
+const int dirsX[4] = {1, 0, -1, 0};
+const int dirsY[4] = {0, 1, 0, -1};
+const int hdX[8] = {2, 1, -1, -2, -2, -1, 1, 2};
+const int hdY[8] = {1, 2, 2, 1, -1, -2, -2, -1};
+
+int board[256];
+int redX[16];
+int redY[16];
+int redN;
+int blackX;
+int blackY;
+int redGX;
+int redGY;
+
+int idx(int x, int y) {
+  return x * 16 + y;
+}
+
+void clearBoard() {
+  int i;
+  for (i = 0; i < 256; i = i + 1) {
+    board[i] = 0;
+  }
+}
+
+int inRange(int x, int left, int right) {
+  int t;
+  if (left > right) {
+    t = left;
+    left = right;
+    right = t;
+  }
+  if (left <= x && x <= right) return 1;
+  return 0;
+}
+
+int inBPalace(int x, int y) {
+  if (inRange(x, 1, 3) == 1 && inRange(y, 4, 6) == 1) return 1;
+  return 0;
+}
+
+int canFly(int x1, int y1, int x2, int y2, int sz) {
+  int cnt;
+  int v;
+  int h;
+  int i;
+  int lo;
+  int hi;
+
+  v = 0;
+  h = 0;
+  if (x1 == x2) v = 1;
+  if (y1 == y2) h = 1;
+  if (v == 0 && h == 0) return 0;
+
+  cnt = 0;
+  if (v == 1) {
+    lo = y1;
+    hi = y2;
+    if (lo > hi) {
+      i = lo;
+      lo = hi;
+      hi = i;
+    }
+    for (i = lo + 1; i < hi; i = i + 1) {
+      if (board[idx(x1, i)] != 0) {
+        cnt = cnt + 1;
+        if (cnt > sz) return 0;
+      }
+    }
+  } else {
+    lo = x1;
+    hi = x2;
+    if (lo > hi) {
+      i = lo;
+      lo = hi;
+      hi = i;
+    }
+    for (i = lo + 1; i < hi; i = i + 1) {
+      if (board[idx(i, y1)] != 0) {
+        cnt = cnt + 1;
+        if (cnt > sz) return 0;
+      }
+    }
+  }
+
+  if (cnt == sz) return 1;
+  return 0;
+}
+
+int checkmateAt(int rx, int ry, int bx, int by) {
+  int t;
+  int i;
+  int hx;
+  int hy;
+  int lx;
+  int ly;
+
+  t = board[idx(rx, ry)];
+  if (t == CODE_G) {
+    if (ry == by && canFly(rx, ry, bx, by, 0) == 1) return 1;
+    return 0;
+  }
+  if (t == CODE_R) {
+    if (rx == bx && canFly(rx, ry, bx, by, 0) == 1) return 1;
+    if (ry == by && canFly(rx, ry, bx, by, 0) == 1) return 1;
+    return 0;
+  }
+  if (t == CODE_C) {
+    if (rx == bx && canFly(rx, ry, bx, by, 1) == 1) return 1;
+    if (ry == by && canFly(rx, ry, bx, by, 1) == 1) return 1;
+    return 0;
+  }
+  if (t == CODE_H) {
+    for (i = 0; i < 8; i = i + 1) {
+      hx = rx + hdX[i];
+      hy = ry + hdY[i];
+      lx = rx + hdX[i] / 2;
+      ly = ry + hdY[i] / 2;
+      if (hx == bx && hy == by && board[idx(lx, ly)] == 0) return 1;
+    }
+    return 0;
+  }
+  return 0;
+}
+
+int isCheckmated() {
+  int i;
+  int j;
+  int nbx;
+  int nby;
+  int back;
+  int live;
+  int rx;
+  int ry;
+
+  if (inBPalace(blackX, blackY) == 0) return 0;
+  if (blackY == redGY && canFly(blackX, blackY, redGX, redGY, 0) == 1) return 0;
+
+  for (i = 0; i < 4; i = i + 1) {
+    nbx = blackX + dirsX[i];
+    nby = blackY + dirsY[i];
+    if (inBPalace(nbx, nby) == 0) continue;
+
+    back = board[idx(nbx, nby)];
+    board[idx(nbx, nby)] = 0;
+
+    live = 1;
+    for (j = 0; j < redN; j = j + 1) {
+      rx = redX[j];
+      ry = redY[j];
+      if (board[idx(rx, ry)] != 0 && checkmateAt(rx, ry, nbx, nby) == 1) {
+        live = 0;
+        break;
+      }
+    }
+
+    board[idx(nbx, nby)] = back;
+    if (live == 1) return 0;
+  }
+
+  return 1;
+}
+
+int main() {
+  int N;
+  int i;
+  int t;
+  int x;
+  int y;
+
+  for (;;) {
+    N = getint();
+    if (N == 0) break;
+    blackX = getint();
+    blackY = getint();
+
+    redN = N;
+    clearBoard();
+
+    for (i = 0; i < N; i = i + 1) {
+      t = getint();
+      x = getint();
+      y = getint();
+      redX[i] = x;
+      redY[i] = y;
+      board[idx(x, y)] = t;
+      if (t == CODE_G) {
+        redGX = x;
+        redGY = y;
+      }
+    }
+
+    if (isCheckmated() == 1) {
+      printf("YES\n");
+    } else {
+      printf("NO\n");
+    }
+  }
+
+  return 0;
+}

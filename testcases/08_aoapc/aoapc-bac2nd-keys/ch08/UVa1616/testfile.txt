@@ -1,0 +1,130 @@
+/* Description:
+ *   Converted from "Caravan Robbers" reference solution.
+ *   Finds maximum feasible spacing length and prints it as a reduced fraction.
+ *   Input format:
+ *     n
+ *     a1
+ *     b1
+ *     ...
+ *     an
+ *     bn
+ *     (repeat)
+ *     0   // sentinel to end
+ *   All integers are one per line.
+ */
+
+const int MAXN = 64;
+
+int n;
+int segA[MAXN];
+int segB[MAXN];
+
+int max2(int x, int y) {
+  if (x > y) return x;
+  return y;
+}
+
+int gcd2(int a, int b) {
+  int t;
+  for (;;) {
+    if (b == 0) break;
+    t = a % b;
+    a = b;
+    b = t;
+  }
+  if (a < 0) a = 0 - a;
+  return a;
+}
+
+void sortSegs() {
+  int i;
+  int j;
+  int minIdx;
+  int ta;
+  int tb;
+  for (i = 0; i < n; i = i + 1) {
+    minIdx = i;
+    for (j = i + 1; j < n; j = j + 1) {
+      if (segA[j] < segA[minIdx]) minIdx = j;
+    }
+    ta = segA[i];
+    tb = segB[i];
+    segA[i] = segA[minIdx];
+    segB[i] = segB[minIdx];
+    segA[minIdx] = ta;
+    segB[minIdx] = tb;
+  }
+}
+
+int feasible(int p, int q) {
+  int i;
+  int lbScaled;
+  int aScaled;
+  int bScaled;
+  lbScaled = 0;
+  for (i = 0; i < n; i = i + 1) {
+    aScaled = segA[i] * q;
+    bScaled = segB[i] * q;
+    lbScaled = max2(aScaled, lbScaled) + p;
+    if (lbScaled > bScaled) return 0;
+  }
+  return 1;
+}
+
+int maxNumeratorForDenom(int q, int bMax) {
+  int lo;
+  int hi;
+  int mid;
+  int k;
+  lo = 0;
+  hi = bMax * q + 1;
+  for (k = 0; k < 31; k = k + 1) {
+    if (lo + 1 >= hi) break;
+    mid = (lo + hi) / 2;
+    if (feasible(mid, q) == 1)
+      lo = mid;
+    else
+      hi = mid;
+  }
+  return lo;
+}
+
+int main() {
+  int i;
+  int bMax;
+  int q;
+  int p;
+  int bestP;
+  int bestQ;
+  int g;
+
+  for (;;) {
+    n = getint();
+    if (n == 0) break;
+
+    bMax = 0;
+    for (i = 0; i < n; i = i + 1) {
+      segA[i] = getint();
+      segB[i] = getint();
+      if (segB[i] > bMax) bMax = segB[i];
+    }
+
+    sortSegs();
+
+    bestP = 0;
+    bestQ = 1;
+    for (q = 1; q <= n; q = q + 1) {
+      p = maxNumeratorForDenom(q, bMax);
+      if (p * bestQ > bestP * q) {
+        bestP = p;
+        bestQ = q;
+      }
+    }
+
+    g = gcd2(bestP, bestQ);
+    bestP = bestP / g;
+    bestQ = bestQ / g;
+    printf("%d/%d\n", bestP, bestQ);
+  }
+  return 0;
+}

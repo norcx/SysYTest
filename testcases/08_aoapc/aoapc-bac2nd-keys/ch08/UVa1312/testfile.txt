@@ -1,0 +1,161 @@
+/* Cricket Field (UVa 1312) - Strict SysY version
+ * Finds the largest axis-aligned empty square inside W x H.
+ */
+
+const int MAXN = 110;
+
+int px[MAXN];
+int py[MAXN];
+int yvals[MAXN + 2];
+
+int N;
+int W;
+int H;
+int ycnt;
+
+int ansx;
+int ansy;
+
+int min2(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+void insert_y(int v) {
+    int i;
+    for (i = 0; i < ycnt; i = i + 1) {
+        if (yvals[i] == v) return;
+    }
+    yvals[ycnt] = v;
+    ycnt = ycnt + 1;
+}
+
+void sort_points_by_x() {
+    int i;
+    int j;
+    for (i = 0; i < N; i = i + 1) {
+        int best;
+        best = i;
+        for (j = i + 1; j < N; j = j + 1) {
+            if (px[j] < px[best]) best = j;
+        }
+        if (best != i) {
+            int tx;
+            int ty;
+            tx = px[i];
+            ty = py[i];
+            px[i] = px[best];
+            py[i] = py[best];
+            px[best] = tx;
+            py[best] = ty;
+        }
+    }
+}
+
+void sort_yvals() {
+    int i;
+    int j;
+    for (i = 0; i < ycnt; i = i + 1) {
+        int best;
+        best = i;
+        for (j = i + 1; j < ycnt; j = j + 1) {
+            if (yvals[j] < yvals[best]) best = j;
+        }
+        if (best != i) {
+            int tv;
+            tv = yvals[i];
+            yvals[i] = yvals[best];
+            yvals[best] = tv;
+        }
+    }
+}
+
+int solve() {
+    int len;
+    int a;
+    int b;
+    int i;
+
+    sort_points_by_x();
+    sort_yvals();
+
+    len = 0;
+    for (a = 0; a < ycnt; a = a + 1) {
+        for (b = a + 1; b < ycnt; b = b + 1) {
+            int miny;
+            int maxy;
+            int dy;
+            int left;
+
+            miny = yvals[a];
+            maxy = yvals[b];
+            dy = maxy - miny;
+            if (dy <= len) continue;
+
+            left = 0;
+            for (i = 0; i < N; i = i + 1) {
+                int gap;
+                int cand;
+
+                if (py[i] <= miny || py[i] >= maxy) continue;
+
+                gap = px[i] - left;
+                cand = dy;
+                if (gap < cand) cand = gap;
+                if (len < cand) {
+                    len = cand;
+                    ansx = left;
+                    ansy = miny;
+                }
+                left = px[i];
+            }
+
+            {
+                int gap2;
+                int cand2;
+                gap2 = W - left;
+                cand2 = dy;
+                if (gap2 < cand2) cand2 = gap2;
+                if (len < cand2) {
+                    len = cand2;
+                    ansx = left;
+                    ansy = miny;
+                }
+            }
+        }
+    }
+
+    return len;
+}
+
+int main() {
+    int T;
+    int t;
+
+    T = getint();
+    for (t = 0; t < T; t = t + 1) {
+        int i;
+        int len;
+
+        if (t) printf("\n");
+
+        N = getint();
+        W = getint();
+        H = getint();
+
+        ycnt = 0;
+        insert_y(0);
+        insert_y(H);
+
+        for (i = 0; i < N; i = i + 1) {
+            px[i] = getint();
+            py[i] = getint();
+            insert_y(py[i]);
+        }
+
+        len = solve();
+        printf("%d %d %d\n", ansx, ansy, len);
+    }
+
+    return 0;
+}

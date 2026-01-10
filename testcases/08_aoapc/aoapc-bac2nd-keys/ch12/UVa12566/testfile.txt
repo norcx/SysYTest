@@ -1,0 +1,269 @@
+/* Description:
+ * Converted from UVa12566 - Melody "Creation" (integer-IO SysY variant).
+ *
+ * Input (all newline-separated integers):
+ *   T
+ *   For each case:
+ *     M
+ *     N
+ *     Repeat N times:
+ *       stepBefore  (0..11)
+ *       stepAfter   (0..11)
+ *       afterBar    (0/1)
+ *
+ * Output:
+ *   Case t:
+ *   Then N lines, each:
+ *     slRepId eqFlag mslRepId afterBar
+ *   Terminator line: -1
+ */
+
+const int MAXN = 35;
+const int MAXM = 70;
+const int P = 12;
+const int INF = 1000000000;
+const int TOT = (MAXN + 1) * (MAXM + 1) * P;
+
+int stepB[MAXN + 1];
+int stepA[MAXN + 1];
+int afterBarArr[MAXN + 1];
+
+int dp[TOT];
+int nextJArr[TOT];
+int nextKArr[TOT];
+int optKey[TOT];
+int optSL[TOT];
+int optEq[TOT];
+int optMSL[TOT];
+
+int repPitch[17];
+int repAcc[17];
+int repLex[17];
+int repCnt[12];
+int repList[24];
+
+int idx3(int i, int j, int k) {
+    return (i * (MAXM + 1) + j) * P + k;
+}
+
+void set_state(int cur, int nd, int key, int sl, int eq, int msl, int nj, int nk) {
+    dp[cur] = nd;
+    optKey[cur] = key;
+    optSL[cur] = sl;
+    optEq[cur] = eq;
+    optMSL[cur] = msl;
+    nextJArr[cur] = nj;
+    nextKArr[cur] = nk;
+}
+
+void init_reps() {
+    int i;
+    for (i = 0; i < 12; i = i + 1) {
+        repCnt[i] = 0;
+        repList[i * 2] = -1;
+        repList[i * 2 + 1] = -1;
+    }
+
+    repPitch[0] = 1; repAcc[0] = 1; repLex[0] = 0;   /* #1 */
+    repPitch[1] = 3; repAcc[1] = 1; repLex[1] = 1;   /* #2 */
+    repPitch[2] = 6; repAcc[2] = 1; repLex[2] = 2;   /* #4 */
+    repPitch[3] = 8; repAcc[3] = 1; repLex[3] = 3;   /* #5 */
+    repPitch[4] = 10; repAcc[4] = 1; repLex[4] = 4;  /* #6 */
+    repPitch[5] = 0; repAcc[5] = 0; repLex[5] = 5;   /* 1 */
+    repPitch[6] = 2; repAcc[6] = 0; repLex[6] = 6;   /* 2 */
+    repPitch[7] = 4; repAcc[7] = 0; repLex[7] = 7;   /* 3 */
+    repPitch[8] = 5; repAcc[8] = 0; repLex[8] = 8;   /* 4 */
+    repPitch[9] = 7; repAcc[9] = 0; repLex[9] = 9;   /* 5 */
+    repPitch[10] = 9; repAcc[10] = 0; repLex[10] = 10; /* 6 */
+    repPitch[11] = 11; repAcc[11] = 0; repLex[11] = 11; /* 7 */
+    repPitch[12] = 1; repAcc[12] = 1; repLex[12] = 12; /* b2 */
+    repPitch[13] = 3; repAcc[13] = 1; repLex[13] = 13; /* b3 */
+    repPitch[14] = 6; repAcc[14] = 1; repLex[14] = 14; /* b5 */
+    repPitch[15] = 8; repAcc[15] = 1; repLex[15] = 15; /* b6 */
+    repPitch[16] = 10; repAcc[16] = 1; repLex[16] = 16; /* b7 */
+
+    repCnt[0] = 1; repList[0 * 2] = 5;
+    repCnt[1] = 2; repList[1 * 2] = 0; repList[1 * 2 + 1] = 12;
+    repCnt[2] = 1; repList[2 * 2] = 6;
+    repCnt[3] = 2; repList[3 * 2] = 1; repList[3 * 2 + 1] = 13;
+    repCnt[4] = 1; repList[4 * 2] = 7;
+    repCnt[5] = 1; repList[5 * 2] = 8;
+    repCnt[6] = 2; repList[6 * 2] = 2; repList[6 * 2 + 1] = 14;
+    repCnt[7] = 1; repList[7 * 2] = 9;
+    repCnt[8] = 2; repList[8 * 2] = 3; repList[8 * 2 + 1] = 15;
+    repCnt[9] = 1; repList[9 * 2] = 10;
+    repCnt[10] = 2; repList[10 * 2] = 4; repList[10 * 2 + 1] = 16;
+    repCnt[11] = 1; repList[11 * 2] = 11;
+}
+
+void solve_case(int N, int M) {
+    int pos;
+    int i;
+    int j;
+    int k;
+    int ni;
+    int nj;
+    int nk;
+    int delta;
+    int r;
+    int sl;
+    int d;
+    int cur;
+    int prev;
+    int nxt;
+    int nd;
+    int key;
+    int mk;
+    int mr;
+    int msl;
+    int d2;
+
+    for (pos = 0; pos < TOT; pos = pos + 1) {
+        dp[pos] = INF;
+        optKey[pos] = 2147483647;
+        optSL[pos] = -1;
+        optEq[pos] = 0;
+        optMSL[pos] = -1;
+        nextJArr[pos] = 0;
+        nextKArr[pos] = 0;
+    }
+
+    for (j = 0; j <= M; j = j + 1) {
+        for (k = 0; k < 12; k = k + 1) {
+            cur = idx3(N, j, k);
+            dp[cur] = 0;
+            optKey[cur] = 0;
+        }
+    }
+
+    for (i = N - 1; i >= 0; i = i - 1) {
+        delta = stepB[i + 1] - stepA[i];
+        delta = delta % 12;
+        if (delta < 0) delta = delta + 12;
+
+        for (j = 0; j <= M; j = j + 1) {
+            for (k = 0; k < 12; k = k + 1) {
+                cur = idx3(i, j, k);
+
+                if (j > 0) {
+                    prev = idx3(i, j - 1, k);
+                    if (dp[prev] != INF) {
+                        set_state(cur, dp[prev], optKey[prev], optSL[prev], optEq[prev], optMSL[prev], nextJArr[prev], nextKArr[prev]);
+                    }
+                }
+
+                for (r = 0; r < repCnt[k]; r = r + 1) {
+                    sl = repList[k * 2 + r];
+                    d = repAcc[sl];
+                    ni = i + 1;
+
+                    nj = j - d;
+                    nk = (k + delta) % 12;
+                    if (nj >= 0) {
+                        nxt = idx3(ni, nj, nk);
+                        if (dp[nxt] != INF) {
+                            nd = dp[nxt];
+                            key = repLex[sl] * 1000;
+                            if (nd < dp[cur] || nd == dp[cur] && key < optKey[cur]) {
+                                set_state(cur, nd, key, sl, 0, -1, nj, nk);
+                            }
+                        }
+                    }
+
+                    for (mk = 0; mk < 12; mk = mk + 1) {
+                        for (mr = 0; mr < repCnt[mk]; mr = mr + 1) {
+                            msl = repList[mk * 2 + mr];
+                            d2 = d + repAcc[msl];
+                            nj = j - d2;
+                            nk = (mk + delta) % 12;
+                            if (nj >= 0) {
+                                nxt = idx3(ni, nj, nk);
+                                if (dp[nxt] != INF) {
+                                    nd = dp[nxt] + 1;
+                                    key = repLex[sl] * 1000 + 100 + repLex[msl];
+                                    if (nd < dp[cur] || nd == dp[cur] && key < optKey[cur]) {
+                                        set_state(cur, nd, key, sl, 1, msl, nj, nk);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+int pick_start_k(int N, int M) {
+    int k;
+    int bestK;
+    int bestKey;
+    int bestD;
+    int cur;
+    bestK = 0;
+    bestKey = 2147483647;
+    bestD = INF;
+    for (k = 0; k < 12; k = k + 1) {
+        cur = idx3(0, M, k);
+        if (dp[cur] != INF) {
+            if (dp[cur] < bestD || dp[cur] == bestD && optKey[cur] < bestKey) {
+                bestD = dp[cur];
+                bestKey = optKey[cur];
+                bestK = k;
+            }
+        }
+    }
+    return bestK;
+}
+
+int norm12(int x) {
+    x = x % 12;
+    if (x < 0) x = x + 12;
+    return x;
+}
+
+int main() {
+    int T;
+    int t;
+    int M;
+    int N;
+    int i;
+    int k;
+    int j;
+    int cur;
+
+    init_reps();
+    T = getint();
+
+    for (t = 1; t <= T; t = t + 1) {
+        M = getint();
+        N = getint();
+        if (N > MAXN) N = MAXN;
+        if (M > 2 * N) M = 2 * N;
+        if (M > MAXM) M = MAXM;
+
+        for (i = 0; i < N; i = i + 1) {
+            stepB[i] = norm12(getint());
+            stepA[i] = norm12(getint());
+            afterBarArr[i] = getint();
+        }
+        stepB[N] = 0;
+        stepA[N] = 0;
+        afterBarArr[N] = 0;
+
+        solve_case(N, M);
+        k = pick_start_k(N, M);
+
+        printf("Case %d:\n", t);
+        j = M;
+        for (i = 0; i < N; i = i + 1) {
+            cur = idx3(i, j, k);
+            printf("%d %d %d %d\n", optSL[cur], optEq[cur], optMSL[cur], afterBarArr[i]);
+            j = nextJArr[cur];
+            k = nextKArr[cur];
+        }
+        printf("-1\n");
+    }
+
+    return 0;
+}

@@ -1,0 +1,185 @@
+/* Description:
+ * Lift Hopping (UVa10801-style graph shortest path).
+ *
+ * Strict SysY testcase IO (newline-separated integers only):
+ * - Multiple test cases, terminated by a single integer n==0.
+ * - For each test case:
+ *     n
+ *     k
+ *     T[0..n-1]
+ *     For each elevator e in [0, n):
+ *       s
+ *       floors[0..s-1]
+ *
+ * Output (per test case):
+ * - minimum time as integer, or "IMPOSSIBLE"
+ */
+
+const int INF = 100000000;
+
+int g[250000];
+int distArr[500];
+int vis[500];
+
+int T[5];
+int levelCount[100];
+int levelElev[500];
+
+int V;
+int n;
+int k;
+
+int abs_int(int x) {
+  if (x < 0) return 0 - x;
+  return x;
+}
+
+void add_edge(int from, int to, int cost) {
+  int pos;
+  pos = from * 500 + to;
+  if (cost < g[pos]) g[pos] = cost;
+}
+
+void init_case() {
+  int i;
+  int j;
+  int pos;
+  int diag;
+
+  for (i = 0; i < 100; i = i + 1) levelCount[i] = 0;
+
+  for (i = 0; i < V; i = i + 1) {
+    pos = i * 500;
+    for (j = 0; j < V; j = j + 1) g[pos + j] = INF;
+    diag = i * 500 + i;
+    g[diag] = 0;
+  }
+}
+
+void dijkstra(int start) {
+  int i;
+  int j;
+  int u;
+  int best;
+  int w;
+  int alt;
+  int base;
+
+  for (i = 0; i < V; i = i + 1) {
+    distArr[i] = INF;
+    vis[i] = 0;
+  }
+  distArr[start] = 0;
+
+  for (i = 0; i < V; i = i + 1) {
+    u = 0 - 1;
+    best = INF;
+    for (j = 0; j < V; j = j + 1) {
+      if (vis[j] == 0 && distArr[j] < best) {
+        best = distArr[j];
+        u = j;
+      }
+    }
+
+    if (u == 0 - 1) i = V;
+    if (u != 0 - 1) {
+      vis[u] = 1;
+      base = u * 500;
+      for (j = 0; j < V; j = j + 1) {
+        w = g[base + j];
+        if (w < INF && vis[j] == 0) {
+          alt = distArr[u] + w;
+          if (alt < distArr[j]) distArr[j] = alt;
+        }
+      }
+    }
+  }
+}
+
+int main() {
+  int i;
+  int e;
+  int f;
+  int s;
+  int prev;
+  int cur;
+  int first;
+  int cnt;
+  int a;
+  int b;
+  int e1;
+  int e2;
+  int u;
+  int v;
+  int ans;
+  int node;
+  int delta;
+
+  for (;;) {
+    n = getint();
+    if (n == 0) return 0;
+    k = getint();
+
+    V = n * 100;
+    init_case();
+
+    for (i = 0; i < n; i = i + 1) T[i] = getint();
+
+    for (e = 0; e < n; e = e + 1) {
+      s = getint();
+      first = 1;
+      for (i = 0; i < s; i = i + 1) {
+        cur = getint();
+        cnt = levelCount[cur];
+        levelElev[cur * 5 + cnt] = e;
+        levelCount[cur] = cnt + 1;
+
+        if (first == 0) {
+          delta = abs_int(cur - prev);
+          add_edge(e * 100 + prev, e * 100 + cur, delta * T[e]);
+          add_edge(e * 100 + cur, e * 100 + prev, delta * T[e]);
+        }
+        if (first == 1) first = 0;
+        prev = cur;
+      }
+    }
+
+    for (f = 0; f < 100; f = f + 1) {
+      cnt = levelCount[f];
+      for (a = 0; a < cnt; a = a + 1) {
+        for (b = a + 1; b < cnt; b = b + 1) {
+          e1 = levelElev[f * 5 + a];
+          e2 = levelElev[f * 5 + b];
+          u = e1 * 100 + f;
+          v = e2 * 100 + f;
+          add_edge(u, v, 60);
+          add_edge(v, u, 60);
+        }
+      }
+    }
+
+    if (k == 0) {
+      printf("0\n");
+    } else {
+      if (levelCount[0] == 0 || levelCount[k] == 0) {
+        printf("IMPOSSIBLE\n");
+      } else {
+        ans = INF;
+        cnt = levelCount[0];
+        for (a = 0; a < cnt; a = a + 1) {
+          e1 = levelElev[a];
+          dijkstra(e1 * 100);
+          for (b = 0; b < levelCount[k]; b = b + 1) {
+            e2 = levelElev[k * 5 + b];
+            node = e2 * 100 + k;
+            if (distArr[node] < ans) ans = distArr[node];
+          }
+        }
+        if (ans >= INF) printf("IMPOSSIBLE\n");
+        if (ans < INF) printf("%d\n", ans);
+      }
+    }
+  }
+
+  return 0;
+}

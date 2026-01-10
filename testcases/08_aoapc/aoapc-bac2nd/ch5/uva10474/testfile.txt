@@ -1,0 +1,127 @@
+/* Description:
+ *   UVa10474 Where is the Marble? (strict SysY)
+ *   Read multiple cases (n, q), sort marbles, then answer queries with 1-based first position.
+ *   Terminates when n == 0 (q is still read).
+ */
+
+const int MAXN = 10000;
+
+int a[MAXN];
+int lstack[MAXN];
+int rstack[MAXN];
+
+int lower_bound_a(int n, int x) {
+    int l;
+    int r;
+    int mid;
+    l = 0;
+    r = n;
+    for (; l < r; ) {
+        mid = (l + r) / 2;
+        if (a[mid] < x) {
+            l = mid + 1;
+        } else {
+            r = mid;
+        }
+    }
+    return l;
+}
+
+void sort_a(int n) {
+    int top;
+    int l;
+    int r;
+    int i;
+    int j;
+    int pivot;
+    int tmp;
+
+    if (n <= 1) {
+        return;
+    }
+
+    top = 0;
+    lstack[0] = 0;
+    rstack[0] = n - 1;
+
+    for (; top >= 0; ) {
+        l = lstack[top];
+        r = rstack[top];
+        top = top - 1;
+
+        for (; l < r; ) {
+            i = l;
+            j = r;
+            pivot = a[(l + r) / 2];
+
+            for (; i <= j; ) {
+                for (; a[i] < pivot; ) {
+                    i = i + 1;
+                }
+                for (; a[j] > pivot; ) {
+                    j = j - 1;
+                }
+                if (i <= j) {
+                    tmp = a[i];
+                    a[i] = a[j];
+                    a[j] = tmp;
+                    i = i + 1;
+                    j = j - 1;
+                }
+            }
+
+            if (j - l < r - i) {
+                if (i < r) {
+                    top = top + 1;
+                    lstack[top] = i;
+                    rstack[top] = r;
+                }
+                r = j;
+            } else {
+                if (l < j) {
+                    top = top + 1;
+                    lstack[top] = l;
+                    rstack[top] = j;
+                }
+                l = i;
+            }
+        }
+    }
+}
+
+int main() {
+    int n;
+    int q;
+    int x;
+    int i;
+    int kase;
+    int p;
+
+    kase = 0;
+    for (; ; ) {
+        n = getint();
+        q = getint();
+        if (n == 0) {
+            break;
+        }
+
+        kase = kase + 1;
+        printf("CASE# %d:\n", kase);
+
+        for (i = 0; i < n; i = i + 1) {
+            a[i] = getint();
+        }
+        sort_a(n);
+
+        for (i = 0; i < q; i = i + 1) {
+            x = getint();
+            p = lower_bound_a(n, x);
+            if (p < n && a[p] == x) {
+                printf("%d found at %d\n", x, p + 1);
+            } else {
+                printf("%d not found\n", x);
+            }
+        }
+    }
+    return 0;
+}

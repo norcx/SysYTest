@@ -1,0 +1,428 @@
+/* Description:
+ *   Converted from UVa10155 "Green Eggs and Ham" pretty-printer.
+ *   SysY-only I/O: expressions are provided as integer tokens.
+ *
+ * Input format (all integers, 1 per line):
+ *   T
+ *   For each case:
+ *     M
+ *     token_0
+ *     token_1
+ *     ...
+ *     token_{M-1}
+ *
+ * Token encoding:
+ *   Positive integers: operands (printed as decimal)
+ *   Negative integers:
+ *     -1 '='  -2 '+'  -3 '-'  -4 '*'  -5 '/'  -6 '^'
+ *     -7 '('  -8 ')'  -9 '{'  -10 '}'
+ */
+
+const int TOK_EQ = -1;
+const int TOK_ADD = -2;
+const int TOK_SUB = -3;
+const int TOK_MUL = -4;
+const int TOK_DIV = -5;
+const int TOK_POW = -6;
+const int TOK_LP = -7;
+const int TOK_RP = -8;
+const int TOK_LB = -9;
+const int TOK_RB = -10;
+
+const int CH_SPACE = 32;
+const int CH_LP = 40;
+const int CH_RP = 41;
+const int CH_MUL = 42;
+const int CH_ADD = 43;
+const int CH_SUB = 45;
+const int CH_DIV = 47;
+const int CH_0 = 48;
+const int CH_EQ = 61;
+const int CH_POW = 94;
+
+const int MAXTOK = 128;
+const int MAXNODE = 256;
+const int MAXBOX = 256;
+const int MAXGRID = 50000;
+
+int tokens[MAXTOK];
+int tokensN;
+
+int nodeKind[MAXNODE];   /* 0=group, 1=operand, 2=operator */
+int nodeOp[MAXNODE];     /* operand value or operator token */
+int nodeNeg[MAXNODE];    /* 0/1 */
+int nodeInGroup[MAXNODE];/* 1=(), 0={} */
+int nodeLeft[MAXNODE];
+int nodeRight[MAXNODE];
+int nodesCnt;
+
+int boxW[MAXBOX];
+int boxH[MAXBOX];
+int boxLVC[MAXBOX];
+int boxOff[MAXBOX];
+int boxCnt;
+
+int gridBuf[MAXGRID];
+int gridPtr;
+
+int max2(int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
+int isOpToken(int t) {
+    int r;
+    r = 0;
+    if (t < 0) r = 1;
+    return r;
+}
+
+int newNode() {
+    nodesCnt = nodesCnt + 1;
+    nodeKind[nodesCnt] = 0;
+    nodeOp[nodesCnt] = 0;
+    nodeNeg[nodesCnt] = 0;
+    nodeInGroup[nodesCnt] = 0;
+    nodeLeft[nodesCnt] = 0;
+    nodeRight[nodesCnt] = 0;
+    return nodesCnt;
+}
+
+int newBox(int w, int h) {
+    int id;
+    int i;
+    int cells;
+    boxCnt = boxCnt + 1;
+    id = boxCnt;
+    boxW[id] = w;
+    boxH[id] = h;
+    boxLVC[id] = 0;
+    boxOff[id] = gridPtr;
+    cells = w * h;
+    gridPtr = gridPtr + cells;
+    for (i = 0; i < cells; i = i + 1) {
+        gridBuf[boxOff[id] + i] = CH_SPACE;
+    }
+    return id;
+}
+
+int boxGet(int b, int r, int c) {
+    return gridBuf[boxOff[b] + r * boxW[b] + c];
+}
+
+void boxSet(int b, int r, int c, int v) {
+    gridBuf[boxOff[b] + r * boxW[b] + c] = v;
+}
+
+void boxCopyTo(int src, int dst, int r0, int c0) {
+    int i;
+    int j;
+    int v;
+    for (i = 0; i < boxH[src]; i = i + 1) {
+        for (j = 0; j < boxW[src]; j = j + 1) {
+            v = boxGet(src, i, j);
+            boxSet(dst, r0 + i, c0 + j, v);
+        }
+    }
+}
+
+int writeIntAscii(int x, int out[], int maxn) {
+    int tmp[16];
+    int len;
+    int i;
+    int j;
+    int d;
+    if (x == 0) {
+        out[0] = CH_0;
+        return 1;
+    }
+    len = 0;
+    for (;;) {
+        d = x % 10;
+        tmp[len] = CH_0 + d;
+        len = len + 1;
+        x = x / 10;
+        if (x == 0) break;
+    }
+    j = 0;
+    for (i = len - 1; i >= 0; i = i - 1) {
+        out[j] = tmp[i];
+        j = j + 1;
+        if (j >= maxn) break;
+    }
+    return j;
+}
+
+int makeOperandBox(int val, int neg) {
+    int digs[16];
+    int n;
+    int b;
+    int i;
+    n = writeIntAscii(val, digs, 16);
+    b = newBox(n + neg, 1);
+    boxLVC[b] = 0;
+    if (neg != 0) boxSet(b, 0, 0, CH_SUB);
+    for (i = 0; i < n; i = i + 1) {
+        boxSet(b, 0, i + neg, digs[i]);
+    }
+    return b;
+}
+
+int addGroupBox(int b, int group, int neg) {
+    int addLeft;
+    int addRight;
+    int nb;
+    int i;
+    int leftNegCol;
+    addLeft = 0;
+    if (neg != 0) addLeft = addLeft + 1;
+    if (group != 0) addLeft = addLeft + 1;
+    addRight = 0;
+    if (group != 0) addRight = 1;
+    nb = newBox(boxW[b] + addLeft + addRight, boxH[b]);
+    boxLVC[nb] = boxLVC[b];
+    boxCopyTo(b, nb, 0, addLeft);
+    if (neg != 0) {
+        leftNegCol = 0;
+        if (group != 0) leftNegCol = 1;
+        boxSet(nb, boxLVC[nb], leftNegCol, CH_SUB);
+    }
+    if (group != 0) {
+        for (i = 0; i < boxH[nb]; i = i + 1) {
+            boxSet(nb, i, 0, CH_LP);
+            boxSet(nb, i, boxW[nb] - 1, CH_RP);
+        }
+    }
+    return nb;
+}
+
+int buildExpTree(int l, int r) {
+    int i;
+    int dep;
+    int i0;
+    int i1;
+    int i2;
+    int i3;
+    int lt;
+    int t;
+    int p;
+    int child;
+    if (l == r) {
+        p = newNode();
+        nodeKind[p] = 1;
+        nodeOp[p] = tokens[l];
+        return p;
+    }
+    if (l + 1 == r) {
+        p = newNode();
+        nodeKind[p] = 1;
+        nodeOp[p] = tokens[l + 1];
+        nodeNeg[p] = 1;
+        return p;
+    }
+
+    i0 = -1;
+    i1 = -1;
+    i2 = -1;
+    i3 = -1;
+    dep = 0;
+    lt = TOK_ADD;
+    for (i = l; i <= r; i = i + 1) {
+        t = tokens[i];
+        if (t == TOK_LB || t == TOK_LP) dep = dep + 1;
+        else if (t == TOK_RB || t == TOK_RP) dep = dep - 1;
+        if (dep != 0) {
+            lt = t;
+            continue;
+        }
+        if (t == TOK_EQ) i0 = i;
+        else if (t == TOK_ADD) i1 = i;
+        else if (t == TOK_SUB) {
+            if (isOpToken(lt) == 0) i1 = i;
+        } else if (t == TOK_MUL || t == TOK_DIV) i2 = i;
+        else if (t == TOK_POW) {
+            if (i3 == -1) i3 = i;
+        }
+        lt = t;
+    }
+
+    if (i0 >= 0) {
+        p = newNode();
+        nodeKind[p] = 2;
+        nodeOp[p] = tokens[i0];
+        nodeLeft[p] = buildExpTree(l, i0 - 1);
+        nodeRight[p] = buildExpTree(i0 + 1, r);
+        return p;
+    }
+    if (i1 >= 0) {
+        p = newNode();
+        nodeKind[p] = 2;
+        nodeOp[p] = tokens[i1];
+        nodeLeft[p] = buildExpTree(l, i1 - 1);
+        nodeRight[p] = buildExpTree(i1 + 1, r);
+        return p;
+    }
+    if (i2 >= 0) {
+        p = newNode();
+        nodeKind[p] = 2;
+        nodeOp[p] = tokens[i2];
+        nodeLeft[p] = buildExpTree(l, i2 - 1);
+        nodeRight[p] = buildExpTree(i2 + 1, r);
+        return p;
+    }
+    if (i3 >= 0) {
+        p = newNode();
+        nodeKind[p] = 2;
+        nodeOp[p] = tokens[i3];
+        nodeLeft[p] = buildExpTree(l, i3 - 1);
+        nodeRight[p] = buildExpTree(i3 + 1, r);
+        return p;
+    }
+    if (tokens[l] == TOK_SUB) {
+        child = buildExpTree(l + 1, r);
+        nodeNeg[child] = 1;
+        return child;
+    }
+
+    p = newNode();
+    nodeKind[p] = 0;
+    if (tokens[l] == TOK_LP) nodeInGroup[p] = 1;
+    else nodeInGroup[p] = 0;
+    nodeLeft[p] = buildExpTree(l + 1, r - 1);
+    return p;
+}
+
+int getBox(int node) {
+    int k;
+    int o;
+    int lb;
+    int rb;
+    int b;
+    int w;
+    int h;
+    int lvc;
+    int ls;
+    int rs;
+    int i;
+    k = nodeKind[node];
+    if (k == 0) {
+        b = getBox(nodeLeft[node]);
+        b = addGroupBox(b, nodeInGroup[node], nodeNeg[node]);
+        return b;
+    }
+    if (k == 1) {
+        b = makeOperandBox(nodeOp[node], nodeNeg[node]);
+        return b;
+    }
+
+    o = nodeOp[node];
+    lb = getBox(nodeLeft[node]);
+    rb = getBox(nodeRight[node]);
+
+    if (o == TOK_DIV) {
+        w = max2(boxW[lb], boxW[rb]);
+        h = boxH[lb] + boxH[rb] + 1;
+        b = newBox(w, h);
+        boxLVC[b] = boxH[lb];
+
+        ls = w - boxW[lb];
+        ls = ls / 2 + ls % 2;
+        boxCopyTo(lb, b, 0, ls);
+
+        rs = w - boxW[rb];
+        rs = rs / 2 + rs % 2;
+        boxCopyTo(rb, b, boxLVC[b] + 1, rs);
+
+        for (i = 0; i < w; i = i + 1) boxSet(b, boxLVC[b], i, CH_SUB);
+        return b;
+    }
+
+    if (o == TOK_POW) {
+        w = boxW[lb] + boxW[rb];
+        h = boxH[lb] + boxH[rb];
+        b = newBox(w, h);
+        boxLVC[b] = boxLVC[lb] + boxH[rb];
+        boxCopyTo(lb, b, boxH[rb], 0);
+        boxCopyTo(rb, b, 0, boxW[lb]);
+        return b;
+    }
+
+    lvc = max2(boxLVC[lb], boxLVC[rb]);
+    h = lvc + max2(boxH[lb] - boxLVC[lb], boxH[rb] - boxLVC[rb]);
+    w = boxW[lb] + boxW[rb] + 3;
+    b = newBox(w, h);
+    boxLVC[b] = lvc;
+    boxCopyTo(lb, b, lvc - boxLVC[lb], 0);
+    boxCopyTo(rb, b, lvc - boxLVC[rb], boxW[lb] + 3);
+
+    if (o == TOK_EQ) boxSet(b, boxLVC[b], boxW[lb] + 1, CH_EQ);
+    else if (o == TOK_ADD) boxSet(b, boxLVC[b], boxW[lb] + 1, CH_ADD);
+    else if (o == TOK_SUB) boxSet(b, boxLVC[b], boxW[lb] + 1, CH_SUB);
+    else if (o == TOK_MUL) boxSet(b, boxLVC[b], boxW[lb] + 1, CH_MUL);
+    else boxSet(b, boxLVC[b], boxW[lb] + 1, CH_POW);
+
+    return b;
+}
+
+void printChar(int code) {
+    if (code == CH_SPACE) printf(" ");
+    else if (code == CH_LP) printf("(");
+    else if (code == CH_RP) printf(")");
+    else if (code == CH_ADD) printf("+");
+    else if (code == CH_SUB) printf("-");
+    else if (code == CH_MUL) printf("*");
+    else if (code == CH_DIV) printf("/");
+    else if (code == CH_EQ) printf("=");
+    else if (code == CH_POW) printf("^");
+    else if (code == CH_0) printf("0");
+    else if (code == CH_0 + 1) printf("1");
+    else if (code == CH_0 + 2) printf("2");
+    else if (code == CH_0 + 3) printf("3");
+    else if (code == CH_0 + 4) printf("4");
+    else if (code == CH_0 + 5) printf("5");
+    else if (code == CH_0 + 6) printf("6");
+    else if (code == CH_0 + 7) printf("7");
+    else if (code == CH_0 + 8) printf("8");
+    else if (code == CH_0 + 9) printf("9");
+    else printf("?");
+}
+
+void printBox(int b) {
+    int i;
+    int j;
+    int v;
+    for (i = 0; i < boxH[b]; i = i + 1) {
+        for (j = 0; j < boxW[b]; j = j + 1) {
+            v = boxGet(b, i, j);
+            printChar(v);
+        }
+        printf("\n");
+    }
+}
+
+void resetPools() {
+    nodesCnt = 0;
+    boxCnt = 0;
+    gridPtr = 0;
+}
+
+int main() {
+    int t;
+    int casei;
+    int m;
+    int i;
+    int root;
+    int b;
+    t = getint();
+    for (casei = 0; casei < t; casei = casei + 1) {
+        if (casei != 0) printf("\n");
+        resetPools();
+        m = getint();
+        tokensN = m;
+        for (i = 0; i < m; i = i + 1) tokens[i] = getint();
+        root = buildExpTree(0, m - 1);
+        b = getBox(root);
+        printBox(b);
+    }
+    return 0;
+}

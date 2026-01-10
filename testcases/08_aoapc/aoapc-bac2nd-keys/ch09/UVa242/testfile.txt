@@ -1,0 +1,159 @@
+/* Description:
+ *   [Add description here]
+ */
+ 
+const int MAXN = 11;
+const int MAXD = 16;
+const int MAXC = 1204;
+
+int S;
+int N;
+int stampCount[MAXN];
+int denom[MAXN * MAXD];
+int maxCover[MAXN];
+int dp[MAXC];
+
+void printWidth3(int x) {
+  if (x < 10) {
+    printf("  ");
+  } else if (x < 100) {
+    printf(" ");
+  }
+  printf("%d", x);
+  return;
+}
+
+void outputSet(int idx) {
+  int base;
+  int j;
+  base = idx * MAXD;
+  for (j = 0; j < stampCount[idx]; j = j + 1) {
+    printWidth3(denom[base + j]);
+  }
+  return;
+}
+
+void sortSet(int base, int n) {
+  int i;
+  int j;
+  int key;
+  for (i = 1; i < n; i = i + 1) {
+    key = denom[base + i];
+    j = i - 1;
+    for (; j >= 0 && denom[base + j] > key; ) {
+      denom[base + j + 1] = denom[base + j];
+      j = j - 1;
+    }
+    denom[base + j + 1] = key;
+  }
+  return;
+}
+
+void getMaxCoverForSet(int idx) {
+  int i;
+  int base;
+  int j;
+  int best;
+  int cand;
+
+  base = idx * MAXD;
+  for (i = 0; i < MAXC; i = i + 1) {
+    dp[i] = 0;
+  }
+
+  i = 0;
+  for (;;) {
+    i = i + 1;
+    best = 2147483647;
+    for (j = 0; j < stampCount[idx] && denom[base + j] <= i; j = j + 1) {
+      cand = dp[i - denom[base + j]] + 1;
+      if (cand < best) {
+        best = cand;
+      }
+    }
+    if (best > S) {
+      break;
+    }
+    dp[i] = best;
+  }
+
+  maxCover[idx] = i - 1;
+  return;
+}
+
+int isBetter(int a, int b) {
+  int i;
+  int da;
+  int db;
+  int baseA;
+  int baseB;
+
+  if (maxCover[a] != maxCover[b]) {
+    if (maxCover[a] > maxCover[b]) {
+      return 1;
+    }
+    return 0;
+  }
+
+  if (stampCount[a] != stampCount[b]) {
+    if (stampCount[a] < stampCount[b]) {
+      return 1;
+    }
+    return 0;
+  }
+
+  baseA = a * MAXD;
+  baseB = b * MAXD;
+  for (i = stampCount[a] - 1; i >= 0; i = i - 1) {
+    da = denom[baseA + i];
+    db = denom[baseB + i];
+    if (da != db) {
+      if (da < db) {
+        return 1;
+      }
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
+int main() {
+  int i;
+  int j;
+  int base;
+  int bestIdx;
+
+  for (;;) {
+    S = getint();
+    if (S == 0) {
+      break;
+    }
+
+    N = getint();
+    for (i = 0; i < N; i = i + 1) {
+      stampCount[i] = getint();
+      base = i * MAXD;
+      for (j = 0; j < stampCount[i]; j = j + 1) {
+        denom[base + j] = getint();
+      }
+      sortSet(base, stampCount[i]);
+      getMaxCoverForSet(i);
+    }
+
+    bestIdx = 0;
+    for (i = 1; i < N; i = i + 1) {
+      if (isBetter(i, bestIdx) == 1) {
+        bestIdx = i;
+      }
+    }
+
+    printf("max coverage = ");
+    printWidth3(maxCover[bestIdx]);
+    printf(" :");
+    outputSet(bestIdx);
+    printf("\n");
+  }
+
+  return 0;
+}

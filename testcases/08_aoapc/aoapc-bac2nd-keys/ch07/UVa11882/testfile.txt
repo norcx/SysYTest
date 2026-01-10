@@ -1,0 +1,204 @@
+/* Description:
+ *   Biggest number from a digit grid path (4-neighbor, no revisits).
+ *   Input format (strict SysY in.txt):
+ *     R
+ *     C
+ *     grid[0][0]
+ *     ...
+ *     grid[R-1][C-1]
+ *     (repeat testcases)
+ *     0
+ *     0
+ *   Non-digit cells are encoded as -1; digits are 0..9.
+ */
+
+const int MAXR = 8;
+const int MAXC = 8;
+const int MAXN = 64;
+
+int R;
+int C;
+
+int grid[MAXN];
+int walked[MAXN];
+int vis[MAXN];
+int q[MAXN];
+
+int curDigits[MAXN];
+int curLen;
+int ansDigits[MAXN];
+int ansLen;
+
+int bfsDigits[MAXN];
+int bfsLen;
+int cnt[10];
+
+int dx[4] = {0, 1, 0, -1};
+int dy[4] = {1, 0, -1, 0};
+
+int isValid(int x, int y) {
+    int idx;
+    if (x < 0) return 0;
+    if (x >= R) return 0;
+    if (y < 0) return 0;
+    if (y >= C) return 0;
+    idx = x * C + y;
+    if (grid[idx] < 0) return 0;
+    return 1;
+}
+
+void bfs(int sx, int sy) {
+    int i;
+    int head;
+    int tail;
+    int tmp;
+    int x;
+    int y;
+    int ax;
+    int ay;
+    int idx;
+    int aidx;
+
+    bfsLen = 0;
+    for (i = 0; i < R * C; i = i + 1) vis[i] = 0;
+
+    idx = sx * C + sy;
+    vis[idx] = 1;
+
+    head = 0;
+    tail = 0;
+    q[tail] = sx * MAXC + sy;
+    tail = tail + 1;
+
+    for (head = 0; head < tail; head = head + 1) {
+        tmp = q[head];
+        x = tmp / MAXC;
+        y = tmp % MAXC;
+        for (i = 0; i < 4; i = i + 1) {
+            ax = x + dx[i];
+            ay = y + dy[i];
+            if (isValid(ax, ay) == 0) continue;
+            aidx = ax * C + ay;
+            if (walked[aidx] != 0) continue;
+            if (vis[aidx] != 0) continue;
+            vis[aidx] = 1;
+            bfsDigits[bfsLen] = grid[aidx];
+            bfsLen = bfsLen + 1;
+            q[tail] = ax * MAXC + ay;
+            tail = tail + 1;
+        }
+    }
+}
+
+int lessThanMaxPossible() {
+    int i;
+    int d;
+    for (i = 0; i < curLen; i = i + 1) {
+        if (curDigits[i] < ansDigits[i]) return 1;
+        if (curDigits[i] > ansDigits[i]) return 0;
+    }
+
+    for (i = 0; i < 10; i = i + 1) cnt[i] = 0;
+    for (i = 0; i < bfsLen; i = i + 1) {
+        d = bfsDigits[i];
+        cnt[d] = cnt[d] + 1;
+    }
+
+    d = 9;
+    for (i = curLen; i < ansLen; i = i + 1) {
+        for (; d >= 0; d = d - 1) {
+            if (cnt[d] > 0) break;
+        }
+        cnt[d] = cnt[d] - 1;
+        if (d < ansDigits[i]) return 1;
+        if (d > ansDigits[i]) return 0;
+    }
+    return 0;
+}
+
+int isCurBetter() {
+    int i;
+    if (curLen > ansLen) return 1;
+    if (curLen < ansLen) return 0;
+    for (i = 0; i < curLen; i = i + 1) {
+        if (curDigits[i] > ansDigits[i]) return 1;
+        if (curDigits[i] < ansDigits[i]) return 0;
+    }
+    return 0;
+}
+
+void updateAns() {
+    int i;
+    ansLen = curLen;
+    for (i = 0; i < ansLen; i = i + 1) ansDigits[i] = curDigits[i];
+}
+
+void solve(int x, int y) {
+    int i;
+    int ax;
+    int ay;
+    int aidx;
+
+    bfs(x, y);
+    if (curLen + bfsLen < ansLen) return;
+    if (curLen + bfsLen == ansLen) {
+        if (lessThanMaxPossible() != 0) return;
+    }
+
+    for (i = 0; i < 4; i = i + 1) {
+        ax = x + dx[i];
+        ay = y + dy[i];
+        if (isValid(ax, ay) == 0) continue;
+        aidx = ax * C + ay;
+        if (walked[aidx] != 0) continue;
+
+        curDigits[curLen] = grid[aidx];
+        curLen = curLen + 1;
+        walked[aidx] = 1;
+
+        solve(ax, ay);
+
+        curLen = curLen - 1;
+        walked[aidx] = 0;
+    }
+
+    if (isCurBetter() != 0) updateAns();
+}
+
+int main() {
+    int i;
+    int j;
+    int idx;
+
+    for (;;) {
+        R = getint();
+        C = getint();
+        if (R == 0 && C == 0) break;
+
+        for (i = 0; i < R; i = i + 1) {
+            for (j = 0; j < C; j = j + 1) {
+                grid[i * C + j] = getint();
+            }
+        }
+
+        ansLen = 0;
+        for (i = 0; i < R * C; i = i + 1) walked[i] = 0;
+
+        for (i = 0; i < R; i = i + 1) {
+            for (j = 0; j < C; j = j + 1) {
+                idx = i * C + j;
+                if (grid[idx] < 0) continue;
+                curLen = 0;
+                curDigits[curLen] = grid[idx];
+                curLen = curLen + 1;
+                walked[idx] = 1;
+                solve(i, j);
+                walked[idx] = 0;
+            }
+        }
+
+        for (i = 0; i < ansLen; i = i + 1) printf("%d", ansDigits[i]);
+        printf("\n");
+    }
+    return 0;
+}

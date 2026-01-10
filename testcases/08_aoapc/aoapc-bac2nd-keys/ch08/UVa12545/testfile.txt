@@ -1,0 +1,66 @@
+/* Description:
+ *   Converted from UVa12545 "Bits Equalizer".
+ *   Input encoding (integers, one per line):
+ *     C
+ *     repeat C times:
+ *       N
+ *       S[0..N-1] where 0='0', 1='1', 2='?'
+ *       T[0..N-1] where 0='0', 1='1'
+ *   Output matches the original format:
+ *     Case k: ans
+ */
+
+const int MAXN = 256;
+int s_arr[MAXN];
+int t_arr[MAXN];
+
+int min_int(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+int solve(int n) {
+    int s01, s10, q0, q1, ans;
+    int i, cs, ct, x;
+    s01 = 0;
+    s10 = 0;
+    q0 = 0;
+    q1 = 0;
+    ans = 0;
+
+    for (i = 0; i < n; i = i + 1) {
+        cs = s_arr[i];
+        ct = t_arr[i];
+        if (cs != ct) {
+            if (cs == 0) s01 = s01 + 1;
+            if (cs == 1) s10 = s10 + 1;
+            if (cs == 2 && ct == 0) q0 = q0 + 1;
+            if (cs == 2 && ct == 1) q1 = q1 + 1;
+        }
+    }
+
+    x = min_int(s01, s10);
+    ans = x + q0;
+    s01 = s01 - x;
+    s10 = s10 - x;
+    if (s10 > q1) return -1;
+    ans = ans + s10 + s01 + q1;
+    return ans;
+}
+
+int main() {
+    int c, case_id, n, i, ans;
+    c = getint();
+    for (case_id = 1; case_id <= c; case_id = case_id + 1) {
+        n = getint();
+        for (i = 0; i < n; i = i + 1) {
+            s_arr[i] = getint();
+        }
+        for (i = 0; i < n; i = i + 1) {
+            t_arr[i] = getint();
+        }
+        ans = solve(n);
+        printf("Case %d: %d\n", case_id, ans);
+    }
+    return 0;
+}

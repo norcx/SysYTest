@@ -1,0 +1,79 @@
+/* Tree Recovery (UVa 536), converted to Strict SysY.
+ *
+ * Input (integer-only, 1 per line):
+ *   T
+ *   For each testcase:
+ *     n
+ *     preorder[0..n-1]
+ *     inorder[0..n-1]
+ *
+ * Output:
+ *   Postorder traversal as integers, one testcase per line.
+ */
+
+const int MAXN = 64;
+
+int preorder[MAXN];
+int inorder[MAXN];
+int postorder[MAXN];
+int outn;
+
+void build_post(int pL, int pR, int iL, int iR) {
+    int root;
+    int x;
+    int k;
+    int leftSize;
+    if (pL >= pR) {
+        return;
+    }
+
+    root = preorder[pL];
+    x = iL;
+    for (k = iL; k < iR; k = k + 1) {
+        if (inorder[k] == root) {
+            x = k;
+            k = iR;
+        }
+    }
+
+    leftSize = x - iL;
+    build_post(pL + 1, pL + 1 + leftSize, iL, x);
+    build_post(pL + 1 + leftSize, pR, x + 1, iR);
+    postorder[outn] = root;
+    outn = outn + 1;
+    return;
+}
+
+int main() {
+    int t;
+    int tc;
+    int n;
+    int i;
+
+    t = getint();
+    for (tc = 0; tc < t; tc = tc + 1) {
+        n = getint();
+
+        for (i = 0; i < n; i = i + 1) {
+            preorder[i] = getint();
+        }
+        for (i = 0; i < n; i = i + 1) {
+            inorder[i] = getint();
+        }
+
+        outn = 0;
+        build_post(0, n, 0, n);
+
+        for (i = 0; i < outn; i = i + 1) {
+            if (i + 1 < outn) {
+                printf("%d ", postorder[i]);
+            } else {
+                printf("%d\n", postorder[i]);
+            }
+        }
+        if (outn == 0) {
+            printf("\n");
+        }
+    }
+    return 0;
+}

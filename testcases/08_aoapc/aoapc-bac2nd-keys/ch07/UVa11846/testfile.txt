@@ -1,0 +1,113 @@
+/* UVa11846 Finding Seats Again (ported to Strict SysY)
+ * Input encoding:
+ *   N, K (both non-zero), then N*N integers (row-major):
+ *     0 means '.', 1..9 means leader digit.
+ * Terminated by N=0 or K=0 (we use 0 0).
+ * Output:
+ *   For each testcase, prints an N x N grid of region labels as integers.
+ */
+
+const int MAXA = 400;
+
+int N;
+int K;
+int G[MAXA];
+int Ans[MAXA];
+
+int dfs(int c, int pos) {
+    int x1;
+    int y1;
+    int y2;
+    int x2;
+    int y;
+    int x;
+    int lcnt;
+    int area;
+    int ld;
+    int used;
+    int too_large;
+    int height;
+    int width;
+
+    for (; pos != N * N; pos = pos + 1) {
+        if (Ans[pos] == 0) break;
+    }
+    if (pos == N * N) return 1;
+
+    y1 = pos / N;
+    x1 = pos - y1 * N;
+
+    for (y2 = y1; y2 < N; y2 = y2 + 1) {
+        for (x2 = x1; x2 < N; x2 = x2 + 1) {
+            height = y2 - y1 + 1;
+            width = x2 - x1 + 1;
+            area = height * width;
+
+            if (area > 9) break;
+            if (Ans[y2 * N + x2] != 0) break;
+
+            lcnt = 0;
+            ld = 0;
+            used = 0;
+            too_large = 0;
+
+            for (y = y1; y <= y2; y = y + 1) {
+                for (x = x1; x <= x2; x = x + 1) {
+                    if (G[y * N + x] != 0) {
+                        lcnt = lcnt + 1;
+                        ld = G[y * N + x];
+                        if (lcnt > 1 || area > ld || ld % height != 0) {
+                            too_large = 1;
+                            break;
+                        }
+                    }
+                    if (Ans[y * N + x] != 0) {
+                        used = 1;
+                        break;
+                    }
+                }
+                if (used != 0 || too_large != 0) break;
+            }
+
+            if (used != 0 || too_large != 0) break;
+            if (lcnt == 0) continue;
+            if (ld > area) continue;
+
+            for (y = y1; y <= y2; y = y + 1) {
+                for (x = x1; x <= x2; x = x + 1) Ans[y * N + x] = c;
+            }
+
+            if (dfs(c + 1, pos + width) != 0) return 1;
+
+            for (y = y1; y <= y2; y = y + 1) {
+                for (x = x1; x <= x2; x = x + 1) Ans[y * N + x] = 0;
+            }
+        }
+    }
+    return 0;
+}
+
+int main() {
+    int i;
+    int j;
+
+    for (;;) {
+        N = getint();
+        K = getint();
+        if (N == 0 || K == 0) break;
+
+        for (i = 0; i < MAXA; i = i + 1) Ans[i] = 0;
+        for (i = 0; i < N * N; i = i + 1) G[i] = getint();
+
+        dfs(1, 0);
+
+        for (i = 0; i < N; i = i + 1) {
+            for (j = 0; j < N; j = j + 1) {
+                printf("%d", Ans[i * N + j]);
+                if (j != N - 1) printf(" ");
+            }
+            printf("\n");
+        }
+    }
+    return 0;
+}

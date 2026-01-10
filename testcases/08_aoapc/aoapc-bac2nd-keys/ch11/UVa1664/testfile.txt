@@ -1,0 +1,116 @@
+/* Description:
+ *   Conquer a New Region (UVa 1664) - Strict SysY adaptation
+ *   Original: ACM/ICPC Changchun 2012
+ *
+ * Notes:
+ * - Types are restricted to int; test data is scaled to avoid overflow.
+ * - Structs/C++ STL removed; edges are stored in parallel arrays and sorted
+ *   by descending weight using selection sort.
+ */
+
+const int MAXN = 10005;
+
+int e_from[10005];
+int e_to[10005];
+int e_w[10005];
+
+int ws[10005];
+int pa[10005];
+int cnt[10005];
+
+int find_pa(int x) {
+    if (pa[x] == x) return x;
+    pa[x] = find_pa(pa[x]);
+    return pa[x];
+}
+
+void merge_set(int from, int to, int v) {
+    pa[from] = to;
+    cnt[to] = cnt[to] + cnt[from];
+    ws[to] = v;
+}
+
+void swap_edge(int i, int j) {
+    int t;
+    t = e_from[i];
+    e_from[i] = e_from[j];
+    e_from[j] = t;
+
+    t = e_to[i];
+    e_to[i] = e_to[j];
+    e_to[j] = t;
+
+    t = e_w[i];
+    e_w[i] = e_w[j];
+    e_w[j] = t;
+}
+
+void sort_edges(int m) {
+    int i;
+    int j;
+    int best;
+    for (i = 1; i <= m; i = i + 1) {
+        best = i;
+        for (j = i + 1; j <= m; j = j + 1) {
+            if (e_w[j] > e_w[best]) best = j;
+        }
+        if (best != i) swap_edge(i, best);
+    }
+}
+
+int main() {
+    int N;
+    int i;
+    int m;
+    int ans;
+    int a;
+    int b;
+    int wa;
+    int wb;
+    int w;
+    int u;
+    int v;
+
+    for (; 1; ) {
+        N = getint();
+        if (N == 0) break;
+
+        m = N - 1;
+        for (i = 1; i <= m; i = i + 1) {
+            e_from[i] = getint();
+            e_to[i] = getint();
+            e_w[i] = getint();
+        }
+
+        sort_edges(m);
+
+        for (i = 1; i <= N; i = i + 1) {
+            cnt[i] = 1;
+            pa[i] = i;
+            ws[i] = 0;
+        }
+
+        ans = 0;
+        for (i = 1; i <= m; i = i + 1) {
+            u = e_from[i];
+            v = e_to[i];
+            w = e_w[i];
+            a = find_pa(u);
+            b = find_pa(v);
+
+            wb = ws[b] + cnt[a] * w;
+            wa = ws[a] + cnt[b] * w;
+            if (wb > wa) {
+                merge_set(a, b, wb);
+                ans = wb;
+            } else {
+                merge_set(b, a, wa);
+                ans = wa;
+            }
+        }
+
+        printf("%d\n", ans);
+    }
+
+    return 0;
+}

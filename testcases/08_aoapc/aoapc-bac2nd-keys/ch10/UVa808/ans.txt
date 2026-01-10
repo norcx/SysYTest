@@ -1,0 +1,7 @@
+The distance between cells 1 and 2 is 1.
+The distance between cells 1 and 7 is 1.
+The distance between cells 8 and 13 is 4.
+The distance between cells 19 and 30 is 5.
+The distance between cells 100 and 200 is 13.
+The distance between cells 9999 and 10000 is 1.
+The distance between cells 10326 and 1 is 59.

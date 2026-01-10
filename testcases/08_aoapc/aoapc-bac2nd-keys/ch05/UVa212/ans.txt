@@ -1,0 +1,18 @@
+PatientSchedule
+idx name opRoom opBegin opEnd reBed reBegin reEnd
+1 101 1  7:00  7:30 2  7:40  8:20
+2 102 2  7:00  7:20 1  7:30  8:30
+3 103 2  7:25  8:15 4  8:25  8:55
+4 104 1  7:35  8:10 3  8:20  9:05
+5 105 1  8:15  8:40 1  8:50  9:10
+
+FacilityUtilization
+Type idx minutes percent
+OpRoom 1 90 69.23
+OpRoom 2 70 53.84
+ReBed 1 80 61.53
+ReBed 2 40 30.76
+ReBed 3 45 34.61
+ReBed 4 30 23.07
+ReBed 5 0 0.00
+

@@ -1,0 +1,48 @@
+/*
+UVa1363 Joseph's Problem (adapted)
+Input: repeated pairs n, k; terminate with 0 0.
+Output: one answer per pair.
+*/
+
+int sum(int a, int d, int n) {
+  int t1;
+  int t2;
+  t1 = 2 * a - n * d;
+  t2 = n + 1;
+  if (t1 % 2 == 0) t1 = t1 / 2;
+  else t2 = t2 / 2;
+  return t1 * t2;
+}
+
+int main() {
+  int n;
+  int k;
+  int i;
+  int q;
+  int p;
+  int cnt;
+  int ans;
+  int temp;
+
+  for (;;) {
+    n = getint();
+    k = getint();
+    if (n == 0 && k == 0) break;
+
+    ans = 0;
+    for (i = 1; i <= n; ) {
+      q = k % i;
+      p = k / i;
+      cnt = n - i;
+      if (p > 0) {
+        temp = q / p;
+        if (temp < cnt) cnt = temp;
+      }
+      ans = ans + sum(q, p, cnt);
+      i = i + cnt + 1;
+    }
+    printf("%d\n", ans);
+  }
+
+  return 0;
+}

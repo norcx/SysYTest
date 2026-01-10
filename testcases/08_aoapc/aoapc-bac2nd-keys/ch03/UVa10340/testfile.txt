@@ -1,0 +1,59 @@
+/* Description:
+ *   UVa 10340 "All in All" (subsequence check)
+ *
+ *   Input format (strict SysY integers):
+ *     n
+ *     For each case:
+ *       sLen, then sLen integers (ASCII codes)
+ *       tLen, then tLen integers (ASCII codes)
+ *
+ *   Output:
+ *     "Yes" if s is a subsequence of t, else "No"
+ */
+
+const int MAXL = 256;
+int s[MAXL];
+int t[MAXL];
+
+int main() {
+    int n;
+    int caseId;
+    n = getint();
+
+    for (caseId = 0; caseId < n; caseId = caseId + 1) {
+        int sLen;
+        int tLen;
+        int i;
+        int j;
+        int ok;
+
+        sLen = getint();
+        for (i = 0; i < sLen; i = i + 1) {
+            s[i] = getint();
+        }
+
+        tLen = getint();
+        for (i = 0; i < tLen; i = i + 1) {
+            t[i] = getint();
+        }
+
+        ok = 1;
+        j = 0;
+        for (i = 0; i < sLen; i = i + 1) {
+            for (; j < tLen && t[j] != s[i]; j = j + 1) {
+            }
+            if (j == tLen) {
+                ok = 0;
+                break;
+            }
+            j = j + 1;
+        }
+
+        if (ok == 1) {
+            printf("Yes\n");
+        } else {
+            printf("No\n");
+        }
+    }
+    return 0;
+}

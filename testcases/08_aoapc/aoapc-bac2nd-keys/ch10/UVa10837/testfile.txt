@@ -1,0 +1,128 @@
+// UVa10837 A Research Problem (Strict SysY)
+const int MAXP = 14143;
+const int MAXL = 2000;
+const int INF = 200000001;
+
+int isComposite[MAXP];
+int primes[MAXL];
+int primeCnt;
+
+int ps[MAXL];
+int psCnt;
+
+int usedVals[MAXL];
+
+void sieve() {
+  int i;
+  int j;
+  primeCnt = 0;
+  for (i = 0; i < MAXP; i = i + 1) {
+    isComposite[i] = 0;
+  }
+  for (i = 2; i < MAXP; i = i + 1) {
+    if (isComposite[i] == 0) {
+      primes[primeCnt] = i;
+      primeCnt = primeCnt + 1;
+      for (j = i * i; j < MAXP; j = j + i) {
+        isComposite[j] = 1;
+      }
+    }
+  }
+}
+
+int isPrimeNumber(int x) {
+  int i;
+  int p;
+  if (x < 2) return 0;
+  for (i = 0; i < primeCnt; i = i + 1) {
+    p = primes[i];
+    if (p * p > x) break;
+    if (x % p == 0) return 0;
+  }
+  return 1;
+}
+
+int isUsedPrime(int pr, int usedCnt) {
+  int i;
+  for (i = 0; i < usedCnt; i = i + 1) {
+    if (usedVals[i] == pr) return 1;
+  }
+  return 0;
+}
+
+void getPrimeFactors(int phi) {
+  int i;
+  int p;
+  psCnt = 0;
+  for (i = 0; i < primeCnt; i = i + 1) {
+    p = primes[i];
+    if (p > phi) break;
+    if (phi % (p - 1) == 0) {
+      ps[psCnt] = p;
+      psCnt = psCnt + 1;
+    }
+  }
+}
+
+int dfs(int cur, int usedCnt, int n, int rem) {
+  int best;
+  int cand;
+  int p;
+  int pr;
+  int remPow;
+  int nPow;
+
+  if (cur == psCnt) {
+    if (rem == 1) return n;
+    pr = rem + 1;
+    if (isPrimeNumber(pr) == 1) {
+      if (isUsedPrime(pr, usedCnt) == 0) {
+        if (pr != 0 && n <= INF / pr) return n * pr;
+      }
+    }
+    return INF;
+  }
+
+  best = dfs(cur + 1, usedCnt, n, rem);
+
+  p = ps[cur];
+  if (rem % (p - 1) != 0) return best;
+  if (p != 0 && n > INF / p) return best;
+
+  remPow = rem / (p - 1);
+  nPow = n * p;
+  usedVals[usedCnt] = p;
+  usedCnt = usedCnt + 1;
+
+  for (;;) {
+    cand = dfs(cur + 1, usedCnt, nPow, remPow);
+    if (cand < best) best = cand;
+
+    if (remPow % p != 0) break;
+    if (remPow < p) break;
+    if (p != 0 && nPow > INF / p) break;
+    remPow = remPow / p;
+    nPow = nPow * p;
+  }
+
+  return best;
+}
+
+int solve(int phi) {
+  getPrimeFactors(phi);
+  return dfs(0, 0, 1, phi);
+}
+
+int main() {
+  int phi;
+  int t;
+  sieve();
+  t = 1;
+  for (;;) {
+    phi = getint();
+    if (phi == 0) break;
+    printf("Case %d: %d %d\n", t, phi, solve(phi));
+    t = t + 1;
+  }
+  return 0;
+}

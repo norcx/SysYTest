@@ -1,0 +1,78 @@
+/* Description:
+ *   [Add description here]
+ */
+ 
+const int MAXM = 304;
+
+int adj[MAXM * MAXM];
+int To[MAXM];
+
+int check(int m) {
+  int u;
+  int v;
+  int x;
+  int invCount;
+
+  for (u = 0; u < m; u = u + 1) {
+    for (x = 0; x < m; x = x + 1) {
+      To[x] = 0;
+    }
+
+    invCount = 0;
+    for (v = 0; v < m; v = v + 1) {
+      if (adj[v * m + u] != 0) {
+        invCount = invCount + 1;
+        for (x = 0; x < m; x = x + 1) {
+          if (adj[v * m + x] != 0) {
+            To[x] = To[x] + 1;
+          }
+        }
+      }
+    }
+
+    for (v = 0; v < m; v = v + 1) {
+      if (To[v] == 0) {
+      } else {
+        if (To[v] == invCount) {
+        } else {
+          return 0;
+        }
+      }
+    }
+  }
+  return 1;
+}
+
+int main() {
+  int N;
+  int t;
+  int m;
+  int k;
+  int i;
+  int x;
+  int y;
+  int valid;
+
+  N = getint();
+  for (t = 1; t <= N; t = t + 1) {
+    m = getint();
+    k = getint();
+
+    for (i = 0; i < m * m; i = i + 1) {
+      adj[i] = 0;
+    }
+    for (i = 0; i < k; i = i + 1) {
+      x = getint();
+      y = getint();
+      adj[x * m + y] = 1;
+    }
+
+    valid = check(m);
+    if (valid != 0) {
+      printf("Case #%d: Yes\n", t);
+    } else {
+      printf("Case #%d: No\n", t);
+    }
+  }
+  return 0;
+}

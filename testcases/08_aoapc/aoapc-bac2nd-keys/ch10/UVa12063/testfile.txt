@@ -1,0 +1,67 @@
+// Strict SysY testcase converted from UVa12063 "Zeros and Ones"
+
+const int MAXN = 24;
+const int MAXK = 32;
+const int SIZE = 18432; // MAXN * MAXN * MAXK = 24 * 24 * 32
+
+int D[SIZE];
+int N;
+int K;
+
+int idx(int i, int b, int k) {
+  return i * MAXN * MAXK + b * MAXK + k;
+}
+
+int solve() {
+  int i;
+  int b;
+  int k;
+  int p;
+  int from;
+  int to0;
+  int to1;
+
+  if (N % 2 != 0) return 0;
+  if (N <= 0) return 0;
+  if (N >= MAXN) return 0;
+  if (K <= 0) return 0;
+  if (K > MAXK) return 0;
+
+  for (p = 0; p < SIZE; p = p + 1) D[p] = 0;
+
+  if (K == 1) {
+    D[idx(1, 1, 0)] = 1;
+  } else {
+    D[idx(1, 1, 1)] = 1;
+  }
+
+  for (i = 1; i < N; i = i + 1) {
+    for (b = 1; b <= i; b = b + 1) {
+      for (k = 0; k < K; k = k + 1) {
+        from = D[idx(i, b, k)];
+        if (from != 0) {
+          to0 = (2 * k) % K;
+          to1 = (2 * k + 1) % K;
+          D[idx(i + 1, b, to0)] = D[idx(i + 1, b, to0)] + from;
+          D[idx(i + 1, b + 1, to1)] = D[idx(i + 1, b + 1, to1)] + from;
+        }
+      }
+    }
+  }
+  return D[idx(N, N / 2, 0)];
+}
+
+int main() {
+  int T;
+  int t;
+  int ans;
+
+  T = getint();
+  for (t = 1; t <= T; t = t + 1) {
+    N = getint();
+    K = getint();
+    ans = solve();
+    printf("Case %d: %d\n", t, ans);
+  }
+  return 0;
+}

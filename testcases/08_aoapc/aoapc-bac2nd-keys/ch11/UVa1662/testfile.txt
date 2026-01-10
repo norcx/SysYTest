@@ -1,0 +1,227 @@
+/*
+  Brackets Removal (NEERC 2005, UVa 1662) adapted to Strict SysY.
+
+  Input format (integers, 1 per line):
+    Repeated expressions, each encoded as ASCII codes and terminated by 0.
+    The whole input is terminated by a single -1.
+
+  Output format (integers, 1 per line):
+    For each expression, print the simplified expression as ASCII codes, one
+    character per line, then print a trailing 0 line as a separator.
+*/
+
+const int MAXL = 2048;
+const int MAXNODE = 4096;
+
+int ex[MAXL];
+int exLen;
+
+int nodeCh[MAXNODE];
+int nodeLeft[MAXNODE];
+int nodeRight[MAXNODE];
+int nodeEnclose[MAXNODE];
+int nodeLevel[MAXNODE];
+int nodeCnt;
+
+int isLowerChar(int c) {
+    int res;
+    res = 0;
+    if (c >= 97) {
+        if (c <= 122) {
+            res = 1;
+        }
+    }
+    return res;
+}
+
+int nodeIsOp(int idx) {
+    int res;
+    res = 0;
+    if (idx >= 0) {
+        if (isLowerChar(nodeCh[idx]) == 0) {
+            res = 1;
+        }
+    }
+    return res;
+}
+
+int newNode(int c) {
+    int idx;
+    idx = nodeCnt;
+    nodeCnt = nodeCnt + 1;
+
+    nodeCh[idx] = c;
+    nodeLeft[idx] = -1;
+    nodeRight[idx] = -1;
+    nodeEnclose[idx] = 0;
+    nodeLevel[idx] = 0;
+
+    if (c == 42) nodeLevel[idx] = 2;
+    else if (c == 47) nodeLevel[idx] = 2;
+    else if (c == 43) nodeLevel[idx] = 1;
+    else if (c == 45) nodeLevel[idx] = 1;
+
+    return idx;
+}
+
+void reverseNode(int idx) {
+    int c;
+    int l;
+    int r;
+
+    c = nodeCh[idx];
+    if (c == 43) nodeCh[idx] = 45;
+    else if (c == 45) nodeCh[idx] = 43;
+    else if (c == 42) nodeCh[idx] = 47;
+    else if (c == 47) nodeCh[idx] = 42;
+
+    l = nodeLeft[idx];
+    r = nodeRight[idx];
+
+    if (nodeIsOp(l) != 0) {
+        if (nodeLevel[l] == nodeLevel[idx]) {
+            reverseNode(l);
+        }
+    }
+
+    if (nodeIsOp(r) != 0) {
+        if (nodeEnclose[r] == 0) {
+            if (nodeLevel[r] == nodeLevel[idx]) {
+                reverseNode(r);
+            }
+        }
+    }
+}
+
+void procNode(int idx) {
+    int l;
+    int r;
+
+    if (nodeIsOp(idx) == 0) return;
+
+    l = nodeLeft[idx];
+    r = nodeRight[idx];
+
+    if (nodeIsOp(l) != 0) {
+        if (nodeLevel[l] >= nodeLevel[idx]) {
+            nodeEnclose[l] = 0;
+        }
+        procNode(l);
+    }
+
+    if (nodeIsOp(r) != 0) {
+        if (nodeLevel[r] > nodeLevel[idx]) {
+            nodeEnclose[r] = 0;
+        } else if (nodeLevel[r] == nodeLevel[idx]) {
+            if (nodeCh[idx] == 47 || nodeCh[idx] == 45) {
+                if (nodeEnclose[r] != 0) {
+                    nodeEnclose[r] = 0;
+                    reverseNode(r);
+                }
+            }
+            nodeEnclose[r] = 0;
+        }
+        procNode(r);
+    }
+}
+
+int parseExpr(int l, int r) {
+    int i;
+    int p;
+    int c1;
+    int c2;
+    int split;
+    int ans;
+    int ln;
+    int rn;
+
+    if (l == r) {
+        return newNode(ex[l]);
+    }
+
+    p = 0;
+    c1 = -1;
+    c2 = -1;
+    for (i = l; i <= r; i = i + 1) {
+        int v;
+        v = ex[i];
+        if (v == 40) p = p + 1;
+        else if (v == 41) p = p - 1;
+        else if (p == 0) {
+            if (v == 43) c1 = i;
+            else if (v == 45) c1 = i;
+            else if (v == 42) c2 = i;
+            else if (v == 47) c2 = i;
+        }
+    }
+
+    split = c1;
+    if (split < 0) split = c2;
+
+    if (split < 0) {
+        ans = parseExpr(l + 1, r - 1);
+        nodeEnclose[ans] = 1;
+        return ans;
+    }
+
+    ans = newNode(ex[split]);
+    ln = parseExpr(l, split - 1);
+    rn = parseExpr(split + 1, r);
+    nodeLeft[ans] = ln;
+    nodeRight[ans] = rn;
+
+    if (nodeIsOp(ln) == 0) nodeEnclose[ln] = 0;
+    if (nodeIsOp(rn) == 0) nodeEnclose[rn] = 0;
+
+    return ans;
+}
+
+void printNode(int idx) {
+    if (idx < 0) return;
+
+    if (nodeEnclose[idx] != 0) {
+        printf("%d\n", 40);
+    }
+
+    printNode(nodeLeft[idx]);
+    printf("%d\n", nodeCh[idx]);
+    printNode(nodeRight[idx]);
+
+    if (nodeEnclose[idx] != 0) {
+        printf("%d\n", 41);
+    }
+}
+
+int readNextExpression() {
+    int x;
+    x = getint();
+    if (x == -1) return 0;
+
+    exLen = 0;
+    for (;;) {
+        if (x == 0) break;
+        ex[exLen] = x;
+        exLen = exLen + 1;
+        x = getint();
+    }
+    return 1;
+}
+
+int main() {
+    int ok;
+    for (;;) {
+        ok = readNextExpression();
+        if (ok == 0) break;
+
+        nodeCnt = 0;
+        {
+            int root;
+            root = parseExpr(0, exLen - 1);
+            nodeEnclose[root] = 0;
+            procNode(root);
+            printNode(root);
+            printf("%d\n", 0);
+        }
+    }
+    return 0;
+}

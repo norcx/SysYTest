@@ -1,0 +1,91 @@
+/* Description:
+ *   UVa10562 Undraw the Trees (adapted to Strict SysY).
+ *
+ * Input encoding (integers, one per line):
+ *   T
+ *   For each case:
+ *     n
+ *     m
+ *     n*m cells in row-major order
+ *
+ * Cell encoding:
+ *   0  : space
+ *   -1 : '|'
+ *   -2 : '-'
+ *   >0 : node value (printed as %d)
+ *
+ * Output:
+ *   Parenthesized form, with node values as integers.
+ */
+
+const int MAX_BUF = 10000;
+const int SPACE = 0;
+const int VBAR = -1;
+const int DASH = -2;
+
+int n;
+int m;
+int buf[MAX_BUF];
+
+int cell(int r, int c) {
+  return buf[r * m + c];
+}
+
+void dfs(int r, int c) {
+  int val;
+  int i;
+  val = cell(r, c);
+  printf("%d(", val);
+
+  if (r + 3 < n && cell(r + 1, c) == VBAR) {
+    i = c;
+    for (; i - 1 >= 0 && cell(r + 2, i - 1) == DASH; i = i - 1) {
+    }
+    for (; i < m && cell(r + 2, i) == DASH; i = i + 1) {
+      if (cell(r + 3, i) > 0) {
+        dfs(r + 3, i);
+      }
+    }
+  }
+
+  printf(")");
+}
+
+void solve() {
+  int r;
+  int c;
+  int total;
+  int i;
+
+  n = getint();
+  m = getint();
+
+  total = n * m;
+  if (total > MAX_BUF) total = MAX_BUF;
+  for (i = 0; i < total; i = i + 1) {
+    buf[i] = getint();
+  }
+
+  printf("(");
+  if (n > 0 && m > 0) {
+    r = 0;
+    for (c = 0; c < m; c = c + 1) {
+      if (cell(r, c) > 0) {
+        dfs(r, c);
+        c = m;
+      }
+    }
+  }
+  printf(")\n");
+}
+
+int main() {
+  int T;
+  int t;
+
+  T = getint();
+  for (t = 0; t < T; t = t + 1) {
+    solve();
+  }
+  return 0;
+}

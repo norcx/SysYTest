@@ -1,0 +1,345 @@
+/* Description:
+ *   Port of UVA12107 "Digit Puzzle" to Strict SysY.
+ *
+ *   Notes:
+ *   - Uses scaled-down search space a,b in [1..20] to fit SysY memory limits.
+ *   - Represents each token as digits in base-11: 0..9 are digits, 10 means '*'.
+ *   - Input format (all newline-separated integers):
+ *       lenA, A digits...
+ *       lenB, B digits...
+ *       lenC, C digits...
+ *     Repeat; final sentinel is lenA = 0.
+ */
+
+const int STAR = 10;
+const int BASE = 11;
+const int MAX_A = 20;
+const int MAX_DIGITS = 8;
+
+const int TABLE_SIZE = 65536;
+int dictDigits[TABLE_SIZE];
+int dictLen[TABLE_SIZE];
+int dictCnt[TABLE_SIZE];
+
+int g_lenA;
+int g_lenB;
+int g_lenC;
+int g_lenCode;
+int g_totalLen;
+int g_startB;
+int g_startC;
+
+int g_maxCost;
+int g_found;
+int g_bestDigits[MAX_DIGITS];
+
+int encodeFlat(int digits[], int totalLen) {
+    int code;
+    int i;
+    code = 0;
+    for (i = 0; i < totalLen; i = i + 1) {
+        code = code * BASE + digits[i];
+    }
+    return code;
+}
+
+int makeLenCode(int lenA, int lenB, int lenC) {
+    int code;
+    code = (lenA - 1) * 8 + (lenB - 1) * 4 + (lenC - 1);
+    return code;
+}
+
+void dictInc(int lenCode, int digitsCode) {
+    int h;
+    int slot;
+    int bump;
+    bump = lenCode * 15013;
+    h = digitsCode + bump;
+    if (h < 0) h = -h;
+    slot = h % TABLE_SIZE;
+    for (;;) {
+        if (dictCnt[slot] == 0) {
+            dictCnt[slot] = 1;
+            dictDigits[slot] = digitsCode;
+            dictLen[slot] = lenCode;
+            return;
+        }
+        if (dictDigits[slot] == digitsCode && dictLen[slot] == lenCode) {
+            dictCnt[slot] = dictCnt[slot] + 1;
+            return;
+        }
+        slot = slot + 1;
+        if (slot >= TABLE_SIZE) slot = 0;
+    }
+}
+
+int dictGet(int lenCode, int digitsCode) {
+    int h;
+    int slot;
+    int bump;
+    bump = lenCode * 15013;
+    h = digitsCode + bump;
+    if (h < 0) h = -h;
+    slot = h % TABLE_SIZE;
+    for (;;) {
+        if (dictCnt[slot] == 0) return 0;
+        if (dictDigits[slot] == digitsCode && dictLen[slot] == lenCode) return dictCnt[slot];
+        slot = slot + 1;
+        if (slot >= TABLE_SIZE) slot = 0;
+    }
+    return 0;
+}
+
+int intToDigits(int x, int outDigits[]) {
+    int len;
+    if (x < 10) {
+        outDigits[0] = x;
+        return 1;
+    }
+    if (x < 100) {
+        outDigits[0] = x / 10;
+        outDigits[1] = x - outDigits[0] * 10;
+        return 2;
+    }
+    if (x < 1000) {
+        outDigits[0] = x / 100;
+        outDigits[1] = (x / 10) - outDigits[0] * 10;
+        outDigits[2] = x - (x / 10) * 10;
+        return 3;
+    }
+    outDigits[0] = x / 1000;
+    outDigits[1] = (x / 100) - outDigits[0] * 10;
+    outDigits[2] = (x / 10) - (x / 100) * 10;
+    outDigits[3] = x - (x / 10) * 10;
+    len = 4;
+    return len;
+}
+
+void copyArr(int src[], int dst[], int n) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        dst[i] = src[i];
+    }
+}
+
+int digitOrder(int d) {
+    if (d == STAR) return -1;
+    return d;
+}
+
+int cmpToken(int digits1[], int start1, int len1, int digits2[], int start2, int len2) {
+    int i;
+    int minLen;
+    int a;
+    int b;
+    minLen = len1;
+    if (len2 < minLen) minLen = len2;
+    for (i = 0; i < minLen; i = i + 1) {
+        a = digitOrder(digits1[start1 + i]);
+        b = digitOrder(digits2[start2 + i]);
+        if (a < b) return -1;
+        if (a > b) return 1;
+    }
+    if (len1 < len2) return -1;
+    if (len1 > len2) return 1;
+    return 0;
+}
+
+int expLessSameLen(int aDigits[], int bDigits[]) {
+    int c;
+    c = cmpToken(aDigits, 0, g_lenA, bDigits, 0, g_lenA);
+    if (c < 0) return 1;
+    if (c > 0) return 0;
+    c = cmpToken(aDigits, g_startB, g_lenB, bDigits, g_startB, g_lenB);
+    if (c < 0) return 1;
+    if (c > 0) return 0;
+    c = cmpToken(aDigits, g_startC, g_lenC, bDigits, g_startC, g_lenC);
+    if (c < 0) return 1;
+    return 0;
+}
+
+int hasStar(int digits[], int totalLen) {
+    int i;
+    for (i = 0; i < totalLen; i = i + 1) {
+        if (digits[i] == STAR) return 1;
+    }
+    return 0;
+}
+
+void genPatterns(int digits[], int pos, int totalLen, int lenCode) {
+    int back;
+    int code;
+    if (pos >= totalLen) return;
+
+    genPatterns(digits, pos + 1, totalLen, lenCode);
+
+    back = digits[pos];
+    digits[pos] = STAR;
+    code = encodeFlat(digits, totalLen);
+    dictInc(lenCode, code);
+    genPatterns(digits, pos + 1, totalLen, lenCode);
+    digits[pos] = back;
+}
+
+void generateDict() {
+    int a;
+    int b;
+    int c;
+    int aDigits[2];
+    int bDigits[2];
+    int cDigits[4];
+    int lenA;
+    int lenB;
+    int lenC;
+    int lenCode;
+    int expr[MAX_DIGITS];
+    int totalLen;
+    int i;
+    int idx;
+
+    for (a = 1; a <= MAX_A; a = a + 1) {
+        for (b = 1; b <= MAX_A; b = b + 1) {
+            c = a * b;
+            lenA = intToDigits(a, aDigits);
+            lenB = intToDigits(b, bDigits);
+            lenC = intToDigits(c, cDigits);
+            lenCode = makeLenCode(lenA, lenB, lenC);
+
+            idx = 0;
+            for (i = 0; i < lenA; i = i + 1) {
+                expr[idx] = aDigits[i];
+                idx = idx + 1;
+            }
+            for (i = 0; i < lenB; i = i + 1) {
+                expr[idx] = bDigits[i];
+                idx = idx + 1;
+            }
+            for (i = 0; i < lenC; i = i + 1) {
+                expr[idx] = cDigits[i];
+                idx = idx + 1;
+            }
+            totalLen = idx;
+            genPatterns(expr, 0, totalLen, lenCode);
+        }
+    }
+}
+
+void dfsSearch(int digits[], int idx, int cost) {
+    int bk;
+    int isFirst;
+    int k;
+    int cd;
+    int nc;
+    int cnt;
+    int code;
+
+    if (g_found != 0) {
+        if (expLessSameLen(g_bestDigits, digits) != 0) return;
+    }
+
+    if (idx >= g_totalLen) {
+        if (hasStar(digits, g_totalLen) != 0) {
+            code = encodeFlat(digits, g_totalLen);
+            cnt = dictGet(g_lenCode, code);
+            if (cnt == 1) {
+                if (g_found == 0) {
+                    g_found = 1;
+                    copyArr(digits, g_bestDigits, g_totalLen);
+                } else {
+                    if (expLessSameLen(digits, g_bestDigits) != 0) {
+                        copyArr(digits, g_bestDigits, g_totalLen);
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    bk = digits[idx];
+    isFirst = 0;
+    if (idx == 0) isFirst = 1;
+    if (idx == g_startB) isFirst = 1;
+    if (idx == g_startC) isFirst = 1;
+
+    for (k = 0; k <= 10; k = k + 1) {
+        if (k == 0) cd = STAR;
+        else cd = k - 1;
+        if (isFirst != 0 && cd == 0) {
+        } else {
+            nc = cost;
+            if (cd != bk) nc = cost + 1;
+            if (nc <= g_maxCost) {
+                digits[idx] = cd;
+                dfsSearch(digits, idx + 1, nc);
+            }
+        }
+    }
+    digits[idx] = bk;
+}
+
+int main() {
+    int t;
+    int i;
+    int lenA;
+    int lenB;
+    int lenC;
+    int orig[MAX_DIGITS];
+    int work[MAX_DIGITS];
+    int idx;
+    int maxc;
+
+    generateDict();
+
+    t = 1;
+    for (;;) {
+        lenA = getint();
+        if (lenA == 0) break;
+        lenB = getint();
+        lenC = getint();
+
+        g_lenA = lenA;
+        g_lenB = lenB;
+        g_lenC = lenC;
+        g_lenCode = makeLenCode(g_lenA, g_lenB, g_lenC);
+        g_startB = g_lenA;
+        g_startC = g_lenA + g_lenB;
+        g_totalLen = g_lenA + g_lenB + g_lenC;
+
+        idx = 0;
+        for (i = 0; i < g_lenA; i = i + 1) {
+            orig[idx] = getint();
+            idx = idx + 1;
+        }
+        for (i = 0; i < g_lenB; i = i + 1) {
+            orig[idx] = getint();
+            idx = idx + 1;
+        }
+        for (i = 0; i < g_lenC; i = i + 1) {
+            orig[idx] = getint();
+            idx = idx + 1;
+        }
+
+        g_found = 0;
+        for (maxc = 0; maxc <= g_totalLen; maxc = maxc + 1) {
+            g_maxCost = maxc;
+            copyArr(orig, work, g_totalLen);
+            dfsSearch(work, 0, 0);
+            if (g_found != 0) break;
+        }
+
+        if (g_found == 0) {
+            printf("Case %d: %d\n", t, -1);
+        } else {
+            printf("Case %d:", t);
+            printf(" %d", g_lenA);
+            for (i = 0; i < g_lenA; i = i + 1) printf(" %d", g_bestDigits[i]);
+            printf(" %d", g_lenB);
+            for (i = 0; i < g_lenB; i = i + 1) printf(" %d", g_bestDigits[g_startB + i]);
+            printf(" %d", g_lenC);
+            for (i = 0; i < g_lenC; i = i + 1) printf(" %d", g_bestDigits[g_startC + i]);
+            printf("\n");
+        }
+        t = t + 1;
+    }
+    return 0;
+}

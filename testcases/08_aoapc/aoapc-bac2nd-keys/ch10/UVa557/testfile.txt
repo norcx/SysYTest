@@ -1,0 +1,104 @@
+/* Description:
+ *   Strict SysY adaptation of UVa "Burger" probability formula.
+ *
+ *   Original output is a floating probability:
+ *     1 - C(2n-2, n-1) / 2^(2n-2), where n = N/2 (N is even).
+ *
+ *   Strict SysY allows only `int`, so this testcase prints the exact
+ *   rational result as two integers per query:
+ *     numerator = 2^(2n-2) - C(2n-2, n-1)
+ *     denominator = 2^(2n-2)
+ */
+
+int gcd(int a, int b) {
+    int aa;
+    int bb;
+    int t;
+    aa = a;
+    bb = b;
+    if (aa < 0) aa = 0 - aa;
+    if (bb < 0) bb = 0 - bb;
+    for (;;) {
+        if (bb == 0) return aa;
+        t = aa % bb;
+        aa = bb;
+        bb = t;
+    }
+    return 0;
+}
+
+int binom(int n, int k) {
+    int kk;
+    int i;
+    int j;
+    int g;
+    int res;
+    int numer[16];
+    int denom[16];
+
+    if (k < 0) return 0;
+    if (k > n) return 0;
+    kk = k;
+    if (kk > n - kk) kk = n - kk;
+    if (kk <= 0) return 1;
+
+    for (i = 1; i <= kk; i = i + 1) {
+        numer[i] = n - kk + i;
+        denom[i] = i;
+    }
+
+    for (i = 1; i <= kk; i = i + 1) {
+        for (j = 1; j <= kk; j = j + 1) {
+            if (denom[j] != 1) {
+                g = gcd(numer[i], denom[j]);
+                if (g > 1) {
+                    numer[i] = numer[i] / g;
+                    denom[j] = denom[j] / g;
+                }
+            }
+        }
+    }
+
+    res = 1;
+    for (i = 1; i <= kk; i = i + 1) {
+        res = res * numer[i];
+    }
+    return res;
+}
+
+int pow2(int e) {
+    int i;
+    int res;
+    res = 1;
+    for (i = 0; i < e; i = i + 1) {
+        res = res * 2;
+    }
+    return res;
+}
+
+int main() {
+    int T;
+    int t;
+    int N;
+    int n;
+    int e;
+    int den;
+    int comb;
+    int num;
+
+    T = getint();
+    for (t = 0; t < T; t = t + 1) {
+        N = getint();
+        n = N / 2;
+        if (n <= 1) {
+            printf("%d\n%d\n", 0, 1);
+        } else {
+            e = 2 * n - 2;
+            den = pow2(e);
+            comb = binom(e, n - 1);
+            num = den - comb;
+            printf("%d\n%d\n", num, den);
+        }
+    }
+    return 0;
+}

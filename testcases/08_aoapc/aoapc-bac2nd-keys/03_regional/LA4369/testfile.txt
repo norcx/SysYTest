@@ -1,0 +1,72 @@
+/* Description:
+ *   LA4369 - I Speak Whales (converted to Strict SysY)
+ *   Original author: 陈锋
+ */
+
+int min_int(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+int pow2(int k) {
+    int res;
+    int i;
+    res = 1;
+    for (i = 0; i < k; i = i + 1) {
+        res = res * 2;
+    }
+    return res;
+}
+
+int solve(int N, int R, int S, int E) {
+    int ans;
+    int w;
+    int t;
+
+    if (N == 0) return 1;
+
+    ans = 0;
+    w = pow2(N - 1);
+
+    if (R < w) {
+        if (w <= S) {
+            ans = ans + solve(N - 1, R, S - w, E - w);
+        } else {
+            t = min_int(w - 1, E);
+            ans = ans + solve(N - 1, R, S, t);
+            if (E >= w) {
+                ans = ans + solve(N - 1, R, 0, E - w);
+            }
+        }
+    } else {
+        if (w <= S) {
+            ans = ans - solve(N - 1, R - w, S - w, E - w);
+        } else {
+            t = min_int(w - 1, E);
+            ans = ans + solve(N - 1, R - w, S, t);
+            if (E >= w) {
+                ans = ans - solve(N - 1, R - w, 0, E - w);
+            }
+        }
+    }
+
+    return ans;
+}
+
+int main() {
+    int N;
+    int R;
+    int S;
+    int E;
+
+    for (;;) {
+        N = getint();
+        if (N < 0) break;
+        R = getint();
+        S = getint();
+        E = getint();
+        printf("%d\n", solve(N, R, S, E));
+    }
+
+    return 0;
+}

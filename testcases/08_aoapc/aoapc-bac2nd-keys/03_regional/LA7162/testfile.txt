@@ -1,0 +1,389 @@
+const int MAXW = 64;
+
+int XMAX;
+int YMAX;
+int wn;
+int winIdx;
+int cmdIdx;
+
+int wx[MAXW];
+int wy[MAXW];
+int ww[MAXW];
+int wh[MAXW];
+int widx[MAXW];
+int wmaxMove[MAXW];
+
+int crossCnt[MAXW];
+int crossList[MAXW * MAXW];
+
+int rot_x;
+int rot_y;
+
+int min2(int a, int b) {
+  if (a < b) return a;
+  return b;
+}
+
+int inRange(int x, int l, int r) {
+  if (x < l) return 0;
+  if (x >= r) return 0;
+  return 1;
+}
+
+int intersect(int l1, int r1, int l2, int r2) {
+  int t;
+  t = inRange(l1, l2, r2);
+  if (t) return 1;
+  t = inRange(l2, l1, r1);
+  if (t) return 1;
+  t = inRange(r1 - 1, l2, r2);
+  if (t) return 1;
+  t = inRange(r2 - 1, l1, r1);
+  if (t) return 1;
+  return 0;
+}
+
+int outOfBound_pt(int px, int py) {
+  if (inRange(px, 0, XMAX) == 0) return 1;
+  if (inRange(py, 0, YMAX) == 0) return 1;
+  return 0;
+}
+
+int containsPt(int i, int px, int py) {
+  if (inRange(px, wx[i], wx[i] + ww[i]) == 0) return 0;
+  if (inRange(py, wy[i], wy[i] + wh[i]) == 0) return 0;
+  return 1;
+}
+
+int overlap_ij(int i, int j) {
+  int xok;
+  int yok;
+  xok = intersect(wx[i], wx[i] + ww[i], wx[j], wx[j] + ww[j]);
+  if (xok == 0) return 0;
+  yok = intersect(wy[i], wy[i] + wh[i], wy[j], wy[j] + wh[j]);
+  if (yok == 0) return 0;
+  return 1;
+}
+
+int overlap_rect_with_i(int nx, int ny, int nw, int nh, int i) {
+  int xok;
+  int yok;
+  xok = intersect(nx, nx + nw, wx[i], wx[i] + ww[i]);
+  if (xok == 0) return 0;
+  yok = intersect(ny, ny + nh, wy[i], wy[i] + wh[i]);
+  if (yok == 0) return 0;
+  return 1;
+}
+
+int window_outOfBound_rect(int nx, int ny, int nw, int nh) {
+  if (outOfBound_pt(nx, ny)) return 1;
+  if (outOfBound_pt(nx, ny + nh - 1)) return 1;
+  if (outOfBound_pt(nx + nw - 1, ny)) return 1;
+  if (outOfBound_pt(nx + nw - 1, ny + nh - 1)) return 1;
+  return 0;
+}
+
+int windowFit(int nx, int ny, int nw, int nh, int existIdx) {
+  int i;
+  if (window_outOfBound_rect(nx, ny, nw, nh)) return 0;
+  for (i = 0; i < wn; i = i + 1) {
+    if (widx[i] != existIdx) {
+      if (overlap_rect_with_i(nx, ny, nw, nh, i)) return 0;
+    }
+  }
+  return 1;
+}
+
+void swap_window(int a, int b) {
+  int t;
+  t = wx[a];
+  wx[a] = wx[b];
+  wx[b] = t;
+  t = wy[a];
+  wy[a] = wy[b];
+  wy[b] = t;
+  t = ww[a];
+  ww[a] = ww[b];
+  ww[b] = t;
+  t = wh[a];
+  wh[a] = wh[b];
+  wh[b] = t;
+  t = widx[a];
+  widx[a] = widx[b];
+  widx[b] = t;
+  t = wmaxMove[a];
+  wmaxMove[a] = wmaxMove[b];
+  wmaxMove[b] = t;
+  t = crossCnt[a];
+  crossCnt[a] = crossCnt[b];
+  crossCnt[b] = t;
+}
+
+void sortByXY() {
+  int i;
+  int j;
+  for (i = 0; i < wn; i = i + 1) {
+    for (j = 0; j < wn - 1 - i; j = j + 1) {
+      if (wx[j] > wx[j + 1] || wx[j] == wx[j + 1] && wy[j] > wy[j + 1]) {
+        swap_window(j, j + 1);
+      }
+    }
+  }
+}
+
+void sortByIdx() {
+  int i;
+  int j;
+  for (i = 0; i < wn; i = i + 1) {
+    for (j = 0; j < wn - 1 - i; j = j + 1) {
+      if (widx[j] > widx[j + 1]) {
+        swap_window(j, j + 1);
+      }
+    }
+  }
+}
+
+int findWindowIdx(int px, int py) {
+  int i;
+  for (i = 0; i < wn; i = i + 1) {
+    if (containsPt(i, px, py)) return i;
+  }
+  return -1;
+}
+
+void rotate90_point(int px, int py) {
+  rot_y = px;
+  rot_x = YMAX - py - 1;
+}
+
+void rotate90_all() {
+  int i;
+  int nx;
+  int ny;
+  int t;
+  for (i = 0; i < wn; i = i + 1) {
+    nx = wx[i];
+    ny = wy[i] + wh[i] - 1;
+    rotate90_point(nx, ny);
+    nx = rot_x;
+    ny = rot_y;
+    t = ww[i];
+    ww[i] = wh[i];
+    wh[i] = t;
+    wx[i] = nx;
+    wy[i] = ny;
+  }
+  t = XMAX;
+  XMAX = YMAX;
+  YMAX = t;
+}
+
+int VCross_idx(int i, int yl, int yr) {
+  return intersect(yl, yr, wy[i], wy[i] + wh[i]);
+}
+
+void moveRight_rec(int i, int dist) {
+  int k;
+  int j;
+  int gap;
+  for (k = 0; k < crossCnt[i]; k = k + 1) {
+    j = crossList[i * MAXW + k];
+    gap = wx[j] - (wx[i] + ww[i]);
+    if (gap < dist) moveRight_rec(j, dist - gap);
+  }
+  wx[i] = wx[i] + dist;
+}
+
+void moveRight_cmd(int px, int py, int dist, int idx) {
+  int i;
+  int j;
+  int pw;
+  int move;
+  int gap;
+  int cand;
+  int d;
+  for (i = 0; i < wn; i = i + 1) {
+    wmaxMove[i] = 0;
+    crossCnt[i] = 0;
+  }
+
+  sortByXY();
+  pw = findWindowIdx(px, py);
+  if (pw < 0) return;
+
+  for (i = wn - 1; i >= pw; i = i - 1) {
+    move = XMAX - (wx[i] + ww[i]);
+    for (j = i + 1; j < wn; j = j + 1) {
+      gap = wx[j] - (wx[i] + ww[i]);
+      if (gap >= 0 && VCross_idx(i, wy[j], wy[j] + wh[j])) {
+        cand = gap + wmaxMove[j];
+        if (cand < move) move = cand;
+        crossList[i * MAXW + crossCnt[i]] = j;
+        crossCnt[i] = crossCnt[i] + 1;
+      }
+    }
+    wmaxMove[i] = move;
+  }
+
+  d = min2(wmaxMove[pw], dist);
+  moveRight_rec(pw, d);
+  if (d != dist) {
+    printf("Command %d: MOVE - moved %d instead of %d\n", idx, d, dist);
+  }
+}
+
+void openWindow(int idx, int x, int y, int w, int h) {
+  int ok;
+  ok = windowFit(x, y, w, h, -1);
+  if (ok == 0) {
+    printf("Command %d: OPEN - window does not fit\n", idx);
+    return;
+  }
+  wx[wn] = x;
+  wy[wn] = y;
+  ww[wn] = w;
+  wh[wn] = h;
+  widx[wn] = winIdx;
+  winIdx = winIdx + 1;
+  wn = wn + 1;
+}
+
+void closeWindow(int idx, int x, int y) {
+  int i;
+  int j;
+  i = findWindowIdx(x, y);
+  if (i < 0) {
+    printf("Command %d: CLOSE - no window at given position\n", idx);
+    return;
+  }
+  for (j = i; j < wn - 1; j = j + 1) {
+    wx[j] = wx[j + 1];
+    wy[j] = wy[j + 1];
+    ww[j] = ww[j + 1];
+    wh[j] = wh[j + 1];
+    widx[j] = widx[j + 1];
+  }
+  wn = wn - 1;
+}
+
+void resizeWindow(int idx, int x, int y, int w, int h) {
+  int i;
+  int ok;
+  i = findWindowIdx(x, y);
+  if (i < 0) {
+    printf("Command %d: RESIZE - no window at given position\n", idx);
+    return;
+  }
+  ok = windowFit(wx[i], wy[i], w, h, widx[i]);
+  if (ok == 0) {
+    printf("Command %d: RESIZE - window does not fit\n", idx);
+    return;
+  }
+  ww[i] = w;
+  wh[i] = h;
+}
+
+void moveWindow(int idx, int x, int y, int dx, int dy) {
+  int i;
+  int r;
+  int ncmd_x;
+  int ncmd_y;
+  int ncmd_dx;
+  int ncmd_dy;
+  int t;
+  int k;
+
+  i = findWindowIdx(x, y);
+  if (i < 0) {
+    printf("Command %d: MOVE - no window at given position\n", idx);
+    return;
+  }
+
+  ncmd_x = x;
+  ncmd_y = y;
+  ncmd_dx = dx;
+  ncmd_dy = dy;
+  r = 0;
+
+  if (dy == 0) {
+    if (dx < 0) {
+      ncmd_dx = 0 - dx;
+      r = 2;
+    }
+  } else {
+    if (dy > 0) {
+      ncmd_dx = dy;
+      ncmd_dy = 0;
+      r = 3;
+    } else {
+      ncmd_dx = 0 - dy;
+      ncmd_dy = 0;
+      r = 1;
+    }
+  }
+
+  for (k = 0; k < r; k = k + 1) {
+    rotate90_point(ncmd_x, ncmd_y);
+    ncmd_x = rot_x;
+    ncmd_y = rot_y;
+    rotate90_all();
+  }
+
+  moveRight_cmd(ncmd_x, ncmd_y, ncmd_dx, idx);
+
+  t = 4 - r;
+  if (t == 4) t = 0;
+  for (k = 0; k < t; k = k + 1) {
+    rotate90_all();
+  }
+}
+
+void printResult() {
+  int i;
+  sortByIdx();
+  printf("%d window(s):\n", wn);
+  for (i = 0; i < wn; i = i + 1) {
+    printf("%d %d %d %d\n", wx[i], wy[i], ww[i], wh[i]);
+  }
+}
+
+int main() {
+  int T;
+  int tc;
+  int m;
+  int i;
+  int typ;
+  int x;
+  int y;
+  int dx;
+  int dy;
+  int idx;
+
+  T = getint();
+  for (tc = 0; tc < T; tc = tc + 1) {
+    XMAX = getint();
+    YMAX = getint();
+    m = getint();
+    wn = 0;
+    winIdx = 0;
+    cmdIdx = 1;
+
+    for (i = 0; i < m; i = i + 1) {
+      typ = getint();
+      x = getint();
+      y = getint();
+      dx = getint();
+      dy = getint();
+      idx = cmdIdx;
+      cmdIdx = cmdIdx + 1;
+      if (typ == 1) openWindow(idx, x, y, dx, dy);
+      if (typ == 2) closeWindow(idx, x, y);
+      if (typ == 3) resizeWindow(idx, x, y, dx, dy);
+      if (typ == 4) moveWindow(idx, x, y, dx, dy);
+    }
+
+    printResult();
+  }
+
+  return 0;
+}

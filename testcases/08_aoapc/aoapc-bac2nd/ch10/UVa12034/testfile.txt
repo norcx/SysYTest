@@ -1,0 +1,45 @@
+// UVa12034 Race (Strict SysY)
+const int MAXN = 600;
+const int MOD = 10056;
+
+int comb[1001];
+int f[1001];
+
+void init() {
+  int i;
+  int j;
+
+  comb[0] = 1;
+  for (i = 1; i <= MAXN; i = i + 1) comb[i] = 0;
+
+  f[0] = 1;
+  for (i = 1; i <= MAXN; i = i + 1) f[i] = 0;
+
+  for (i = 1; i <= MAXN; i = i + 1) {
+    for (j = i; j >= 1; j = j - 1) {
+      comb[j] = comb[j] + comb[j - 1];
+      comb[j] = comb[j] % MOD;
+    }
+
+    for (j = 1; j <= i; j = j + 1) {
+      f[i] = f[i] + comb[j] * f[i - j];
+      f[i] = f[i] % MOD;
+    }
+  }
+  return;
+}
+
+int main() {
+  int T;
+  int kase;
+  int n;
+
+  init();
+
+  T = getint();
+  for (kase = 1; kase <= T; kase = kase + 1) {
+    n = getint();
+    printf("Case %d: %d\n", kase, f[n]);
+  }
+  return 0;
+}

@@ -1,0 +1,83 @@
+/* Description:
+ *   LA7078 Yue Fei's Battle (translated from C++).
+ *   Input: multiple K (one per line), terminated by 0.
+ *   Output: answer for each K modulo 10007.
+ */
+
+const int MOD = 10007;
+const int INV2 = 5004;
+const int INV6 = 1668;
+const int MAXI = 2000 + 4;
+
+int D[MAXI];
+int S[MAXI];
+
+int norm(int x) {
+    x = x % MOD;
+    if (x < 0) x = x + MOD;
+    return x;
+}
+
+int add_mod(int a, int b) {
+    int s = a + b;
+    if (s >= MOD) s = s - MOD;
+    return s;
+}
+
+int mul_mod(int a, int b) {
+    int res = 0;
+    int x = norm(a);
+    int y = norm(b);
+    for (; y > 0; y = y / 2) {
+        if (y % 2 == 1) res = add_mod(res, x);
+        x = add_mod(x, x);
+    }
+    return res;
+}
+
+int main() {
+    int i;
+    D[0] = 1;
+    S[0] = 1;
+    D[1] = 1;
+    S[1] = 2;
+
+    for (i = 2; i < MAXI; i = i + 1) {
+        int d1 = D[i - 1];
+        int term1 = d1;
+        int term2 = mul_mod(mul_mod(d1, norm(d1 - 1)), INV2);
+        int term3 = mul_mod(d1, S[i - 2]);
+        int di = add_mod(add_mod(term1, term2), term3);
+        D[i] = di;
+        S[i] = add_mod(di, S[i - 1]);
+    }
+
+    for (;;) {
+        int K = getint();
+        int ans;
+        int half;
+        int d;
+
+        if (K == 0) break;
+
+        if (K <= 2) {
+            ans = 1;
+        } else {
+            half = K / 2;
+            d = D[half];
+            if (K % 2 == 1) {
+                int a1 = add_mod(mul_mod(mul_mod(d, norm(d - 1)), INV2), d);
+                ans = mul_mod(S[half - 1], a1);
+                ans = add_mod(ans, d);
+                ans = add_mod(ans, mul_mod(d, norm(d - 1)));
+                ans = add_mod(ans, mul_mod(mul_mod(mul_mod(d, norm(d - 1)), norm(d - 2)), INV6));
+            } else {
+                ans = add_mod(d, mul_mod(mul_mod(d, norm(d - 1)), INV2));
+            }
+        }
+
+        printf("%d\n", ans);
+    }
+
+    return 0;
+}

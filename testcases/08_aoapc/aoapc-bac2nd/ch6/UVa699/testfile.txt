@@ -1,0 +1,56 @@
+/* UVa699 - The Falling Leaves (SysY) */
+const int MAXN = 200;
+int sum[MAXN];
+int minpos;
+int maxpos;
+
+void build(int p) {
+  int v;
+  v = getint();
+  if (v == -1) return;
+  sum[p] = sum[p] + v;
+  if (p < minpos) minpos = p;
+  if (p > maxpos) maxpos = p;
+  build(p - 1);
+  build(p + 1);
+  return;
+}
+
+int init() {
+  int v;
+  int i;
+  int pos;
+  v = getint();
+  if (v == -1) return 0;
+
+  for (i = 0; i < MAXN; i = i + 1) sum[i] = 0;
+  pos = MAXN / 2;
+  sum[pos] = v;
+  minpos = pos;
+  maxpos = pos;
+  build(pos - 1);
+  build(pos + 1);
+  return 1;
+}
+
+int main() {
+  int kase;
+  kase = 0;
+  for (;;) {
+    int ok;
+    int i;
+    ok = init();
+    if (ok == 0) break;
+
+    kase = kase + 1;
+    printf("Case %d:\n", kase);
+
+    i = minpos;
+    printf("%d", sum[i]);
+    for (i = minpos + 1; i <= maxpos; i = i + 1) {
+      printf(" %d", sum[i]);
+    }
+    printf("\n\n");
+  }
+  return 0;
+}

@@ -1,0 +1,81 @@
+/* Description:
+ *   Strict SysY testcase: UVa11982 DP (integer-coded input)
+ */
+const int MOD = 1000000007;
+const int MAXN = 305;
+
+int prev_dp[MAXN];
+int cur_dp[MAXN];
+
+int add_mod(int a, int b) {
+  int s;
+  s = a + b;
+  if (s >= MOD) s = s - MOD;
+  return s;
+}
+
+int mul_mod(int a, int b) {
+  int res;
+  int x;
+  int y;
+  res = 0;
+  x = a;
+  y = b;
+  for (; y > 0; y = y / 2) {
+    if (y % 2 == 1) res = add_mod(res, x);
+    x = add_mod(x, x);
+  }
+  return res;
+}
+
+int main() {
+  int T;
+  int t;
+
+  T = getint();
+  for (t = 1; t <= T; t = t + 1) {
+    int N;
+    int i;
+    int j;
+    int ans;
+
+    N = getint();
+    for (i = 0; i <= N + 2; i = i + 1) prev_dp[i] = 0;
+    prev_dp[0] = 1;
+
+    for (i = 1; i <= N; i = i + 1) {
+      int op;
+      op = getint(); /* 1: D, 2: U, 0: other */
+
+      for (j = 0; j <= N + 2; j = j + 1) cur_dp[j] = 0;
+
+      for (j = 0; j <= i; j = j + 1) {
+        if (op == 1) {
+          int term1;
+          int term2;
+          int jp1;
+          term1 = mul_mod(prev_dp[j], j);
+          jp1 = j + 1;
+          term2 = mul_mod(prev_dp[jp1], mul_mod(jp1, jp1));
+          cur_dp[j] = add_mod(term1, term2);
+        } else if (op == 2) {
+          int term1;
+          int term2;
+          term1 = 0;
+          if (j > 0) term1 = prev_dp[j - 1];
+          term2 = mul_mod(prev_dp[j], j);
+          cur_dp[j] = add_mod(term1, term2);
+        } else {
+          cur_dp[j] = prev_dp[j];
+        }
+      }
+
+      for (j = 0; j <= N + 2; j = j + 1) prev_dp[j] = cur_dp[j];
+    }
+
+    ans = prev_dp[0];
+    printf("Case %d: %d\n", t, ans);
+  }
+
+  return 0;
+}

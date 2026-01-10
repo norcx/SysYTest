@@ -1,0 +1,92 @@
+/*
+  UVa11572 Unique Snowflakes (scaled SysY version)
+
+  Input:
+    T
+    For each testcase:
+      n
+      n integers (one per line)
+
+  Output:
+    For each testcase, the maximum length of a contiguous subarray with all
+    distinct values.
+*/
+
+const int HASH_MOD = 131071;
+
+int hash_key[131071];
+int hash_val[131071];
+int hash_tag[131071];
+int cur_tag = 1;
+
+int hash_get(int key) {
+  int pos;
+  int steps;
+  pos = key % HASH_MOD;
+  if (pos < 0) pos = pos + HASH_MOD;
+
+  for (steps = 0; steps < HASH_MOD; steps = steps + 1) {
+    if (hash_tag[pos] != cur_tag) return 0;
+    if (hash_key[pos] == key) return hash_val[pos];
+    pos = pos + 1;
+    if (pos == HASH_MOD) pos = 0;
+  }
+  return 0;
+}
+
+int hash_set(int key, int value) {
+  int pos;
+  int steps;
+  pos = key % HASH_MOD;
+  if (pos < 0) pos = pos + HASH_MOD;
+
+  for (steps = 0; steps < HASH_MOD; steps = steps + 1) {
+    if (hash_tag[pos] != cur_tag) {
+      hash_tag[pos] = cur_tag;
+      hash_key[pos] = key;
+      hash_val[pos] = value;
+      return 0;
+    }
+    if (hash_key[pos] == key) {
+      hash_val[pos] = value;
+      return 0;
+    }
+    pos = pos + 1;
+    if (pos == HASH_MOD) pos = 0;
+  }
+  return 0;
+}
+
+int main() {
+  int T;
+  int tc;
+
+  T = getint();
+  for (tc = 0; tc < T; tc = tc + 1) {
+    int n;
+    int r;
+    int L;
+    int ans;
+
+    n = getint();
+    cur_tag = cur_tag + 1;
+
+    L = 0;
+    ans = 0;
+    for (r = 0; r < n; r = r + 1) {
+      int x;
+      int last_pos;
+      int len;
+
+      x = getint();
+      last_pos = hash_get(x);
+      if (last_pos > L) L = last_pos;
+      len = r + 1 - L;
+      if (len > ans) ans = len;
+      hash_set(x, r + 1);
+    }
+
+    printf("%d\n", ans);
+  }
+  return 0;
+}

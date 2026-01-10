@@ -1,0 +1,56 @@
+// UVa12325 Zombie's Treasure Chest (scaled for Strict SysY)
+
+int max_int(int a, int b) {
+  if (a > b) return a;
+  return b;
+}
+
+int main() {
+  int T;
+  int kase;
+  T = getint();
+  for (kase = 1; kase <= T; kase = kase + 1) {
+    int n;
+    int s1;
+    int v1;
+    int s2;
+    int v2;
+    int tmp;
+    int ans;
+    int i;
+    int cand;
+    n = getint();
+    s1 = getint();
+    v1 = getint();
+    s2 = getint();
+    v2 = getint();
+
+    if (s1 > s2) {
+      tmp = s1;
+      s1 = s2;
+      s2 = tmp;
+      tmp = v1;
+      v1 = v2;
+      v2 = tmp;
+    }
+
+    ans = 0;
+    if (n / s2 >= 65536) {
+      for (i = 0; i <= s1; i = i + 1) {
+        cand = v2 * i + (n - s2 * i) / s1 * v1;
+        ans = max_int(ans, cand);
+      }
+      for (i = 0; i <= s2; i = i + 1) {
+        cand = v1 * i + (n - s1 * i) / s2 * v2;
+        ans = max_int(ans, cand);
+      }
+    } else {
+      for (i = 0; s2 * i <= n; i = i + 1) {
+        cand = v2 * i + (n - s2 * i) / s1 * v1;
+        ans = max_int(ans, cand);
+      }
+    }
+    printf("Case #%d: %d\n", kase, ans);
+  }
+  return 0;
+}

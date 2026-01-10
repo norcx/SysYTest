@@ -1,0 +1,137 @@
+/* UVa 818 Cutting Chains (converted to Strict SysY)
+ * Reads multiple cases:
+ * - N (0 terminates)
+ * - edges as pairs i j (1-based), terminated by a pair with i<=0 or j<=0
+ * Prints: Set k: Minimum links to open is ans
+ */
+
+const int MAXN = 16;
+
+int N;
+int VIS[MAXN];
+int OPEN[MAXN];
+int ADJ[MAXN * MAXN];
+int POW2[MAXN];
+
+int dfs(int u, int pa) {
+  int v;
+  int d;
+  VIS[u] = -1;
+  d = 0;
+  for (v = 0; v < N; v = v + 1) {
+    if (ADJ[u * MAXN + v] != 0) {
+      if (OPEN[v] == 0) {
+        d = d + 1;
+        if (d > 2) {
+          return 0;
+        }
+        if (v != pa) {
+          if (VIS[v] == -1) {
+            return 0;
+          }
+          if (VIS[v] == 0) {
+            if (dfs(v, u) == 0) {
+              return 0;
+            }
+          }
+        }
+      }
+    }
+  }
+  return 1;
+}
+
+int solve() {
+  int ans;
+  int limit;
+  int B;
+  int i;
+  int u;
+  int oc;
+  int comp;
+  int valid;
+
+  ans = N;
+  limit = 1;
+  for (i = 0; i < N; i = i + 1) {
+    limit = limit * 2;
+  }
+
+  for (B = 0; B < limit; B = B + 1) {
+    oc = 0;
+    for (i = 0; i < N; i = i + 1) {
+      OPEN[i] = (B / POW2[i]) % 2;
+      oc = oc + OPEN[i];
+      VIS[i] = 0;
+    }
+
+    valid = 1;
+    comp = 0;
+    if (oc <= ans) {
+      for (u = 0; u < N; u = u + 1) {
+        if (OPEN[u] == 0 && VIS[u] == 0) {
+          comp = comp + 1;
+          if (comp > oc + 1) {
+            valid = 0;
+            break;
+          }
+          if (dfs(u, -1) == 0) {
+            valid = 0;
+            break;
+          }
+        }
+      }
+
+      if (valid == 1) {
+        if (oc < ans) {
+          ans = oc;
+        }
+      }
+    }
+  }
+
+  return ans;
+}
+
+int main() {
+  int t;
+  int i;
+  int a;
+  int b;
+  int ans;
+
+  POW2[0] = 1;
+  for (i = 1; i < MAXN; i = i + 1) {
+    POW2[i] = POW2[i - 1] * 2;
+  }
+
+  t = 1;
+  for (;;) {
+    N = getint();
+    if (N == 0) {
+      break;
+    }
+
+    for (i = 0; i < MAXN * MAXN; i = i + 1) {
+      ADJ[i] = 0;
+    }
+
+    for (;;) {
+      a = getint();
+      b = getint();
+      if (a <= 0 || b <= 0) {
+        break;
+      }
+      a = a - 1;
+      b = b - 1;
+      ADJ[a * MAXN + b] = 1;
+      ADJ[b * MAXN + a] = 1;
+    }
+
+    ans = solve();
+    printf("Set %d: Minimum links to open is %d\n", t, ans);
+    t = t + 1;
+  }
+
+  return 0;
+}

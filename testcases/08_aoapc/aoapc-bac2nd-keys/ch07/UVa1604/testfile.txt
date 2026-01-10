@@ -1,0 +1,146 @@
+// UVa1604 Cubic Eight-Puzzle (Strict SysY adaptation)
+// Input encoding (integers only):
+// - For each case: ey, ex (1..3), then 9 integers for target grid (row-major)
+// - Cell codes: E=0, W=1, R=2, B=3
+// - Terminator: ey=0 or ex=0 (use 0 0)
+
+const int HRoll[6] = {3, 5, 4, 0, 2, 1};
+const int VRoll[6] = {4, 2, 1, 5, 0, 3};
+const int DX[4] = {0, 0, 1, -1};
+const int DY[4] = {1, -1, 0, 0};
+const int TopColor[6] = {1, 1, 3, 3, 2, 2}; // W,W,B,B,R,R
+
+int target[9];
+int poses[9];   // 0..5 for cubes, 7 for empty
+int emptyPos;   // 0..8
+int limitDepth; // current IDA* bound
+
+int heuristic() {
+  int i;
+  int mismatches;
+  mismatches = 0;
+  for (i = 0; i < 9; i = i + 1) {
+    int c;
+    c = 0;
+    if (i == emptyPos) {
+      c = 0;
+    } else {
+      c = TopColor[poses[i]];
+    }
+    if (c != target[i]) {
+      mismatches = mismatches + 1;
+    }
+  }
+  return mismatches;
+}
+
+int dfs(int prevEmptyPos, int depth) {
+  int h;
+  int ex;
+  int ey;
+  int dir;
+
+  h = heuristic();
+  if (h == 0) {
+    return 1;
+  }
+  if (depth + h > limitDepth) {
+    return 0;
+  }
+
+  ex = emptyPos / 3;
+  ey = emptyPos - ex * 3;
+
+  for (dir = 0; dir < 4; dir = dir + 1) {
+    int ax;
+    int ay;
+    int npos;
+    int p;
+    int newPose;
+    int oldEmpty;
+    int ok;
+
+    ax = ex + DX[dir];
+    ay = ey + DY[dir];
+    if (ax < 0 || ax >= 3 || ay < 0 || ay >= 3) {
+      continue;
+    }
+    npos = ax * 3 + ay;
+    if (npos == prevEmptyPos) {
+      continue;
+    }
+
+    p = poses[npos];
+    newPose = 0;
+    if (ax == ex) {
+      newPose = HRoll[p];
+    } else {
+      newPose = VRoll[p];
+    }
+
+    oldEmpty = emptyPos;
+    poses[oldEmpty] = newPose;
+    poses[npos] = 7;
+    emptyPos = npos;
+
+    ok = dfs(oldEmpty, depth + 1);
+
+    emptyPos = oldEmpty;
+    poses[npos] = p;
+    poses[oldEmpty] = 7;
+
+    if (ok == 1) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+int solve() {
+  int start;
+  start = heuristic();
+  for (limitDepth = start; limitDepth <= 30; limitDepth = limitDepth + 1) {
+    if (dfs(-1, 0) == 1) {
+      return limitDepth;
+    }
+  }
+  return -1;
+}
+
+int main() {
+  int ey;
+  int ex;
+
+  for (;;) {
+    int i;
+    int res;
+
+    ey = getint();
+    ex = getint();
+    if (ex == 0) {
+      break;
+    }
+    if (ey == 0) {
+      break;
+    }
+
+    ex = ex - 1;
+    ey = ey - 1;
+
+    emptyPos = ex * 3 + ey;
+    for (i = 0; i < 9; i = i + 1) {
+      poses[i] = 0;
+    }
+    poses[emptyPos] = 7;
+
+    for (i = 0; i < 9; i = i + 1) {
+      target[i] = getint();
+    }
+
+    res = solve();
+    printf("%d\n", res);
+  }
+
+  return 0;
+}

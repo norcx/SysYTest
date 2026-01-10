@@ -1,0 +1,131 @@
+/* Description:
+ *   UVa1638/LA6117 Pole Arrangement
+ *   Converted to Strict SysY (int-only, 1D arrays).
+ */
+
+const int MAXN = 20;
+const int DIM = 21;
+const int STRIDE_J = 21;
+const int STRIDE_I = 21 * 21;
+const int SIZE = 21 * 21 * 21;
+
+const int BASE = 100000000;
+
+int d0[SIZE];
+int d1[SIZE];
+int d2[SIZE];
+
+int idx(int i, int j, int k) {
+    return i * STRIDE_I + j * STRIDE_J + k;
+}
+
+void assign_mul(int dest, int src, int m) {
+    int t;
+    int carry;
+    t = d0[src] * m;
+    d0[dest] = t % BASE;
+    carry = t / BASE;
+    t = d1[src] * m + carry;
+    d1[dest] = t % BASE;
+    carry = t / BASE;
+    t = d2[src] * m + carry;
+    d2[dest] = t % BASE;
+}
+
+void add_assign(int dest, int src) {
+    int t;
+    int carry;
+
+    t = d0[dest] + d0[src];
+    carry = 0;
+    if (t >= BASE) {
+        t = t - BASE;
+        carry = 1;
+    }
+    d0[dest] = t;
+
+    t = d1[dest] + d1[src] + carry;
+    carry = 0;
+    if (t >= BASE) {
+        t = t - BASE;
+        carry = 1;
+    }
+    d1[dest] = t;
+
+    t = d2[dest] + d2[src] + carry;
+    if (t >= BASE) {
+        t = t - BASE;
+    }
+    d2[dest] = t;
+}
+
+void print_group8(int x) {
+    int p;
+    int digit;
+    for (p = 10000000; p > 0; p = p / 10) {
+        digit = (x / p) % 10;
+        printf("%d", digit);
+    }
+}
+
+void print_cell(int p) {
+    int a0;
+    int a1;
+    int a2;
+    a0 = d0[p];
+    a1 = d1[p];
+    a2 = d2[p];
+
+    if (a2 == 0) {
+        if (a1 == 0) {
+            printf("%d\n", a0);
+        } else {
+            printf("%d", a1);
+            print_group8(a0);
+            printf("\n");
+        }
+    } else {
+        printf("%d", a2);
+        print_group8(a1);
+        print_group8(a0);
+        printf("\n");
+    }
+}
+
+int main() {
+    int i;
+    int j;
+    int k;
+    int current;
+    int T;
+    int n;
+    int L;
+    int R;
+
+    d0[idx(1, 1, 1)] = 1;
+
+    for (i = 2; i <= MAXN; i = i + 1) {
+        for (j = 1; j <= i; j = j + 1) {
+            for (k = 1; k <= i; k = k + 1) {
+                current = idx(i, j, k);
+                assign_mul(current, idx(i - 1, j, k), i - 2);
+                if (j > 1) {
+                    add_assign(current, idx(i - 1, j - 1, k));
+                }
+                if (k > 1) {
+                    add_assign(current, idx(i - 1, j, k - 1));
+                }
+            }
+        }
+    }
+
+    T = getint();
+    for (i = 0; i < T; i = i + 1) {
+        n = getint();
+        L = getint();
+        R = getint();
+        print_cell(idx(n, L, R));
+    }
+
+    return 0;
+}

@@ -1,0 +1,230 @@
+// Strict SysY version of UVa1665 Islands (scaled for MARS memory limit)
+
+const int MAXN = 50;
+const int MAXM = 50;
+const int MAXP = 2500;
+const int MAXT = 128;
+
+int n;
+int m;
+int T;
+
+int px[MAXP];
+int py[MAXP];
+int pv[MAXP];
+
+int indice[MAXP];
+int pa[MAXP];
+
+int t[MAXT];
+int Ans[MAXT + 1];
+
+int tmp[4];
+
+int findPa(int i) {
+  if (pa[i] == i) return i;
+  pa[i] = findPa(pa[i]);
+  return pa[i];
+}
+
+void swap_points(int i, int j) {
+  int tx;
+  int ty;
+  int tv;
+  tx = px[i];
+  ty = py[i];
+  tv = pv[i];
+  px[i] = px[j];
+  py[i] = py[j];
+  pv[i] = pv[j];
+  px[j] = tx;
+  py[j] = ty;
+  pv[j] = tv;
+}
+
+void sort_points(int cnt) {
+  int stackL[256];
+  int stackR[256];
+  int top;
+  int l;
+  int r;
+  int i;
+  int j;
+  int pivot;
+
+  top = 0;
+  if (cnt <= 1) return;
+
+  stackL[top] = 0;
+  stackR[top] = cnt - 1;
+  top = top + 1;
+
+  for (; top > 0;) {
+    top = top - 1;
+    l = stackL[top];
+    r = stackR[top];
+    i = l;
+    j = r;
+    pivot = pv[(l + r) / 2];
+
+    for (;;) {
+      if (i > j) break;
+
+      for (;;) {
+        if (i <= r && pv[i] > pivot) i = i + 1;
+        else break;
+      }
+
+      for (;;) {
+        if (j >= l && pv[j] < pivot) j = j - 1;
+        else break;
+      }
+
+      if (i <= j) {
+        swap_points(i, j);
+        i = i + 1;
+        j = j - 1;
+      }
+    }
+
+    if (l < j) {
+      stackL[top] = l;
+      stackR[top] = j;
+      top = top + 1;
+    }
+    if (i < r) {
+      stackL[top] = i;
+      stackR[top] = r;
+      top = top + 1;
+    }
+  }
+  return;
+}
+
+int getAdjs(int pi) {
+  int cnt;
+  int r;
+  int c;
+  int idx;
+  cnt = 0;
+
+  r = px[pi] - 1;
+  c = py[pi];
+  if (r >= 0) {
+    idx = r * m + c;
+    tmp[cnt] = indice[idx];
+    cnt = cnt + 1;
+  }
+
+  r = px[pi] + 1;
+  if (r < n) {
+    idx = r * m + c;
+    tmp[cnt] = indice[idx];
+    cnt = cnt + 1;
+  }
+
+  r = px[pi];
+  c = py[pi] - 1;
+  if (c >= 0) {
+    idx = r * m + c;
+    tmp[cnt] = indice[idx];
+    cnt = cnt + 1;
+  }
+
+  c = py[pi] + 1;
+  if (c < m) {
+    idx = r * m + c;
+    tmp[cnt] = indice[idx];
+    cnt = cnt + 1;
+  }
+
+  return cnt;
+}
+
+void solve() {
+  int r;
+  int c;
+  int psz;
+  int i;
+  int pi;
+  int ans;
+  int tcur;
+  int cnt;
+  int k;
+  int j;
+  int pnpa;
+  int pipa;
+
+  n = getint();
+  m = getint();
+
+  psz = n * m;
+  i = 0;
+  for (r = 0; r < n; r = r + 1) {
+    for (c = 0; c < m; c = c + 1) {
+      px[i] = r;
+      py[i] = c;
+      pv[i] = getint();
+      i = i + 1;
+    }
+  }
+
+  sort_points(psz);
+
+  for (i = 0; i < psz; i = i + 1) {
+    pa[i] = i;
+    indice[px[i] * m + py[i]] = i;
+  }
+
+  T = getint();
+  for (i = 0; i < T; i = i + 1) {
+    t[i] = getint();
+  }
+
+  Ans[T] = 0;
+  pi = 0;
+  for (i = T - 1; i >= 0; i = i - 1) {
+    ans = Ans[i + 1];
+    tcur = t[i];
+
+    for (; pi < psz && pv[pi] > tcur;) {
+      ans = ans + 1;
+      cnt = getAdjs(pi);
+      pipa = findPa(pi);
+
+      for (k = 0; k < cnt; k = k + 1) {
+        j = tmp[k];
+        if (pv[j] > tcur) {
+          pnpa = findPa(j);
+          if (pnpa != pipa) {
+            pa[pnpa] = pipa;
+            ans = ans - 1;
+          }
+        }
+      }
+
+      pi = pi + 1;
+    }
+
+    Ans[i] = ans;
+  }
+
+  return;
+}
+
+int main() {
+  int Z;
+  int z;
+  int i;
+
+  Z = getint();
+  for (z = 0; z < Z; z = z + 1) {
+    solve();
+    for (i = 0; i < T; i = i + 1) {
+      printf("%d ", Ans[i]);
+    }
+    printf("\n");
+  }
+
+  return 0;
+}

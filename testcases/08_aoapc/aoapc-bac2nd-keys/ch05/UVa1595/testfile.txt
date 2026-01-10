@@ -1,0 +1,150 @@
+/* Description:
+ *   UVa 1595 - Symmetry
+ *   Check whether a set of points is symmetric w.r.t. some vertical line.
+ *
+ * SysY constraints applied:
+ * - int-only, no structs/STL, for-loops only, no function prototypes.
+ * - Input via getint(); output via printf().
+ * - Multiplicities handled via a custom hash map (point -> count).
+ */
+
+const int MAXN = 1100;
+const int HSIZE = 8192;
+
+int xs[MAXN];
+int ys[MAXN];
+
+int used[HSIZE];
+int keyx[HSIZE];
+int keyy[HSIZE];
+int val[HSIZE];
+
+int abs_int(int x) {
+    if (x < 0) return 0 - x;
+    return x;
+}
+
+int hash_key(int x, int y) {
+    int h;
+    h = x * 10007 + y * 10009;
+    h = abs_int(h);
+    return h % HSIZE;
+}
+
+void map_clear() {
+    int i;
+    for (i = 0; i < HSIZE; i = i + 1) {
+        used[i] = 0;
+        val[i] = 0;
+    }
+}
+
+void map_add(int x, int y) {
+    int start;
+    int idx;
+    start = hash_key(x, y);
+    idx = start;
+    for (;;) {
+        if (used[idx] == 0) {
+            used[idx] = 1;
+            keyx[idx] = x;
+            keyy[idx] = y;
+            val[idx] = 1;
+            return;
+        }
+        if (keyx[idx] == x && keyy[idx] == y) {
+            val[idx] = val[idx] + 1;
+            return;
+        }
+        idx = idx + 1;
+        if (idx == HSIZE) idx = 0;
+        if (idx == start) return;
+    }
+    return;
+}
+
+int map_get(int x, int y) {
+    int start;
+    int idx;
+    start = hash_key(x, y);
+    idx = start;
+    for (;;) {
+        if (used[idx] == 0) return 0;
+        if (keyx[idx] == x && keyy[idx] == y) return val[idx];
+        idx = idx + 1;
+        if (idx == HSIZE) idx = 0;
+        if (idx == start) return 0;
+    }
+    return 0;
+}
+
+void map_dec(int x, int y) {
+    int start;
+    int idx;
+    start = hash_key(x, y);
+    idx = start;
+    for (;;) {
+        if (used[idx] == 0) return;
+        if (keyx[idx] == x && keyy[idx] == y) {
+            val[idx] = val[idx] - 1;
+            return;
+        }
+        idx = idx + 1;
+        if (idx == HSIZE) idx = 0;
+        if (idx == start) return;
+    }
+    return;
+}
+
+int main() {
+    int T;
+    int tc;
+    int N;
+    int i;
+    int x;
+    int y;
+    int minx;
+    int maxx;
+    int mid2;
+    int ans;
+    int x2;
+    int y2;
+
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        N = getint();
+        map_clear();
+
+        for (i = 0; i < N; i = i + 1) {
+            x = getint();
+            y = getint();
+            xs[i] = x;
+            ys[i] = y;
+            if (i == 0) {
+                minx = x;
+                maxx = x;
+            } else {
+                if (x < minx) minx = x;
+                if (x > maxx) maxx = x;
+            }
+            map_add(x, y);
+        }
+
+        mid2 = minx + maxx;
+        ans = 1;
+        for (i = 0; i < N; i = i + 1) {
+            x2 = mid2 - xs[i];
+            y2 = ys[i];
+            if (map_get(x2, y2) == 0) {
+                ans = 0;
+                i = N;
+            } else {
+                map_dec(x2, y2);
+            }
+        }
+
+        if (ans == 1) printf("YES\n");
+        else printf("NO\n");
+    }
+    return 0;
+}

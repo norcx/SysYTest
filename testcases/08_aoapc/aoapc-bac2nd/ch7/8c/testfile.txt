@@ -1,0 +1,172 @@
+/* Description:
+ *   8-puzzle shortest-move solver (BFS).
+ *   Refactored to Strict SysY:
+ *   - No headers / no pointers
+ *   - 1D arrays only
+ *   - Memory-scaled via compact visited bitset and small BFS queue
+ */
+
+const int N = 9;
+const int MAX_CODE = 362880; /* 9! */
+const int VIS_WORDS = 11340; /* ceil(MAX_CODE / 32) */
+const int MAX_QUEUE = 4096;  /* scaled: enough for small-depth test input */
+
+int fact[10];
+int pow2[32];
+int vis[VIS_WORDS];
+
+int q_code[MAX_QUEUE];
+int q_dist[MAX_QUEUE];
+
+int start_state[N];
+int goal_state[N];
+
+int dx[4] = {-1, 1, 0, 0};
+int dy[4] = {0, 0, -1, 1};
+
+void init_tables() {
+  int i;
+  fact[0] = 1;
+  for(i = 1; i <= 9; i = i + 1) fact[i] = fact[i - 1] * i;
+  pow2[0] = 1;
+  for(i = 1; i < 32; i = i + 1) pow2[i] = pow2[i - 1] * 2;
+}
+
+int try_insert_code(int code) {
+  int word;
+  int bit;
+  int has;
+  word = code / 32;
+  bit = code - word * 32;
+  has = (vis[word] / pow2[bit]) % 2;
+  if(has == 1) return 0;
+  vis[word] = vis[word] + pow2[bit];
+  return 1;
+}
+
+int encode_perm(int p[]) {
+  int code;
+  int i;
+  int j;
+  int cnt;
+  code = 0;
+  for(i = 0; i < 9; i = i + 1) {
+    cnt = 0;
+    for(j = i + 1; j < 9; j = j + 1) {
+      if(p[j] < p[i]) cnt = cnt + 1;
+    }
+    code = code + cnt * fact[8 - i];
+  }
+  return code;
+}
+
+void decode_perm(int code, int p[]) {
+  int used[9];
+  int i;
+  int v;
+  int base;
+  int digit;
+  int cnt;
+  for(i = 0; i < 9; i = i + 1) used[i] = 0;
+  for(i = 0; i < 9; i = i + 1) {
+    base = fact[8 - i];
+    digit = code / base;
+    code = code - digit * base;
+    cnt = -1;
+    for(v = 0; v < 9; v = v + 1) {
+      if(used[v] == 0) cnt = cnt + 1;
+      if(cnt == digit) {
+        p[i] = v;
+        used[v] = 1;
+        v = 9;
+      }
+    }
+  }
+}
+
+int bfs(int start_code, int goal_code) {
+  int front;
+  int rear;
+  int cur_code;
+  int cur_dist;
+  int perm[9];
+  int z;
+  int zpos;
+  int x;
+  int y;
+  int d;
+  int nx;
+  int ny;
+  int nz;
+  int tmp;
+  int new_code;
+
+  if(start_code == goal_code) return 0;
+
+  front = 0;
+  rear = 0;
+  try_insert_code(start_code);
+  q_code[rear] = start_code;
+  q_dist[rear] = 0;
+  rear = rear + 1;
+
+  for(front = 0; front < rear; front = front + 1) {
+    cur_code = q_code[front];
+    cur_dist = q_dist[front];
+    decode_perm(cur_code, perm);
+
+    zpos = 0;
+    for(z = 0; z < 9; z = z + 1) {
+      if(perm[z] == 0) {
+        zpos = z;
+        z = 9;
+      }
+    }
+
+    x = zpos / 3;
+    y = zpos - x * 3;
+
+    for(d = 0; d < 4; d = d + 1) {
+      nx = x + dx[d];
+      ny = y + dy[d];
+      if(nx >= 0 && nx < 3 && ny >= 0 && ny < 3) {
+        nz = nx * 3 + ny;
+
+        tmp = perm[nz];
+        perm[nz] = 0;
+        perm[zpos] = tmp;
+        new_code = encode_perm(perm);
+        perm[zpos] = 0;
+        perm[nz] = tmp;
+
+        if(try_insert_code(new_code) == 1) {
+          if(new_code == goal_code) return cur_dist + 1;
+          if(rear >= MAX_QUEUE) return -1;
+          q_code[rear] = new_code;
+          q_dist[rear] = cur_dist + 1;
+          rear = rear + 1;
+        }
+      }
+    }
+  }
+
+  return -1;
+}
+
+int main() {
+  int i;
+  int start_code;
+  int goal_code;
+  int ans;
+
+  init_tables();
+  for(i = 0; i < 9; i = i + 1) start_state[i] = getint();
+  for(i = 0; i < 9; i = i + 1) goal_state[i] = getint();
+
+  start_code = encode_perm(start_state);
+  goal_code = encode_perm(goal_state);
+
+  ans = bfs(start_code, goal_code);
+  printf("%d\n", ans);
+  return 0;
+}

@@ -1,0 +1,343 @@
+// Strict SysY testcase converted from UVa 511 solution (logic preserved, input encoded as integers).
+// Input format (all integers, 1 per line):
+// M
+//   mapId x1 y1 x2 y2        (repeat M times)
+// L
+//   locId x y               (repeat L times)
+// R
+//   locId requestedLevel    (repeat R times)
+
+const int MAX_MAPS = 20;
+const int MAX_LOCS = 20;
+const int MAX_CONTAIN = 20;
+
+int mapId[MAX_MAPS];
+int x1Arr[MAX_MAPS];
+int y1Arr[MAX_MAPS];
+int x2Arr[MAX_MAPS];
+int y2Arr[MAX_MAPS];
+
+int widthArr[MAX_MAPS];
+int heightArr[MAX_MAPS];
+int areaArr[MAX_MAPS];
+
+int center2X[MAX_MAPS];
+int center2Y[MAX_MAPS];
+int lowerRight2X[MAX_MAPS];
+int lowerRight2Y[MAX_MAPS];
+int minX2Arr[MAX_MAPS];
+
+int ratioNumArr[MAX_MAPS];
+int ratioDenArr[MAX_MAPS];
+
+int locIdArr[MAX_LOCS];
+int locXArr[MAX_LOCS];
+int locYArr[MAX_LOCS];
+int locCount;
+
+int misIdx[MAX_CONTAIN];
+int misLevel[MAX_CONTAIN];
+int misCnt;
+
+int absInt(int v) {
+  if (v < 0) return 0 - v;
+  return v;
+}
+
+int minInt(int a, int b) {
+  if (a < b) return a;
+  return b;
+}
+
+int maxInt(int a, int b) {
+  if (a > b) return a;
+  return b;
+}
+
+int inRangeInt(int x, int l, int r) {
+  int lo;
+  int hi;
+  lo = minInt(l, r);
+  hi = maxInt(l, r);
+  if (x < lo) return 0;
+  if (x > hi) return 0;
+  return 1;
+}
+
+int inAreaInt(int px, int py, int i) {
+  int okX;
+  int okY;
+  okX = inRangeInt(px, x1Arr[i], x2Arr[i]);
+  okY = inRangeInt(py, y1Arr[i], y2Arr[i]);
+  if (okX == 1 && okY == 1) return 1;
+  return 0;
+}
+
+int dist2ToCenterNum(int px, int py, int i) {
+  int dx2;
+  int dy2;
+  int v;
+  dx2 = px + px - center2X[i];
+  dy2 = py + py - center2Y[i];
+  v = dx2 * dx2 + dy2 * dy2;
+  return v;
+}
+
+int dist2ToLowerRightNum(int px, int py, int i) {
+  int dx2;
+  int dy2;
+  int v;
+  dx2 = px + px - lowerRight2X[i];
+  dy2 = py + py - lowerRight2Y[i];
+  v = dx2 * dx2 + dy2 * dy2;
+  return v;
+}
+
+int ratioGreater(int i1, int i2) {
+  int left;
+  int right;
+  left = ratioNumArr[i1] * ratioDenArr[i2];
+  right = ratioNumArr[i2] * ratioDenArr[i1];
+  if (left > right) return 1;
+  return 0;
+}
+
+int ratioLess(int i1, int i2) {
+  int left;
+  int right;
+  left = ratioNumArr[i1] * ratioDenArr[i2];
+  right = ratioNumArr[i2] * ratioDenArr[i1];
+  if (left < right) return 1;
+  return 0;
+}
+
+int mapBefore(int i1, int i2, int px, int py) {
+  int a1;
+  int a2;
+  int d1;
+  int d2;
+  int lr1;
+  int lr2;
+  int mx1;
+  int mx2;
+
+  a1 = areaArr[i1];
+  a2 = areaArr[i2];
+  if (a1 > a2) return 1;
+  if (a1 < a2) return 0;
+
+  d1 = dist2ToCenterNum(px, py, i1);
+  d2 = dist2ToCenterNum(px, py, i2);
+  if (d1 > d2) return 1;
+  if (d1 < d2) return 0;
+
+  if (ratioGreater(i1, i2) == 1) return 1;
+  if (ratioLess(i1, i2) == 1) return 0;
+
+  lr1 = dist2ToLowerRightNum(px, py, i1);
+  lr2 = dist2ToLowerRightNum(px, py, i2);
+  if (lr1 < lr2) return 1;
+  if (lr1 > lr2) return 0;
+
+  mx1 = minX2Arr[i1];
+  mx2 = minX2Arr[i2];
+  if (mx1 > mx2) return 1;
+  if (mx1 < mx2) return 0;
+
+  return 0;
+}
+
+void sortMis(int px, int py) {
+  int i;
+  int j;
+  int tmp;
+  for (i = 0; i < misCnt; i = i + 1) {
+    for (j = 0; j + 1 < misCnt - i; j = j + 1) {
+      if (mapBefore(misIdx[j + 1], misIdx[j], px, py) == 1) {
+        tmp = misIdx[j];
+        misIdx[j] = misIdx[j + 1];
+        misIdx[j + 1] = tmp;
+      }
+    }
+  }
+}
+
+void getMaps(int px, int py) {
+  int i;
+  int lv;
+  misCnt = 0;
+  for (i = 0; i < MAX_CONTAIN; i = i + 1) {
+    misIdx[i] = 0;
+    misLevel[i] = 0;
+  }
+  for (i = 0; i < MAX_MAPS; i = i + 1) {
+    if (i >= 0 && i < MAX_MAPS) {
+      if (mapId[i] != 0) {
+        if (inAreaInt(px, py, i) == 1) {
+          misIdx[misCnt] = i;
+          misCnt = misCnt + 1;
+        }
+      }
+    }
+  }
+  sortMis(px, py);
+
+  lv = 1;
+  for (i = 0; i < misCnt; i = i + 1) {
+    if (i == 0) {
+      misLevel[i] = 1;
+    } else {
+      misLevel[i] = lv;
+      if (areaArr[misIdx[i]] < areaArr[misIdx[i - 1]]) {
+        lv = lv + 1;
+        misLevel[i] = lv;
+      }
+    }
+  }
+}
+
+int findLocationIndex(int id) {
+  int i;
+  for (i = 0; i < locCount; i = i + 1) {
+    if (locIdArr[i] == id) return i;
+  }
+  return 0 - 1;
+}
+
+void doRequest(int locIdVal, int level) {
+  int li;
+  int px;
+  int py;
+  int maxLevel;
+  int idx;
+  int i;
+  int chosenMapIdx;
+
+  printf("location %d at detail level %d", locIdVal, level);
+
+  li = findLocationIndex(locIdVal);
+  if (li < 0) {
+    printf(" unknown location\n");
+    return;
+  }
+
+  px = locXArr[li];
+  py = locYArr[li];
+  getMaps(px, py);
+  if (misCnt == 0) {
+    printf(" no map contains that location\n");
+    return;
+  }
+
+  maxLevel = misLevel[misCnt - 1];
+  if (maxLevel < level) {
+    chosenMapIdx = misIdx[misCnt - 1];
+    printf(" no map at that detail level; using map %d\n", mapId[chosenMapIdx]);
+    return;
+  }
+
+  idx = misCnt;
+  for (i = 0; i < misCnt; i = i + 1) {
+    if (misLevel[i] > level) {
+      idx = i;
+      i = misCnt;
+    }
+  }
+  chosenMapIdx = misIdx[idx - 1];
+  printf(" using map %d\n", mapId[chosenMapIdx]);
+  return;
+}
+
+int main() {
+  int m;
+  int i;
+  int M;
+  int L;
+  int R;
+  int rid;
+  int rlevel;
+
+  for (i = 0; i < MAX_MAPS; i = i + 1) {
+    mapId[i] = 0;
+  }
+  locCount = 0;
+
+  M = getint();
+  for (m = 0; m < M; m = m + 1) {
+    int id;
+    int xa;
+    int ya;
+    int xb;
+    int yb;
+    int w;
+    int h;
+    int ar;
+    int cx2;
+    int cy2;
+    int lrX2;
+    int lrY2;
+    int minx2;
+    int rnum;
+    int rden;
+
+    id = getint();
+    xa = getint();
+    ya = getint();
+    xb = getint();
+    yb = getint();
+
+    mapId[m] = id;
+    x1Arr[m] = xa;
+    y1Arr[m] = ya;
+    x2Arr[m] = xb;
+    y2Arr[m] = yb;
+
+    w = absInt(xa - xb);
+    h = absInt(ya - yb);
+    ar = w * h;
+
+    cx2 = xa + xb;
+    cy2 = ya + yb;
+    lrX2 = cx2 + w;
+    lrY2 = cy2 - h;
+    minx2 = cx2 - w;
+
+    rnum = absInt(h * 4 - w * 3);
+    rden = w * 4;
+    if (rden == 0) rden = 1;
+
+    widthArr[m] = w;
+    heightArr[m] = h;
+    areaArr[m] = ar;
+    center2X[m] = cx2;
+    center2Y[m] = cy2;
+    lowerRight2X[m] = lrX2;
+    lowerRight2Y[m] = lrY2;
+    minX2Arr[m] = minx2;
+    ratioNumArr[m] = rnum;
+    ratioDenArr[m] = rden;
+  }
+
+  L = getint();
+  for (i = 0; i < L; i = i + 1) {
+    int id2;
+    int lx;
+    int ly;
+    id2 = getint();
+    lx = getint();
+    ly = getint();
+    locIdArr[i] = id2;
+    locXArr[i] = lx;
+    locYArr[i] = ly;
+  }
+  locCount = L;
+
+  R = getint();
+  for (i = 0; i < R; i = i + 1) {
+    rid = getint();
+    rlevel = getint();
+    doRequest(rid, rlevel);
+  }
+
+  return 0;
+}

@@ -1,0 +1,77 @@
+/* Description:
+ *   UVa1611 Crane (converted to Strict SysY).
+ */
+
+const int MAXN = 10005;
+const int MAXOPS = 50000;
+
+int N;
+int A[MAXN];
+int ansL[MAXOPS];
+int ansR[MAXOPS];
+int ansCnt;
+
+int findPos(int start, int value) {
+  int i;
+  for (i = start; i <= N; i = i + 1) {
+    if (A[i] == value) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+void swapSeg(int st, int len) {
+  int i;
+  int tmp;
+  for (i = 0; i < len; i = i + 1) {
+    tmp = A[st + i];
+    A[st + i] = A[st + len + i];
+    A[st + len + i] = tmp;
+  }
+  ansL[ansCnt] = st;
+  ansR[ansCnt] = st + 2 * len - 1;
+  ansCnt = ansCnt + 1;
+}
+
+int main() {
+  int T;
+  int t;
+  int i;
+  int p;
+  int l;
+  int sl;
+
+  T = getint();
+  for (t = 0; t < T; t = t + 1) {
+    N = getint();
+    for (i = 1; i <= N; i = i + 1) {
+      A[i] = getint();
+    }
+
+    ansCnt = 0;
+    for (i = 1; i <= N; i = i + 1) {
+      if (A[i] == i) {
+      } else {
+        p = findPos(i, i);
+        l = p - i;
+
+        if (2 * l > N - i + 1) {
+          sl = (N - i + 1) / 2;
+          if (sl > 0) {
+            swapSeg(N - 2 * sl + 1, sl);
+          }
+        }
+
+        p = findPos(i, i);
+        swapSeg(i, p - i);
+      }
+    }
+
+    printf("%d\n", ansCnt);
+    for (i = 0; i < ansCnt; i = i + 1) {
+      printf("%d %d\n", ansL[i], ansR[i]);
+    }
+  }
+  return 0;
+}

@@ -1,0 +1,330 @@
+/* Description:
+ *   Strict SysY adaptation of "LA4749 Game Simulator".
+ *
+ *   This testcase uses a scaled-down input format (all integers, one per line):
+ *     T
+ *     For each case:
+ *       mainSuit   (0=H, 1=S, 2=C, 3=D, 4=O(no-suit))
+ *       dealer     (0..3)
+ *       CR0        (2..14)
+ *       CR1        (2..14)
+ *       rounds     (number of tricks)
+ *       Then for each trick (in play order starting from current leader):
+ *         For each of 4 players:
+ *           len
+ *           len cardIDs
+ *
+ *   Card encoding:
+ *     cardID = suit*20 + rank
+ *     suit: 0..3 for H,S,C,D; 4 for jokers
+ *     rank: 2..14 normal; BJ=15; RJ=16
+ */
+
+const int MAX_CARD_ID = 100;
+const int MAX_TRICKS = 64;
+const int MAX_PER_PLAY = 8;
+
+int PItoTeam[4] = {0, 1, 0, 1};
+
+int cardsOrder[MAX_CARD_ID];
+int hiddenCards[MAX_CARD_ID];
+
+int mainSuit;
+int dealer, CR0, CR1, CR, CT, FT;
+
+int tricksCards[MAX_TRICKS * MAX_PER_PLAY];
+int tricksLen[MAX_TRICKS];
+int tricksCnt;
+
+int cardSuit(int cardID) { return cardID / 20; }
+int cardRank(int cardID) { return cardID - cardSuit(cardID) * 20; }
+
+int makeCard(int suit, int rank) { return suit * 20 + rank; }
+
+int isTrump(int cardID) {
+    int s;
+    int r;
+    s = cardSuit(cardID);
+    r = cardRank(cardID);
+    if (r == 15) return 1;
+    if (r == 16) return 1;
+    if (r == CR) return 1;
+    if (s == mainSuit) return 1;
+    return 0;
+}
+
+int scoreCard(int cardID) {
+    int r;
+    r = cardRank(cardID);
+    if (r == 5) return 5;
+    if (r == 10) return 10;
+    if (r == 13) return 10;
+    return 0;
+}
+
+int scorePlay(int trickIndex) {
+    int base;
+    int j;
+    int sum;
+    base = trickIndex * MAX_PER_PLAY;
+    sum = 0;
+    j = 0;
+    for (j = 0; j < tricksLen[trickIndex]; j = j + 1) {
+        sum = sum + scoreCard(tricksCards[base + j]);
+    }
+    return sum;
+}
+
+void addCardOrder(int cardID, int order) {
+    cardsOrder[cardID] = order;
+    hiddenCards[cardID] = 2;
+}
+
+void clearOrders() {
+    int i;
+    i = 0;
+    for (i = 0; i < MAX_CARD_ID; i = i + 1) {
+        cardsOrder[i] = -1;
+        hiddenCards[i] = 0;
+    }
+}
+
+void genCardOrders(int cr, int suit) {
+    int order;
+    int s;
+    int r;
+    clearOrders();
+    order = 110;
+
+    addCardOrder(makeCard(4, 16), order);
+    order = order - 1;
+    addCardOrder(makeCard(4, 15), order);
+    order = order - 1;
+
+    if (suit == 4) {
+        s = 0;
+        for (s = 0; s < 4; s = s + 1) {
+            addCardOrder(makeCard(s, cr), order);
+        }
+        order = order - 1;
+    } else {
+        addCardOrder(makeCard(suit, cr), order);
+        order = order - 1;
+
+        s = 0;
+        for (s = 0; s < 4; s = s + 1) {
+            if (s != suit) addCardOrder(makeCard(s, cr), order);
+        }
+        order = order - 1;
+
+        r = 14;
+        for (r = 14; r >= 2; r = r - 1) {
+            if (r != cr) {
+                addCardOrder(makeCard(suit, r), order);
+                order = order - 1;
+            }
+        }
+    }
+
+    r = 14;
+    for (r = 14; r >= 2; r = r - 1) {
+        if (r == cr) {
+        } else {
+            s = 0;
+            for (s = 0; s < 4; s = s + 1) {
+                if (s != suit) addCardOrder(makeCard(s, r), order);
+            }
+            order = order - 1;
+        }
+    }
+}
+
+void sortPlayByOrder(int trickIndex) {
+    int base;
+    int i;
+    int j;
+    int key;
+    int keyOrd;
+    int cur;
+    base = trickIndex * MAX_PER_PLAY;
+    i = 1;
+    for (i = 1; i < tricksLen[trickIndex]; i = i + 1) {
+        key = tricksCards[base + i];
+        keyOrd = cardsOrder[key];
+        j = i - 1;
+        for (; j >= 0; j = j - 1) {
+            cur = tricksCards[base + j];
+            if (cardsOrder[cur] <= keyOrd) {
+                j = j + 1;
+                break;
+            }
+            tricksCards[base + j + 1] = cur;
+        }
+        if (j < 0) j = 0;
+        tricksCards[base + j] = key;
+    }
+}
+
+int pow2(int e) {
+    int ans;
+    int i;
+    ans = 1;
+    i = 0;
+    for (i = 0; i < e; i = i + 1) ans = ans * 2;
+    return ans;
+}
+
+void solveCase(int rounds) {
+    int tLead;
+    int ftScore;
+    int i;
+    int leadCard;
+    int isLeadTrump;
+    int score;
+    int wp;
+    int maxHornor;
+    int pi;
+    int pCard;
+    int hornor;
+    int w;
+    int mult;
+    int kCT;
+    int kFT;
+    int make;
+
+    tLead = dealer;
+    ftScore = 0;
+    w = 1;
+
+    i = 0;
+    for (i = 0; i < rounds; i = i + 1) {
+        leadCard = tricksCards[(i * 4) * MAX_PER_PLAY + 0];
+        isLeadTrump = isTrump(leadCard);
+        score = 0;
+        score = score + scorePlay(i * 4 + 0);
+        score = score + scorePlay(i * 4 + 1);
+        score = score + scorePlay(i * 4 + 2);
+        score = score + scorePlay(i * 4 + 3);
+
+        wp = 0;
+        maxHornor = cardsOrder[leadCard];
+
+        pi = 1;
+        for (pi = 1; pi < 4; pi = pi + 1) {
+            pCard = tricksCards[(i * 4 + pi) * MAX_PER_PLAY + 0];
+
+            if (isLeadTrump == 1) {
+                if (isTrump(pCard) == 0) {
+                    continue;
+                }
+            } else {
+                if (isTrump(pCard) == 0) {
+                    if (cardSuit(pCard) != cardSuit(leadCard)) continue;
+                }
+            }
+
+            hornor = cardsOrder[pCard];
+            if (hornor > maxHornor) {
+                wp = pi;
+                maxHornor = hornor;
+            }
+        }
+
+        tLead = (tLead + wp) % 4;
+        if (PItoTeam[tLead] == FT) ftScore = ftScore + score;
+        w = tricksLen[i * 4 + 0];
+    }
+
+    if (PItoTeam[tLead] == FT) {
+        mult = pow2(w);
+        i = 0;
+        for (i = 0; i < MAX_CARD_ID; i = i + 1) {
+            if (hiddenCards[i] > 0) {
+                ftScore = ftScore + mult * hiddenCards[i] * scoreCard(i);
+            }
+        }
+    }
+
+    kCT = 0;
+    kFT = 0;
+    make = 0;
+    if (ftScore < 80) make = 1;
+
+    if (ftScore == 0) kCT = 3;
+    else if (ftScore < 40) kCT = 2;
+    else if (ftScore < 80) kCT = 1;
+    else kFT = (ftScore - 80) / 40;
+
+    if (CT == 0) {
+        CR0 = CR0 + kCT;
+        CR1 = CR1 + kFT;
+    } else {
+        CR0 = CR0 + kFT;
+        CR1 = CR1 + kCT;
+    }
+
+    printf("%d\n", ftScore);
+
+    if (CR0 > 14) {
+        printf("Winner: Team 1\n");
+    } else if (CR1 > 14) {
+        printf("Winner: Team 2\n");
+    } else {
+        if (make == 1) dealer = (dealer + 2) % 4;
+        else dealer = (dealer + 1) % 4;
+        printf("%d %d %d\n", CR0, CR1, dealer);
+    }
+}
+
+int main() {
+    int T;
+    int t;
+    int rounds;
+    int r;
+    int pi;
+    int len;
+    int j;
+    int cardID;
+
+    T = getint();
+    t = 1;
+    for (t = 1; t <= T; t = t + 1) {
+        printf("Case #%d:\n", t);
+
+        mainSuit = getint();
+        dealer = getint();
+        CT = PItoTeam[dealer];
+        FT = 1 - CT;
+
+        CR0 = getint();
+        CR1 = getint();
+        if (CT == 0) CR = CR0;
+        else CR = CR1;
+
+        genCardOrders(CR, mainSuit);
+
+        rounds = getint();
+        tricksCnt = 0;
+
+        r = 0;
+        for (r = 0; r < rounds; r = r + 1) {
+            pi = 0;
+            for (pi = 0; pi < 4; pi = pi + 1) {
+                len = getint();
+                tricksLen[tricksCnt] = len;
+                j = 0;
+                for (j = 0; j < len; j = j + 1) {
+                    cardID = getint();
+                    tricksCards[tricksCnt * MAX_PER_PLAY + j] = cardID;
+                    hiddenCards[cardID] = hiddenCards[cardID] - 1;
+                }
+                sortPlayByOrder(tricksCnt);
+                tricksCnt = tricksCnt + 1;
+            }
+        }
+
+        solveCase(rounds);
+    }
+
+    return 0;
+}

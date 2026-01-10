@@ -1,0 +1,56 @@
+/*
+ * Bungee Jumping (UVa 10868) - Strict SysY adaptation
+ *
+ * Original uses doubles:
+ *   v^2 = 2*g*s - k*dl^2/w, with dl = max(0, s-l)
+ *
+ * Strict SysY has only int, so compare using integer arithmetic:
+ *   g = 9.81 = 981/100
+ *   stuck  <=> 2*981*s*w <= 100*k*dl^2
+ *   survive<=> 2*981*s*w - 100*k*dl^2 < 10000*w   (given v^2 > 0)
+ */
+
+int main() {
+    const int G100 = 981;
+    int k;
+    int l;
+    int s;
+    int w;
+    int dl;
+    int dl2;
+    int left;
+    int right;
+    int delta;
+
+    for (;;) {
+        k = getint();
+        l = getint();
+        s = getint();
+        w = getint();
+        if (k == 0) {
+            break;
+        }
+
+        dl = s - l;
+        if (dl < 0) {
+            dl = 0;
+        }
+        dl2 = dl * dl;
+
+        left = 2 * G100 * s * w;
+        right = 100 * k * dl2;
+
+        if (left <= right) {
+            printf("Stuck in the air.\n");
+        } else {
+            delta = left - right;
+            if (delta < 10000 * w) {
+                printf("James Bond survives.\n");
+            } else {
+                printf("Killed by the impact.\n");
+            }
+        }
+    }
+
+    return 0;
+}

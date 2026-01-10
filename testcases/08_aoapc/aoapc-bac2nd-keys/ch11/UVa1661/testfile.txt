@@ -1,0 +1,349 @@
+const int TOK_X = 10;
+const int TOK_ADD = 11;
+const int TOK_SUB = 12;
+const int TOK_MUL = 13;
+const int TOK_DIV = 14;
+
+const int MAXTOK = 128;
+
+int tokens[MAXTOK];
+
+int leftChild[MAXTOK];
+int rightChild[MAXTOK];
+int nodeToken[MAXTOK];
+int unknownNode[MAXTOK];
+int valMe[MAXTOK];
+int valDe[MAXTOK];
+
+int nodeCount;
+int parse_pos;
+
+int flag_none;
+int flag_multiple;
+int res_me;
+int res_de;
+
+int abs_int(int x) {
+    if (x < 0) return -x;
+    return x;
+}
+
+int gcd_int(int a, int b) {
+    int t;
+    a = abs_int(a);
+    b = abs_int(b);
+    if (a == 0) return b;
+    if (b == 0) return a;
+    for (; b != 0;) {
+        t = a % b;
+        a = b;
+        b = t;
+    }
+    return a;
+}
+
+void rat_reduce(int r[]) {
+    int me;
+    int de;
+    int g;
+    me = r[0];
+    de = r[1];
+    if (de < 0) {
+        de = -de;
+        me = -me;
+    }
+    if (me == 0) {
+        de = 1;
+    } else {
+        g = gcd_int(me, de);
+        if (g != 0) {
+            me = me / g;
+            de = de / g;
+        }
+    }
+    r[0] = me;
+    r[1] = de;
+}
+
+void rat_add2(int me1, int de1, int me2, int de2, int out[]) {
+    out[0] = me1 * de2 + me2 * de1;
+    out[1] = de1 * de2;
+    rat_reduce(out);
+}
+
+void rat_sub2(int me1, int de1, int me2, int de2, int out[]) {
+    out[0] = me1 * de2 - me2 * de1;
+    out[1] = de1 * de2;
+    rat_reduce(out);
+}
+
+void rat_mul2(int me1, int de1, int me2, int de2, int out[]) {
+    out[0] = me1 * me2;
+    out[1] = de1 * de2;
+    rat_reduce(out);
+}
+
+void rat_div2(int me1, int de1, int me2, int de2, int out[]) {
+    if (me2 == 0) {
+        out[0] = 0;
+        out[1] = 1;
+        return;
+    }
+    out[0] = me1 * de2;
+    out[1] = de1 * me2;
+    rat_reduce(out);
+}
+
+int rat_eq(int me1, int de1, int me2, int de2) {
+    int r;
+    r = 0;
+    if (me1 * de2 == me2 * de1) r = 1;
+    return r;
+}
+
+int is_digit(int tok) {
+    int r;
+    r = 0;
+    if (tok >= 0 && tok <= 9) r = 1;
+    return r;
+}
+
+int is_num(int tok) {
+    int r;
+    r = 0;
+    if (tok == TOK_X) r = 1;
+    if (is_digit(tok) == 1) r = 1;
+    return r;
+}
+
+int new_node(int tok) {
+    int idx;
+    nodeCount = nodeCount + 1;
+    idx = nodeCount;
+    leftChild[idx] = 0;
+    rightChild[idx] = 0;
+    nodeToken[idx] = tok;
+    unknownNode[idx] = 1;
+    valMe[idx] = 0;
+    valDe[idx] = 1;
+    return idx;
+}
+
+int parse_expr() {
+    int tok;
+    int idx;
+    if (parse_pos < 0) return 0;
+    tok = tokens[parse_pos];
+    parse_pos = parse_pos - 1;
+    idx = new_node(tok);
+    if (is_num(tok) == 1) return idx;
+    rightChild[idx] = parse_expr();
+    leftChild[idx] = parse_expr();
+    return idx;
+}
+
+int eval_expr(int idx) {
+    int tok;
+    int l;
+    int r;
+    int tmp[2];
+    tok = nodeToken[idx];
+
+    if (tok == TOK_X) {
+        unknownNode[idx] = 1;
+        return 1;
+    }
+    if (is_digit(tok) == 1) {
+        unknownNode[idx] = 0;
+        valMe[idx] = tok;
+        valDe[idx] = 1;
+        leftChild[idx] = 0;
+        rightChild[idx] = 0;
+        return 0;
+    }
+
+    l = leftChild[idx];
+    r = rightChild[idx];
+    eval_expr(l);
+    eval_expr(r);
+    unknownNode[idx] = 0;
+    if (unknownNode[l] == 1) unknownNode[idx] = 1;
+    if (unknownNode[r] == 1) unknownNode[idx] = 1;
+    if (unknownNode[idx] == 1) return 1;
+
+    if (tok == TOK_ADD) {
+        rat_add2(valMe[l], valDe[l], valMe[r], valDe[r], tmp);
+        valMe[idx] = tmp[0];
+        valDe[idx] = tmp[1];
+    } else if (tok == TOK_SUB) {
+        rat_sub2(valMe[l], valDe[l], valMe[r], valDe[r], tmp);
+        valMe[idx] = tmp[0];
+        valDe[idx] = tmp[1];
+    } else if (tok == TOK_MUL) {
+        rat_mul2(valMe[l], valDe[l], valMe[r], valDe[r], tmp);
+        valMe[idx] = tmp[0];
+        valDe[idx] = tmp[1];
+    } else {
+        rat_div2(valMe[l], valDe[l], valMe[r], valDe[r], tmp);
+        valMe[idx] = tmp[0];
+        valDe[idx] = tmp[1];
+    }
+
+    leftChild[idx] = 0;
+    rightChild[idx] = 0;
+    return 0;
+}
+
+void solve_expr(int idx, int rvMe, int rvDe) {
+    int tok;
+    int l;
+    int r;
+    int tmp[2];
+
+    if (flag_none == 1) return;
+    if (flag_multiple == 1) return;
+
+    tok = nodeToken[idx];
+
+    if (unknownNode[idx] == 0) {
+        if (rat_eq(valMe[idx], valDe[idx], rvMe, rvDe) == 1) flag_multiple = 1;
+        else flag_none = 1;
+        return;
+    }
+
+    if (tok == TOK_X) {
+        tmp[0] = rvMe;
+        tmp[1] = rvDe;
+        rat_reduce(tmp);
+        res_me = tmp[0];
+        res_de = tmp[1];
+        return;
+    }
+
+    l = leftChild[idx];
+    r = rightChild[idx];
+
+    if (unknownNode[l] == 1) {
+        if (tok == TOK_ADD) {
+            rat_sub2(rvMe, rvDe, valMe[r], valDe[r], tmp);
+            solve_expr(l, tmp[0], tmp[1]);
+            return;
+        }
+        if (tok == TOK_SUB) {
+            rat_add2(rvMe, rvDe, valMe[r], valDe[r], tmp);
+            solve_expr(l, tmp[0], tmp[1]);
+            return;
+        }
+        if (tok == TOK_MUL) {
+            if (rat_eq(rvMe, rvDe, 0, 1) == 1) {
+                if (rat_eq(valMe[r], valDe[r], 0, 1) == 1) {
+                    flag_multiple = 1;
+                    return;
+                }
+                solve_expr(l, 0, 1);
+                return;
+            }
+            if (rat_eq(valMe[r], valDe[r], 0, 1) == 1) {
+                flag_none = 1;
+                return;
+            }
+            rat_div2(rvMe, rvDe, valMe[r], valDe[r], tmp);
+            solve_expr(l, tmp[0], tmp[1]);
+            return;
+        }
+        if (tok == TOK_DIV) {
+            if (rat_eq(valMe[r], valDe[r], 0, 1) == 1) {
+                flag_none = 1;
+                return;
+            }
+            if (rat_eq(rvMe, rvDe, 0, 1) == 1) {
+                solve_expr(l, 0, 1);
+                return;
+            }
+            rat_mul2(rvMe, rvDe, valMe[r], valDe[r], tmp);
+            solve_expr(l, tmp[0], tmp[1]);
+            return;
+        }
+    } else {
+        if (tok == TOK_ADD) {
+            rat_sub2(rvMe, rvDe, valMe[l], valDe[l], tmp);
+            solve_expr(r, tmp[0], tmp[1]);
+            return;
+        }
+        if (tok == TOK_SUB) {
+            rat_sub2(valMe[l], valDe[l], rvMe, rvDe, tmp);
+            solve_expr(r, tmp[0], tmp[1]);
+            return;
+        }
+        if (tok == TOK_MUL) {
+            if (rat_eq(rvMe, rvDe, 0, 1) == 1) {
+                if (rat_eq(valMe[l], valDe[l], 0, 1) == 1) {
+                    flag_multiple = 1;
+                    return;
+                }
+                solve_expr(r, 0, 1);
+                return;
+            }
+            if (rat_eq(valMe[l], valDe[l], 0, 1) == 1) {
+                flag_none = 1;
+                return;
+            }
+            rat_div2(rvMe, rvDe, valMe[l], valDe[l], tmp);
+            solve_expr(r, tmp[0], tmp[1]);
+            return;
+        }
+        if (tok == TOK_DIV) {
+            if (rat_eq(rvMe, rvDe, 0, 1) == 1) {
+                if (rat_eq(valMe[l], valDe[l], 0, 1) == 1) {
+                    flag_multiple = 1;
+                    return;
+                }
+                flag_none = 1;
+                return;
+            }
+            if (rat_eq(valMe[l], valDe[l], 0, 1) == 1) {
+                flag_none = 1;
+                return;
+            }
+            rat_div2(valMe[l], valDe[l], rvMe, rvDe, tmp);
+            solve_expr(r, tmp[0], tmp[1]);
+            return;
+        }
+    }
+}
+
+int main() {
+    int T;
+    int tc;
+    int n;
+    int i;
+    int root;
+
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        n = getint();
+        for (i = 0; i < n; i = i + 1) {
+            tokens[i] = getint();
+        }
+
+        nodeCount = 0;
+        parse_pos = n - 1;
+        root = parse_expr();
+        eval_expr(root);
+
+        flag_none = 0;
+        flag_multiple = 0;
+        res_me = 0;
+        res_de = 1;
+        solve_expr(root, 0, 1);
+
+        if (flag_none == 1) {
+            printf("NONE\n");
+        } else if (flag_multiple == 1) {
+            printf("MULTIPLE\n");
+        } else {
+            printf("X = %d/%d\n", res_me, res_de);
+        }
+    }
+    return 0;
+}

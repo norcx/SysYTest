@@ -1,0 +1,122 @@
+// Holiday's Accommodation (tree edge contribution), Strict SysY version
+// Scaled down to fit MARS memory limits.
+
+const int MAXN = 2000;
+const int MAXM = 2 * MAXN + 5;
+
+int head[MAXN + 5];
+int to[MAXM];
+int wei[MAXM];
+int nxt[MAXM];
+int ecnt;
+
+int pa[MAXN + 5];
+int sub[MAXN + 5];
+int pwei[MAXN + 5];
+
+int st[MAXN + 5];
+int ord[MAXN + 5];
+
+void addEdge(int u, int v, int w) {
+  to[ecnt] = v;
+  wei[ecnt] = w;
+  nxt[ecnt] = head[u];
+  head[u] = ecnt;
+  ecnt = ecnt + 1;
+}
+
+int min2(int a, int b) {
+  if (a < b) return a;
+  return b;
+}
+
+int main() {
+  int T;
+  int t;
+  int N;
+  int i;
+  int X;
+  int Y;
+  int Z;
+  int top;
+  int ocnt;
+  int u;
+  int e;
+  int v;
+  int ans;
+  int s;
+
+  T = getint();
+  for (t = 1; t <= T; t = t + 1) {
+    N = getint();
+
+    ecnt = 0;
+    for (i = 1; i <= N; i = i + 1) {
+      head[i] = -1;
+      pa[i] = 0;
+      sub[i] = 0;
+      pwei[i] = 0;
+    }
+
+    for (i = 0; i < N - 1; i = i + 1) {
+      X = getint();
+      Y = getint();
+      Z = getint();
+      addEdge(X, Y, Z);
+      addEdge(Y, X, Z);
+    }
+
+    // Iterative DFS from root 1: build parent array and traversal order.
+    top = 0;
+    ocnt = 0;
+    pa[1] = 0;
+    st[top] = 1;
+    top = top + 1;
+
+    for (; top > 0;) {
+      top = top - 1;
+      u = st[top];
+      ord[ocnt] = u;
+      ocnt = ocnt + 1;
+
+      e = head[u];
+      for (; e != -1;) {
+        v = to[e];
+        if (v == pa[u]) {
+          e = nxt[e];
+          continue;
+        }
+        pa[v] = u;
+        pwei[v] = wei[e];
+        st[top] = v;
+        top = top + 1;
+        e = nxt[e];
+      }
+    }
+
+    // Post-order: compute subtree sizes.
+    for (i = ocnt - 1; i >= 0; i = i - 1) {
+      u = ord[i];
+      sub[u] = 1;
+      e = head[u];
+      for (; e != -1;) {
+        v = to[e];
+        if (v == pa[u]) {
+          e = nxt[e];
+          continue;
+        }
+        sub[u] = sub[u] + sub[v];
+        e = nxt[e];
+      }
+    }
+
+    ans = 0;
+    for (i = 2; i <= N; i = i + 1) {
+      s = min2(sub[i], N - sub[i]);
+      ans = ans + 2 * pwei[i] * s;
+    }
+
+    printf("Case #%d: %d\n", t, ans);
+  }
+  return 0;
+}

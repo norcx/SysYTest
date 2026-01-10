@@ -1,0 +1,91 @@
+/* Description:
+ *   Converted from LA4870 "Roller Coaster" DP solution.
+ *   Strict SysY constraints: int-only, 1D arrays, for-loops only, getint input, printf output.
+ */
+
+const int MAXN = 1000 + 5;
+const int MAXF = 20000 + 5;
+const int INF = 1000000007;
+
+int dp0[MAXF];
+int dp1[MAXF];
+int F[MAXN];
+int D[MAXN];
+
+int main() {
+    int N;
+    int K;
+    int L;
+    int i;
+    int f;
+
+    for (;;) {
+        N = getint();
+        K = getint();
+        L = getint();
+        if (N + K + L == 0) {
+            break;
+        }
+
+        int FF;
+        FF = 0;
+        for (i = 1; i <= N; i = i + 1) {
+            F[i] = getint();
+            D[i] = getint();
+            FF = FF + F[i];
+        }
+
+        for (f = 0; f <= FF; f = f + 1) {
+            dp0[f] = INF;
+        }
+        dp0[0] = 0;
+
+        for (i = 1; i <= N; i = i + 1) {
+            for (f = 0; f <= FF; f = f + 1) {
+                dp1[f] = INF;
+            }
+
+            for (f = 0; f <= FF; f = f + 1) {
+                int best;
+                best = INF;
+
+                int closev;
+                closev = dp0[f] - K;
+                if (closev < 0) {
+                    closev = 0;
+                }
+                if (closev < best) {
+                    best = closev;
+                }
+
+                if (f - F[i] >= 0) {
+                    int openv;
+                    openv = dp0[f - F[i]] + D[i];
+                    if (openv <= L) {
+                        if (openv < best) {
+                            best = openv;
+                        }
+                    }
+                }
+
+                dp1[f] = best;
+            }
+
+            for (f = 0; f <= FF; f = f + 1) {
+                dp0[f] = dp1[f];
+            }
+        }
+
+        int ans;
+        ans = 0;
+        for (f = FF; f >= 0; f = f - 1) {
+            if (dp0[f] <= L) {
+                ans = f;
+                break;
+            }
+        }
+        printf("%d\n", ans);
+    }
+
+    return 0;
+}

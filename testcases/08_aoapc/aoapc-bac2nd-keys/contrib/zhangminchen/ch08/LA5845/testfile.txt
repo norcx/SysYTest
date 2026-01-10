@@ -1,0 +1,126 @@
+/* Description:
+ *   Strict SysY translation of a C++ solution that:
+ *   - reads T testcases of intervals (from,to)
+ *   - sorts by (to asc, from asc)
+ *   - computes the same answer as the original solve()
+ */
+
+const int MAXN = 10000;
+
+int n;
+int seg_from[MAXN];
+int seg_to[MAXN];
+
+int less_seg(int f1, int t1, int f2, int t2) {
+    int res;
+    res = 0;
+    if (t1 < t2) {
+        res = 1;
+    } else {
+        if (t1 == t2 && f1 < f2) {
+            res = 1;
+        }
+    }
+    return res;
+}
+
+void swap_seg(int i, int j) {
+    int tmp;
+    tmp = seg_from[i];
+    seg_from[i] = seg_from[j];
+    seg_from[j] = tmp;
+
+    tmp = seg_to[i];
+    seg_to[i] = seg_to[j];
+    seg_to[j] = tmp;
+    return;
+}
+
+void sort_seg(int l, int r) {
+    int i;
+    int j;
+    int p_from;
+    int p_to;
+
+    if (l >= r) {
+        return;
+    }
+
+    i = l;
+    j = r;
+    p_from = seg_from[(l + r) / 2];
+    p_to = seg_to[(l + r) / 2];
+
+    for (; ; ) {
+        for (; ; ) {
+            if (less_seg(seg_from[i], seg_to[i], p_from, p_to) == 1) {
+                i = i + 1;
+            } else {
+                break;
+            }
+        }
+        for (; ; ) {
+            if (less_seg(p_from, p_to, seg_from[j], seg_to[j]) == 1) {
+                j = j - 1;
+            } else {
+                break;
+            }
+        }
+        if (i <= j) {
+            swap_seg(i, j);
+            i = i + 1;
+            j = j - 1;
+        } else {
+            break;
+        }
+    }
+
+    if (l < j) {
+        sort_seg(l, j);
+    }
+    if (i < r) {
+        sort_seg(i, r);
+    }
+    return;
+}
+
+int solve_case() {
+    int ans;
+    int last;
+    int i;
+    ans = 0;
+    last = -1;
+    for (i = 0; i < n; i = i + 1) {
+        if (seg_to[i] == last) {
+            continue;
+        }
+        if (seg_from[i] <= last) {
+            last = last + 1;
+        }
+        if (seg_from[i] > last) {
+            ans = ans + 1;
+            last = seg_to[i];
+        }
+    }
+    return ans - 1;
+}
+
+int main() {
+    int T;
+    int t;
+    int i;
+
+    T = getint();
+    for (t = 0; t < T; t = t + 1) {
+        n = getint();
+        for (i = 0; i < n; i = i + 1) {
+            seg_from[i] = getint();
+            seg_to[i] = getint();
+        }
+        if (n > 1) {
+            sort_seg(0, n - 1);
+        }
+        printf("%d\n", solve_case());
+    }
+    return 0;
+}

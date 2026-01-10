@@ -1,0 +1,103 @@
+/* IP Networks (NEERC 2005 / UVa1590), Strict SysY testcase.
+ * Input format (newline-separated integers):
+ *   Repeated testcases:
+ *     m
+ *     a1 b1 c1 d1
+ *     ...
+ *     am bm cm dm
+ *   Terminator:
+ *     0
+ */
+int ipOctets[512];
+int pow2[8];
+
+int getBitAt(int index, int pos) {
+  int oct;
+  int bitIndex;
+  int bit;
+  oct = ipOctets[index * 4 + pos / 8];
+  bitIndex = pos % 8;
+  bit = (oct / pow2[bitIndex]) % 2;
+  return bit;
+}
+
+void computeNetMask(int commonBits, int net[], int mask[]) {
+  int i;
+  int b;
+  int pos;
+  int maskBit;
+  int ipBit;
+  for (i = 0; i < 4; i = i + 1) {
+    net[i] = 0;
+    mask[i] = 0;
+    for (b = 0; b < 8; b = b + 1) {
+      pos = i * 8 + b;
+      maskBit = 0;
+      if (pos < commonBits) {
+        maskBit = 1;
+      }
+      if (maskBit == 1) {
+        mask[i] = mask[i] + pow2[b];
+      }
+      ipBit = 0;
+      if (maskBit == 1) {
+        ipBit = getBitAt(0, pos);
+      }
+      if (ipBit == 1) {
+        net[i] = net[i] + pow2[b];
+      }
+    }
+  }
+}
+
+int main() {
+  int m;
+  int i;
+  int j;
+  int p;
+  int baseBit;
+  int same;
+  int commonBits;
+  int net[4];
+  int mask[4];
+
+  pow2[0] = 128;
+  for (i = 1; i < 8; i = i + 1) {
+    pow2[i] = pow2[i - 1] / 2;
+  }
+
+  for (;;) {
+    m = getint();
+    if (m == 0) {
+      break;
+    }
+
+    for (i = 0; i < m; i = i + 1) {
+      for (j = 0; j < 4; j = j + 1) {
+        ipOctets[i * 4 + j] = getint();
+      }
+    }
+
+    commonBits = 0;
+    for (p = 0; p < 32; p = p + 1) {
+      baseBit = getBitAt(0, p);
+      same = 1;
+      for (i = 1; i < m; i = i + 1) {
+        if (getBitAt(i, p) != baseBit) {
+          same = 0;
+          break;
+        }
+      }
+      if (same == 0) {
+        break;
+      }
+      commonBits = p + 1;
+    }
+
+    computeNetMask(commonBits, net, mask);
+    printf("%d.%d.%d.%d\n", net[0], net[1], net[2], net[3]);
+    printf("%d.%d.%d.%d\n", mask[0], mask[1], mask[2], mask[3]);
+  }
+
+  return 0;
+}

@@ -1,0 +1,226 @@
+/* Description:
+ *   Converted from UVa1515 "Pool Construction" (Dinic max-flow).
+ *   Input is integer-encoded grid: 1 = '#'(grass), 0 = '.'(hole).
+ */
+const int INF = 1000000000;
+const int MAXV = 2605;
+const int MAXE = 60000;
+
+int w;
+int h;
+int poolCell[MAXV];
+
+int headArr[MAXV];
+int toArr[MAXE];
+int capArr[MAXE];
+int nextArr[MAXE];
+int levelArr[MAXV];
+int queueArr[MAXV];
+int curArr[MAXV];
+int edgeCnt;
+
+int min2(int a, int b) {
+  if (a < b) return a;
+  return b;
+}
+
+int revEdge(int e) {
+  if (e % 2 == 0) return e + 1;
+  return e - 1;
+}
+
+void init_graph(int n) {
+  int i;
+  for (i = 0; i < n; i = i + 1) headArr[i] = -1;
+  edgeCnt = 0;
+}
+
+void addEdge(int from, int to, int cap) {
+  toArr[edgeCnt] = to;
+  capArr[edgeCnt] = cap;
+  nextArr[edgeCnt] = headArr[from];
+  headArr[from] = edgeCnt;
+  edgeCnt = edgeCnt + 1;
+
+  toArr[edgeCnt] = from;
+  capArr[edgeCnt] = 0;
+  nextArr[edgeCnt] = headArr[to];
+  headArr[to] = edgeCnt;
+  edgeCnt = edgeCnt + 1;
+}
+
+int bfs(int s, int t, int n) {
+  int i;
+  int qh;
+  int qt;
+  int x;
+  int e;
+  int y;
+
+  for (i = 0; i < n; i = i + 1) levelArr[i] = -1;
+  qh = 0;
+  qt = 0;
+  queueArr[qt] = s;
+  qt = qt + 1;
+  levelArr[s] = 0;
+
+  for (; qh < qt; ) {
+    x = queueArr[qh];
+    qh = qh + 1;
+    e = headArr[x];
+    for (; e != -1; ) {
+      y = toArr[e];
+      if (levelArr[y] < 0 && capArr[e] > 0) {
+        levelArr[y] = levelArr[x] + 1;
+        queueArr[qt] = y;
+        qt = qt + 1;
+      }
+      e = nextArr[e];
+    }
+  }
+
+  if (levelArr[t] < 0) return 0;
+  return 1;
+}
+
+int dfs(int x, int t, int pushed) {
+  int e;
+  int y;
+  int tr;
+  int avail;
+  int r;
+
+  if (pushed == 0) return 0;
+  if (x == t) return pushed;
+
+  e = curArr[x];
+  for (; e != -1; ) {
+    y = toArr[e];
+    if (levelArr[y] == levelArr[x] + 1) {
+      avail = capArr[e];
+      if (avail > 0) {
+        tr = dfs(y, t, min2(pushed, avail));
+        if (tr > 0) {
+          capArr[e] = capArr[e] - tr;
+          r = revEdge(e);
+          capArr[r] = capArr[r] + tr;
+          curArr[x] = e;
+          return tr;
+        }
+      }
+    }
+    e = nextArr[e];
+    curArr[x] = e;
+  }
+
+  return 0;
+}
+
+int maxflow(int s, int t, int n) {
+  int flow;
+  int i;
+  int pushed;
+
+  flow = 0;
+  for (;;) {
+    if (bfs(s, t, n) == 0) break;
+    for (i = 0; i < n; i = i + 1) curArr[i] = headArr[i];
+    for (;;) {
+      pushed = dfs(s, t, INF);
+      if (pushed == 0) break;
+      flow = flow + pushed;
+    }
+  }
+  return flow;
+}
+
+int main() {
+  int T;
+  int dCost;
+  int fCost;
+  int bCost;
+  int tc;
+  int i;
+  int j;
+  int idx;
+  int idx2;
+  int cost;
+  int n;
+  int s;
+  int t;
+  int id;
+  int c;
+  int ans;
+
+  T = getint();
+  for (tc = 0; tc < T; tc = tc + 1) {
+    w = getint();
+    h = getint();
+    dCost = getint();
+    fCost = getint();
+    bCost = getint();
+
+    for (i = 0; i < h; i = i + 1) {
+      for (j = 0; j < w; j = j + 1) {
+        poolCell[i * w + j] = getint();
+      }
+    }
+
+    cost = 0;
+
+    for (i = 0; i < h; i = i + 1) {
+      idx = i * w;
+      idx2 = i * w + (w - 1);
+      if (poolCell[idx] == 0) {
+        poolCell[idx] = 1;
+        cost = cost + fCost;
+      }
+      if (poolCell[idx2] == 0) {
+        poolCell[idx2] = 1;
+        cost = cost + fCost;
+      }
+    }
+
+    for (j = 0; j < w; j = j + 1) {
+      idx = j;
+      idx2 = (h - 1) * w + j;
+      if (poolCell[idx] == 0) {
+        poolCell[idx] = 1;
+        cost = cost + fCost;
+      }
+      if (poolCell[idx2] == 0) {
+        poolCell[idx2] = 1;
+        cost = cost + fCost;
+      }
+    }
+
+    n = h * w + 2;
+    s = h * w;
+    t = h * w + 1;
+
+    init_graph(n);
+
+    for (i = 0; i < h; i = i + 1) {
+      for (j = 0; j < w; j = j + 1) {
+        id = i * w + j;
+        if (poolCell[id] == 1) {
+          c = INF;
+          if (i != 0 && i != h - 1 && j != 0 && j != w - 1) c = dCost;
+          addEdge(s, id, c);
+        } else {
+          addEdge(id, t, fCost);
+        }
+
+        if (i > 0) addEdge(id, id - w, bCost);
+        if (i < h - 1) addEdge(id, id + w, bCost);
+        if (j > 0) addEdge(id, id - 1, bCost);
+        if (j < w - 1) addEdge(id, id + 1, bCost);
+      }
+    }
+
+    ans = cost + maxflow(s, t, n);
+    printf("%d\n", ans);
+  }
+
+  return 0;
+}

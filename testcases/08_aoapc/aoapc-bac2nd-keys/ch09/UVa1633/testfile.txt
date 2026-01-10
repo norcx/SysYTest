@@ -1,0 +1,147 @@
+/* Description:
+ *   UVa 1633 "Dyslexic Gollum" counting DP, converted to Strict SysY.
+ *   Input: T, then T lines of n and k (newline separated integers).
+ *   Output: answer mod 1000000007 per testcase.
+ */
+
+const int MOD = 1000000007;
+const int MAXK = 10;
+const int MAXSTATE = 1024;
+const int MAXSTATE1 = 2048;
+
+int pow2_[16];
+int P[MAXSTATE1];
+int P1[MAXSTATE1];
+int dp0[MAXSTATE];
+int dp1[MAXSTATE];
+int g_k;
+
+void init_pow2() {
+    int i;
+    pow2_[0] = 1;
+    for (i = 1; i < 16; i = i + 1) {
+        pow2_[i] = pow2_[i - 1] * 2;
+    }
+}
+
+int add_mod(int a, int b) {
+    int s;
+    s = a + b;
+    if (s >= MOD) s = s - MOD;
+    return s;
+}
+
+int mul_mod(int a, int b) {
+    int res;
+    int x;
+    int y;
+    res = 0;
+    x = a;
+    if (x >= MOD) x = x % MOD;
+    if (x < 0) x = x + MOD;
+    y = b;
+    if (y < 0) y = y + MOD;
+    for (; y > 0; y = y / 2) {
+        if (y % 2 == 1) res = add_mod(res, x);
+        x = add_mod(x, x);
+    }
+    return res;
+}
+
+int pow_mod(int base, int exp) {
+    int res;
+    int p;
+    int e;
+    res = 1;
+    p = base;
+    if (p >= MOD) p = p % MOD;
+    if (p < 0) p = p + MOD;
+    e = exp;
+    for (; e > 0; e = e / 2) {
+        if (e % 2 == 1) res = mul_mod(res, p);
+        p = mul_mod(p, p);
+    }
+    return res;
+}
+
+void dfsP(int w, int b) {
+    if (w == g_k) {
+        P[b] = 1;
+        return;
+    }
+    if (w == g_k + 1) {
+        P1[b] = 1;
+        return;
+    }
+    dfsP(w + 2, b * 2);
+    dfsP(w + 2, (pow2_[w + 1] + 1) + b * 2);
+    return;
+}
+
+void init_pal(int k) {
+    int i;
+    g_k = k;
+    for (i = 0; i < MAXSTATE1; i = i + 1) {
+        P[i] = 0;
+        P1[i] = 0;
+    }
+    dfsP(1, 0);
+    dfsP(1, 1);
+    dfsP(2, 0);
+    dfsP(2, 3);
+}
+
+int solve(int n, int k) {
+    int i;
+    int b;
+    int pow2k;
+    int ans;
+    int nb0;
+    int nb1;
+
+    if (k > n) return pow_mod(2, n);
+    init_pal(k);
+
+    pow2k = pow2_[k];
+    for (b = 0; b < pow2k; b = b + 1) {
+        dp0[b] = 0;
+        dp1[b] = 0;
+        if (P[b] == 0) dp0[b] = 1;
+    }
+
+    for (i = k; i < n; i = i + 1) {
+        for (b = 0; b < pow2k; b = b + 1) dp1[b] = 0;
+        for (b = 0; b < pow2k; b = b + 1) {
+            if (dp0[b] != 0) {
+                nb0 = b * 2;
+                if (P1[nb0] == 0 && P[nb0 % pow2k] == 0) {
+                    dp1[nb0 % pow2k] = add_mod(dp1[nb0 % pow2k], dp0[b]);
+                }
+                nb1 = b * 2 + 1;
+                if (P1[nb1] == 0 && P[nb1 % pow2k] == 0) {
+                    dp1[nb1 % pow2k] = add_mod(dp1[nb1 % pow2k], dp0[b]);
+                }
+            }
+        }
+        for (b = 0; b < pow2k; b = b + 1) dp0[b] = dp1[b];
+    }
+
+    ans = 0;
+    for (b = 0; b < pow2k; b = b + 1) ans = add_mod(ans, dp0[b]);
+    return ans;
+}
+
+int main() {
+    int T;
+    int t;
+    int n;
+    int k;
+    init_pow2();
+    T = getint();
+    for (t = 0; t < T; t = t + 1) {
+        n = getint();
+        k = getint();
+        printf("%d\n", solve(n, k));
+    }
+    return 0;
+}

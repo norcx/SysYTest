@@ -1,0 +1,25 @@
+/* Description:
+ *   SysY translation of a small C++ Point demo:
+ *   constructs (a.x=3,a.y=0) and (b.x=1,b.y=2), prints (a+b).
+ */
+
+int main() {
+    int ax;
+    int ay;
+    int bx;
+    int by;
+    int sx;
+    int sy;
+
+    ax = 0;
+    ay = 0;
+    bx = 1;
+    by = 2;
+
+    ax = 3;
+    sx = ax + bx;
+    sy = ay + by;
+
+    printf("(%d,%d)\n", sx, sy);
+    return 0;
+}

@@ -1,0 +1,2 @@
+Cheese 1: Travel time = 40 sec
+Cheese 2: Travel time = 60 sec

@@ -1,0 +1,39 @@
+/* Description:
+ *   UVa1585 - Score
+ *
+ *   Original input is T lines of 'O'/'X'. Strict SysY supports `getint()` only,
+ *   so each line is encoded as:
+ *     n
+ *     v1
+ *     v2
+ *     ...
+ *     vn
+ *   where vi = 1 means 'O', vi = 0 means 'X'.
+ */
+
+int main() {
+    int T;
+    int tc;
+    T = getint();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        int n;
+        int i;
+        int cnt;
+        int sum;
+        n = getint();
+        cnt = 0;
+        sum = 0;
+        for (i = 0; i < n; i = i + 1) {
+            int v;
+            v = getint();
+            if (v == 1) {
+                cnt = cnt + 1;
+                sum = sum + cnt;
+            } else {
+                cnt = 0;
+            }
+        }
+        printf("%d\n", sum);
+    }
+    return 0;
+}

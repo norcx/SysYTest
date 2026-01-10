@@ -1,0 +1,12 @@
+Region 1
+Water level is 300 centimeters.
+5000 hundredths percent of the region is under water.
+
+Region 2
+Water level is 225 centimeters.
+6667 hundredths percent of the region is under water.
+
+Region 3
+Water level is 250 centimeters.
+2000 hundredths percent of the region is under water.
+

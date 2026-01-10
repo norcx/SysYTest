@@ -1,0 +1,108 @@
+/* Description:
+ *   UVa213 Message Decoding (Strict SysY adaptation).
+ *
+ *   Input is an integer stream:
+ *   - Header: ASCII codes; terminated by 10 or 13.
+ *   - Bitstream: 0/1 integers; same structure as original problem.
+ *   - Whole input terminates with a single -1 before the next header.
+ *
+ *   Output: decoded ASCII codes, one per line, then an extra line "10"
+ *   after each message to represent '\n'.
+ */
+
+int code[2048];
+
+int code_index(int len, int i) {
+    return len * 256 + i;
+}
+
+int pow2(int n) {
+    int r;
+    int i;
+    r = 1;
+    for (i = 0; i < n; i = i + 1) r = r * 2;
+    return r;
+}
+
+int read_raw() {
+    int x;
+    x = getint();
+    return x;
+}
+
+int read_non_nl() {
+    int ch;
+    int loop;
+    for (loop = 0; loop == 0; loop = 0) {
+        ch = read_raw();
+        if (ch == 10) {
+        } else if (ch == 13) {
+        } else {
+            return ch;
+        }
+    }
+    return 0;
+}
+
+int read_bits(int c) {
+    int v;
+    int i;
+    int b;
+    v = 0;
+    for (i = 0; i < c; i = i + 1) {
+        b = read_non_nl();
+        v = v * 2 + b;
+    }
+    return v;
+}
+
+int readcodes() {
+    int i;
+    int ch;
+    int len;
+    int limit;
+    int j;
+
+    for (i = 0; i < 2048; i = i + 1) code[i] = 0;
+
+    ch = read_non_nl();
+    if (ch == -1) return 0;
+    code[code_index(1, 0)] = ch;
+
+    for (len = 2; len <= 7; len = len + 1) {
+        limit = pow2(len) - 1;
+        for (j = 0; j < limit; j = j + 1) {
+            ch = read_raw();
+            if (ch == -1) return 0;
+            if (ch == 10) return 1;
+            if (ch == 13) return 1;
+            code[code_index(len, j)] = ch;
+        }
+    }
+    return 1;
+}
+
+int main() {
+    int len;
+    int v;
+    int limit;
+    int loop_outer;
+    int loop_len;
+    int loop_v;
+
+    for (loop_outer = 0; loop_outer == 0; loop_outer = 0) {
+        if (readcodes() == 0) break;
+        for (loop_len = 0; loop_len == 0; loop_len = 0) {
+            len = read_bits(3);
+            if (len == 0) break;
+            limit = pow2(len) - 1;
+            for (loop_v = 0; loop_v == 0; loop_v = 0) {
+                v = read_bits(len);
+                if (v == limit) break;
+                printf("%d\n", code[code_index(len, v)]);
+            }
+        }
+        printf("%d\n", 10);
+    }
+    return 0;
+}

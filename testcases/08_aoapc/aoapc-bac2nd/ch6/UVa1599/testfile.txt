@@ -1,0 +1,169 @@
+/* Description:
+ *   Converted from UVa 1599 (Ideal Path) reference solution.
+ *   Computes the lexicographically smallest edge-color sequence among all
+ *   shortest paths from node 0 to node n-1 in an undirected graph.
+ *
+ *   Input format for this testcase:
+ *     t
+ *     n
+ *     m
+ *     u v c  (repeated m times, 1-based vertices)
+ */
+
+const int MAXN = 2050;
+const int MAXE = 40050;
+const int INF = 1000000000;
+
+int n;
+int m;
+
+int head[MAXN];
+int to[MAXE];
+int nxt[MAXE];
+int col[MAXE];
+int edge_cnt;
+
+int dista[MAXN];
+int vis[MAXN];
+int q[MAXN];
+
+int frontier[MAXN];
+int frontier2[MAXN];
+int ans[MAXN];
+
+void init_graph(int n0) {
+  int i;
+  for (i = 0; i < n0; i = i + 1) head[i] = -1;
+  edge_cnt = 0;
+}
+
+void add_edge(int u, int v, int c) {
+  to[edge_cnt] = v;
+  col[edge_cnt] = c;
+  nxt[edge_cnt] = head[u];
+  head[u] = edge_cnt;
+  edge_cnt = edge_cnt + 1;
+}
+
+void rev_bfs() {
+  int i;
+  int headq;
+  int tailq;
+  int v;
+  int e;
+  int u;
+
+  for (i = 0; i < n; i = i + 1) {
+    vis[i] = 0;
+    dista[i] = INF;
+  }
+
+  dista[n - 1] = 0;
+  vis[n - 1] = 1;
+  q[0] = n - 1;
+  headq = 0;
+  tailq = 1;
+
+  for (headq = 0; headq < tailq; headq = headq + 1) {
+    v = q[headq];
+    for (e = head[v]; e != -1; e = nxt[e]) {
+      u = to[e];
+      if (vis[u] == 0) {
+        vis[u] = 1;
+        dista[u] = dista[v] + 1;
+        q[tailq] = u;
+        tailq = tailq + 1;
+      }
+    }
+  }
+}
+
+void build_path() {
+  int i;
+  int j;
+  int k;
+  int u;
+  int v;
+  int e;
+  int min_color;
+  int ans_len;
+  int fsize;
+  int fsize2;
+
+  ans_len = dista[0];
+  if (ans_len >= INF) {
+    printf("0\n");
+    printf("\n");
+    return;
+  }
+
+  for (i = 0; i < n; i = i + 1) vis[i] = 0;
+  vis[0] = 1;
+  fsize = 1;
+  frontier[0] = 0;
+
+  for (i = 0; i < ans_len; i = i + 1) {
+    min_color = INF;
+    for (j = 0; j < fsize; j = j + 1) {
+      u = frontier[j];
+      for (e = head[u]; e != -1; e = nxt[e]) {
+        v = to[e];
+        if (dista[u] == dista[v] + 1) {
+          if (col[e] < min_color) min_color = col[e];
+        }
+      }
+    }
+    ans[i] = min_color;
+
+    fsize2 = 0;
+    for (j = 0; j < fsize; j = j + 1) {
+      u = frontier[j];
+      for (e = head[u]; e != -1; e = nxt[e]) {
+        v = to[e];
+        if (dista[u] == dista[v] + 1 && vis[v] == 0 && col[e] == min_color) {
+          vis[v] = 1;
+          frontier2[fsize2] = v;
+          fsize2 = fsize2 + 1;
+        }
+      }
+    }
+
+    fsize = fsize2;
+    for (k = 0; k < fsize; k = k + 1) frontier[k] = frontier2[k];
+  }
+
+  printf("%d\n", ans_len);
+  if (ans_len > 0) {
+    printf("%d", ans[0]);
+    for (i = 1; i < ans_len; i = i + 1) printf(" %d", ans[i]);
+  }
+  printf("\n");
+}
+
+int main() {
+  int t;
+  int case_idx;
+  int i;
+  int u;
+  int v;
+  int c;
+
+  t = getint();
+  for (case_idx = 0; case_idx < t; case_idx = case_idx + 1) {
+    n = getint();
+    m = getint();
+    init_graph(n);
+    for (i = 0; i < m; i = i + 1) {
+      u = getint();
+      v = getint();
+      c = getint();
+      u = u - 1;
+      v = v - 1;
+      add_edge(u, v, c);
+      add_edge(v, u, c);
+    }
+    rev_bfs();
+    build_path();
+  }
+  return 0;
+}

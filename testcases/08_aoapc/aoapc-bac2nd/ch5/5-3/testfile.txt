@@ -1,0 +1,26 @@
+/* Description:
+ *   Swap two (x,y) points; no input/output.
+ */
+
+int main() {
+    int p1x;
+    int p1y;
+    int p2x;
+    int p2y;
+    int t;
+
+    p1x = 0;
+    p1y = 0;
+    p2x = 0;
+    p2y = 0;
+
+    t = p1x;
+    p1x = p2x;
+    p2x = t;
+
+    t = p1y;
+    p1y = p2y;
+    p2y = t;
+
+    return 0;
+}

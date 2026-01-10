@@ -1,0 +1,177 @@
+/* Description:
+ * A Strict SysY re-implementation of UVa 230 "Borrowers" core logic.
+ *
+ * - Books are ordered by (authorKey, titleKey), both integers.
+ * - Commands are integer-coded:
+ *     1 titleKey  -> BORROW titleKey
+ *     2 titleKey  -> RETURN titleKey
+ *     3           -> SHELVE
+ *     0           -> END
+ * - Output is numeric (titleKey) using SysY-compatible printf formats.
+ */
+
+const int MAXN = 50;
+
+int n;
+int authorKey[MAXN];
+int titleKey[MAXN];
+
+int lib[MAXN];
+int libLen;
+
+int shelf[MAXN];
+int shelfLen;
+
+int lessBook(int i, int j) {
+    if (authorKey[i] < authorKey[j]) return 1;
+    if (authorKey[i] > authorKey[j]) return 0;
+    if (titleKey[i] < titleKey[j]) return 1;
+    return 0;
+}
+
+int findIndexByTitle(int t) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        if (titleKey[i] == t) return i;
+    }
+    return -1;
+}
+
+int findPosInLib(int idx) {
+    int i;
+    for (i = 0; i < libLen; i = i + 1) {
+        if (lib[i] == idx) return i;
+    }
+    return -1;
+}
+
+int findPosInShelf(int idx) {
+    int i;
+    for (i = 0; i < shelfLen; i = i + 1) {
+        if (shelf[i] == idx) return i;
+    }
+    return -1;
+}
+
+void removeFromLib(int idx) {
+    int pos;
+    int i;
+    pos = findPosInLib(idx);
+    if (pos < 0) return;
+    for (i = pos; i + 1 < libLen; i = i + 1) {
+        lib[i] = lib[i + 1];
+    }
+    libLen = libLen - 1;
+}
+
+void removeFromShelf(int idx) {
+    int pos;
+    int i;
+    pos = findPosInShelf(idx);
+    if (pos < 0) return;
+    for (i = pos; i + 1 < shelfLen; i = i + 1) {
+        shelf[i] = shelf[i + 1];
+    }
+    shelfLen = shelfLen - 1;
+}
+
+void insertIntoShelf(int idx) {
+    int pos;
+    int i;
+    pos = 0;
+    for (i = 0; i < shelfLen; i = i + 1) {
+        if (lessBook(idx, shelf[i]) == 1) {
+            pos = i;
+            i = shelfLen;
+        } else {
+            pos = i + 1;
+        }
+    }
+    for (i = shelfLen; i > pos; i = i - 1) {
+        shelf[i] = shelf[i - 1];
+    }
+    shelf[pos] = idx;
+    shelfLen = shelfLen + 1;
+}
+
+int insertIntoLibGetPos(int idx) {
+    int pos;
+    int i;
+    pos = 0;
+    for (i = 0; i < libLen; i = i + 1) {
+        if (lessBook(idx, lib[i]) == 1) {
+            pos = i;
+            i = libLen;
+        } else {
+            pos = i + 1;
+        }
+    }
+    for (i = libLen; i > pos; i = i - 1) {
+        lib[i] = lib[i - 1];
+    }
+    lib[pos] = idx;
+    libLen = libLen + 1;
+    return pos;
+}
+
+void doBorrowByIndex(int idx) {
+    int pos;
+    pos = findPosInLib(idx);
+    if (pos >= 0) removeFromLib(idx);
+    else removeFromShelf(idx);
+}
+
+void doReturnByIndex(int idx) {
+    insertIntoShelf(idx);
+}
+
+void doShelve() {
+    int i;
+    for (i = 0; i < shelfLen; i = i + 1) {
+        int idx;
+        int pos;
+        idx = shelf[i];
+        pos = insertIntoLibGetPos(idx);
+        if (pos == 0) {
+            printf("Put %d first\n", titleKey[idx]);
+        } else {
+            int prevIdx;
+            prevIdx = lib[pos - 1];
+            printf("Put %d after %d\n", titleKey[idx], titleKey[prevIdx]);
+        }
+    }
+    shelfLen = 0;
+    printf("END\n");
+}
+
+int main() {
+    int i;
+    int cmd;
+    int t;
+    int idx;
+
+    n = getint();
+    libLen = 0;
+    shelfLen = 0;
+
+    for (i = 0; i < n; i = i + 1) {
+        authorKey[i] = getint();
+        titleKey[i] = getint();
+        insertIntoLibGetPos(i);
+    }
+
+    for (;;) {
+        cmd = getint();
+        if (cmd == 0) return 0;
+        if (cmd == 3) {
+            doShelve();
+        } else {
+            t = getint();
+            idx = findIndexByTitle(t);
+            if (cmd == 1) doBorrowByIndex(idx);
+            else doReturnByIndex(idx);
+        }
+    }
+
+    return 0;
+}

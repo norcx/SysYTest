@@ -1,0 +1,217 @@
+/* Description:
+ *   Strict SysY translation of "Queue and A" (UVa 822) simulation.
+ *   Data structures are refactored into small fixed-size arrays.
+ */
+
+const int MAXN = 21;
+const int MAXM = 8;
+const int MAXK = 21;
+const int MAXE = 512;
+
+int n;
+int m;
+int kase;
+
+int reqOrigTid[MAXN];
+int reqNum[MAXN];
+int reqT0[MAXN];
+int reqT[MAXN];
+int reqDt[MAXN];
+
+int reqQueueCount[MAXN];
+
+int staffPid[MAXM];
+int staffK[MAXM];
+int staffTids[MAXM * MAXK];
+int staffLast[MAXM];
+
+int freeStaff[MAXM];
+int chosenTid[MAXM];
+
+int eventTime[MAXE];
+int eventId[MAXE];
+int eventIsReq[MAXE];
+int eventCount;
+
+int pendingTotal;
+int freeStaffCount;
+int curTime;
+
+void pushEvent(int t, int id, int isReq) {
+    eventTime[eventCount] = t;
+    eventId[eventCount] = id;
+    eventIsReq[eventCount] = isReq;
+    eventCount = eventCount + 1;
+}
+
+int findMinEventTime() {
+    int i;
+    int mn;
+    mn = eventTime[0];
+    i = 1;
+    for (i = 1; i < eventCount; i = i + 1) {
+        if (eventTime[i] < mn) mn = eventTime[i];
+    }
+    return mn;
+}
+
+int mapTaskId(int tid) {
+    int i;
+    for (i = 0; i < n; i = i + 1) {
+        if (reqOrigTid[i] == tid) return i;
+    }
+    return 0;
+}
+
+void simulateScenario() {
+    int i;
+    int newCount;
+    int sid;
+    int canAssign;
+    int j;
+    int tid;
+    int best;
+
+    for (;;) {
+        if (eventCount == 0) break;
+
+        curTime = findMinEventTime();
+
+        newCount = 0;
+        for (i = 0; i < eventCount; i = i + 1) {
+            if (eventTime[i] == curTime) {
+                if (eventIsReq[i] == 1) {
+                    reqQueueCount[eventId[i]] = reqQueueCount[eventId[i]] + 1;
+                    pendingTotal = pendingTotal + 1;
+                } else {
+                    sid = eventId[i];
+                    if (freeStaff[sid] == 0) {
+                        freeStaff[sid] = 1;
+                        freeStaffCount = freeStaffCount + 1;
+                    }
+                }
+            } else {
+                eventTime[newCount] = eventTime[i];
+                eventId[newCount] = eventId[i];
+                eventIsReq[newCount] = eventIsReq[i];
+                newCount = newCount + 1;
+            }
+        }
+        eventCount = newCount;
+
+        for (;;) {
+            if (pendingTotal == 0) break;
+            if (freeStaffCount == 0) break;
+
+            canAssign = 0;
+            for (i = 0; i < m; i = i + 1) {
+                chosenTid[i] = -1;
+                if (freeStaff[i] == 1) {
+                    for (j = 0; j < staffK[i]; j = j + 1) {
+                        tid = staffTids[i * MAXK + j];
+                        if (reqQueueCount[tid] > 0) {
+                            chosenTid[i] = tid;
+                            canAssign = 1;
+                            j = staffK[i];
+                        }
+                    }
+                }
+            }
+
+            if (canAssign == 0) break;
+
+            for (tid = 0; tid < n; tid = tid + 1) {
+                for (;;) {
+                    if (reqQueueCount[tid] == 0) break;
+
+                    best = -1;
+                    for (i = 0; i < m; i = i + 1) {
+                        if (freeStaff[i] == 1 && chosenTid[i] == tid) {
+                            if (best < 0) best = i;
+                            else {
+                                if (staffLast[i] < staffLast[best]) best = i;
+                                else if (staffLast[i] == staffLast[best] && staffPid[i] < staffPid[best]) best = i;
+                            }
+                        }
+                    }
+
+                    if (best < 0) break;
+
+                    reqQueueCount[tid] = reqQueueCount[tid] - 1;
+                    pendingTotal = pendingTotal - 1;
+                    freeStaff[best] = 0;
+                    freeStaffCount = freeStaffCount - 1;
+                    chosenTid[best] = -1;
+                    staffLast[best] = curTime;
+                    pushEvent(curTime + reqT[tid], best, 0);
+                }
+            }
+        }
+
+        if (eventCount == 0) {
+            printf("Scenario %d: All requests are serviced within %d minutes.\n", kase, curTime);
+            kase = kase + 1;
+        }
+    }
+}
+
+int main() {
+    int i;
+    int j;
+    int tid;
+    int pid;
+    int k;
+
+    kase = 1;
+
+    for (;;) {
+        n = getint();
+        if (n == 0) break;
+
+        eventCount = 0;
+        pendingTotal = 0;
+        freeStaffCount = 0;
+
+        for (i = 0; i < MAXN; i = i + 1) reqQueueCount[i] = 0;
+        for (i = 0; i < MAXM; i = i + 1) {
+            freeStaff[i] = 0;
+            chosenTid[i] = -1;
+            staffLast[i] = 0;
+        }
+
+        for (i = 0; i < n; i = i + 1) {
+            reqOrigTid[i] = getint();
+            reqNum[i] = getint();
+            reqT0[i] = getint();
+            reqT[i] = getint();
+            reqDt[i] = getint();
+
+            for (j = 0; j < reqNum[i]; j = j + 1) {
+                pushEvent(reqT0[i] + reqDt[i] * j, i, 1);
+            }
+        }
+
+        m = getint();
+        for (i = 0; i < m; i = i + 1) {
+            pid = getint();
+            k = getint();
+            staffPid[i] = pid;
+            staffK[i] = k;
+
+            for (j = 0; j < k; j = j + 1) {
+                tid = getint();
+                staffTids[i * MAXK + j] = mapTaskId(tid);
+            }
+
+            for (j = k; j < MAXK; j = j + 1) staffTids[i * MAXK + j] = 0;
+
+            staffLast[i] = 0;
+            freeStaff[i] = 0;
+            pushEvent(0, i, 0);
+        }
+
+        simulateScenario();
+    }
+
+    return 0;
+}

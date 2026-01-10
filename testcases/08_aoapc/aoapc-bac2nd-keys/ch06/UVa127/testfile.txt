@@ -1,0 +1,161 @@
+/* Description:
+ *   UVa 127 "Accordian" Patience (converted to Strict SysY).
+ *
+ * Input (SysY):
+ *   Repeated games, each game has 52 integers (1..52) for cards, then a sentinel 0 to end.
+ * Output:
+ *   Same format as the original solution: "<k> pile(s) remaining: <sizes...>"
+ */
+
+const int PILE_CNT = 52;
+const int PILE_SIZE = 52;
+const int HEAD = 0;
+const int END = 53;
+
+int pileTop[54];
+int prevPile[54];
+int nextPile[54];
+int pileCards[2704];
+
+int matchCard(int c1, int c2) {
+    int r1;
+    int r2;
+    int s1;
+    int s2;
+    r1 = (c1 - 1) / 4;
+    r2 = (c2 - 1) / 4;
+    if (r1 == r2) return 1;
+    s1 = (c1 - 1) % 4;
+    s2 = (c2 - 1) % 4;
+    if (s1 == s2) return 1;
+    return 0;
+}
+
+int topCard(int p) {
+    return pileCards[(p - 1) * PILE_SIZE + pileTop[p] - 1];
+}
+
+int popCard(int p) {
+    int card;
+    card = pileCards[(p - 1) * PILE_SIZE + pileTop[p] - 1];
+    pileTop[p] = pileTop[p] - 1;
+    return card;
+}
+
+void pushCard(int p, int card) {
+    pileCards[(p - 1) * PILE_SIZE + pileTop[p]] = card;
+    pileTop[p] = pileTop[p] + 1;
+}
+
+int getLeft3(int p) {
+    int i;
+    for (i = 0; i < 3; i = i + 1) {
+        p = prevPile[p];
+        if (p == HEAD) return HEAD;
+    }
+    return p;
+}
+
+void solveGame() {
+    int from;
+    int to;
+    int cur;
+    int l3;
+    int l1;
+    int card;
+
+    for (;;) {
+        from = HEAD;
+        to = HEAD;
+
+        cur = nextPile[HEAD];
+        for (; cur != END; cur = nextPile[cur]) {
+            l3 = getLeft3(cur);
+            if (l3 != HEAD) {
+                if (matchCard(topCard(l3), topCard(cur)) == 1) {
+                    from = cur;
+                    to = l3;
+                    break;
+                }
+            }
+
+            l1 = prevPile[cur];
+            if (l1 != HEAD) {
+                if (matchCard(topCard(l1), topCard(cur)) == 1) {
+                    from = cur;
+                    to = l1;
+                    break;
+                }
+            }
+        }
+
+        if (from == HEAD) break;
+
+        card = popCard(from);
+        pushCard(to, card);
+
+        if (pileTop[from] == 0) {
+            int p;
+            int n;
+            p = prevPile[from];
+            n = nextPile[from];
+            nextPile[p] = n;
+            prevPile[n] = p;
+        }
+    }
+}
+
+void printResult() {
+    int cnt;
+    int cur;
+    cnt = 0;
+
+    cur = nextPile[HEAD];
+    for (; cur != END; cur = nextPile[cur]) cnt = cnt + 1;
+
+    printf("%d", cnt);
+    if (cnt == 1) printf(" pile remaining:");
+    else printf(" piles remaining:");
+
+    cur = nextPile[HEAD];
+    for (; cur != END; cur = nextPile[cur]) printf(" %d", pileTop[cur]);
+    printf("\n");
+}
+
+int main() {
+    int first;
+    int i;
+    int card;
+
+    for (;;) {
+        first = getint();
+        if (first == 0) break;
+
+        pileTop[HEAD] = 0;
+        prevPile[HEAD] = HEAD;
+        nextPile[HEAD] = 1;
+        prevPile[END] = PILE_CNT;
+        nextPile[END] = END;
+
+        pileTop[1] = 1;
+        pileCards[0] = first;
+        prevPile[1] = HEAD;
+        nextPile[1] = 2;
+
+        for (i = 2; i <= PILE_CNT; i = i + 1) {
+            card = getint();
+            pileTop[i] = 1;
+            pileCards[(i - 1) * PILE_SIZE] = card;
+            prevPile[i] = i - 1;
+            nextPile[i] = i + 1;
+        }
+
+        nextPile[PILE_CNT] = END;
+        prevPile[END] = PILE_CNT;
+
+        solveGame();
+        printResult();
+    }
+
+    return 0;
+}

@@ -1,0 +1,171 @@
+// UVa11082 Matrix Decompressing (Strict SysY translation)
+// Original idea: Edmonds-Karp maxflow; refactored to array-based graph.
+
+const int MAXR = 50;
+const int MAXC = 50;
+const int MAXV = MAXR + MAXC + 2;
+const int MAXE = 6000;
+const int INF = 1000000000;
+
+int nNodes;
+int head[MAXV];
+int to[MAXE];
+int cap[MAXE];
+int flow[MAXE];
+int from[MAXE];
+int nxt[MAXE];
+int edgeCnt;
+
+int a[MAXV];
+int p[MAXV];
+int q[MAXV];
+
+int cellEdge[MAXR * MAXC];
+
+int min2(int x, int y) {
+  if (x < y) return x;
+  return y;
+}
+
+void init_graph(int n) {
+  int i;
+  nNodes = n;
+  edgeCnt = 0;
+  for (i = 0; i < nNodes; i = i + 1) head[i] = -1;
+}
+
+void add_edge(int u, int v, int c) {
+  from[edgeCnt] = u;
+  to[edgeCnt] = v;
+  cap[edgeCnt] = c;
+  flow[edgeCnt] = 0;
+  nxt[edgeCnt] = head[u];
+  head[u] = edgeCnt;
+  edgeCnt = edgeCnt + 1;
+
+  from[edgeCnt] = v;
+  to[edgeCnt] = u;
+  cap[edgeCnt] = 0;
+  flow[edgeCnt] = 0;
+  nxt[edgeCnt] = head[v];
+  head[v] = edgeCnt;
+  edgeCnt = edgeCnt + 1;
+}
+
+int maxflow(int s, int t) {
+  int total;
+  int iter;
+  int i;
+  total = 0;
+
+  for (iter = 0; iter < 1000000; iter = iter + 1) {
+    for (i = 0; i < nNodes; i = i + 1) {
+      a[i] = 0;
+      p[i] = -1;
+    }
+
+    int qh;
+    int qt;
+    qh = 0;
+    qt = 0;
+    q[qt] = s;
+    qt = qt + 1;
+    a[s] = INF;
+
+    for (qh = 0; qh < qt; qh = qh + 1) {
+      int x;
+      int ei;
+      x = q[qh];
+      for (ei = head[x]; ei != -1; ei = nxt[ei]) {
+        int y;
+        int residual;
+        y = to[ei];
+        residual = cap[ei] - flow[ei];
+        if (a[y] == 0 && residual > 0) {
+          p[y] = ei;
+          a[y] = min2(a[x], residual);
+          q[qt] = y;
+          qt = qt + 1;
+        }
+      }
+      if (a[t] != 0) break;
+    }
+
+    if (a[t] == 0) break;
+
+    int inc;
+    int u;
+    inc = a[t];
+    for (u = t; u != s; u = from[p[u]]) {
+      int e;
+      int re;
+      e = p[u];
+      if (e % 2 == 0) re = e + 1;
+      else re = e - 1;
+      flow[e] = flow[e] + inc;
+      flow[re] = flow[re] - inc;
+    }
+    total = total + inc;
+  }
+
+  return total;
+}
+
+int main() {
+  int T;
+  int kase;
+  T = getint();
+
+  for (kase = 1; kase <= T; kase = kase + 1) {
+    int R;
+    int C;
+    int v;
+    int last;
+    int i;
+    int j;
+
+    R = getint();
+    C = getint();
+    init_graph(R + C + 2);
+
+    last = 0;
+    for (i = 1; i <= R; i = i + 1) {
+      v = getint();
+      add_edge(0, i, v - last - C);
+      last = v;
+    }
+
+    last = 0;
+    for (i = 1; i <= C; i = i + 1) {
+      v = getint();
+      add_edge(R + i, R + C + 1, v - last - R);
+      last = v;
+    }
+
+    for (i = 1; i <= R; i = i + 1) {
+      for (j = 1; j <= C; j = j + 1) {
+        int idx;
+        add_edge(i, R + j, 19);
+        idx = (i - 1) * MAXC + (j - 1);
+        cellEdge[idx] = edgeCnt - 2;
+      }
+    }
+
+    maxflow(0, R + C + 1);
+
+    printf("Matrix %d\n", kase);
+    for (i = 1; i <= R; i = i + 1) {
+      for (j = 1; j <= C; j = j + 1) {
+        int idx2;
+        int e2;
+        idx2 = (i - 1) * MAXC + (j - 1);
+        e2 = cellEdge[idx2];
+        printf("%d ", flow[e2] + 1);
+      }
+      printf("\n");
+    }
+    printf("\n");
+  }
+
+  return 0;
+}

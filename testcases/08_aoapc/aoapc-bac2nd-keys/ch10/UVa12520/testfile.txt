@@ -1,0 +1,80 @@
+/*
+  UVa12520 Square Garden (scaled to int for SysY)
+  Input: repeated pairs (L, N), stop when L == 0 (still provide N).
+  Output: answer per case.
+*/
+
+int min_int(int a, int b) {
+  if (a < b) return a;
+  return b;
+}
+
+int max_int(int a, int b) {
+  if (a > b) return a;
+  return b;
+}
+
+int solve(int L, int N) {
+  int g;
+  g = (L * L + 1) / 2;
+  if (N <= g) return 4 * N;
+
+  if (L % 2) {
+    int tN;
+    int ans1;
+    int ans2;
+    int e;
+    int limit;
+
+    tN = N - g;
+    ans1 = 4 * g;
+    ans2 = 4 * (g - 1);
+
+    limit = (L / 2) * 4;
+    e = min_int(tN, limit);
+    ans1 = ans1 - 2 * e;
+    tN = tN - e;
+    ans1 = ans1 - tN * 4;
+
+    tN = N - (g - 1);
+    tN = tN - min_int(4, tN);
+    limit = (L / 2 - 1) * 4;
+    e = min_int(limit, tN);
+    ans2 = ans2 - 2 * e;
+    tN = tN - e;
+    ans2 = ans2 - 4 * tN;
+
+    return max_int(ans1, ans2);
+  }
+
+  {
+    int tN;
+    int ans;
+    int e;
+    int limit;
+
+    tN = N - g;
+    ans = g * 4;
+    tN = tN - min_int(tN, 2);
+    limit = L * 2 - 4;
+    e = min_int(tN, limit);
+    ans = ans - 2 * e;
+    tN = tN - e;
+    ans = ans - 4 * tN;
+    return ans;
+  }
+
+  return 0;
+}
+
+int main() {
+  int l;
+  int n;
+  for (;;) {
+    l = getint();
+    n = getint();
+    if (l == 0) break;
+    printf("%d\n", solve(l, n));
+  }
+  return 0;
+}

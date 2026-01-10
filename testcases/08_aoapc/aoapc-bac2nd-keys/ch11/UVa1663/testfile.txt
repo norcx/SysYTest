@@ -1,0 +1,146 @@
+/* Description:
+ * Purifying Machine (UVa 1663) core logic:
+ * Given a set of N-bit strings (each input pattern has 0/1 and optional single '*'),
+ * build a graph on present strings where edges connect Hamming distance 1.
+ * Output |V| - maximum_matching in the induced bipartite graph (even/odd parity).
+ *
+ * SysY input encoding (integers only):
+ * Repeated testcases:
+ *   N
+ *   M
+ *   then M patterns, each as N integers (one per line):
+ *     0 or 1 for bit, 2 means '*'
+ * Terminates when N == 0 (still followed by one integer M in input).
+ */
+
+const int MAXN = 10;
+const int MAXSZ = 1024;
+
+int Set[MAXSZ];
+int Parity[MAXSZ];
+int UsedR[MAXSZ];
+int LeftMatch[MAXSZ];
+int Pow2[MAXN];
+
+int N;
+int M;
+int SZ;
+
+void fill_int(int a[], int n, int val) {
+  int i;
+  for (i = 0; i < n; i = i + 1) a[i] = val;
+}
+
+void precompute_pow2() {
+  int i;
+  Pow2[0] = 1;
+  for (i = 1; i < N; i = i + 1) Pow2[i] = Pow2[i - 1] * 2;
+}
+
+void precompute_parity() {
+  int i;
+  int b;
+  int ones;
+  for (i = 0; i < SZ; i = i + 1) {
+    ones = 0;
+    for (b = 0; b < N; b = b + 1) ones = ones + (i / Pow2[b]) % 2;
+    Parity[i] = ones % 2;
+  }
+}
+
+int dfs(int u) {
+  int b;
+  int pow;
+  int bit;
+  int v;
+  for (b = 0; b < N; b = b + 1) {
+    pow = Pow2[b];
+    bit = (u / pow) % 2;
+    if (bit == 0) v = u + pow;
+    else v = u - pow;
+
+    if (v < 0) continue;
+    if (v >= SZ) continue;
+    if (Set[v] == 0) continue;
+    if (UsedR[v] == 1) continue;
+    UsedR[v] = 1;
+
+    if (LeftMatch[v] == -1) {
+      LeftMatch[v] = u;
+      return 1;
+    }
+    if (dfs(LeftMatch[v]) == 1) {
+      LeftMatch[v] = u;
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int solve_matching() {
+  int u;
+  int matchCount;
+  fill_int(LeftMatch, SZ, -1);
+  matchCount = 0;
+  for (u = 0; u < SZ; u = u + 1) {
+    if (Set[u] == 0) continue;
+    if (Parity[u] != 0) continue;
+    fill_int(UsedR, SZ, 0);
+    if (dfs(u) == 1) matchCount = matchCount + 1;
+  }
+  return matchCount;
+}
+
+int main() {
+  int i;
+  int j;
+  int c;
+  int x;
+  int v;
+  int bit;
+  int cnt;
+  int matchCount;
+  int v2;
+
+  for (;;) {
+    N = getint();
+    M = getint();
+    if (N == 0) break;
+
+    SZ = 1;
+    for (i = 0; i < N; i = i + 1) SZ = SZ * 2;
+
+    fill_int(Set, SZ, 0);
+    precompute_pow2();
+
+    for (i = 0; i < M; i = i + 1) {
+      x = -1;
+      v = 0;
+      for (j = 0; j < N; j = j + 1) {
+        c = getint();
+        if (c == 2) {
+          x = j;
+          bit = 1;
+        } else bit = c;
+        v = v * 2 + bit;
+      }
+
+      Set[v] = 1;
+      if (x != -1) {
+        v2 = v - Pow2[N - x - 1];
+        Set[v2] = 1;
+      }
+    }
+
+    cnt = 0;
+    for (i = 0; i < SZ; i = i + 1) {
+      if (Set[i] == 1) cnt = cnt + 1;
+    }
+
+    precompute_parity();
+    matchCount = solve_matching();
+    printf("%d\n", cnt - matchCount);
+  }
+
+  return 0;
+}

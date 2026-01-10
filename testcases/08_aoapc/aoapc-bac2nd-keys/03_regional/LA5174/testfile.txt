@@ -1,0 +1,217 @@
+const int FCNT = 6;
+const int FONT_STRIDE = 7;
+const int ASCII_SIZE = 256;
+
+const int MAXTOK = 2048;
+const int MAXCH = 32768;
+
+int Fonts[ASCII_SIZE * FONT_STRIDE];
+int tokStart[MAXTOK];
+int tokLen[MAXTOK];
+int tokChars[MAXCH];
+int tokCharCnt;
+
+int spaceWidth(int ft, int pt) {
+    int w;
+    w = Fonts[32 * FONT_STRIDE + ft];
+    return (pt * w + 5) / 10;
+}
+
+int tokenWidth(int ft, int pt, int idx) {
+    int ans;
+    int i;
+    int start;
+    int len;
+    int c;
+    ans = 0;
+    start = tokStart[idx];
+    len = tokLen[idx];
+    for (i = 0; i < len; i = i + 1) {
+        c = tokChars[start + i];
+        ans = ans + (pt * Fonts[c * FONT_STRIDE + ft] + 5) / 10;
+    }
+    return ans;
+}
+
+int tokenHash(int idx) {
+    int h;
+    int i;
+    int start;
+    int len;
+    int c;
+    h = 0;
+    start = tokStart[idx];
+    len = tokLen[idx];
+    for (i = 0; i < len; i = i + 1) {
+        c = tokChars[start + i];
+        h = h * 131 + c;
+    }
+    return h;
+}
+
+void print_line_summary(int lineNo, int firstIdx, int lastIdx, int whitespace) {
+    printf("Line %d: %d ... %d (%d whitespace)\n", lineNo, tokenHash(firstIdx), tokenHash(lastIdx), whitespace);
+}
+
+void print_line_single(int lineNo, int idx, int whitespace) {
+    printf("Line %d: %d (%d whitespace)\n", lineNo, tokenHash(idx), whitespace);
+}
+
+void solve(int tokCnt, int LW) {
+    int l;
+    int ft;
+    int pt;
+    int lw;
+    int lsw;
+    int firstIdx;
+    int lastIdx;
+
+    int i;
+    int j;
+    int d;
+    int start;
+    int len;
+    int c0;
+    int c1;
+    int ww;
+
+    l = 1;
+    ft = 1;
+    pt = 10;
+    lw = 0;
+    lsw = spaceWidth(ft, pt);
+    firstIdx = 0;
+    lastIdx = 0;
+
+    for (i = 0; i < tokCnt; i = i + 1) {
+        start = tokStart[i];
+        len = tokLen[i];
+        if (len <= 0) {
+        } else {
+            c0 = tokChars[start];
+            if (c0 == 42) {
+                if (len >= 3) {
+                    c1 = tokChars[start + 1];
+                    if (c1 == 102) {
+                        ft = tokChars[start + 2] - 48;
+                    }
+                    if (c1 == 115) {
+                        pt = 0;
+                        for (j = 2; j < len; j = j + 1) {
+                            d = tokChars[start + j] - 48;
+                            pt = pt * 10 + d;
+                        }
+                    }
+                }
+            } else {
+                ww = tokenWidth(ft, pt, i);
+                if (ww > LW) {
+                    if (lw != 0) {
+                        print_line_summary(l, firstIdx, lastIdx, LW - lw);
+                        l = l + 1;
+                    }
+                    print_line_single(l, i, LW - ww);
+                    l = l + 1;
+                    lw = 0;
+                } else {
+                    if (lw == 0) {
+                        firstIdx = i;
+                        lastIdx = i;
+                        lw = ww;
+                        lsw = spaceWidth(ft, pt);
+                    } else {
+                        if (lw + lsw + ww > LW) {
+                            print_line_summary(l, firstIdx, lastIdx, LW - lw);
+                            l = l + 1;
+                            firstIdx = i;
+                            lastIdx = i;
+                            lw = ww;
+                            lsw = spaceWidth(ft, pt);
+                        } else {
+                            lastIdx = i;
+                            lw = lw + lsw + ww;
+                            lsw = spaceWidth(ft, pt);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (lw != 0) {
+        print_line_summary(l, firstIdx, lastIdx, LW - lw);
+        l = l + 1;
+    }
+}
+
+int main() {
+    int firstCase;
+    int N;
+    int i;
+    int j;
+    int c;
+    int v;
+    int L;
+    int W;
+    int p;
+    int len;
+
+    firstCase = 1;
+    for (;;) {
+        N = getint();
+        if (N == 0) {
+            break;
+        }
+
+        if (firstCase == 0) {
+            printf("\n");
+        }
+        firstCase = 0;
+
+        for (i = 0; i < ASCII_SIZE * FONT_STRIDE; i = i + 1) {
+            Fonts[i] = 0;
+        }
+
+        for (i = 0; i < N - 1; i = i + 1) {
+            c = getint();
+            for (j = 1; j <= FCNT; j = j + 1) {
+                v = getint();
+                Fonts[c * FONT_STRIDE + j] = v;
+            }
+        }
+
+        for (j = 1; j <= FCNT; j = j + 1) {
+            v = getint();
+            Fonts[32 * FONT_STRIDE + j] = v;
+        }
+
+        p = 1;
+        for (;;) {
+            L = getint();
+            W = getint();
+            if (L == 0) {
+                break;
+            }
+            printf("Paragraph %d\n", p);
+            p = p + 1;
+
+            tokCharCnt = 0;
+            for (i = 0; i < L; i = i + 1) {
+                len = getint();
+                tokStart[i] = tokCharCnt;
+                tokLen[i] = len;
+                for (j = 0; j < len; j = j + 1) {
+                    if (tokCharCnt < MAXCH) {
+                        tokChars[tokCharCnt] = getint();
+                        tokCharCnt = tokCharCnt + 1;
+                    } else {
+                        getint();
+                    }
+                }
+            }
+
+            solve(L, W);
+        }
+    }
+    return 0;
+}

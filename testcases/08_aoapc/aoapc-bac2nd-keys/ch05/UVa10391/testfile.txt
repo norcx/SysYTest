@@ -1,0 +1,149 @@
+/* Description:
+ *   UVa 10391 "Compound Words" translated to Strict SysY.
+ *
+ *   Since SysY has only integers, each "word" is encoded as:
+ *     len
+ *     d0
+ *     d1
+ *     ...
+ *     d[len-1]
+ *   where digits are positive integers (e.g., 1..26 for 'a'..'z').
+ *
+ *   Input format:
+ *     n
+ *     (len, digits...) repeated n times
+ *
+ *   Output:
+ *     For each unique word that can be split into two existing words,
+ *     print its packed integer value (base 31) in lexicographic order.
+ */
+
+const int MAXN = 40;
+const int MAXLEN = 8;
+
+int uniqCount = 0;
+int uniqLen[MAXN];
+int uniqDigits[MAXN * MAXLEN];
+
+int tempLen = 0;
+int tempDigits[MAXLEN];
+
+int lexLess(int a, int b) {
+    int la = uniqLen[a];
+    int lb = uniqLen[b];
+    int minLen = la;
+    int k = 0;
+    if (lb < minLen) minLen = lb;
+
+    for (k = 0; k < minLen; k = k + 1) {
+        int da = uniqDigits[a * MAXLEN + k];
+        int db = uniqDigits[b * MAXLEN + k];
+        if (da < db) return 1;
+        if (da > db) return 0;
+    }
+
+    if (la < lb) return 1;
+    return 0;
+}
+
+void swapWord(int a, int b) {
+    int t = 0;
+    int k = 0;
+
+    t = uniqLen[a];
+    uniqLen[a] = uniqLen[b];
+    uniqLen[b] = t;
+
+    for (k = 0; k < MAXLEN; k = k + 1) {
+        t = uniqDigits[a * MAXLEN + k];
+        uniqDigits[a * MAXLEN + k] = uniqDigits[b * MAXLEN + k];
+        uniqDigits[b * MAXLEN + k] = t;
+    }
+}
+
+int existsPart(int wordIndex, int start, int partLen) {
+    int i = 0;
+    int k = 0;
+    for (i = 0; i < uniqCount; i = i + 1) {
+        if (uniqLen[i] == partLen) {
+            int same = 1;
+            for (k = 0; k < partLen; k = k + 1) {
+                if (uniqDigits[wordIndex * MAXLEN + start + k] != uniqDigits[i * MAXLEN + k]) {
+                    same = 0;
+                }
+            }
+            if (same == 1) return 1;
+        }
+    }
+    return 0;
+}
+
+int packWord(int idx) {
+    int base = 31;
+    int value = 0;
+    int k = 0;
+    for (k = 0; k < uniqLen[idx]; k = k + 1) {
+        value = value * base + uniqDigits[idx * MAXLEN + k];
+    }
+    return value;
+}
+
+int main() {
+    int n = 0;
+    int i = 0;
+    int j = 0;
+    int k = 0;
+
+    n = getint();
+    for (i = 0; i < n; i = i + 1) {
+        int dup = 0;
+        tempLen = getint();
+        for (j = 0; j < tempLen; j = j + 1) {
+            tempDigits[j] = getint();
+        }
+        for (j = tempLen; j < MAXLEN; j = j + 1) {
+            tempDigits[j] = 0;
+        }
+
+        for (j = 0; j < uniqCount; j = j + 1) {
+            if (uniqLen[j] == tempLen) {
+                int same = 1;
+                for (k = 0; k < tempLen; k = k + 1) {
+                    if (uniqDigits[j * MAXLEN + k] != tempDigits[k]) {
+                        same = 0;
+                    }
+                }
+                if (same == 1) dup = 1;
+            }
+        }
+
+        if (dup == 0) {
+            uniqLen[uniqCount] = tempLen;
+            for (j = 0; j < MAXLEN; j = j + 1) {
+                uniqDigits[uniqCount * MAXLEN + j] = tempDigits[j];
+            }
+            uniqCount = uniqCount + 1;
+        }
+    }
+
+    for (i = 1; i < uniqCount; i = i + 1) {
+        j = i;
+        for (; j > 0 && lexLess(j, j - 1) == 1; j = j - 1) {
+            swapWord(j, j - 1);
+        }
+    }
+
+    for (i = 0; i < uniqCount; i = i + 1) {
+        int split = 0;
+        for (split = 1; split < uniqLen[i]; split = split + 1) {
+            if (existsPart(i, 0, split) == 1) {
+                if (existsPart(i, split, uniqLen[i] - split) == 1) {
+                    printf("%d\n", packWord(i));
+                    break;
+                }
+            }
+        }
+    }
+
+    return 0;
+}

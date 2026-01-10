@@ -1,0 +1,115 @@
+/* Description:
+ *   Learning Vector (UVa 12589) solver, scaled down for Strict SysY.
+ *
+ *   Input:
+ *     T
+ *     For each case:
+ *       N
+ *       K
+ *       N lines of vectors (x then y), with x>0 and y>0 in this testcase.
+ *
+ *   Output:
+ *     Case t: ans
+ */
+
+const int MAXN = 12;
+const int MAXK = 12;
+const int MAXY = 200;
+const int STRIDEY = MAXY + 1;
+
+int vx[MAXN];
+int vy[MAXN];
+
+int dp_next[(MAXK + 1) * (MAXY + 1)];
+int dp_cur[(MAXK + 1) * (MAXY + 1)];
+
+int max2(int a, int b) {
+  if (a > b) return a;
+  return b;
+}
+
+int angle_greater(int i, int j) {
+  int left = vy[i] * vx[j];
+  int right = vy[j] * vx[i];
+  if (left > right) return 1;
+  if (left < right) return 0;
+  if (vx[i] > vx[j]) return 1;
+  if (vx[i] < vx[j]) return 0;
+  if (vy[i] > vy[j]) return 1;
+  return 0;
+}
+
+void swap_vec(int i, int j) {
+  int tx = vx[i];
+  int ty = vy[i];
+  vx[i] = vx[j];
+  vy[i] = vy[j];
+  vx[j] = tx;
+  vy[j] = ty;
+}
+
+void sort_vectors(int n) {
+  int i;
+  int j;
+  for (i = 0; i < n; i = i + 1) {
+    for (j = 0; j + 1 < n - i; j = j + 1) {
+      if (angle_greater(j, j + 1) == 0) swap_vec(j, j + 1);
+    }
+  }
+}
+
+int solve_case(int n, int k) {
+  int i;
+  int c;
+  int y;
+  int H = 0;
+
+  if (n > MAXN) return 0;
+  if (k > MAXK) return 0;
+
+  for (i = 0; i < n; i = i + 1) H = H + vy[i];
+  if (H > MAXY) return 0;
+
+  sort_vectors(n);
+
+  for (c = 0; c <= k; c = c + 1) {
+    for (y = 0; y <= H; y = y + 1) dp_next[c * STRIDEY + y] = 0;
+  }
+
+  for (i = n - 1; i >= 0; i = i - 1) {
+    for (c = 0; c <= k; c = c + 1) {
+      for (y = 0; y <= H; y = y + 1) {
+        int best = dp_next[c * STRIDEY + y];
+        if (c + 1 <= k) {
+          int ny = y + vy[i];
+          if (ny <= H) {
+            int take = dp_next[(c + 1) * STRIDEY + ny] + (2 * y + vy[i]) * vx[i];
+            best = max2(best, take);
+          }
+        }
+        dp_cur[c * STRIDEY + y] = best;
+      }
+    }
+    for (c = 0; c <= k; c = c + 1) {
+      for (y = 0; y <= H; y = y + 1) dp_next[c * STRIDEY + y] = dp_cur[c * STRIDEY + y];
+    }
+  }
+
+  return dp_next[0];
+}
+
+int main() {
+  int T = getint();
+  int t;
+  for (t = 1; t <= T; t = t + 1) {
+    int N = getint();
+    int K = getint();
+    int i;
+    for (i = 0; i < N; i = i + 1) {
+      vx[i] = getint();
+      vy[i] = getint();
+    }
+    printf("Case %d: %d\n", t, solve_case(N, K));
+  }
+  return 0;
+}

@@ -1,0 +1,95 @@
+/* Description:
+ *   SysY testcase converted from LA6286 "Jumping Around".
+ */
+
+int N;
+int A[4];
+int cur;
+
+int myabs(int x) {
+  if (x < 0) {
+    return 0 - x;
+  }
+  return x;
+}
+
+void moveStep(int step) {
+  int ci;
+  ci = myabs(step);
+  cur = cur + step;
+  printf(" %d", cur);
+  A[ci] = A[ci] - 1;
+}
+
+void moveCnt(int step, int cnt) {
+  int i;
+  for (i = 0; i < cnt; i = i + 1) {
+    moveStep(step);
+  }
+}
+
+void solve() {
+  int c3;
+  int cm3;
+  int b2;
+  int bm2;
+
+  printf("0");
+  cur = 0;
+
+  c3 = A[3] / 3;
+  cm3 = A[3] - c3 * 3;
+
+  if (cm3 == 0) {
+    moveCnt(3, c3);
+    moveStep(1);
+    moveCnt(-3, c3);
+    moveStep(1);
+    moveCnt(3, c3);
+  } else if (cm3 == 1) {
+    moveCnt(3, c3 + 1);
+    moveStep(-2);
+    moveCnt(-3, c3);
+    moveStep(1);
+    moveCnt(3, c3);
+    moveStep(2);
+  } else {
+    moveCnt(3, c3 + 1);
+    moveStep(-1);
+    moveCnt(-3, c3);
+    moveStep(-1);
+    moveCnt(3, c3 + 1);
+  }
+
+  moveCnt(1, A[1] - 1);
+
+  b2 = A[2] / 2;
+  bm2 = A[2] - b2 * 2;
+  if (bm2 == 0) {
+    moveCnt(2, b2);
+    moveStep(1);
+    moveCnt(-2, b2);
+  } else {
+    moveCnt(2, b2 + 1);
+    moveStep(-1);
+    moveCnt(-2, b2);
+  }
+
+  printf("\n");
+}
+
+int main() {
+  int t;
+  int i;
+
+  t = getint();
+  for (i = 0; i < t; i = i + 1) {
+    A[1] = getint();
+    A[2] = getint();
+    A[3] = getint();
+    N = A[1] + A[2] + A[3] + 1;
+    solve();
+  }
+
+  return 0;
+}

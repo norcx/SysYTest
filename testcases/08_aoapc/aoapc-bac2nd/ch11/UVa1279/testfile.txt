@@ -1,0 +1,304 @@
+/*
+  UVa1279 Asteroid Rangers (scaled / refactored to Strict SysY)
+
+  Notes for Strict SysY:
+  - int only, no structs/vectors, 1D arrays only
+  - input ends with a sentinel n=0 (do not rely on EOF)
+  - this testcase uses y=z=dy=dz=0, so distances are 1D:
+      dist^2(i,j,t) = ((dx[i]-dx[j]) * t + (x[i]-x[j]))^2
+    Equality between two edges is solved via linear equations and handled using
+    exact rational times (num/den) with integer arithmetic.
+*/
+
+const int MAXN = 10;
+const int MAXE = 60;
+const int MAXEV = 2000;
+
+int n;
+
+int x0[MAXN];
+int dx0[MAXN];
+
+int m;
+int eu[MAXE];
+int ev[MAXE];
+int pcoef[MAXE];
+int qcoef[MAXE];
+int acoef[MAXE];
+int bcoef[MAXE];
+int ccoef[MAXE];
+
+int pa[MAXN];
+
+int ev_num[MAXEV];
+int ev_den[MAXEV];
+int ev_new[MAXEV];
+int ev_old[MAXEV];
+int ev_cnt;
+
+int abs_int(int v) {
+  if (v < 0) return -v;
+  return v;
+}
+
+int gcd_int(int a, int b) {
+  a = abs_int(a);
+  b = abs_int(b);
+  if (b == 0) return a;
+  return gcd_int(b, a % b);
+}
+
+int findset(int v) {
+  if (pa[v] != v) pa[v] = findset(pa[v]);
+  return pa[v];
+}
+
+void init_ufset() {
+  int i;
+  for (i = 0; i < n; i = i + 1) pa[i] = i;
+}
+
+void swap_edges(int i, int j) {
+  int t;
+  t = eu[i]; eu[i] = eu[j]; eu[j] = t;
+  t = ev[i]; ev[i] = ev[j]; ev[j] = t;
+  t = pcoef[i]; pcoef[i] = pcoef[j]; pcoef[j] = t;
+  t = qcoef[i]; qcoef[i] = qcoef[j]; qcoef[j] = t;
+  t = acoef[i]; acoef[i] = acoef[j]; acoef[j] = t;
+  t = bcoef[i]; bcoef[i] = bcoef[j]; bcoef[j] = t;
+  t = ccoef[i]; ccoef[i] = ccoef[j]; ccoef[j] = t;
+}
+
+void sort_edges_by_c() {
+  int i;
+  int j;
+  for (i = 0; i < m; i = i + 1) {
+    for (j = 0; j + 1 < m - i; j = j + 1) {
+      if (ccoef[j + 1] < ccoef[j]) {
+        swap_edges(j, j + 1);
+      }
+    }
+  }
+}
+
+int time_less(int i, int j) {
+  int left;
+  int right;
+  left = ev_num[i] * ev_den[j];
+  right = ev_num[j] * ev_den[i];
+  if (left < right) return 1;
+  if (left > right) return 0;
+  if (ev_new[i] < ev_new[j]) return 1;
+  if (ev_new[i] > ev_new[j]) return 0;
+  if (ev_old[i] < ev_old[j]) return 1;
+  return 0;
+}
+
+void swap_events(int i, int j) {
+  int t;
+  t = ev_num[i]; ev_num[i] = ev_num[j]; ev_num[j] = t;
+  t = ev_den[i]; ev_den[i] = ev_den[j]; ev_den[j] = t;
+  t = ev_new[i]; ev_new[i] = ev_new[j]; ev_new[j] = t;
+  t = ev_old[i]; ev_old[i] = ev_old[j]; ev_old[j] = t;
+}
+
+void sort_events_by_time() {
+  int i;
+  int j;
+  for (i = 0; i < ev_cnt; i = i + 1) {
+    for (j = 0; j + 1 < ev_cnt - i; j = j + 1) {
+      if (time_less(j + 1, j) == 1) {
+        swap_events(j, j + 1);
+      }
+    }
+  }
+}
+
+void add_event(int num, int den, int i, int j, int ad, int bd, int cd) {
+  int g;
+  int check;
+  int deriv;
+  int newe;
+  int olde;
+  int k;
+
+  if (ev_cnt >= MAXEV) return;
+  if (den == 0) return;
+  if (num == 0) return;
+
+  if (den < 0) {
+    den = -den;
+    num = -num;
+  }
+  if (num <= 0) return;
+
+  g = gcd_int(num, den);
+  if (g != 0) {
+    num = num / g;
+    den = den / g;
+  }
+
+  check = ad * num * num + bd * num * den + cd * den * den;
+  if (check != 0) return;
+
+  deriv = 2 * ad * num + bd * den;
+  if (deriv == 0) return;
+
+  newe = i;
+  olde = j;
+  if (deriv > 0) {
+    newe = j;
+    olde = i;
+  }
+
+  for (k = 0; k < ev_cnt; k = k + 1) {
+    if (ev_num[k] == num && ev_den[k] == den && ev_new[k] == newe && ev_old[k] == olde) return;
+  }
+
+  ev_num[ev_cnt] = num;
+  ev_den[ev_cnt] = den;
+  ev_new[ev_cnt] = newe;
+  ev_old[ev_cnt] = olde;
+  ev_cnt = ev_cnt + 1;
+}
+
+void make_edges() {
+  int i;
+  int j;
+  int p;
+  int q;
+
+  m = 0;
+  for (i = 0; i < n; i = i + 1) {
+    for (j = i + 1; j < n; j = j + 1) {
+      p = dx0[i] - dx0[j];
+      q = x0[i] - x0[j];
+      eu[m] = i;
+      ev[m] = j;
+      pcoef[m] = p;
+      qcoef[m] = q;
+      acoef[m] = p * p;
+      bcoef[m] = 2 * p * q;
+      ccoef[m] = q * q;
+      m = m + 1;
+    }
+  }
+
+  sort_edges_by_c();
+}
+
+void make_events() {
+  int i;
+  int j;
+  int ad;
+  int bd;
+  int cd;
+  int den;
+  int num;
+
+  ev_cnt = 0;
+  for (i = 0; i < m; i = i + 1) {
+    for (j = i + 1; j < m; j = j + 1) {
+      ad = acoef[i] - acoef[j];
+      bd = bcoef[i] - bcoef[j];
+      cd = ccoef[i] - ccoef[j];
+
+      den = pcoef[i] - pcoef[j];
+      num = qcoef[j] - qcoef[i];
+      add_event(num, den, i, j, ad, bd, cd);
+
+      den = pcoef[i] + pcoef[j];
+      num = -(qcoef[i] + qcoef[j]);
+      add_event(num, den, i, j, ad, bd, cd);
+    }
+  }
+
+  sort_events_by_time();
+}
+
+int solve() {
+  int pos[MAXE];
+  int e[MAXN];
+  int idx;
+  int i;
+  int j;
+  int u;
+  int v;
+  int ans;
+  int olde;
+  int newe;
+  int oldpos;
+
+  init_ufset();
+  for (i = 0; i < m; i = i + 1) pos[i] = 0;
+
+  idx = 0;
+  for (i = 0; i < m; i = i + 1) {
+    u = findset(eu[i]);
+    v = findset(ev[i]);
+    if (u != v) {
+      idx = idx + 1;
+      e[idx] = i;
+      pos[i] = idx;
+      pa[u] = v;
+    }
+    if (idx == n - 1) i = m;
+  }
+
+  ans = 1;
+  for (i = 0; i < ev_cnt; i = i + 1) {
+    olde = ev_old[i];
+    newe = ev_new[i];
+    if (pos[olde] != 0 && pos[newe] == 0) {
+      init_ufset();
+      oldpos = pos[olde];
+      for (j = 1; j < n; j = j + 1) {
+        if (j != oldpos) {
+          u = findset(eu[e[j]]);
+          v = findset(ev[e[j]]);
+          if (u != v) pa[u] = v;
+        }
+      }
+      u = findset(eu[newe]);
+      v = findset(ev[newe]);
+      if (u != v) {
+        ans = ans + 1;
+        pos[newe] = oldpos;
+        e[oldpos] = newe;
+        pos[olde] = 0;
+      }
+    }
+  }
+  return ans;
+}
+
+int main() {
+  int kase;
+  int i;
+  int tmp;
+  int ans;
+
+  kase = 0;
+  for (;;) {
+    n = getint();
+    if (n == 0) return 0;
+
+    for (i = 0; i < n; i = i + 1) {
+      x0[i] = getint();
+      tmp = getint();
+      tmp = getint();
+      dx0[i] = getint();
+      tmp = getint();
+      tmp = getint();
+    }
+
+    make_edges();
+    make_events();
+    ans = solve();
+
+    kase = kase + 1;
+    printf("Case %d: %d\n", kase, ans);
+  }
+
+  return 0;
+}

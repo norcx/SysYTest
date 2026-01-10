@@ -1,0 +1,118 @@
+/* Description:
+ *   SysY adaptation of "Version Controlled IDE" (UVa12538).
+ *
+ *   Input format (integers only, one per line):
+ *     n
+ *     For each op:
+ *       opt
+ *       opt==1: p, L, then L ascii codes (0-based insert position)
+ *       opt==2: p, c (1-based delete position)
+ *       else  : v, p, c (v is version id, p is 1-based)
+ *
+ *   Output:
+ *     For each query, prints the substring as ascii codes separated by spaces,
+ *     followed by a newline.
+ */
+
+const int VMAX = 64;
+const int LENMAX = 256;
+const int ASCII_C = 99;
+
+int verLen[VMAX];
+int verData[VMAX * LENMAX];
+
+int curLen;
+int curData[LENMAX];
+
+int main() {
+  int n;
+  int d;
+  int ver;
+
+  int opt;
+  int p;
+  int c;
+  int v;
+  int L;
+
+  int i;
+  int j;
+  int ch;
+
+  curLen = 0;
+  d = 0;
+  ver = 1;
+  verLen[0] = 0;
+
+  n = getint();
+  for (i = 0; i < n; i = i + 1) {
+    opt = getint();
+    if (opt == 1) {
+      p = getint();
+      p = p - d;
+      L = getint();
+      if (p < 0) p = 0;
+      if (p > curLen) p = curLen;
+      if (L < 0) L = 0;
+      if (curLen + L >= LENMAX) L = LENMAX - 1 - curLen;
+
+      j = curLen - 1;
+      for (; j >= p; j = j - 1) curData[j + L] = curData[j];
+
+      j = 0;
+      for (; j < L; j = j + 1) {
+        ch = getint();
+        curData[p + j] = ch;
+      }
+      curLen = curLen + L;
+
+      verLen[ver] = curLen;
+      j = 0;
+      for (; j < curLen; j = j + 1) verData[ver * LENMAX + j] = curData[j];
+      ver = ver + 1;
+      if (ver >= VMAX) ver = VMAX - 1;
+    } else if (opt == 2) {
+      p = getint();
+      c = getint();
+      p = p - d;
+      c = c - d;
+      if (p < 1) p = 1;
+      if (c < 0) c = 0;
+      if (p - 1 + c > curLen) c = curLen - (p - 1);
+
+      j = p - 1 + c;
+      for (; j < curLen; j = j + 1) curData[j - c] = curData[j];
+      curLen = curLen - c;
+      if (curLen < 0) curLen = 0;
+
+      verLen[ver] = curLen;
+      j = 0;
+      for (; j < curLen; j = j + 1) verData[ver * LENMAX + j] = curData[j];
+      ver = ver + 1;
+      if (ver >= VMAX) ver = VMAX - 1;
+    } else {
+      v = getint();
+      p = getint();
+      c = getint();
+      v = v - d;
+      p = p - d;
+      c = c - d;
+
+      if (v < 0) v = 0;
+      if (v >= VMAX) v = VMAX - 1;
+      if (p < 1) p = 1;
+      if (c < 0) c = 0;
+      if (p - 1 + c > verLen[v]) c = verLen[v] - (p - 1);
+
+      j = 0;
+      for (; j < c; j = j + 1) {
+        ch = verData[v * LENMAX + (p - 1 + j)];
+        if (ch == ASCII_C) d = d + 1;
+        if (j + 1 == c) printf("%d", ch);
+        else printf("%d ", ch);
+      }
+      printf("\n");
+    }
+  }
+  return 0;
+}

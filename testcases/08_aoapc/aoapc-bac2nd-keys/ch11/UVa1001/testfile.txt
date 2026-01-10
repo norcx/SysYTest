@@ -1,0 +1,120 @@
+/* UVA1001 - Say Cheese (scaled to int-only Strict SysY)
+ * Output matches: "Cheese t: Travel time = X sec"
+ */
+
+const int NN = 105;
+
+int X[NN];
+int Y[NN];
+int Z[NN];
+int Rad[NN];
+int D[NN * NN];
+
+int idx(int i, int j) { return i * NN + j; }
+
+int isqrt(int n) {
+  int low;
+  int high;
+  int ans;
+  low = 0;
+  high = 46340;
+  ans = 0;
+  for (; low <= high;) {
+    int mid;
+    int sq;
+    mid = (low + high) / 2;
+    sq = mid * mid;
+    if (sq == n)
+      return mid;
+    if (sq < n) {
+      ans = mid;
+      low = mid + 1;
+    } else
+      high = mid - 1;
+  }
+  return ans;
+}
+
+int dist10(int i, int j) {
+  int dx;
+  int dy;
+  int dz;
+  int s;
+  int d;
+  int ten;
+  int gap;
+  int rs;
+
+  dx = X[i] - X[j];
+  dy = Y[i] - Y[j];
+  dz = Z[i] - Z[j];
+  s = dx * dx + dy * dy + dz * dz;
+  d = isqrt(s);
+  ten = d * 10;
+  rs = Rad[i] + Rad[j];
+  gap = ten - rs * 10;
+  if (gap < 0)
+    gap = 0;
+  return gap;
+}
+
+int main() {
+  int t;
+  t = 1;
+
+  for (;;) {
+    int n;
+    int i;
+    int j;
+    int k;
+
+    n = getint();
+    if (n <= 0)
+      break;
+
+    for (i = 0; i < n; i = i + 1) {
+      X[i] = getint();
+      Y[i] = getint();
+      Z[i] = getint();
+      Rad[i] = getint();
+    }
+
+    X[n] = getint();
+    Y[n] = getint();
+    Z[n] = getint();
+    Rad[n] = 0;
+    n = n + 1;
+
+    X[n] = getint();
+    Y[n] = getint();
+    Z[n] = getint();
+    Rad[n] = 0;
+    n = n + 1;
+
+    for (i = 0; i < n; i = i + 1) {
+      D[idx(i, i)] = 0;
+      for (j = i + 1; j < n; j = j + 1) {
+        int w;
+        w = dist10(i, j);
+        D[idx(i, j)] = w;
+        D[idx(j, i)] = w;
+      }
+    }
+
+    for (k = 0; k < n; k = k + 1)
+      for (i = 0; i < n; i = i + 1)
+        for (j = 0; j < n; j = j + 1) {
+          int cand;
+          cand = D[idx(i, k)] + D[idx(k, j)];
+          if (cand < D[idx(i, j)])
+            D[idx(i, j)] = cand;
+        }
+
+    printf("Cheese %d: Travel time = ", t);
+    printf("%d", D[idx(n - 1, n - 2)]);
+    printf(" sec\n");
+    t = t + 1;
+  }
+
+  return 0;
+}

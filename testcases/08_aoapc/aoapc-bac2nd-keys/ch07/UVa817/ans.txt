@@ -1,0 +1,17 @@
+Problem 1
+  IMPOSSIBLE
+Problem 2
+  1999+1=
+Problem 3
+  4*500=
+Problem 4
+  IMPOSSIBLE
+Problem 5
+  2000+0*0=
+  2000+0+0=
+  2000+0-0=
+  2000-0*0=
+  2000-0+0=
+  2000-0-0=
+Problem 6
+  IMPOSSIBLE

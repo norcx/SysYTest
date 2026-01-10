@@ -1,0 +1,101 @@
+/* Description:
+ *   Converted from UVa1347 Tour (bitonic tour DP).
+ *   Strict SysY: int-only, 1D arrays, getint input, printf %d output.
+ *
+ * Input format:
+ *   n
+ *   x1
+ *   y1
+ *   ...
+ *   xn
+ *   yn
+ *   0            (sentinel to stop)
+ *
+ * Note:
+ *   Distances are computed as integer sqrt(dx*dx + dy*dy).
+ *   This testcase uses coordinates that make all distances integers.
+ */
+
+const int LIM = 60;
+const int LIM2 = 3600;
+
+int x[LIM];
+int y[LIM];
+int dist[LIM2];
+int dp[LIM2];
+
+int idx(int i, int j) {
+  return i * LIM + j;
+}
+
+int min_int(int a, int b) {
+  if (a < b) return a;
+  return b;
+}
+
+int isqrt(int a) {
+  int lo;
+  int hi;
+  int ans;
+  int iter;
+  lo = 0;
+  hi = 46340;
+  ans = 0;
+  for (iter = 0; iter < 32; iter = iter + 1) {
+    int mid;
+    int sq;
+    mid = (lo + hi) / 2;
+    sq = mid * mid;
+    if (sq == a) return mid;
+    if (sq < a) {
+      ans = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return ans;
+}
+
+int main() {
+  int n;
+  n = getint();
+  for (;n != 0;) {
+    int i;
+    int j;
+    for (i = 1; i <= n; i = i + 1) {
+      x[i] = getint();
+      y[i] = getint();
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+      for (j = 1; j <= n; j = j + 1) {
+        int dx;
+        int dy;
+        int ds;
+        dx = x[i] - x[j];
+        dy = y[i] - y[j];
+        ds = dx * dx + dy * dy;
+        dist[idx(i, j)] = isqrt(ds);
+      }
+    }
+
+    for (i = n - 1; i >= 2; i = i - 1) {
+      for (j = 1; j < i; j = j + 1) {
+        if (i == n - 1) {
+          dp[idx(i, j)] = dist[idx(i, n)] + dist[idx(j, n)];
+        } else {
+          int option1;
+          int option2;
+          option1 = dist[idx(i, i + 1)] + dp[idx(i + 1, j)];
+          option2 = dist[idx(j, i + 1)] + dp[idx(i + 1, i)];
+          dp[idx(i, j)] = min_int(option1, option2);
+        }
+      }
+    }
+
+    printf("%d\n", dist[idx(1, 2)] + dp[idx(2, 1)]);
+    n = getint();
+  }
+  return 0;
+}

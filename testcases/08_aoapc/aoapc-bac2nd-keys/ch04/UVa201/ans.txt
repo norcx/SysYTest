@@ -1,0 +1,11 @@
+Problem #1
+
+1 square (s) of size 2
+
+**********************************
+
+Problem #2
+
+9 square (s) of size 1
+4 square (s) of size 2
+1 square (s) of size 3

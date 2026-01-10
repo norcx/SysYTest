@@ -1,0 +1,65 @@
+/* Description:
+ *   Scaled-down UVa11440 logic (MAXN=200000) converted to Strict SysY.
+ */
+const int MAXN = 10000;
+const int MOD = 100000007;
+
+int vis[200001];
+int phifac[200001];
+
+int mul_mod(int a, int b) {
+  int res;
+  int k;
+  res = 0;
+  for (k = 0; k < 32; k = k + 1) {
+    if (b == 0) break;
+    if (b % 2 == 1) {
+      res = res + a;
+      if (res >= MOD) res = res - MOD;
+    }
+    a = a + a;
+    if (a >= MOD) a = a - MOD;
+    b = b / 2;
+  }
+  return res;
+}
+
+void gen_primes(int n) {
+  int i;
+  int j;
+  for (i = 0; i <= n; i = i + 1) vis[i] = 0;
+  for (i = 2; i * i <= n; i = i + 1) {
+    if (vis[i] == 0) {
+      for (j = i * i; j <= n; j = j + i) vis[j] = 1;
+    }
+  }
+}
+
+int main() {
+  int n;
+  int m;
+  int i;
+  int factor;
+  int ans;
+  int t;
+
+  gen_primes(MAXN);
+  phifac[1] = 1;
+  phifac[2] = 1;
+  for (i = 3; i <= MAXN; i = i + 1) {
+    factor = i - 1;
+    if (vis[i] == 1) factor = i;
+    phifac[i] = mul_mod(phifac[i - 1], factor);
+  }
+
+  for (t = 0; t < 1000000; t = t + 1) {
+    n = getint();
+    m = getint();
+    if (n == 0) break;
+
+    ans = phifac[m];
+    for (i = m + 1; i <= n; i = i + 1) ans = mul_mod(ans, i);
+    printf("%d\n", (ans - 1 + MOD) % MOD);
+  }
+  return 0;
+}

@@ -1,0 +1,36 @@
+int solve(int n, int k) {
+  int pk;
+  int sign;
+  int ans;
+  int limit;
+  pk = k;
+  sign = -1;
+  ans = n;
+  for (; pk < n;) {
+    ans = ans + sign * (n / pk);
+    limit = n / k;
+    if (pk > limit) {
+      pk = n;
+    } else {
+      pk = pk * k;
+    }
+    sign = 0 - sign;
+  }
+  return ans;
+}
+
+int main() {
+  int T;
+  int i;
+  int n;
+  int k;
+  int ans;
+  T = getint();
+  for (i = 0; i < T; i = i + 1) {
+    n = getint();
+    k = getint();
+    ans = solve(n, k);
+    printf("%d\n", ans);
+  }
+  return 0;
+}

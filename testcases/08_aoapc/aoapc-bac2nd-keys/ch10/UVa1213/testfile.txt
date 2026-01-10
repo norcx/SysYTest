@@ -1,0 +1,80 @@
+/* UVa 1213 - Sum of Different Primes
+ * Count the number of ways to express N as a sum of K distinct primes.
+ * Input: multiple testcases (N then K), terminated by N == 0.
+ */
+
+const int NMAX = 199;
+const int KMAX = 9;
+const int PRIME_MAX = 50;
+const int WSIZE = 2000;
+
+int primes[PRIME_MAX];
+int primeCount;
+int isComp[NMAX + 1];
+int ways[WSIZE];
+
+void sieve() {
+    int i;
+    int j;
+    for (i = 0; i <= NMAX; i = i + 1) isComp[i] = 0;
+    primeCount = 0;
+
+    for (i = 2; i <= NMAX; i = i + 1) {
+        if (isComp[i] == 0) {
+            primes[primeCount] = i;
+            primeCount = primeCount + 1;
+            for (j = i + i; j <= NMAX; j = j + i) isComp[j] = 1;
+        }
+    }
+}
+
+void precompute() {
+    int i;
+    int pi;
+    int p;
+    int k;
+    int n;
+    int max_k;
+    int current_max_n = 0;
+    int off1;
+    int off2;
+
+    for (i = 0; i < WSIZE; i = i + 1) ways[i] = 0;
+    ways[0] = 1;
+
+    for (pi = 0; pi < primeCount; pi = pi + 1) {
+        p = primes[pi];
+        current_max_n = current_max_n + p;
+        if (current_max_n > NMAX) current_max_n = NMAX;
+        max_k = pi + 1;
+        if (max_k > KMAX) max_k = KMAX;
+        for (k = max_k; k >= 1; k = k - 1) {
+            off1 = k * (NMAX + 1);
+            off2 = (k - 1) * (NMAX + 1);
+
+            for (n = current_max_n; n >= p; n = n - 1) {
+                ways[off1 + n] = ways[off1 + n] + ways[off2 + n - p];
+            }
+        }
+    }
+}
+
+int main() {
+    int N;
+    int K;
+    sieve();
+    precompute();
+
+    for (;;) {
+        N = getint();
+        if (N == 0) break;
+        K = getint();
+
+        if (N < 0 || N > NMAX || K < 0 || K > KMAX) {
+            printf("0\n");
+        } else {
+            printf("%d\n", ways[K * (NMAX + 1) + N]);
+        }
+    }
+    return 0;
+}

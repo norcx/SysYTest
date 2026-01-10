@@ -1,0 +1,183 @@
+/*
+  LA6463 Tower Defense (converted to Strict SysY)
+
+  Input:
+    T
+    N M P Q per testcase (each on its own line in in.txt)
+  Output:
+    ans for each testcase
+*/
+
+const int MAXN = 204;
+const int FACN = MAXN * 2;
+const int MOD = 1000000007;
+const int R = 500000004;
+
+int C[MAXN * MAXN];
+int CS[MAXN * MAXN];
+int Fac[FACN];
+int G2[MAXN];
+
+int idx2(int i, int j) {
+    return i * MAXN + j;
+}
+
+int mod_norm(int x) {
+    if (x < 0) x = x + MOD;
+    if (x >= MOD) x = x - MOD;
+    return x;
+}
+
+int add_mod(int a, int b) {
+    int s;
+    s = a + b;
+    if (s >= MOD) s = s - MOD;
+    return s;
+}
+
+int mul_mod(int a, int b) {
+    int res;
+    int x;
+    int y;
+    res = 0;
+    x = a;
+    y = b;
+    for (; y > 0; y = y / 2) {
+        if (y % 2 == 1) {
+            res = res + x;
+            if (res >= MOD) res = res - MOD;
+        }
+        x = x + x;
+        if (x >= MOD) x = x - MOD;
+    }
+    return res;
+}
+
+void prepare() {
+    int i;
+    int j;
+    int rp;
+
+    Fac[0] = 1;
+    for (i = 1; i < FACN; i = i + 1) {
+        Fac[i] = mul_mod(Fac[i - 1], i);
+    }
+
+    for (i = 0; i < MAXN; i = i + 1) {
+        G2[i] = 0;
+    }
+    G2[0] = 1;
+    G2[1] = 1;
+    rp = R;
+    for (i = 2; i < MAXN; i = i + 1) {
+        rp = mul_mod(rp, R);
+        G2[i] = mul_mod(Fac[2 * i], rp);
+    }
+
+    for (i = 0; i < MAXN * MAXN; i = i + 1) {
+        C[i] = 0;
+        CS[i] = 0;
+    }
+
+    C[idx2(0, 0)] = 1;
+    for (i = 1; i < MAXN; i = i + 1) {
+        C[idx2(i, 0)] = 1;
+        C[idx2(i, i)] = 1;
+        for (j = 1; j < i; j = j + 1) {
+            C[idx2(i, j)] = add_mod(C[idx2(i - 1, j - 1)], C[idx2(i - 1, j)]);
+        }
+    }
+
+    for (i = 0; i < MAXN; i = i + 1) {
+        CS[idx2(i, 0)] = 1;
+        for (j = 1; j <= i; j = j + 1) {
+            CS[idx2(i, j)] = add_mod(CS[idx2(i, j - 1)], C[idx2(i, j)]);
+        }
+    }
+}
+
+int p2C(int r, int c, int p) {
+    int t;
+    t = mul_mod(C[idx2(r, p)], C[idx2(c, 2 * p)]);
+    t = mul_mod(t, G2[p]);
+    return t;
+}
+
+int p1C(int k, int minP, int maxP) {
+    int t;
+    if (minP > 0) {
+        t = CS[idx2(k, maxP)] - CS[idx2(k, minP - 1)];
+        if (t < 0) t = t + MOD;
+        return t;
+    }
+    return CS[idx2(k, maxP)];
+}
+
+int main() {
+    int T;
+    int tc;
+    int N;
+    int M;
+    int P;
+    int Q;
+    int ans;
+    int i;
+    int j;
+    int r;
+    int c;
+    int p;
+    int ijC;
+    int k;
+    int limit;
+    int limit2;
+    int minp;
+    int maxp;
+    int pq1c;
+    int t;
+
+    T = getint();
+    prepare();
+    for (tc = 0; tc < T; tc = tc + 1) {
+        N = getint();
+        M = getint();
+        P = getint();
+        Q = getint();
+        ans = 0;
+
+        for (i = 0; i <= N; i = i + 1) {
+            for (j = 0; j <= M; j = j + 1) {
+                r = N - (i + 2 * j);
+                c = M - (2 * i + j);
+                p = P - 2 * (i + j);
+                if (r >= 0 && c >= 0 && p >= 0) {
+                    ijC = mul_mod(p2C(N, M, i), p2C(M - 2 * i, N - i, j));
+
+                    limit = r;
+                    if (c < limit) limit = c;
+                    limit2 = p + Q;
+                    if (limit2 < limit) limit = limit2;
+
+                    for (k = 0; k <= limit; k = k + 1) {
+                        minp = k - Q;
+                        if (minp < 0) minp = 0;
+                        maxp = k;
+                        if (maxp > p) maxp = p;
+
+                        pq1c = mul_mod(C[idx2(r, k)], C[idx2(c, k)]);
+                        pq1c = mul_mod(pq1c, p1C(k, minp, maxp));
+
+                        t = mul_mod(pq1c, Fac[k]);
+                        t = mul_mod(t, ijC);
+                        ans = ans + t;
+                        if (ans >= MOD) ans = ans - MOD;
+                    }
+                }
+            }
+        }
+
+        ans = ans - 1;
+        if (ans < 0) ans = ans + MOD;
+        printf("%d\n", ans);
+    }
+    return 0;
+}

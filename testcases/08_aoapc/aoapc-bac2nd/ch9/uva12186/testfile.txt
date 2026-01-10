@@ -1,0 +1,149 @@
+// UVa12186 Another Crisis (Strict SysY)
+// Input:
+//   Repeated testcases:
+//     n
+//     T
+//     f[1]
+//     ...
+//     f[n]
+//   Terminates with n = 0 (still followed by one integer T in input).
+//
+// Output:
+//   One integer per testcase: dp(0)
+
+const int MAXN = 20005;
+
+int parent[MAXN];
+int childCnt[MAXN];
+int startIdx[MAXN + 1];
+int curIdx[MAXN];
+int children[MAXN];
+int dp[MAXN];
+
+int tmp[MAXN];
+int buf[MAXN];
+
+int nodeStack[MAXN];
+int nextChildStack[MAXN];
+
+void sort_tmp(int n) {
+  int width;
+  int i;
+  int l;
+  int mid;
+  int r;
+  int p;
+  int q;
+  int t;
+
+  width = 1;
+  for (; width < n; width = width * 2) {
+    for (i = 0; i < n; i = i + width * 2) {
+      l = i;
+      mid = i + width;
+      if (mid > n) mid = n;
+      r = i + width * 2;
+      if (r > n) r = n;
+
+      p = l;
+      q = mid;
+      t = l;
+      for (; p < mid && q < r; t = t + 1) {
+        if (tmp[p] < tmp[q]) {
+          buf[t] = tmp[p];
+          p = p + 1;
+        } else {
+          buf[t] = tmp[q];
+          q = q + 1;
+        }
+      }
+      for (; p < mid; p = p + 1) {
+        buf[t] = tmp[p];
+        t = t + 1;
+      }
+      for (; q < r; q = q + 1) {
+        buf[t] = tmp[q];
+        t = t + 1;
+      }
+    }
+    for (i = 0; i < n; i = i + 1) tmp[i] = buf[i];
+  }
+  return;
+}
+
+int main() {
+  int n;
+  int T;
+  int i;
+  int p;
+  int pos;
+  int top;
+  int u;
+  int childIndex;
+  int v;
+  int k;
+  int base;
+  int j;
+  int c;
+  int sum;
+
+  for (;;) {
+    n = getint();
+    T = getint();
+    if (n == 0) break;
+
+    for (i = 0; i <= n; i = i + 1) childCnt[i] = 0;
+    for (i = 1; i <= n; i = i + 1) {
+      parent[i] = getint();
+      childCnt[parent[i]] = childCnt[parent[i]] + 1;
+    }
+
+    startIdx[0] = 0;
+    for (i = 0; i <= n; i = i + 1) {
+      startIdx[i + 1] = startIdx[i] + childCnt[i];
+      curIdx[i] = startIdx[i];
+    }
+
+    for (i = 1; i <= n; i = i + 1) {
+      p = parent[i];
+      pos = curIdx[p];
+      children[pos] = i;
+      curIdx[p] = pos + 1;
+    }
+
+    top = 0;
+    nodeStack[0] = 0;
+    nextChildStack[0] = 0;
+    for (;;) {
+      if (top < 0) break;
+      u = nodeStack[top];
+      childIndex = nextChildStack[top];
+      if (childIndex < childCnt[u]) {
+        v = children[startIdx[u] + childIndex];
+        nextChildStack[top] = childIndex + 1;
+        top = top + 1;
+        nodeStack[top] = v;
+        nextChildStack[top] = 0;
+      } else {
+        if (childCnt[u] == 0) {
+          dp[u] = 1;
+        } else {
+          k = childCnt[u];
+          base = startIdx[u];
+          for (j = 0; j < k; j = j + 1) tmp[j] = dp[children[base + j]];
+          sort_tmp(k);
+
+          c = (k * T + 99) / 100;
+          sum = 0;
+          for (j = 0; j < c; j = j + 1) sum = sum + tmp[j];
+          dp[u] = sum;
+        }
+        top = top - 1;
+      }
+    }
+
+    printf("%d\n", dp[0]);
+  }
+
+  return 0;
+}

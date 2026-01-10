@@ -1,0 +1,190 @@
+// UVa1658 Admiral (Strict SysY conversion)
+
+const int INF = 1000000000;
+
+const int MAXN = 120;
+const int MAXV = 2 * MAXN + 5;
+const int MAXM = 1200;
+const int MAXE = 2 * (MAXM + MAXN + 5) * 2;
+const int MAXQ = MAXV * 20;
+
+int V;
+int head[MAXV];
+int toE[MAXE];
+int fromE[MAXE];
+int nextE[MAXE];
+int capE[MAXE];
+int flowE[MAXE];
+int costE[MAXE];
+int edgeCnt;
+
+int inq[MAXV];
+int d[MAXV];
+int p[MAXV];
+int aPath[MAXV];
+int q[MAXQ];
+
+int curFlow;
+int curCost;
+
+void graph_init(int n) {
+  int i;
+  V = n;
+  edgeCnt = 0;
+  for (i = 0; i < V; i = i + 1) head[i] = -1;
+}
+
+void addEdge(int u, int v, int cap, int cost) {
+  fromE[edgeCnt] = u;
+  toE[edgeCnt] = v;
+  capE[edgeCnt] = cap;
+  flowE[edgeCnt] = 0;
+  costE[edgeCnt] = cost;
+  nextE[edgeCnt] = head[u];
+  head[u] = edgeCnt;
+  edgeCnt = edgeCnt + 1;
+
+  fromE[edgeCnt] = v;
+  toE[edgeCnt] = u;
+  capE[edgeCnt] = 0;
+  flowE[edgeCnt] = 0;
+  costE[edgeCnt] = 0 - cost;
+  nextE[edgeCnt] = head[v];
+  head[v] = edgeCnt;
+  edgeCnt = edgeCnt + 1;
+}
+
+int spfa_once(int s, int t, int flow_limit) {
+  int i;
+  int qh;
+  int qt;
+  int iter;
+  int u;
+  int ei;
+  int v;
+  int nd;
+  int resid;
+  int add;
+  int rev;
+
+  for (i = 0; i < V; i = i + 1) {
+    d[i] = INF;
+    inq[i] = 0;
+    p[i] = -1;
+    aPath[i] = 0;
+  }
+  d[s] = 0;
+  inq[s] = 1;
+  aPath[s] = INF;
+
+  qh = 0;
+  qt = 0;
+  q[qt] = s;
+  qt = qt + 1;
+
+  for (iter = 0; iter < MAXQ * 10; iter = iter + 1) {
+    if (qh == qt) break;
+    u = q[qh];
+    qh = qh + 1;
+    if (qh == MAXQ) qh = 0;
+    inq[u] = 0;
+
+    ei = head[u];
+    for (; ei != -1; ei = nextE[ei]) {
+      if (capE[ei] > flowE[ei]) {
+        v = toE[ei];
+        nd = d[u] + costE[ei];
+        if (d[v] > nd) {
+          d[v] = nd;
+          p[v] = ei;
+          aPath[v] = aPath[u];
+          resid = capE[ei] - flowE[ei];
+          if (aPath[v] > resid) aPath[v] = resid;
+          if (inq[v] == 0) {
+            q[qt] = v;
+            qt = qt + 1;
+            if (qt == MAXQ) qt = 0;
+            inq[v] = 1;
+          }
+        }
+      }
+    }
+  }
+
+  if (d[t] == INF) return 0;
+
+  add = aPath[t];
+  if (curFlow + add > flow_limit) add = flow_limit - curFlow;
+  curFlow = curFlow + add;
+  curCost = curCost + d[t] * add;
+
+  u = t;
+  for (; u != s;) {
+    ei = p[u];
+    flowE[ei] = flowE[ei] + add;
+    rev = ei + 1;
+    if (ei % 2 == 1) rev = ei - 1;
+    flowE[rev] = flowE[rev] - add;
+    u = fromE[ei];
+  }
+
+  return 1;
+}
+
+int mincostflow(int s, int t, int flow_limit) {
+  int iter;
+  int ok;
+
+  curFlow = 0;
+  curCost = 0;
+
+  for (iter = 0; iter < flow_limit + 5; iter = iter + 1) {
+    if (curFlow >= flow_limit) break;
+    ok = spfa_once(s, t, flow_limit);
+    if (ok == 0) break;
+  }
+
+  return curFlow;
+}
+
+int main() {
+  int n;
+  int m;
+  int caseIdx;
+  int splitNode;
+  int eIdx;
+  int u;
+  int v;
+  int w;
+  int totalV;
+
+  for (caseIdx = 0; caseIdx < 1000000000; caseIdx = caseIdx + 1) {
+    n = getint();
+    m = getint();
+    if (n == 0) break;
+
+    totalV = n * 2 - 2;
+    graph_init(totalV);
+
+    for (splitNode = 2; splitNode <= n - 1; splitNode = splitNode + 1) {
+      addEdge(splitNode - 1, splitNode + n - 2, 1, 0);
+    }
+
+    for (eIdx = 0; eIdx < m; eIdx = eIdx + 1) {
+      u = getint();
+      v = getint();
+      w = getint();
+
+      if (u != 1 && u != n) u = u + n - 2;
+      else u = u - 1;
+      v = v - 1;
+
+      addEdge(u, v, 1, w);
+    }
+
+    mincostflow(0, n - 1, 2);
+    printf("%d\n", curCost);
+  }
+
+  return 0;
+}

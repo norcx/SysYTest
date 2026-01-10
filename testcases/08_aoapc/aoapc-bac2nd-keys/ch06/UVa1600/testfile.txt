@@ -1,0 +1,114 @@
+/* Description:
+ *   Patrol Robot (UVa 1600): BFS with limited consecutive obstacles.
+ *
+ * Input:
+ *   T
+ *   For each testcase:
+ *     M N K
+ *     M*N integers (0 = free, 1 = obstacle)
+ *
+ * Output:
+ *   For each testcase, the minimum steps from (0,0) to (M-1,N-1),
+ *   where you can pass through at most K consecutive obstacles.
+ */
+
+const int MAXN = 24;
+const int KMAX = 24;
+const int MAXCELL = 576;
+const int MAXSTATE = 14400;
+
+int M;
+int N;
+int K;
+
+int Grid[MAXCELL];
+int Vis[MAXSTATE];
+int Qx[MAXSTATE];
+int Qy[MAXSTATE];
+int Qt[MAXSTATE];
+
+int dirx[4] = {1, 0, -1, 0};
+int diry[4] = {0, 1, 0, -1};
+
+int idx(int x, int y, int turbo) { return (x * N + y) * (KMAX + 1) + turbo; }
+
+int solve() {
+  int destx = M - 1;
+  int desty = N - 1;
+
+  int i;
+  for (i = 0; i < MAXSTATE; i = i + 1) {
+    Vis[i] = -1;
+  }
+
+  int tail = 0;
+  Qx[tail] = 0;
+  Qy[tail] = 0;
+  Qt[tail] = 0;
+  Vis[idx(0, 0, 0)] = 0;
+  tail = tail + 1;
+
+  int head;
+  for (head = 0; head < tail; head = head + 1) {
+    int x = Qx[head];
+    int y = Qy[head];
+    int turbo = Qt[head];
+    int d = Vis[idx(x, y, turbo)];
+
+    if (x == destx && y == desty) {
+      return d;
+    }
+
+    int di;
+    for (di = 0; di < 4; di = di + 1) {
+      int nx = x + dirx[di];
+      int ny = y + diry[di];
+      if (nx < 0 || nx >= M || ny < 0 || ny >= N) {
+        continue;
+      }
+
+      int isBlock = Grid[nx * N + ny];
+      if (isBlock == 1 && turbo + 1 > K) {
+        continue;
+      }
+
+      int nturbo = 0;
+      if (isBlock == 1) {
+        nturbo = turbo + 1;
+      }
+
+      int nindex = idx(nx, ny, nturbo);
+      if (Vis[nindex] == -1) {
+        Vis[nindex] = d + 1;
+        Qx[tail] = nx;
+        Qy[tail] = ny;
+        Qt[tail] = nturbo;
+        tail = tail + 1;
+      }
+    }
+  }
+
+  return -1;
+}
+
+int main() {
+  int T = getint();
+  int tc;
+  for (tc = 0; tc < T; tc = tc + 1) {
+    M = getint();
+    N = getint();
+    K = getint();
+
+    int i;
+    int j;
+    for (i = 0; i < M; i = i + 1) {
+      for (j = 0; j < N; j = j + 1) {
+        Grid[i * N + j] = getint();
+      }
+    }
+
+    int ans = solve();
+    printf("%d\n", ans);
+  }
+  return 0;
+}

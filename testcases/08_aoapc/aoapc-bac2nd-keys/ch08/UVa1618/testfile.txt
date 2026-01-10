@@ -1,0 +1,174 @@
+/* Description:
+ *   [Add description here]
+ */
+const int MAXK = 5005;
+
+int a[MAXK];
+int b[MAXK];
+int uniqv[MAXK];
+int rankv[MAXK];
+int revRankv[MAXK];
+int freqv[MAXK];
+int minGreaterv[MAXK];
+int qlstack[MAXK];
+int qrstack[MAXK];
+
+void quicksort_iter(int arr[], int n) {
+  int top;
+  int l;
+  int r;
+  int i;
+  int j;
+  int pivot;
+  int tmp;
+
+  if (n <= 1) return;
+
+  top = 0;
+  qlstack[top] = 0;
+  qrstack[top] = n - 1;
+  top = top + 1;
+
+  for (; top > 0;) {
+    top = top - 1;
+    l = qlstack[top];
+    r = qrstack[top];
+
+    for (; l < r;) {
+      i = l;
+      j = r;
+      pivot = arr[(l + r) / 2];
+
+      for (; i <= j;) {
+        for (; arr[i] < pivot;) i = i + 1;
+        for (; arr[j] > pivot;) j = j - 1;
+        if (i <= j) {
+          tmp = arr[i];
+          arr[i] = arr[j];
+          arr[j] = tmp;
+          i = i + 1;
+          j = j - 1;
+        }
+      }
+
+      if (j - l < r - i) {
+        if (i < r) {
+          qlstack[top] = i;
+          qrstack[top] = r;
+          top = top + 1;
+        }
+        r = j;
+      } else {
+        if (l < j) {
+          qlstack[top] = l;
+          qrstack[top] = j;
+          top = top + 1;
+        }
+        l = i;
+      }
+    }
+  }
+  return;
+}
+
+int lower_bound_int(int arr[], int n, int x) {
+  int l;
+  int r;
+  int mid;
+  l = 0;
+  r = n;
+  for (; l < r;) {
+    mid = (l + r) / 2;
+    if (arr[mid] < x)
+      l = mid + 1;
+    else
+      r = mid;
+  }
+  return l;
+}
+
+int exists_pattern(int n, int m, int val[]) {
+  int i;
+  int q;
+  int s;
+  int x;
+  int next;
+  int rmin;
+
+  for (i = 1; i <= m; i = i + 1) freqv[i] = 0;
+
+  for (q = 0; q < n; q = q + 1) {
+    next = m + 1;
+    minGreaterv[m] = m + 1;
+    for (x = m; x >= 1; x = x - 1) {
+      if (freqv[x] > 0) next = x;
+      minGreaterv[x - 1] = next;
+    }
+
+    rmin = m + 1;
+    for (s = q + 2; s < n; s = s + 1) {
+      if (val[s - 1] < rmin) rmin = val[s - 1];
+      if (val[s] < val[q]) {
+        if (rmin < val[s]) {
+          if (minGreaterv[rmin] < val[s]) return 1;
+        }
+      }
+    }
+
+    freqv[val[q]] = freqv[val[q]] + 1;
+  }
+
+  return 0;
+}
+
+int main() {
+  int T;
+  int tc;
+  int k;
+  int i;
+  int m;
+  int idx;
+  int ok;
+
+  T = getint();
+  for (tc = 0; tc < T; tc = tc + 1) {
+    k = getint();
+    for (i = 0; i < k; i = i + 1) {
+      a[i] = getint();
+      b[i] = a[i];
+    }
+
+    if (k < 4) {
+      printf("NO\n");
+      continue;
+    }
+
+    quicksort_iter(b, k);
+
+    m = 0;
+    uniqv[m] = b[0];
+    m = m + 1;
+    for (i = 1; i < k; i = i + 1) {
+      if (b[i] != b[i - 1]) {
+        uniqv[m] = b[i];
+        m = m + 1;
+      }
+    }
+
+    for (i = 0; i < k; i = i + 1) {
+      idx = lower_bound_int(uniqv, m, a[i]);
+      rankv[i] = idx + 1;
+      revRankv[i] = m - rankv[i] + 1;
+    }
+
+    ok = exists_pattern(k, m, rankv);
+    if (ok == 0) ok = exists_pattern(k, m, revRankv);
+
+    if (ok != 0)
+      printf("YES\n");
+    else
+      printf("NO\n");
+  }
+
+  return 0;
+}

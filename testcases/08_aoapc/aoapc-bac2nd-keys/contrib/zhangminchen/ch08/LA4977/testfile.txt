@@ -1,0 +1,121 @@
+const int MAXM = 20000;
+const int MAXL = 20000;
+
+int last[MAXL + 5];
+int ans[MAXM + 5];
+int rain[MAXM + 5];
+
+int seg[4 * MAXM + 10];
+
+int combineMinNonZero(int a, int b) {
+  if (a == 0) return b;
+  if (b == 0) return a;
+  if (a < b) return a;
+  return b;
+}
+
+void segUpdate(int node, int l, int r, int pos, int val) {
+  if (l == r) {
+    seg[node] = val;
+    return;
+  }
+
+  int mid;
+  mid = (l + r) / 2;
+  if (pos <= mid) segUpdate(node * 2, l, mid, pos, val);
+  else segUpdate(node * 2 + 1, mid + 1, r, pos, val);
+  seg[node] = combineMinNonZero(seg[node * 2], seg[node * 2 + 1]);
+}
+
+int segQueryMin(int node, int l, int r, int ql, int qr) {
+  if (ql <= l && r <= qr) return seg[node];
+
+  int mid;
+  int res;
+  mid = (l + r) / 2;
+  res = 0;
+
+  if (ql <= mid) res = combineMinNonZero(res, segQueryMin(node * 2, l, mid, ql, qr));
+  if (qr > mid) res = combineMinNonZero(res, segQueryMin(node * 2 + 1, mid + 1, r, ql, qr));
+  return res;
+}
+
+void initCase(int n, int m) {
+  int i;
+  for (i = 1; i <= n; i = i + 1) last[i] = 0;
+  for (i = 1; i <= m; i = i + 1) ans[i] = 0;
+  for (i = 1; i <= 4 * m + 5; i = i + 1) seg[i] = 0;
+}
+
+int solveCase(int m) {
+  int i;
+  int ok;
+  ok = 1;
+
+  for (i = 1; i <= m; i = i + 1) {
+    if (ok == 1) {
+      if (rain[i] == 0) {
+        segUpdate(1, 1, m, i, i);
+      } else {
+        ans[i] = -1;
+
+        int ql;
+        int pos;
+        ql = last[rain[i]];
+        if (ql < 1) ql = 1;
+
+        pos = segQueryMin(1, 1, m, ql, m);
+        if (pos == 0) ok = 0;
+        else {
+          ans[pos] = rain[i];
+          last[rain[i]] = i;
+          segUpdate(1, 1, m, pos, 0);
+        }
+      }
+    }
+  }
+
+  return ok;
+}
+
+int main() {
+  int T;
+  int tc;
+  T = getint();
+
+  for (tc = 0; tc < T; tc = tc + 1) {
+    int n;
+    int m;
+    int i;
+    int ok;
+
+    n = getint();
+    m = getint();
+    initCase(n, m);
+
+    for (i = 1; i <= m; i = i + 1) rain[i] = getint();
+
+    ok = solveCase(m);
+    if (ok == 0) {
+      printf("NO\n");
+    } else {
+      printf("YES\n");
+
+      int first;
+      first = 1;
+      for (i = 1; i <= m; i = i + 1) {
+        if (ans[i] != -1) {
+          if (first == 1) {
+            first = 0;
+            printf("%d", ans[i]);
+          } else {
+            printf(" %d", ans[i]);
+          }
+        }
+      }
+      printf("\n");
+    }
+  }
+
+  return 0;
+}

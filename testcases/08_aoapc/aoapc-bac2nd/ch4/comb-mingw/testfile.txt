@@ -1,0 +1,52 @@
+/* Description:
+ *   Compute C(21,1) using two methods.
+ */
+
+// Strict SysY testcase: compute two variants of binomial coefficient.
+
+int factorial(int n) {
+  int i;
+  int m;
+  m = 1;
+  for (i = 1; i <= n; i = i + 1) {
+    m = m * i;
+  }
+  return m;
+}
+
+// Method 1: incremental multiplication/division (avoids large factorials in SysY int).
+int C(int n, int m) {
+  int i;
+  int ans;
+  if (m < 0) return 0;
+  if (m > n) return 0;
+  if (m > n - m) m = n - m;
+  ans = 1;
+  for (i = 1; i <= m; i = i + 1) {
+    ans = ans * (n - m + i) / i;
+  }
+  return ans;
+}
+
+// Method 2: multiply a tail product then divide.
+int C2(int n, int m) {
+  int i;
+  int ans;
+  if (m < 0) return 0;
+  if (m > n) return 0;
+  if (m < n - m) m = n - m;
+  ans = 1;
+  for (i = m + 1; i <= n; i = i + 1) {
+    ans = ans * i;
+  }
+  for (i = 1; i <= n - m; i = i + 1) {
+    ans = ans / i;
+  }
+  return ans;
+}
+
+int main() {
+  printf("%d\n", C(21, 1));
+  printf("%d\n", C2(21, 1));
+  return 0;
+}

@@ -1,0 +1,10 @@
+To get from 0 0 to 1 2 takes 1 knight moves.
+To get from 0 0 to 7 7 takes 6 knight moves.
+To get from 3 3 to 3 3 takes 0 knight moves.
+To get from 0 0 to 0 1 takes 3 knight moves.
+To get from 7 7 to 0 0 takes 6 knight moves.
+To get from 4 4 to 5 6 takes 1 knight moves.
+To get from 2 5 to 6 2 takes 3 knight moves.
+To get from 1 1 to 2 2 takes 2 knight moves.
+To get from 6 0 to 7 2 takes 1 knight moves.
+To get from 7 0 to 6 1 takes 4 knight moves.

@@ -1,0 +1,45 @@
+/* Description:
+ *   Combination number demo (C(n,m)).
+ *   Adapted to Strict SysY: int/void only, no headers, %d only.
+ */
+
+int factorial(int n) {
+  int m;
+  int i;
+  m = 1;
+  for (i = 1; i <= n; i = i + 1) {
+    m = m * i;
+  }
+  return m;
+}
+
+int C2(int n, int m) {
+  int ans;
+  int i;
+  if (m < n - m) {
+    m = n - m;
+  }
+  ans = 1;
+  for (i = m + 1; i <= n; i = i + 1) {
+    ans = ans * i;
+  }
+  for (i = 1; i <= n - m; i = i + 1) {
+    ans = ans / i;
+  }
+  return ans;
+}
+
+int C(int n, int m) {
+  int res;
+  if (n <= 12) {
+    res = factorial(n) / (factorial(m) * factorial(n - m));
+    return res;
+  }
+  return C2(n, m);
+}
+
+int main() {
+  printf("%d\n", C(21, 1));
+  printf("%d\n", C2(21, 1));
+  return 0;
+}

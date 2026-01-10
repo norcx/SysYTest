@@ -1,0 +1,60 @@
+/* Description:
+ *   Integer-only rewrite of "Angles and Squares" core formula.
+ *   Input format (newline-separated ints):
+ *     N
+ *     Ax Ay Bx By
+ *     l1 ... lN
+ *     (repeat), ending with N = 0
+ *   Output: one integer per case.
+ */
+
+int main() {
+    int n;
+    int ax;
+    int ay;
+    int bx;
+    int by;
+    int i;
+    int l;
+    int sl;
+    int sumsq;
+    int p_num;
+    int p_den;
+    int den;
+    int t1;
+    int first_term;
+    int second_term;
+    int ans;
+
+    for (;;) {
+        n = getint();
+        if (n == 0) break;
+
+        ax = getint();
+        ay = getint();
+        bx = getint();
+        by = getint();
+
+        sl = 0;
+        sumsq = 0;
+        for (i = 0; i < n; i = i + 1) {
+            l = getint();
+            sl = sl + l;
+            sumsq = sumsq + l * l;
+        }
+
+        p_num = (ax + ay) * (bx + by);
+        p_den = ax * by - ay * bx;
+        if (p_den < 0) p_den = 0 - p_den;
+
+        den = 2 * p_den;
+        t1 = p_num * sl * sl;
+        first_term = t1 / den;
+        second_term = sumsq / 2;
+        ans = first_term - second_term;
+
+        printf("%d\n", ans);
+    }
+
+    return 0;
+}

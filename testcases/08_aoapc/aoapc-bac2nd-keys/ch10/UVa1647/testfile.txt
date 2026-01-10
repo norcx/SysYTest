@@ -1,0 +1,122 @@
+/* Description:
+ *   Converted from UVa1647 "Computer Transformation".
+ *   Reads n (one per line) until sentinel 0, prints F[n-1] as a big integer.
+ */
+
+const int MAXN = 1005;
+const int MAXD = 360;
+
+int FLen[MAXN];
+int FDig[MAXN * MAXD];
+
+int p2Len;
+int p2Dig[MAXD];
+
+void set_F_int(int idx, int val) {
+    int base;
+    int x;
+    base = idx * MAXD;
+    if (val == 0) {
+        FLen[idx] = 1;
+        FDig[base] = 0;
+        return;
+    }
+    FLen[idx] = 0;
+    x = val;
+    for (;;) {
+        FDig[base + FLen[idx]] = x % 10;
+        FLen[idx] = FLen[idx] + 1;
+        x = x / 10;
+        if (x == 0) break;
+    }
+}
+
+void set_p2_int(int val) {
+    int x;
+    if (val == 0) {
+        p2Len = 1;
+        p2Dig[0] = 0;
+        return;
+    }
+    p2Len = 0;
+    x = val;
+    for (;;) {
+        p2Dig[p2Len] = x % 10;
+        p2Len = p2Len + 1;
+        x = x / 10;
+        if (x == 0) break;
+    }
+}
+
+void p2_mul2() {
+    int i;
+    int carry;
+    int x;
+    carry = 0;
+    for (i = 0; i < p2Len; i = i + 1) {
+        x = p2Dig[i] * 2 + carry;
+        p2Dig[i] = x % 10;
+        carry = x / 10;
+    }
+    if (carry != 0) {
+        p2Dig[p2Len] = carry;
+        p2Len = p2Len + 1;
+    }
+}
+
+void F_add_p2(int dst, int src) {
+    int i;
+    int carry;
+    int x;
+    int dstBase;
+    int srcBase;
+    int maxLen;
+    dstBase = dst * MAXD;
+    srcBase = src * MAXD;
+    maxLen = FLen[src];
+    if (p2Len > maxLen) maxLen = p2Len;
+    carry = 0;
+    i = 0;
+    for (;;) {
+        if (i >= maxLen && carry == 0) break;
+        x = carry;
+        if (i < FLen[src]) x = x + FDig[srcBase + i];
+        if (i < p2Len) x = x + p2Dig[i];
+        FDig[dstBase + i] = x % 10;
+        carry = x / 10;
+        i = i + 1;
+    }
+    FLen[dst] = i;
+}
+
+void print_F(int idx) {
+    int i;
+    int base;
+    base = idx * MAXD;
+    for (i = FLen[idx] - 1; i >= 0; i = i - 1) {
+        printf("%d", FDig[base + i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int i;
+    int n;
+
+    set_p2_int(2);
+    set_F_int(1, 1);
+    set_F_int(2, 1);
+
+    for (i = 3; i < MAXN; i = i + 1) {
+        F_add_p2(i, i - 2);
+        p2_mul2();
+    }
+
+    for (;;) {
+        n = getint();
+        if (n == 0) break;
+        print_F(n - 1);
+    }
+
+    return 0;
+}

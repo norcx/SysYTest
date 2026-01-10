@@ -1,0 +1,9 @@
+The average wait for a stripping door at ICPC 1 is 120.0 minutes.
+There is no wait for a stripping door at ICPC 2.
+
+The late shipments are:
+Id Origin Destination Volume
+2 1 2 20
+2 1 2 50
+3 1 2 50
+3 1 2 50

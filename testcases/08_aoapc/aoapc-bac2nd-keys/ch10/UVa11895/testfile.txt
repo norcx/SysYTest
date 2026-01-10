@@ -1,0 +1,196 @@
+/* Description:
+ *   Converted from UVa11895 "Honorary Tickets".
+ *   Maintains a max-heap by comparing fractions p/(q*T) using an overflow-safe method.
+ */
+
+int heapP[260];
+int heapQ[260];
+int heapT[260];
+int heapSize;
+
+int gcd(int a, int b) {
+    int t;
+    if (a < 0) a = 0 - a;
+    if (b < 0) b = 0 - b;
+    for (;;) {
+        if (b == 0) break;
+        t = a % b;
+        a = b;
+        b = t;
+    }
+    if (a < 0) a = 0 - a;
+    return a;
+}
+
+int frac_gt(int a, int b, int c, int d) {
+    int invert;
+    int qa;
+    int qc;
+    int ra;
+    int rc;
+    if (a == 0) return 0;
+    if (c == 0) return 1;
+    invert = 0;
+    for (;;) {
+        qa = a / b;
+        qc = c / d;
+        if (qa != qc) {
+            if (invert == 0) {
+                if (qa > qc) return 1;
+                return 0;
+            } else {
+                if (qa < qc) return 1;
+                return 0;
+            }
+        }
+
+        ra = a % b;
+        rc = c % d;
+        if (ra == 0 || rc == 0) {
+            if (ra == 0 && rc == 0) return 0;
+            if (ra == 0) {
+                if (invert == 0) return 0;
+                return 1;
+            }
+            if (invert == 0) return 1;
+            return 0;
+        }
+
+        a = b;
+        b = ra;
+        c = d;
+        d = rc;
+        invert = 1 - invert;
+    }
+    return 0;
+}
+
+int heap_greater(int i, int j) {
+    int a;
+    int b;
+    int c;
+    int d;
+    a = heapP[i];
+    b = heapQ[i] * heapT[i];
+    c = heapP[j];
+    d = heapQ[j] * heapT[j];
+    return frac_gt(a, b, c, d);
+}
+
+void heap_swap(int i, int j) {
+    int t;
+    t = heapP[i];
+    heapP[i] = heapP[j];
+    heapP[j] = t;
+    t = heapQ[i];
+    heapQ[i] = heapQ[j];
+    heapQ[j] = t;
+    t = heapT[i];
+    heapT[i] = heapT[j];
+    heapT[j] = t;
+}
+
+void heap_push(int p, int q, int t) {
+    int idx;
+    int parent;
+    heapSize = heapSize + 1;
+    idx = heapSize;
+    heapP[idx] = p;
+    heapQ[idx] = q;
+    heapT[idx] = t;
+    for (;;) {
+        parent = idx / 2;
+        if (parent == 0) break;
+        if (heap_greater(idx, parent) == 0) break;
+        heap_swap(idx, parent);
+        idx = parent;
+    }
+}
+
+void heap_pop() {
+    int idx;
+    int left;
+    int right;
+    int best;
+    if (heapSize <= 0) return;
+    heapP[1] = heapP[heapSize];
+    heapQ[1] = heapQ[heapSize];
+    heapT[1] = heapT[heapSize];
+    heapSize = heapSize - 1;
+    idx = 1;
+    for (;;) {
+        left = idx * 2;
+        if (left > heapSize) break;
+        right = left + 1;
+        best = left;
+        if (right <= heapSize) {
+            if (heap_greater(right, left)) best = right;
+        }
+        if (heap_greater(best, idx) == 0) break;
+        heap_swap(best, idx);
+        idx = best;
+    }
+}
+
+int main() {
+    int TT;
+    int tc;
+    int N;
+    int K;
+    int i;
+    int bT;
+    int bP;
+    int bQ;
+    int topP;
+    int topQ;
+    int topT;
+    int p2;
+    int q2;
+    int g;
+    int denom;
+
+    TT = getint();
+    tc = 0;
+    for (tc = 0; tc < TT; tc = tc + 1) {
+        N = getint();
+        K = getint();
+        heapSize = 0;
+
+        i = 0;
+        for (i = 0; i < N; i = i + 1) {
+            bT = getint();
+            bP = getint();
+            bQ = 1;
+            heap_push(bP, bQ, bT);
+        }
+
+        i = 1;
+        for (i = 1; i < K; i = i + 1) {
+            topP = heapP[1];
+            topQ = heapQ[1];
+            topT = heapT[1];
+            heap_pop();
+
+            p2 = topP * (topT - 1);
+            q2 = topQ * topT;
+            g = gcd(p2, q2);
+            if (g != 0) {
+                p2 = p2 / g;
+                q2 = q2 / g;
+            }
+            heap_push(p2, q2, topT);
+        }
+
+        topP = heapP[1];
+        topQ = heapQ[1];
+        topT = heapT[1];
+        denom = topQ * topT;
+        g = gcd(topP, denom);
+        if (g != 0) {
+            topP = topP / g;
+            denom = denom / g;
+        }
+        printf("%d/%d\n", topP, denom);
+    }
+    return 0;
+}

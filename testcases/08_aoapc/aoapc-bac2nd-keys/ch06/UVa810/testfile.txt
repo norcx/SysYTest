@@ -1,0 +1,308 @@
+/* Description:
+ * Converted from UVa810 "A Dicey Problem" reference solution.
+ * Input is integer-only (SysY): multiple cases, ended by nameId==0.
+ *
+ * Per case:
+ *   nameId
+ *   R
+ *   C
+ *   start_r
+ *   start_c
+ *   start_top
+ *   start_face
+ *   then R*C cell values, row-major
+ *
+ * Output:
+ *   prints nameId, then either a shortest cycle returning to start cell
+ *   (at least one move) as "(r,c)" list, or "No Solution Possible".
+ */
+
+const int UP = 0;
+const int LEFT = 1;
+const int DOWN = 2;
+const int RIGHT = 3;
+
+const int MAXR = 12;
+const int MAXC = 12;
+const int GRID_STRIDE = 13;
+const int MAXGRID = GRID_STRIDE * GRID_STRIDE;
+
+const int MAXSTATE = 6000;
+const int VISN = GRID_STRIDE * GRID_STRIDE * 7 * 7;
+
+int R;
+int C;
+int M[MAXGRID];
+
+int DL[36] = {
+    -1, 3, 5, 2, 4, -1,
+    4, -1, 1, 6, -1, 3,
+    2, 6, -1, -1, 1, 5,
+    5, 1, -1, -1, 6, 2,
+    3, -1, 6, 1, -1, 4,
+    -1, 4, 2, 5, 3, -1
+};
+
+int dr[4] = { -1, 0, 1, 0 };
+int dc[4] = { 0, -1, 0, 1 };
+
+int st_r[MAXSTATE];
+int st_c[MAXSTATE];
+int st_face[MAXSTATE];
+int st_top[MAXSTATE];
+int st_prev[MAXSTATE];
+
+int q[MAXSTATE];
+int vis[VISN];
+
+int get_left(int face, int top) {
+    return DL[(face - 1) * 6 + (top - 1)];
+}
+
+int key_of(int r, int c, int face, int top) {
+    return (((r * GRID_STRIDE + c) * 7 + face) * 7 + top);
+}
+
+int can_move(int r, int c, int top, int dir) {
+    int nr;
+    int nc;
+    int m;
+    nr = r + dr[dir];
+    nc = c + dc[dir];
+    if (nr < 1 || nr > R || nc < 1 || nc > C) return 0;
+    m = M[nr * GRID_STRIDE + nc];
+    if (m == 0) return 0;
+    if (m == -1) return 1;
+    if (m == top) return 1;
+    return 0;
+}
+
+void set_state(int idx, int r, int c, int face, int top, int prev) {
+    st_r[idx] = r;
+    st_c[idx] = c;
+    st_face[idx] = face;
+    st_top[idx] = top;
+    st_prev[idx] = prev;
+}
+
+int solve(int start_r, int start_c, int start_face, int start_top, int first_dir) {
+    int i;
+    int head;
+    int tail;
+    int cnt;
+
+    i = 0;
+    for (; i < VISN; i = i + 1) vis[i] = 0;
+
+    cnt = 0;
+    set_state(cnt, start_r, start_c, start_face, start_top, -1);
+    cnt = cnt + 1;
+
+    {
+        int r;
+        int c;
+        int face;
+        int top;
+        int left;
+        int right;
+        int bottom;
+        int back;
+        int nface;
+        int ntop;
+        int nr;
+        int nc;
+        int k;
+
+        r = start_r;
+        c = start_c;
+        face = start_face;
+        top = start_top;
+        left = get_left(face, top);
+        right = 7 - left;
+        bottom = 7 - top;
+        back = 7 - face;
+        nr = r + dr[first_dir];
+        nc = c + dc[first_dir];
+
+        nface = face;
+        ntop = top;
+        if (first_dir == UP) {
+            nface = bottom;
+            ntop = face;
+        }
+        if (first_dir == LEFT) {
+            nface = face;
+            ntop = right;
+        }
+        if (first_dir == DOWN) {
+            nface = top;
+            ntop = back;
+        }
+        if (first_dir == RIGHT) {
+            nface = face;
+            ntop = left;
+        }
+        if (get_left(nface, ntop) < 0) return -1;
+
+        set_state(cnt, nr, nc, nface, ntop, 0);
+        k = key_of(nr, nc, nface, ntop);
+        vis[k] = 1;
+        q[0] = cnt;
+        cnt = cnt + 1;
+    }
+
+    head = 0;
+    tail = 1;
+    for (; head < tail; ) {
+        int cur;
+        int cr;
+        int cc;
+        int cface;
+        int ctop;
+        int cleft;
+        int cright;
+        int cbottom;
+        int cback;
+        int d;
+
+        cur = q[head];
+        head = head + 1;
+
+        cr = st_r[cur];
+        cc = st_c[cur];
+        if (cr == start_r && cc == start_c) return cur;
+
+        cface = st_face[cur];
+        ctop = st_top[cur];
+        cleft = get_left(cface, ctop);
+        cright = 7 - cleft;
+        cbottom = 7 - ctop;
+        cback = 7 - cface;
+
+        d = 0;
+        for (; d < 4; d = d + 1) {
+            int nr;
+            int nc;
+            int nface;
+            int ntop;
+            int k;
+
+            if (can_move(cr, cc, ctop, d) == 0) continue;
+            nr = cr + dr[d];
+            nc = cc + dc[d];
+
+            nface = cface;
+            ntop = ctop;
+            if (d == UP) {
+                nface = cbottom;
+                ntop = cface;
+            }
+            if (d == LEFT) {
+                nface = cface;
+                ntop = cright;
+            }
+            if (d == DOWN) {
+                nface = ctop;
+                ntop = cback;
+            }
+            if (d == RIGHT) {
+                nface = cface;
+                ntop = cleft;
+            }
+
+            if (get_left(nface, ntop) < 0) continue;
+            k = key_of(nr, nc, nface, ntop);
+            if (vis[k] != 0) continue;
+            vis[k] = 1;
+            if (cnt >= MAXSTATE) return -1;
+            set_state(cnt, nr, nc, nface, ntop, cur);
+            q[tail] = cnt;
+            tail = tail + 1;
+            cnt = cnt + 1;
+        }
+    }
+
+    return -1;
+}
+
+int main() {
+    int nameId;
+    int start_r;
+    int start_c;
+    int start_top;
+    int start_face;
+
+    for (;;) {
+        nameId = getint();
+        if (nameId == 0) break;
+
+        R = getint();
+        C = getint();
+        start_r = getint();
+        start_c = getint();
+        start_top = getint();
+        start_face = getint();
+
+        {
+            int r;
+            int c;
+            r = 1;
+            for (; r <= R; r = r + 1) {
+                c = 1;
+                for (; c <= C; c = c + 1) {
+                    M[r * GRID_STRIDE + c] = getint();
+                }
+            }
+        }
+
+        printf("%d\n", nameId);
+
+        {
+            int ans;
+            int d;
+            ans = -1;
+            d = 0;
+            for (; d < 4; d = d + 1) {
+                if (can_move(start_r, start_c, start_top, d) != 0) {
+                    ans = solve(start_r, start_c, start_face, start_top, d);
+                    if (ans >= 0) break;
+                }
+            }
+
+            if (ans >= 0) {
+                int path[MAXSTATE];
+                int len;
+                int idx;
+                int i;
+                int step;
+
+                len = 0;
+                idx = ans;
+                for (; idx != -1; ) {
+                    path[len] = idx;
+                    len = len + 1;
+                    idx = st_prev[idx];
+                }
+
+                step = 0;
+                i = len - 1;
+                for (; i >= 0; i = i - 1) {
+                    int sidx;
+                    if (step != 0) {
+                        printf(",");
+                        if (step % 9 == 0) printf("\n");
+                    }
+                    if (step % 9 == 0) printf("  ");
+                    sidx = path[i];
+                    printf("(%d,%d)", st_r[sidx], st_c[sidx]);
+                    step = step + 1;
+                }
+                printf("\n");
+            } else {
+                printf("  No Solution Possible\n");
+            }
+        }
+    }
+
+    return 0;
+}

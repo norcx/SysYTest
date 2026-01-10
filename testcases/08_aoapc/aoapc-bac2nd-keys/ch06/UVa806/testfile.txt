@@ -1,0 +1,152 @@
+/* Description:
+ *   Strict SysY conversion of UVa 806 "Spatial Structures".
+ *
+ *   Input format (newline-separated integers only):
+ *     Repeated testcases:
+ *       N
+ *       If N > 0:
+ *         N*N integers (0/1), row-major image pixels
+ *       If N < 0:
+ *         a sequence of quadtree node indices p (>=0), then a negative sentinel to stop
+ *     Terminator:
+ *       N = 0
+ *
+ *   Output matches the original UVA problem's formatting, except that images are read
+ *   as integers rather than strings.
+ */
+
+const int MAXN = 64;
+const int MAXPIX = 4096;
+const int MAXBLACK = 10000;
+
+int N;
+int IMG[MAXPIX];
+int blacks[MAXBLACK];
+int blackCnt;
+
+int DX[4] = {0, 0, 1, 1};
+int DY[4] = {0, 1, 0, 1};
+
+void sortBlacks() {
+  int i;
+  for (i = 1; i < blackCnt; i = i + 1) {
+    int key;
+    int j;
+    key = blacks[i];
+    j = i - 1;
+    for (;;) {
+      if (j < 0) break;
+      if (blacks[j] <= key) break;
+      blacks[j + 1] = blacks[j];
+      j = j - 1;
+    }
+    blacks[j + 1] = key;
+  }
+}
+
+void countBlack(int x, int y, int len, int path, int p5) {
+  int f;
+  int len2;
+  int i;
+  int j;
+  f = 0;
+  len2 = len / 2;
+
+  for (i = x; i < x + len; i = i + 1) {
+    for (j = y; j < y + len; j = j + 1) {
+      f = f + IMG[i * N + j];
+    }
+  }
+
+  if (f == 0) return;
+  if (f == len * len) {
+    blacks[blackCnt] = path;
+    blackCnt = blackCnt + 1;
+    return;
+  }
+
+  for (i = 0; i < 4; i = i + 1) {
+    countBlack(x + DX[i] * len2, y + DY[i] * len2, len2, path + p5 * (i + 1), p5 * 5);
+  }
+}
+
+void draw(int path, int x, int y, int len) {
+  int i;
+  int j;
+  if (path == 0) {
+    for (i = x; i < x + len; i = i + 1) {
+      for (j = y; j < y + len; j = j + 1) {
+        IMG[i * N + j] = 1;
+      }
+    }
+    return;
+  }
+
+  {
+    int di;
+    int len2;
+    di = path % 5 - 1;
+    len2 = len / 2;
+    draw(path / 5, x + DX[di] * len2, y + DY[di] * len2, len2);
+  }
+}
+
+int main() {
+  int kase;
+  kase = 1;
+  for (;;) {
+    N = getint();
+    if (N == 0) break;
+
+    if (kase > 1) printf("\n");
+    printf("Image %d\n", kase);
+
+    if (N > 0) {
+      int i;
+      int j;
+      int idx;
+      blackCnt = 0;
+
+      idx = 0;
+      for (i = 0; i < N; i = i + 1) {
+        for (j = 0; j < N; j = j + 1) {
+          IMG[idx] = getint();
+          idx = idx + 1;
+        }
+      }
+
+      countBlack(0, 0, N, 0, 1);
+      sortBlacks();
+
+      for (i = 0; i < blackCnt; i = i + 1) {
+        if (i % 12 == 11 || i == blackCnt - 1) printf("%d\n", blacks[i]);
+        else printf("%d ", blacks[i]);
+      }
+      printf("Total number of black nodes = %d\n", blackCnt);
+    } else {
+      int i;
+      int j;
+      int p;
+
+      N = 0 - N;
+      for (i = 0; i < N * N; i = i + 1) IMG[i] = 0;
+
+      for (;;) {
+        p = getint();
+        if (p < 0) break;
+        draw(p, 0, 0, N);
+      }
+
+      for (i = 0; i < N; i = i + 1) {
+        for (j = 0; j < N; j = j + 1) {
+          if (IMG[i * N + j] == 0) printf(".");
+          else printf("*");
+        }
+        printf("\n");
+      }
+    }
+
+    kase = kase + 1;
+  }
+  return 0;
+}

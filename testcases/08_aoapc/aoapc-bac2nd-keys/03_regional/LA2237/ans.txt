@@ -1,0 +1,30 @@
+Transposing from 1 to 8:
+  1 transposes to 8
+  3 transposes to 10
+  5 transposes to 12
+  6 transposes to 1
+  8 transposes to 3
+  10 transposes to 5
+  12 transposes to 7
+  2 is not a valid note in the 1 major scale
+
+Transposing from 6 to 20:
+  6 transposes to 20
+  10 transposes to 3
+  20 transposes to 15
+  5 transposes to 10
+  12 is not a valid note in the 6 major scale
+
+Key of 13 is not a valid major key
+
+Key of 16 is not a valid major key
+
+Transposing from 14 to 7:
+  14 transposes to 7
+  15 transposes to 9
+  6 transposes to 11
+  18 transposes to 12
+  19 transposes to 2
+  20 transposes to 4
+  1 transposes to 17
+  7 is not a valid note in the 14 major scale

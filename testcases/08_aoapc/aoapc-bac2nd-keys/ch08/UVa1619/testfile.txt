@@ -1,0 +1,96 @@
+/*
+  UVa1619 Feel Good (scaled-down Strict SysY)
+  Input:
+    T
+    For each case:
+      N
+      A1..AN
+  Output (per case):
+    max_value
+    l r
+  Blank line between cases.
+*/
+
+const int MAXN = 2005;
+
+int A[MAXN];
+int L[MAXN];
+int R[MAXN];
+int S[MAXN];
+int st1[MAXN];
+int st2[MAXN];
+
+int main() {
+  int T;
+  int caseIndex;
+  int N;
+  int i;
+  int top1;
+  int top2;
+  int ans;
+  int ans_i;
+  int v;
+
+  T = getint();
+  caseIndex = 0;
+  for (caseIndex = 0; caseIndex < T; caseIndex = caseIndex + 1) {
+    N = getint();
+    S[0] = 0;
+    for (i = 1; i <= N; i = i + 1) {
+      A[i] = getint();
+      S[i] = S[i - 1] + A[i];
+    }
+
+    top1 = 0;
+    for (i = 1; i <= N; i = i + 1) {
+      for (;;) {
+        if (top1 == 0) break;
+        if (A[st1[top1 - 1]] >= A[i]) {
+          top1 = top1 - 1;
+        } else {
+          break;
+        }
+      }
+      if (top1 == 0) L[i] = 0;
+      else L[i] = st1[top1 - 1];
+      st1[top1] = i;
+      top1 = top1 + 1;
+    }
+
+    top2 = 0;
+    for (i = N; i >= 1; i = i - 1) {
+      for (;;) {
+        if (top2 == 0) break;
+        if (A[st2[top2 - 1]] >= A[i]) {
+          top2 = top2 - 1;
+        } else {
+          break;
+        }
+      }
+      if (top2 == 0) R[i] = N + 1;
+      else R[i] = st2[top2 - 1];
+      st2[top2] = i;
+      top2 = top2 + 1;
+    }
+
+    ans = -1;
+    ans_i = 1;
+    for (i = 1; i <= N; i = i + 1) {
+      v = (S[R[i] - 1] - S[L[i]]) * A[i];
+      if (v > ans) {
+        ans = v;
+        ans_i = i;
+      }
+    }
+
+    if (caseIndex > 0) printf("\n");
+    if (ans == 0) {
+      printf("0\n");
+      printf("1 1\n");
+    } else {
+      printf("%d\n", ans);
+      printf("%d %d\n", L[ans_i] + 1, R[ans_i] - 1);
+    }
+  }
+  return 0;
+}

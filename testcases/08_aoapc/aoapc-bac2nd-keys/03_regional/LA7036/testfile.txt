@@ -1,0 +1,318 @@
+/* Description:
+ * Converted from "LA7036 Puzzle & Dragons" solver.
+ * Refactored to Strict SysY:
+ * - Iterative BFS for elimination (removes recursion overhead).
+ * - Optimized scanning in eliminate_all (skips redundant checks).
+ * - Reduced memory access overhead.
+ */
+
+const int N = 5;
+const int M = 6;
+const int NM = 30;
+const int MAXSTEP = 3;
+
+int Grid[NM];
+int Buf[NM];
+int Elim[NM];
+int Q[NM]; // Queue for BFS
+
+int DX[4] = {0, 0, 1, -1};
+int DY[4] = {1, -1, 0, 0};
+int Opp[4] = {1, 0, 3, 2};
+
+int Sol[MAXSTEP + 1];
+
+int AnsCombo;
+int AnsDrop;
+int AnsLength;
+int AnsStartX;
+int AnsStartY;
+int AnsSolution[MAXSTEP + 1];
+
+int CurCombo;
+int CurDrop;
+
+int valid(int x, int y) {
+  if (x < 0) return 0;
+  if (x >= N) return 0;
+  if (y < 0) return 0;
+  if (y >= M) return 0;
+  return 1;
+}
+
+int eliminate_bfs(int sx, int sy, int c) {
+  int head;
+  int tail;
+  int idx;
+  int cur;
+  int cx;
+  int cy;
+  int k;
+  int nx;
+  int ny;
+  int nidx;
+  int res;
+
+  if (valid(sx, sy) == 0) return 0;
+  idx = sx * M + sy;
+  if (Buf[idx] != c) return 0;
+  if (Elim[idx] == 0) return 0;
+
+  head = 0;
+  tail = 0;
+  
+  // Push start
+  Q[tail] = idx;
+  tail = tail + 1;
+  Buf[idx] = 0;
+  Elim[idx] = 0;
+  res = 1;
+
+  for (;head < tail;) {
+    cur = Q[head];
+    head = head + 1;
+    
+    cx = cur / M;
+    cy = cur % M;
+
+    for (k = 0; k < 4; k = k + 1) {
+      nx = cx + DX[k];
+      ny = cy + DY[k];
+      if (valid(nx, ny)) {
+        nidx = nx * M + ny;
+        if (Buf[nidx] == c && Elim[nidx] == 1) {
+          Buf[nidx] = 0;
+          Elim[nidx] = 0;
+          res = res + 1;
+          Q[tail] = nidx;
+          tail = tail + 1;
+        }
+      }
+    }
+  }
+  return res;
+}
+
+int eliminate_all() {
+  int any;
+  int i;
+  int j;
+  int k;
+  int idx;
+  int c;
+  int bottom;
+
+  any = 0;
+  CurCombo = 0;
+  CurDrop = 0;
+
+  // Reset Elim array
+  for (idx = 0; idx < NM; idx = idx + 1) Elim[idx] = 0;
+
+  // Optimized Horizontal Scan (Run-Length)
+  for (i = 0; i < N; i = i + 1) {
+    for (j = 0; j <= M - 3; j = j + 1) {
+      idx = i * M + j;
+      c = Buf[idx];
+      if (c == 0) continue;
+      
+      // Check for triplet
+      if (c == Buf[idx + 1] && c == Buf[idx + 2]) {
+        Elim[idx] = 1;
+        Elim[idx + 1] = 1;
+        Elim[idx + 2] = 1;
+        any = 1;
+        
+        // Optimization: Mark continued sequence and jump j
+        k = 3;
+        for (;j + k < M && Buf[idx + k] == c;) {
+          Elim[idx + k] = 1;
+          k = k + 1;
+        }
+        j = j + k - 1; // Skip the rest of this match
+      }
+    }
+  }
+
+  // Optimized Vertical Scan
+  for (j = 0; j < M; j = j + 1) {
+    for (i = 0; i <= N - 3; i = i + 1) {
+      idx = i * M + j;
+      c = Buf[idx];
+      if (c == 0) continue;
+
+      if (c == Buf[idx + M] && c == Buf[idx + 2 * M]) {
+        Elim[idx] = 1;
+        Elim[idx + M] = 1;
+        Elim[idx + 2 * M] = 1;
+        any = 1;
+        
+        k = 3;
+        for (;i + k < N && Buf[idx + k * M] == c;) {
+          Elim[idx + k * M] = 1;
+          k = k + 1;
+        }
+        i = i + k - 1; 
+      }
+    }
+  }
+
+  if (any == 0) return 0;
+
+  // Process eliminations using BFS
+  for (i = 0; i < N; i = i + 1) {
+    for (j = 0; j < M; j = j + 1) {
+      idx = i * M + j;
+      if (Elim[idx] != 0) {
+        CurCombo = CurCombo + 1;
+        CurDrop = CurDrop + eliminate_bfs(i, j, Buf[idx]);
+      }
+    }
+  }
+
+  // Apply Gravity
+  for (j = 0; j < M; j = j + 1) {
+    bottom = N - 1;
+    for (i = N - 1; i >= 0; i = i - 1) {
+      idx = i * M + j;
+      if (Buf[idx] != 0) {
+        if (bottom != i) {
+          Buf[bottom * M + j] = Buf[idx];
+          Buf[idx] = 0;
+        }
+        bottom = bottom - 1;
+      }
+    }
+  }
+
+  return 1;
+}
+
+void try_path(int step, int stx, int sty) {
+  int idx;
+  int resCombo;
+  int resDrop;
+  int ok;
+  int better;
+  int i;
+
+  resCombo = 0;
+  resDrop = 0;
+
+  for (idx = 0; idx < NM; idx = idx + 1) Buf[idx] = Grid[idx];
+
+  // Simulation Loop
+  for (;;) {
+    ok = eliminate_all();
+    if (ok == 0) break;
+    resCombo = resCombo + CurCombo;
+    resDrop = resDrop + CurDrop;
+  }
+
+  better = 0;
+  if (AnsLength < 0) {
+    better = 1;
+  } else {
+    if (resCombo > AnsCombo) {
+      better = 1;
+    } else {
+      if (resCombo == AnsCombo) {
+        if (resDrop > AnsDrop) {
+          better = 1;
+        } else {
+          if (resDrop == AnsDrop) {
+            // Prefer shorter paths
+            if (step < AnsLength) better = 1;
+          }
+        }
+      }
+    }
+  }
+
+  if (better != 0) {
+    AnsCombo = resCombo;
+    AnsDrop = resDrop;
+    AnsLength = step;
+    AnsStartX = stx;
+    AnsStartY = sty;
+    for (i = 0; i < step; i = i + 1) AnsSolution[i] = Sol[i];
+  }
+}
+
+void find_path(int x, int y, int step, int lastDir, int stx, int sty) {
+  int i;
+  int nx;
+  int ny;
+  int idx1;
+  int idx2;
+  int tmp;
+
+  try_path(step, stx, sty);
+  
+  if (step >= MAXSTEP) return;
+
+  for (i = 0; i < 4; i = i + 1) {
+    if (step >= 1 && lastDir == Opp[i]) {
+        // Skip
+    } else {
+      nx = x + DX[i];
+      ny = y + DY[i];
+      if (valid(nx, ny) == 0) {
+          // Skip
+      } else {
+        idx1 = x * M + y;
+        idx2 = nx * M + ny;
+        
+        // Swap
+        tmp = Grid[idx1];
+        Grid[idx1] = Grid[idx2];
+        Grid[idx2] = tmp;
+
+        Sol[step] = i;
+        find_path(nx, ny, step + 1, i, stx, sty);
+
+        // Backtrack
+        tmp = Grid[idx1];
+        Grid[idx1] = Grid[idx2];
+        Grid[idx2] = tmp;
+      }
+    }
+  }
+}
+
+int main() {
+  int T;
+  int t;
+  int idx;
+  int x;
+  int y;
+  int i;
+
+  T = getint();
+
+  for (t = 0; t < T; t = t + 1) {
+    for (idx = 0; idx < NM; idx = idx + 1) Grid[idx] = getint();
+
+    AnsCombo = 0;
+    AnsDrop = 0;
+    AnsLength = -1;
+    AnsStartX = 0;
+    AnsStartY = 0;
+
+    for (x = 0; x < N; x = x + 1) {
+      for (y = 0; y < M; y = y + 1) {
+        find_path(x, y, 0, 4, x, y);
+      }
+    }
+
+    printf("Case %d\n", t + 1);
+    printf("%d\n", AnsCombo);
+    printf("%d\n", AnsDrop);
+    printf("%d\n", AnsLength);
+    printf("%d\n", AnsStartX + 1);
+    printf("%d\n", AnsStartY + 1);
+    for (i = 0; i < AnsLength; i = i + 1) printf("%d\n", AnsSolution[i]);
+  }
+
+  return 0;
+}

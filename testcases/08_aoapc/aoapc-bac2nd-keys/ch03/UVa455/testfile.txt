@@ -1,0 +1,65 @@
+/*
+  Periodic Strings (UVa 455), encoded as integers.
+
+  Input format (newline-separated integers):
+    T
+    For each case:
+      L
+      s[0]
+      s[1]
+      ...
+      s[L-1]
+
+  Each s[i] is an integer "character code" (e.g., ASCII).
+  Output matches the original: period length per case, blank line between cases.
+*/
+
+int main() {
+    int T;
+    int caseIndex;
+    int L;
+    int i;
+    int p;
+    int answer;
+    int ok;
+    int ii;
+    int jj;
+    int s[256];
+
+    T = getint();
+    for (caseIndex = 0; caseIndex < T; caseIndex = caseIndex + 1) {
+        L = getint();
+        for (i = 0; i < L; i = i + 1) {
+            s[i] = getint();
+        }
+
+        answer = L;
+        for (p = 1; p <= L; p = p + 1) {
+            if (L % p != 0) {
+            } else {
+                ok = 1;
+                for (ii = 0; ii < p; ii = ii + 1) {
+                    for (jj = ii + p; jj < L; jj = jj + p) {
+                        if (s[jj] != s[ii]) {
+                            ok = 0;
+                            jj = L;
+                        }
+                    }
+                    if (ok == 0) {
+                        ii = p;
+                    }
+                }
+                if (ok == 1) {
+                    answer = p;
+                    p = L + 1;
+                }
+            }
+        }
+
+        printf("%d\n", answer);
+        if (caseIndex != T - 1) {
+            printf("\n");
+        }
+    }
+    return 0;
+}

@@ -1,0 +1,212 @@
+/* Description:
+ *   [Add description here]
+ */
+
+const int MAXN = 52;
+const int MAXV = 120;
+const int MAXE = 2000;
+const int INF = 100000000;
+
+int head[MAXV];
+int toV[MAXE];
+int fromV[MAXE];
+int capE[MAXE];
+int flowE[MAXE];
+int costE[MAXE];
+int nextE[MAXE];
+int edgeCnt;
+int nodeCnt;
+
+int distV[MAXV];
+int inqV[MAXV];
+int prevE[MAXV];
+int augV[MAXV];
+int q[MAXV * 10];
+
+int N, C, R;
+int S, T;
+int M[MAXN];
+int Gid[MAXN];
+int Qid[MAXN];
+
+int totalFlow;
+int totalCost;
+
+void graphInit(int n) {
+  int i;
+  nodeCnt = n;
+  edgeCnt = 0;
+  for (i = 0; i < MAXV; i = i + 1) head[i] = -1;
+}
+
+void addEdgeInternal(int u, int v, int cap, int cost) {
+  fromV[edgeCnt] = u;
+  toV[edgeCnt] = v;
+  capE[edgeCnt] = cap;
+  flowE[edgeCnt] = 0;
+  costE[edgeCnt] = cost;
+  nextE[edgeCnt] = head[u];
+  head[u] = edgeCnt;
+  edgeCnt = edgeCnt + 1;
+}
+
+void AddEdge(int u, int v, int cap, int cost) {
+  addEdgeInternal(u, v, cap, cost);
+  addEdgeInternal(v, u, 0, 0 - cost);
+}
+
+void initId() {
+  int i;
+  int id;
+  id = 0;
+  S = id;
+  id = id + 1;
+  for (i = 0; i < N; i = i + 1) {
+    Gid[i] = id;
+    id = id + 1;
+  }
+  for (i = 0; i < N; i = i + 1) {
+    Qid[i] = id;
+    id = id + 1;
+  }
+  T = id;
+  id = id + 1;
+  graphInit(id);
+}
+
+int BellmanFord(int s, int t) {
+  int i;
+  int headQ;
+  int tailQ;
+  int u;
+  int e;
+  for (i = 0; i < nodeCnt; i = i + 1) {
+    distV[i] = INF;
+    inqV[i] = 0;
+    prevE[i] = -1;
+    augV[i] = 0;
+  }
+  distV[s] = 0;
+  inqV[s] = 1;
+  augV[s] = INF;
+  headQ = 0;
+  tailQ = 0;
+  q[tailQ] = s;
+  tailQ = tailQ + 1;
+
+  for (;;) {
+    if (headQ == tailQ) break;
+    u = q[headQ];
+    headQ = headQ + 1;
+    inqV[u] = 0;
+    e = head[u];
+    for (;;) {
+      if (e == -1) break;
+      if (capE[e] > flowE[e]) {
+        int v;
+        int nd;
+        int add;
+        v = toV[e];
+        nd = distV[u] + costE[e];
+        if (distV[v] > nd) {
+          distV[v] = nd;
+          prevE[v] = e;
+          add = capE[e] - flowE[e];
+          if (augV[u] < add) augV[v] = augV[u];
+          else augV[v] = add;
+          if (inqV[v] == 0) {
+            q[tailQ] = v;
+            tailQ = tailQ + 1;
+            inqV[v] = 1;
+          }
+        }
+      }
+      e = nextE[e];
+    }
+  }
+
+  if (distV[t] == INF) return 0;
+
+  {
+    int addf;
+    addf = augV[t];
+    totalFlow = totalFlow + addf;
+    totalCost = totalCost + distV[t] * addf;
+    u = t;
+    for (;;) {
+      int pe;
+      int rev;
+      if (u == s) break;
+      pe = prevE[u];
+      flowE[pe] = flowE[pe] + addf;
+      if (pe % 2 == 0) rev = pe + 1;
+      else rev = pe - 1;
+      flowE[rev] = flowE[rev] - addf;
+      u = fromV[pe];
+    }
+  }
+  return 1;
+}
+
+int Mincost(int s, int t) {
+  totalFlow = 0;
+  totalCost = 0;
+  for (;;) {
+    int ok;
+    ok = BellmanFord(s, t);
+    if (ok == 0) break;
+  }
+  return totalCost;
+}
+
+int main() {
+  int K;
+  int tc;
+  K = getint();
+  tc = 1;
+  for (tc = 1; tc <= K; tc = tc + 1) {
+    int i;
+    int ans;
+    int sumM;
+
+    N = getint();
+    C = getint();
+    R = getint();
+    initId();
+
+    sumM = 0;
+    for (i = 0; i < N; i = i + 1) {
+      int r;
+      r = getint();
+      M[i] = r;
+      sumM = sumM + r;
+      AddEdge(Gid[i], T, r, 0);
+      AddEdge(S, Qid[i], r, 0);
+      if (i != 0) AddEdge(Gid[i - 1], Gid[i], INF, 0);
+    }
+
+    for (i = 0; i < C; i = i + 1) {
+      int c;
+      int p;
+      c = getint();
+      p = getint();
+      AddEdge(S, Gid[0], c, p);
+    }
+
+    for (i = 0; i < R; i = i + 1) {
+      int d;
+      int sCost;
+      int j;
+      d = getint();
+      sCost = getint();
+      for (j = 0; j + d + 1 < N; j = j + 1) {
+        AddEdge(Qid[j], Gid[j + d + 1], INF, sCost);
+      }
+    }
+
+    ans = Mincost(S, T);
+    if (totalFlow != sumM) printf("Case %d: impossible\n", tc);
+    else printf("Case %d: %d\n", tc, ans);
+  }
+  return 0;
+}

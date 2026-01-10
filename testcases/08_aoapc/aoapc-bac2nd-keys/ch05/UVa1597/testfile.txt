@@ -1,0 +1,209 @@
+/* Description:
+ *   Integer-only version of "Searching the Web" query engine.
+ *
+ *   Input format (all integers, one per line):
+ *     N
+ *     For each document i in [0..N):
+ *       Li
+ *       For each line j in [0..Li):
+ *         Wij
+ *         then Wij integers: word IDs in this line
+ *     M
+ *     For each query:
+ *       t
+ *       if t==1: A
+ *       if t==2: B
+ *       if t==3: A, B
+ *       if t==4: A, B
+ *
+ *   Query semantics per document:
+ *     t==1 (A): print lines containing A
+ *     t==2 (NOT B): if B absent in document, print all lines
+ *     t==3 (A AND B): if both exist in document, print lines containing A or B
+ *     t==4 (A OR  B): if either exists in document, print lines containing A or B
+ *
+ *   Between matching documents print "----------".
+ *   If no document matches: print "Sorry, I found nothing."
+ *   Always end each query with "=========="
+ */
+
+const int MAX_DOCS = 8;
+const int MAX_LINES = 128;
+const int MAX_WORDS_PER_LINE = 16;
+
+int docLineStart[MAX_DOCS];
+int docLineCount[MAX_DOCS];
+
+int lineWordCount[MAX_LINES];
+int lineWords[MAX_LINES * MAX_WORDS_PER_LINE];
+
+int totalLines;
+
+int line_has_word(int lineIdx, int wordId) {
+    int k;
+    int base;
+    int cnt;
+    int found;
+    base = lineIdx * MAX_WORDS_PER_LINE;
+    cnt = lineWordCount[lineIdx];
+    found = 0;
+    for (k = 0; k < cnt; k = k + 1) {
+        if (lineWords[base + k] == wordId) found = 1;
+    }
+    return found;
+}
+
+void print_line(int lineIdx) {
+    int k;
+    int base;
+    int cnt;
+    base = lineIdx * MAX_WORDS_PER_LINE;
+    cnt = lineWordCount[lineIdx];
+    for (k = 0; k < cnt; k = k + 1) {
+        if (k == 0) printf("%d", lineWords[base + k]);
+        else printf(" %d", lineWords[base + k]);
+    }
+    printf("\n");
+}
+
+int doc_word_exists(int docId, int wordId) {
+    int j;
+    int start;
+    int cnt;
+    int exists;
+    start = docLineStart[docId];
+    cnt = docLineCount[docId];
+    exists = 0;
+    for (j = 0; j < cnt; j = j + 1) {
+        if (line_has_word(start + j, wordId) == 1) exists = 1;
+    }
+    return exists;
+}
+
+int doc_matches_query(int docId, int t, int a, int b) {
+    int hasA;
+    int hasB;
+    int matchDoc;
+
+    hasA = 0;
+    hasB = 0;
+    if (t == 1) hasA = doc_word_exists(docId, a);
+    if (t == 2) hasB = doc_word_exists(docId, b);
+    if (t == 3) {
+        hasA = doc_word_exists(docId, a);
+        hasB = doc_word_exists(docId, b);
+    }
+    if (t == 4) {
+        hasA = doc_word_exists(docId, a);
+        hasB = doc_word_exists(docId, b);
+    }
+
+    matchDoc = 0;
+    if (t == 1) {
+        if (hasA == 1) matchDoc = 1;
+    } else if (t == 2) {
+        if (hasB == 0) matchDoc = 1;
+    } else if (t == 3) {
+        if (hasA == 1 && hasB == 1) matchDoc = 1;
+    } else if (t == 4) {
+        if (hasA == 1 || hasB == 1) matchDoc = 1;
+    }
+
+    return matchDoc;
+}
+
+void doc_print_lines(int docId, int t, int a, int b) {
+    int j;
+    int start;
+    int cnt;
+    int lineIdx;
+    int printLine;
+
+    start = docLineStart[docId];
+    cnt = docLineCount[docId];
+    for (j = 0; j < cnt; j = j + 1) {
+        lineIdx = start + j;
+        printLine = 0;
+        if (t == 1) {
+            if (line_has_word(lineIdx, a) == 1) printLine = 1;
+        } else if (t == 2) {
+            printLine = 1;
+        } else if (t == 3) {
+            if (line_has_word(lineIdx, a) == 1 || line_has_word(lineIdx, b) == 1) printLine = 1;
+        } else if (t == 4) {
+            if (line_has_word(lineIdx, a) == 1 || line_has_word(lineIdx, b) == 1) printLine = 1;
+        }
+
+        if (printLine == 1) print_line(lineIdx);
+    }
+}
+
+int main() {
+    int n;
+    int m;
+    int doc;
+    int li;
+    int j;
+    int wi;
+    int k;
+    int w;
+    int q;
+    int t;
+    int a;
+    int b;
+    int firstDoc;
+    int anyDoc;
+    int matchDoc;
+
+    totalLines = 0;
+
+    n = getint();
+    for (doc = 0; doc < n; doc = doc + 1) {
+        li = getint();
+        docLineStart[doc] = totalLines;
+        docLineCount[doc] = li;
+
+        for (j = 0; j < li; j = j + 1) {
+            wi = getint();
+            lineWordCount[totalLines] = wi;
+            for (k = 0; k < wi; k = k + 1) {
+                w = getint();
+                lineWords[totalLines * MAX_WORDS_PER_LINE + k] = w;
+            }
+            totalLines = totalLines + 1;
+        }
+    }
+
+    m = getint();
+    for (q = 0; q < m; q = q + 1) {
+        t = getint();
+        a = 0;
+        b = 0;
+        if (t == 1) a = getint();
+        else if (t == 2) b = getint();
+        else if (t == 3) {
+            a = getint();
+            b = getint();
+        } else if (t == 4) {
+            a = getint();
+            b = getint();
+        }
+
+        firstDoc = 1;
+        anyDoc = 0;
+        for (doc = 0; doc < n; doc = doc + 1) {
+            matchDoc = doc_matches_query(doc, t, a, b);
+            if (matchDoc == 1) {
+                if (firstDoc == 0) printf("----------\n");
+                firstDoc = 0;
+                anyDoc = 1;
+                doc_print_lines(doc, t, a, b);
+            }
+        }
+
+        if (anyDoc == 0) printf("Sorry, I found nothing.\n");
+        printf("==========\n");
+    }
+
+    return 0;
+}

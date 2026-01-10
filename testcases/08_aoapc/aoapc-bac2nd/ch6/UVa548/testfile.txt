@@ -1,0 +1,80 @@
+/* Description:
+ *   Reconstruct a weighted binary tree from inorder + postorder traversals,
+ *   then print the leaf whose root-to-leaf path sum is minimal (tie: smaller
+ *   leaf value).
+ *
+ * Input format for this testcase (newline-separated integers):
+ *   Repeat:
+ *     n
+ *     inorder[0..n-1]
+ *     postorder[0..n-1]
+ *   Until n == 0.
+ */
+
+const int MAXV = 10000 + 10;
+const int MAXN = 10000 + 10;
+
+int in_order[MAXN];
+int post_order[MAXN];
+int lch[MAXV];
+int rch[MAXV];
+int n;
+
+int best;
+int best_sum;
+
+int build(int L1, int R1, int L2, int R2) {
+  int root;
+  int p;
+  int cnt;
+  if (L1 > R1) return 0;
+  root = post_order[R2];
+  p = L1;
+  for (; p <= R1; p = p + 1) {
+    if (in_order[p] == root) break;
+  }
+  cnt = p - L1;
+  lch[root] = build(L1, p - 1, L2, L2 + cnt - 1);
+  rch[root] = build(p + 1, R1, L2 + cnt, R2 - 1);
+  return root;
+}
+
+void dfs(int u, int sum) {
+  int next_sum;
+  next_sum = sum + u;
+  if (lch[u] == 0 && rch[u] == 0) {
+    if (next_sum < best_sum) {
+      best_sum = next_sum;
+      best = u;
+    } else {
+      if (next_sum == best_sum && u < best) best = u;
+    }
+  }
+  if (lch[u] != 0) dfs(lch[u], next_sum);
+  if (rch[u] != 0) dfs(rch[u], next_sum);
+  return;
+}
+
+int main() {
+  int i;
+  int root;
+  for (;;) {
+    n = getint();
+    if (n == 0) break;
+
+    for (i = 0; i < MAXV; i = i + 1) {
+      lch[i] = 0;
+      rch[i] = 0;
+    }
+
+    for (i = 0; i < n; i = i + 1) in_order[i] = getint();
+    for (i = 0; i < n; i = i + 1) post_order[i] = getint();
+
+    root = build(0, n - 1, 0, n - 1);
+    best = 0;
+    best_sum = 1000000000;
+    dfs(root, 0);
+    printf("%d\n", best);
+  }
+  return 0;
+}

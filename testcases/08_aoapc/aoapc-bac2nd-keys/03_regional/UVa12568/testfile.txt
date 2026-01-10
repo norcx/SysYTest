@@ -1,0 +1,272 @@
+/* Description:
+ *   Strict SysY conversion of UVa12568 "Optimizing Key Signature".
+ *
+ *   Input format (integers, one per line):
+ *     T
+ *     For each case:
+ *       mSig          (0..7)
+ *       accSig        (0:none, 1:'#', 2:'b')  (must be 0 when mSig==0)
+ *       then a token stream ending with 101:
+ *         100  => '|'  (new measure)
+ *         101  => '||' (end of case)
+ *         0..36 => a note token: token = acc*10 + note
+ *                 acc: 0:none, 1:'#', 2:'b', 3:'n'
+ *                 note: 0..6 for A..G
+ *
+ *   Output matches the original UVA style:
+ *     Case t: minCnt
+ *     key list (e.g., "0" or "2# 2b")
+ */
+
+const int NOTE_K = 7;
+
+const int TOKEN_BAR = 100;
+const int TOKEN_END = 101;
+
+const int ACC_NONE = 0;
+const int ACC_SHARP = 1;
+const int ACC_FLAT = 2;
+const int ACC_NATURAL = 3;
+
+const int MAX_MEASURES = 64;
+const int MAX_NOTES = 512;
+const int MAX_KEYS = 16;
+
+const int bKey[56] = {
+    0, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 1, 0, 0,
+    1, 1, 0, 0, 1, 0, 0,
+    1, 1, 0, 1, 1, 0, 0,
+    1, 1, 0, 1, 1, 0, 1,
+    1, 1, 1, 1, 1, 0, 1,
+    1, 1, 1, 1, 1, 1, 1
+};
+
+const int sKey[56] = {
+    0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 1, 0,
+    0, 0, 1, 0, 0, 1, 0,
+    0, 0, 1, 0, 0, 1, 1,
+    0, 0, 1, 1, 0, 1, 1,
+    1, 0, 1, 1, 0, 1, 1,
+    1, 0, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1
+};
+
+int notes[MAX_NOTES];
+int acs[MAX_NOTES];
+int measureStart[MAX_MEASURES];
+int measureLen[MAX_MEASURES];
+
+int keyM[MAX_KEYS];
+int keyAcc[MAX_KEYS];
+
+int tableAffected(int mSig, int accSig, int note) {
+    int idx;
+    idx = mSig * NOTE_K + note;
+    if (accSig == ACC_SHARP) return sKey[idx];
+    return bKey[idx];
+}
+
+void restoreMeasure(int start, int len, int mSig, int accSig) {
+    int kAcc[7];
+    int i;
+    for (i = 0; i < 7; i = i + 1) kAcc[i] = 0;
+
+    for (i = 0; i < len; i = i + 1) {
+        int pos;
+        int nt;
+        int ac;
+        int affected;
+
+        pos = start + i;
+        nt = notes[pos];
+        ac = acs[pos];
+
+        if (accSig == ACC_SHARP) affected = sKey[mSig * NOTE_K + nt];
+        else affected = bKey[mSig * NOTE_K + nt];
+
+        if (ac == ACC_NONE) {
+            if (kAcc[nt] != 0) ac = kAcc[nt];
+            else if (affected != 0) ac = accSig;
+        }
+
+        acs[pos] = ac;
+        kAcc[nt] = ac;
+    }
+}
+
+int applyMeasure(int start, int len, int mCand, int accCand) {
+    int kAcc[7];
+    int i;
+    int ans;
+    for (i = 0; i < 7; i = i + 1) kAcc[i] = 0;
+    ans = 0;
+
+    for (i = 0; i < len; i = i + 1) {
+        int pos;
+        int nt;
+        int ac;
+        int affected;
+
+        pos = start + i;
+        nt = notes[pos];
+        ac = acs[pos];
+
+        affected = 0;
+        if (accCand != 0) affected = tableAffected(mCand, accCand, nt);
+
+        if (ac == ACC_NONE || ac == ACC_NATURAL) {
+            if (affected != 0) {
+                if (kAcc[nt] == 0 || kAcc[nt] != ACC_NATURAL) {
+                    kAcc[nt] = ACC_NATURAL;
+                    ans = ans + 1;
+                }
+            } else {
+                if (kAcc[nt] != 0 && kAcc[nt] != ACC_NATURAL) {
+                    kAcc[nt] = ACC_NATURAL;
+                    ans = ans + 1;
+                }
+            }
+        } else {
+            if (kAcc[nt] != 0) {
+                if (kAcc[nt] != ac) {
+                    kAcc[nt] = ac;
+                    ans = ans + 1;
+                }
+            } else {
+                if (ac != accCand || affected == 0) {
+                    kAcc[nt] = ac;
+                    ans = ans + 1;
+                }
+            }
+        }
+    }
+
+    return ans;
+}
+
+void printKey(int mSig, int accSig) {
+    if (mSig == 0) {
+        printf("0");
+        return;
+    }
+    if (accSig == ACC_SHARP) {
+        printf("%d#", mSig);
+        return;
+    }
+    printf("%db", mSig);
+}
+
+int main() {
+    int T;
+    int t;
+
+    T = getint();
+    for (t = 1; t <= T; t = t + 1) {
+        int mSig;
+        int accSig;
+        int measureCount;
+        int totalNotes;
+        int tok;
+        int i;
+
+        mSig = getint();
+        accSig = getint();
+
+        measureCount = 1;
+        totalNotes = 0;
+        measureStart[0] = 0;
+        measureLen[0] = 0;
+
+        for (;;) {
+            tok = getint();
+            if (tok == TOKEN_END) break;
+            if (tok == TOKEN_BAR) {
+                if (measureCount < MAX_MEASURES) {
+                    measureStart[measureCount] = totalNotes;
+                    measureLen[measureCount] = 0;
+                    measureCount = measureCount + 1;
+                }
+            } else {
+                int ac;
+                int nt;
+                ac = tok / 10;
+                nt = tok - ac * 10;
+                if (totalNotes < MAX_NOTES) {
+                    notes[totalNotes] = nt;
+                    acs[totalNotes] = ac;
+                    totalNotes = totalNotes + 1;
+                    measureLen[measureCount - 1] = measureLen[measureCount - 1] + 1;
+                }
+            }
+        }
+
+        for (i = 0; i < measureCount; i = i + 1) {
+            restoreMeasure(measureStart[i], measureLen[i], mSig, accSig);
+        }
+
+        {
+            int minCnt;
+            int keyCount;
+            int candM;
+            int candAcc;
+            int firstM;
+
+            minCnt = 0;
+            for (i = 0; i < measureCount; i = i + 1) {
+                minCnt = minCnt + applyMeasure(measureStart[i], measureLen[i], 0, 0);
+            }
+
+            keyCount = 1;
+            keyM[0] = 0;
+            keyAcc[0] = 0;
+
+            for (candM = 1; candM <= 7; candM = candM + 1) {
+                for (candAcc = 1; candAcc <= 2; candAcc = candAcc + 1) {
+                    int cnt;
+                    cnt = 0;
+                    for (i = 0; i < measureCount; i = i + 1) {
+                        cnt = cnt + applyMeasure(measureStart[i], measureLen[i], candM, candAcc);
+                    }
+                    if (cnt > minCnt) {
+                    } else {
+                        if (cnt < minCnt) {
+                            minCnt = cnt;
+                            keyCount = 0;
+                        }
+                        if (keyCount < MAX_KEYS) {
+                            keyM[keyCount] = candM;
+                            keyAcc[keyCount] = candAcc;
+                            keyCount = keyCount + 1;
+                        }
+                    }
+                }
+            }
+
+            firstM = keyM[0];
+            {
+                int keep;
+                keep = 0;
+                for (i = 0; i < keyCount; i = i + 1) {
+                    if (keyM[i] == firstM) {
+                        keyM[keep] = keyM[i];
+                        keyAcc[keep] = keyAcc[i];
+                        keep = keep + 1;
+                    }
+                }
+                keyCount = keep;
+            }
+
+            printf("Case %d: %d\n", t, minCnt);
+            for (i = 0; i < keyCount; i = i + 1) {
+                if (i != 0) printf(" ");
+                printKey(keyM[i], keyAcc[i]);
+            }
+            printf("\n\n");
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,98 @@
+/* Description:
+ *   Scaled-down Strict SysY adaptation of UVa12559 (Finding Black Circles).
+ *   Input uses integers only: T, then for each case w, h, then w*h pixels (0/1).
+ *   The program searches for approximate circles via integer squared-distance checks.
+ */
+
+const int R_MIN = 2;
+const int R_MAX = 4;
+const int TOL = 1;
+
+int w;
+int h;
+int grid[900];
+
+int r_ans[500];
+int x_ans[500];
+int y_ans[500];
+
+int idx(int x, int y) {
+    return y * w + x;
+}
+
+int main() {
+    int T;
+    int t;
+    int x;
+    int y;
+    int r;
+    int ansCount;
+
+    T = getint();
+
+    for (t = 1; t <= T; t = t + 1) {
+        w = getint();
+        h = getint();
+
+        for (y = 0; y < h; y = y + 1) {
+            for (x = 0; x < w; x = x + 1) {
+                grid[idx(x, y)] = getint();
+            }
+        }
+
+        ansCount = 0;
+        for (r = R_MIN; r <= R_MAX; r = r + 1) {
+            int r2;
+            r2 = r * r;
+
+            for (x = r; x <= w - 1 - r; x = x + 1) {
+                for (y = r; y <= h - 1 - r; y = y + 1) {
+                    int all;
+                    int per;
+                    int dx;
+                    int dy;
+
+                    all = 0;
+                    per = 0;
+                    for (dx = -r; dx <= r; dx = dx + 1) {
+                        for (dy = -r; dy <= r; dy = dy + 1) {
+                            int d2;
+                            d2 = dx * dx + dy * dy;
+                            if (d2 >= r2 - TOL && d2 <= r2 + TOL) {
+                                if (dx != 0 || dy != 0) {
+                                    int cx;
+                                    int cy;
+                                    cx = x + dx;
+                                    cy = y + dy;
+                                    all = all + 1;
+                                    if (grid[idx(cx, cy)] == 1) {
+                                        per = per + 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (all > 0) {
+                        if (per * 10 > all * 8) {
+                            if (ansCount < 500) {
+                                r_ans[ansCount] = r;
+                                x_ans[ansCount] = x;
+                                y_ans[ansCount] = y;
+                                ansCount = ansCount + 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        printf("Case %d: %d", t, ansCount);
+        for (x = 0; x < ansCount; x = x + 1) {
+            printf(" (%d,%d,%d)", r_ans[x], x_ans[x], y_ans[x]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}

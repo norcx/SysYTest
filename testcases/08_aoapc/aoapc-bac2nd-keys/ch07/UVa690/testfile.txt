@@ -1,0 +1,128 @@
+/* Pipeline Scheduling (UVa690) - Strict SysY version
+ *
+ * Input format (all integers, one per line):
+ *   Repeated testcases:
+ *     n
+ *     Task[0]
+ *     ...
+ *     Task[n-1]
+ *   End with n = 0.
+ *
+ * Each Task[i] is the unit index (0..4) used at offset i of a task.
+ */
+const int MAXN = 21;
+const int UNITS = 5;
+const int MAXT = 10;
+const int MAXTIME = MAXT * MAXN;
+
+int n;
+int S[UNITS * MAXTIME];
+int Task[MAXN];
+int Dist[MAXN];
+int dist_len;
+int Ans[MAXT + 1];
+int best;
+
+int canPut(int clock) {
+  int i;
+  for (i = 0; i < n; i = i + 1) {
+    if (S[Task[i] * MAXTIME + (clock + i)] != 0) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+void put(int clock) {
+  int i;
+  for (i = 0; i < n; i = i + 1) {
+    S[Task[i] * MAXTIME + (clock + i)] = 1;
+  }
+  return;
+}
+
+void unput(int clock) {
+  int i;
+  for (i = 0; i < n; i = i + 1) {
+    S[Task[i] * MAXTIME + (clock + i)] = 0;
+  }
+  return;
+}
+
+void dfs(int t, int T, int clock) {
+  int i;
+  int D;
+  int c;
+  int remaining;
+
+  if (t == T) {
+    if (clock + n < best) {
+      best = clock + n;
+    }
+    return;
+  }
+
+  remaining = T - t;
+  for (i = 0; i < dist_len; i = i + 1) {
+    D = Dist[i];
+    c = clock + D;
+    if (c + Ans[remaining] >= best) {
+      break;
+    }
+    if (canPut(c) == 0) {
+      continue;
+    }
+    put(c);
+    dfs(t + 1, T, c);
+    unput(c);
+  }
+  return;
+}
+
+int main() {
+  int i;
+  int T;
+
+  for (;;) {
+    n = getint();
+    if (n == 0) {
+      break;
+    }
+
+    for (i = 0; i < UNITS * MAXTIME; i = i + 1) {
+      S[i] = 0;
+    }
+    for (i = 0; i < MAXN; i = i + 1) {
+      Task[i] = 0;
+      Dist[i] = 0;
+    }
+    for (i = 0; i <= MAXT; i = i + 1) {
+      Ans[i] = 0;
+    }
+    dist_len = 0;
+
+    for (i = 0; i < n; i = i + 1) {
+      Task[i] = getint();
+    }
+
+    put(0);
+    for (i = 1; i <= n; i = i + 1) {
+      if (canPut(i) != 0) {
+        Dist[dist_len] = i;
+        dist_len = dist_len + 1;
+      }
+    }
+
+    Ans[1] = n;
+    for (T = 1; T <= MAXT; T = T + 1) {
+      best = T * n;
+      Ans[T] = best;
+      dfs(1, T, 0);
+      Ans[T] = best;
+    }
+
+    printf("%d\n", Ans[MAXT]);
+  }
+
+  return 0;
+}

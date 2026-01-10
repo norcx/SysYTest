@@ -1,0 +1,64 @@
+/* Description:
+ *   Strict SysY port of UVA 10479 - The Hendrie Sequence.
+ *   Reads integers n (one per line) until sentinel 0, outputs solve(n-1).
+ */
+
+int pow2(int e) {
+  int r;
+  int i;
+  r = 1;
+  for (i = 0; i < e; i = i + 1) {
+    r = r * 2;
+  }
+  return r;
+}
+
+int bsz(int m) {
+  if (m == 0) return 1;
+  return pow2(m - 1);
+}
+
+int solve_block(int b, int n) {
+  int i;
+  int k;
+  int sz;
+  int r;
+  if (b == 0 || b == 1) return b;
+  if (n == bsz(b)) return b;
+  for (i = 1; i < b; i = i + 1) {
+    k = b - i - 1;
+    sz = bsz(k);
+    if (n <= i * sz) {
+      r = n % sz;
+      if (r != 0) return solve_block(k, r);
+      return solve_block(k, sz);
+    }
+    n = n - i * sz;
+  }
+  return 0;
+}
+
+int solve_pos(int n) {
+  int b;
+  int sz;
+  if (n == 0) return 0;
+  b = 1;
+  for (; 1; ) {
+    sz = bsz(b);
+    if (sz < n) n = n - sz;
+    else return solve_block(b, n);
+    b = b + 1;
+  }
+  return 0;
+}
+
+int main() {
+  int n;
+  n = getint();
+  for (; 1; ) {
+    if (n == 0) break;
+    printf("%d\n", solve_pos(n - 1));
+    n = getint();
+  }
+  return 0;
+}

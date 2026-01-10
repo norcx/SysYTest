@@ -1,0 +1,112 @@
+/* Description:
+ * Converted from a C++ program (EOF-driven) into a strict SysY testcase.
+ * Input format (this testcase):
+ *   t
+ *   repeat t times:
+ *     a
+ *     b
+ *     m
+ *     n
+ *     m*n integers (row-major), one per line
+ * Output:
+ *   For each case, print the computed answer on its own line.
+ */
+
+int d[900];
+int dep[30];
+
+int min2(int x, int y) {
+    if (x < y) return x;
+    return y;
+}
+
+int max2(int x, int y) {
+    if (x > y) return x;
+    return y;
+}
+
+int main() {
+    int t;
+    int case_i;
+    int a;
+    int b;
+    int m;
+    int n;
+    int x;
+    int y;
+    int xx;
+    int yy;
+    int ans;
+    int aa;
+    int bb;
+    int idx;
+    int denom;
+    int s;
+    int v;
+    int rem;
+    int cand;
+    int tmp;
+    int inf;
+    int i;
+
+    inf = 1000000000;
+
+    t = getint();
+    if (t <= 0) return 0;
+
+    for (case_i = 0; case_i < t; case_i = case_i + 1) {
+        a = getint();
+        b = getint();
+        m = getint();
+        n = getint();
+
+        for (x = 0; x < m; x = x + 1) {
+            for (y = 0; y < n; y = y + 1) {
+                d[x * 30 + y] = getint();
+            }
+        }
+
+        if (b > a) {
+            tmp = a;
+            a = b;
+            b = tmp;
+        }
+
+        ans = 0;
+
+        for (x = 0; x < m; x = x + 1) {
+            for (y = 0; y <= n; y = y + 1) {
+                for (i = 0; i < n; i = i + 1) dep[i] = inf;
+
+                for (xx = x; xx < m; xx = xx + 1) {
+                    aa = xx - x + 1;
+                    if (aa > a) break;
+
+                    for (yy = y; yy < n; yy = yy + 1) {
+                        bb = yy - y + 1;
+                        if (bb > a || min2(bb, aa) > b) break;
+
+                        idx = xx * 30 + yy;
+                        dep[yy] = min2(dep[yy], d[idx]);
+                        if (yy > 0) dep[yy] = min2(dep[yy - 1], dep[yy]);
+
+                        s = aa * bb;
+                        v = s * dep[yy];
+                        denom = m * n - s;
+                        if (denom <= 0) continue;
+
+                        rem = 0;
+                        if (v % denom == 0) rem = 1;
+
+                        cand = (dep[yy] + (v / denom) - rem) * s;
+                        ans = max2(ans, cand);
+                    }
+                }
+            }
+        }
+
+        printf("%d\n", ans);
+    }
+
+    return 0;
+}

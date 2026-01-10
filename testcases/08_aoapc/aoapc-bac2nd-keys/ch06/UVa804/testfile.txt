@@ -1,0 +1,145 @@
+/* Description:
+ *   UVa 804 Petri Net Simulation (scaled down for Strict SysY).
+ *
+ * Input format (integers only):
+ *   Repeated cases; each case starts with NP (0 ends).
+ *   Then NP initial token counts.
+ *   Then NT transitions:
+ *     Each transition: a list of integers terminated by 0.
+ *       Negative -k means an input arc from place k (1-based).
+ *       Positive  k means an output arc to place k (1-based).
+ *       Repeats indicate arc weight.
+ *   Then NF number of firings.
+ */
+
+const int NP_MAX = 20;
+const int NT_MAX = 20;
+const int OUT_MAX = 400;
+
+int NP;
+int NT;
+int NF;
+
+int tokens[NP_MAX];
+int in_w[NT_MAX * NP_MAX];
+int out_start[NT_MAX];
+int out_cnt[NT_MAX];
+int out_place[OUT_MAX];
+int out_len;
+
+int enabled_trans() {
+  int ti;
+  int pi;
+  int ok;
+  int need;
+  for (ti = 0; ti < NT; ti = ti + 1) {
+    ok = 1;
+    for (pi = 0; pi < NP; pi = pi + 1) {
+      need = in_w[ti * NP_MAX + pi];
+      if (need != 0) {
+        if (tokens[pi] < need) {
+          ok = 0;
+          break;
+        }
+      }
+    }
+    if (ok != 0) return ti;
+  }
+  return -1;
+}
+
+void fire_trans(int ti) {
+  int pi;
+  int need;
+  int j;
+  int start;
+  int cnt;
+  int place;
+
+  for (pi = 0; pi < NP; pi = pi + 1) {
+    need = in_w[ti * NP_MAX + pi];
+    if (need != 0) {
+      tokens[pi] = tokens[pi] - need;
+    }
+  }
+
+  start = out_start[ti];
+  cnt = out_cnt[ti];
+  for (j = 0; j < cnt; j = j + 1) {
+    place = out_place[start + j];
+    tokens[place] = tokens[place] + 1;
+  }
+}
+
+int main() {
+  int kase;
+  int i;
+  int ti;
+  int pi;
+  int idx;
+  int x;
+  int cnt;
+  int live;
+  int f;
+
+  kase = 1;
+  for (;;) {
+    NP = getint();
+    if (NP == 0) break;
+
+    for (i = 0; i < NP; i = i + 1) {
+      tokens[i] = getint();
+    }
+
+    NT = getint();
+    for (i = 0; i < NT_MAX * NP_MAX; i = i + 1) {
+      in_w[i] = 0;
+    }
+    out_len = 0;
+    for (i = 0; i < NT; i = i + 1) {
+      out_start[i] = out_len;
+      out_cnt[i] = 0;
+      for (;;) {
+        x = getint();
+        if (x == 0) break;
+        if (x < 0) {
+          pi = -x - 1;
+          idx = i * NP_MAX + pi;
+          in_w[idx] = in_w[idx] + 1;
+        } else {
+          out_place[out_len] = x - 1;
+          out_len = out_len + 1;
+          out_cnt[i] = out_cnt[i] + 1;
+        }
+      }
+    }
+
+    NF = getint();
+    cnt = 0;
+    live = 1;
+    for (f = 0; f < NF; f = f + 1) {
+      ti = enabled_trans();
+      if (ti == -1) live = 0;
+      if (live == 0) break;
+      fire_trans(ti);
+      cnt = cnt + 1;
+    }
+
+    printf("Case %d: ", kase);
+    if (live != 0) {
+      printf("still live after %d transitions\n", NF);
+    } else {
+      printf("dead after %d transitions\n", cnt);
+    }
+    printf("Places with tokens:");
+    for (pi = 0; pi < NP; pi = pi + 1) {
+      if (tokens[pi] != 0) {
+        printf(" %d (%d)", pi + 1, tokens[pi]);
+      }
+    }
+    printf("\n\n");
+
+    kase = kase + 1;
+  }
+  return 0;
+}

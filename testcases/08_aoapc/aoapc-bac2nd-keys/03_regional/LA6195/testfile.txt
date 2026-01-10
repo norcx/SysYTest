@@ -1,0 +1,96 @@
+// LA6195 The Dueling Philosophers Problem (Strict SysY)
+// Topological sort: 0 = cycle, 1 = unique order, 2 = multiple orders
+const int MAXN = 1100;
+const int MAXM = 6000;
+
+int head[MAXN];
+int to[MAXM];
+int nxt[MAXM];
+int ind[MAXN];
+int q[MAXN];
+
+int main() {
+  int n;
+  int m;
+  int i;
+  int d;
+  int u;
+  int v;
+  int e;
+  int edge_cnt;
+  int front;
+  int back;
+  int cnt;
+  int ans;
+  int flag;
+
+  for (; ; ) {
+    n = getint();
+    m = getint();
+    if (n == 0 || m == 0) {
+      break;
+    }
+
+    i = 0;
+    for (; i < n; i = i + 1) {
+      head[i] = -1;
+      ind[i] = 0;
+    }
+
+    edge_cnt = 0;
+    i = 0;
+    for (; i < m; i = i + 1) {
+      d = getint();
+      u = getint();
+      d = d - 1;
+      u = u - 1;
+      to[edge_cnt] = u;
+      nxt[edge_cnt] = head[d];
+      head[d] = edge_cnt;
+      edge_cnt = edge_cnt + 1;
+      ind[u] = ind[u] + 1;
+    }
+
+    front = 0;
+    back = 0;
+    i = 0;
+    for (; i < n; i = i + 1) {
+      if (ind[i] == 0) {
+        q[back] = i;
+        back = back + 1;
+      }
+    }
+
+    cnt = 0;
+    flag = 0;
+    for (; front < back; ) {
+      cnt = cnt + 1;
+      if (back - front > 1) {
+        flag = 1;
+      }
+      u = q[front];
+      front = front + 1;
+      e = head[u];
+      for (; e != -1; e = nxt[e]) {
+        v = to[e];
+        ind[v] = ind[v] - 1;
+        if (ind[v] == 0) {
+          q[back] = v;
+          back = back + 1;
+        }
+      }
+    }
+
+    ans = 1;
+    if (cnt != n) {
+      ans = 0;
+    } else {
+      if (flag == 1) {
+        ans = 2;
+      }
+    }
+    printf("%d\n", ans);
+  }
+
+  return 0;
+}

@@ -1,0 +1,92 @@
+// Converted to Strict SysY from UVa12113 "Overlapping Squares"
+
+const int EDGE_N = 16;
+const int MAX_DEPTH = 4;
+
+int targetH[25];
+int targetV[25];
+
+int stateH[175];
+int stateV[175];
+
+int equalsTarget(int dep) {
+    int base = dep * EDGE_N;
+    int i;
+    for (i = 0; i < EDGE_N; i = i + 1) {
+        if (stateH[base + i] != targetH[i]) return 0;
+    }
+    for (i = 0; i < EDGE_N; i = i + 1) {
+        if (stateV[base + i] != targetV[i]) return 0;
+    }
+    return 1;
+}
+
+void copyState(int srcDep, int dstDep) {
+    int srcBase = srcDep * EDGE_N;
+    int dstBase = dstDep * EDGE_N;
+    int i;
+    for (i = 0; i < EDGE_N; i = i + 1) {
+        stateH[dstBase + i] = stateH[srcBase + i];
+    }
+    for (i = 0; i < EDGE_N; i = i + 1) {
+        stateV[dstBase + i] = stateV[srcBase + i];
+    }
+}
+
+void putSquare(int dep, int r, int c) {
+    int base = dep * EDGE_N;
+    stateH[base + r * 4 + c] = 1;
+    stateV[base + r * 4 + c] = 1;
+    stateH[base + r * 4 + c + 1] = 1;
+
+    stateV[base + r * 4 + c + 1] = 0;
+    stateV[base + r * 4 + c + 2] = 1;
+    stateV[base + (r + 1) * 4 + c] = 1;
+
+    stateH[base + (r + 1) * 4 + c] = 0;
+    stateH[base + (r + 1) * 4 + c + 1] = 0;
+    stateV[base + (r + 1) * 4 + c + 1] = 0;
+
+    stateV[base + (r + 1) * 4 + c + 2] = 1;
+    stateH[base + (r + 2) * 4 + c] = 1;
+    stateH[base + (r + 2) * 4 + c + 1] = 1;
+}
+
+int dfs(int dep) {
+    if (equalsTarget(dep) == 1) return 1;
+    if (dep >= MAX_DEPTH) return 0;
+
+    int r;
+    int c;
+    for (r = 0; r < 2; r = r + 1) {
+        for (c = 0; c < 2; c = c + 1) {
+            copyState(dep, dep + 1);
+            putSquare(dep + 1, r, c);
+            if (dfs(dep + 1) == 1) return 1;
+        }
+    }
+    return 0;
+}
+
+int main() {
+    int k = 1;
+    for (;;) {
+        int t = getint();
+        if (t == 0) break;
+
+        int i;
+        for (i = 0; i < EDGE_N; i = i + 1) targetH[i] = getint();
+        for (i = 0; i < EDGE_N; i = i + 1) targetV[i] = getint();
+
+        for (i = 0; i < EDGE_N; i = i + 1) {
+            stateH[i] = 0;
+            stateV[i] = 0;
+        }
+
+        int ans = dfs(0);
+        if (ans == 1) printf("Case %d: Yes\n", k);
+        else printf("Case %d: No\n", k);
+        k = k + 1;
+    }
+    return 0;
+}

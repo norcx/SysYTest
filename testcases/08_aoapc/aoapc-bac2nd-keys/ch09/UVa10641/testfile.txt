@@ -1,0 +1,170 @@
+/* Description:
+ *   Converted from UVa10641 Barisal Stadium (integer-only SysY).
+ *   Input format (newline-separated integers):
+ *     N
+ *     x0
+ *     y0
+ *     ...
+ *     x{N-1}
+ *     y{N-1}
+ *     M
+ *     lx0
+ *     ly0
+ *     c0
+ *     ...
+ *     lx{M-1}
+ *     ly{M-1}
+ *     c{M-1}
+ *   Repeats until N == 0 (sentinel must be present).
+ */
+
+const int MAXN = 32;
+const int MAXM = 64;
+const int INF = 1000000000;
+
+int N;
+int M;
+int xV[2 * MAXN];
+int yV[2 * MAXN];
+int xLT[MAXM];
+int yLT[MAXM];
+int C[MAXM];
+int L[MAXM];
+int R[MAXM];
+int D[2 * MAXN + 1];
+int sumX;
+int sumY;
+
+int cross(int ax, int ay, int bx, int by) {
+  return ax * by - ay * bx;
+}
+
+int min2(int a, int b) {
+  if (a < b) return a;
+  return b;
+}
+
+int canCover(int ltIdx, int aIdx, int bIdx) {
+  int dx;
+  int dy;
+  int px;
+  int py;
+  int ox;
+  int oy;
+  int crossP;
+  int crossO;
+
+  dx = xV[bIdx] - xV[aIdx];
+  dy = yV[bIdx] - yV[aIdx];
+
+  px = xLT[ltIdx] - xV[aIdx];
+  py = yLT[ltIdx] - yV[aIdx];
+  crossP = cross(dx, dy, px, py);
+
+  ox = sumX - xV[aIdx] * N;
+  oy = sumY - yV[aIdx] * N;
+  crossO = cross(dx, dy, ox, oy);
+
+  if (crossP < 0 && crossO > 0) return 1;
+  if (crossP > 0 && crossO < 0) return 1;
+  return 0;
+}
+
+void initIntervals() {
+  int i;
+  int j;
+  int prev;
+  int c1;
+  int c2;
+
+  for (i = 0; i < M; i = i + 1) {
+    L[i] = -1;
+    R[i] = -1;
+    for (j = 0; j < N; j = j + 1) {
+      prev = j - 1;
+      if (prev < 0) prev = prev + N;
+      c1 = canCover(i, prev, j);
+      c2 = canCover(i, j, j + 1);
+      if (c1 == 0 && c2 == 1) L[i] = j;
+      if (c1 == 1 && c2 == 0) R[i] = j;
+    }
+    if (L[i] < 0 || R[i] < 0) {
+      L[i] = 0;
+      R[i] = -1;
+    } else {
+      if (R[i] < L[i]) R[i] = R[i] + N;
+    }
+  }
+  return;
+}
+
+int solve() {
+  int ans;
+  int i;
+  int j;
+  int k;
+  int li;
+  int r;
+  int endPos;
+
+  ans = INF;
+  for (i = 0; i < N; i = i + 1) {
+    for (k = 0; k <= 2 * N; k = k + 1) D[k] = INF;
+    D[i] = 0;
+
+    endPos = i + N;
+    for (j = i; j < endPos; j = j + 1) {
+      for (li = 0; li < M; li = li + 1) {
+        if (D[j] < INF && L[li] <= j && j <= R[li]) {
+          r = R[li];
+          if (r > endPos) r = endPos;
+          if (D[j] + C[li] < D[r]) D[r] = D[j] + C[li];
+        }
+      }
+    }
+    if (D[endPos] < ans) ans = D[endPos];
+  }
+  return ans;
+}
+
+int main() {
+  int i;
+  int x;
+  int y;
+  int ans;
+
+  for (;;) {
+    N = getint();
+    if (N == 0) break;
+
+    sumX = 0;
+    sumY = 0;
+    for (i = 0; i < N; i = i + 1) {
+      x = getint();
+      y = getint();
+      xV[i] = x;
+      yV[i] = y;
+      xV[i + N] = x;
+      yV[i + N] = y;
+      sumX = sumX + x;
+      sumY = sumY + y;
+    }
+
+    M = getint();
+    for (i = 0; i < M; i = i + 1) {
+      xLT[i] = getint();
+      yLT[i] = getint();
+      C[i] = getint();
+    }
+
+    initIntervals();
+    ans = solve();
+    if (ans >= INF) {
+      printf("Impossible.\n");
+    } else {
+      printf("%d\n", ans);
+    }
+  }
+
+  return 0;
+}

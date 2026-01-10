@@ -1,0 +1,132 @@
+/*
+Spreadsheet calculator (UVa 215) refactored to Strict SysY.
+
+Input encoding (all integers, one per line):
+Repeat cases:
+  R
+  C
+  For each cell id = 0..R*C-1:
+    T                      // number of terms in expression
+    Repeat T times:
+      kind                 // 0 = literal number, 1 = reference
+      sign                 // 1 or -1
+      data                 // if kind==0: abs(number); if kind==1: refId (0..R*C-1)
+Terminate with:
+  0
+  0
+
+Output:
+For each case:
+  "OK\n"  then R, C, and all cell values (row-major), one %d per line
+  or
+  "ERR\n" then count of bad cells and their ids, one %d per line
+  then a blank line.
+*/
+
+const int MAXR = 22;
+const int MAXC = 12;
+const int MAXCELLS = 300;
+const int MAXTERMS = 5000;
+
+int R;
+int C;
+int cellStart[MAXCELLS];
+int cellLen[MAXCELLS];
+int termKind[MAXTERMS];
+int termSign[MAXTERMS];
+int termData[MAXTERMS];
+int OK[MAXCELLS];
+int V[MAXCELLS];
+
+int eval(int id) {
+  int o;
+  int v;
+  int start;
+  int len;
+  int i;
+  int idx;
+  int refId;
+  o = OK[id];
+  if (o == 1) return 1;
+  if (o == -1) return 0;
+  OK[id] = -1;
+  V[id] = 0;
+  v = 0;
+  start = cellStart[id];
+  len = cellLen[id];
+  for (i = 0; i < len; i = i + 1) {
+    idx = start + i;
+    if (termKind[idx] == 0) {
+      v = v + termSign[idx] * termData[idx];
+    } else {
+      refId = termData[idx];
+      if (eval(refId) == 0) return 0;
+      v = v + termSign[idx] * V[refId];
+    }
+  }
+  V[id] = v;
+  OK[id] = 1;
+  return 1;
+}
+
+int main() {
+  int total;
+  int pos;
+  int id;
+  int t;
+  int i;
+  int j;
+  int ok;
+  int badCount;
+  for (;;) {
+    R = getint();
+    C = getint();
+    if (R == 0 && C == 0) break;
+
+    total = R * C;
+    pos = 0;
+    for (id = 0; id < total; id = id + 1) {
+      t = getint();
+      cellStart[id] = pos;
+      cellLen[id] = t;
+      for (i = 0; i < t; i = i + 1) {
+        termKind[pos] = getint();
+        termSign[pos] = getint();
+        termData[pos] = getint();
+        pos = pos + 1;
+      }
+    }
+
+    for (id = 0; id < total; id = id + 1) {
+      OK[id] = 0;
+      V[id] = 0;
+    }
+
+    ok = 1;
+    for (id = 0; id < total; id = id + 1) {
+      if (eval(id) == 0) ok = 0;
+    }
+
+    if (ok == 1) {
+      printf("OK\n");
+      printf("%d\n", R);
+      printf("%d\n", C);
+      for (id = 0; id < total; id = id + 1) {
+        printf("%d\n", V[id]);
+      }
+    } else {
+      printf("ERR\n");
+      badCount = 0;
+      for (id = 0; id < total; id = id + 1) {
+        if (OK[id] != 1) badCount = badCount + 1;
+      }
+      printf("%d\n", badCount);
+      for (id = 0; id < total; id = id + 1) {
+        if (OK[id] != 1) printf("%d\n", id);
+      }
+    }
+    printf("\n");
+  }
+  j = 0;
+  return j;
+}

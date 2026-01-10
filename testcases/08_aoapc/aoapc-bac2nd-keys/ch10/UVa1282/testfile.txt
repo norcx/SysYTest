@@ -1,0 +1,116 @@
+/* Description:
+ *   UVa 1282 (Fibonacci Words), converted to Strict SysY.
+ *
+ *   The Fibonacci word is defined as:
+ *     F(0) = "0", F(1) = "1", F(n) = F(n-1) + F(n-2)
+ *
+ *   This testcase reads multiple cases and counts how many times a pattern
+ *   occurs in F(N).
+ *
+ *   Input format (newline-separated integers only):
+ *     N
+ *     M
+ *     p0
+ *     ...
+ *     p(M-1)
+ *   Repeated. Terminates when N < 0 (sentinel included in in.txt).
+ */
+
+const int MAXLEN = 80000;
+const int MAXM = 2000;
+
+int w0[MAXLEN];
+int w1[MAXLEN];
+int w2[MAXLEN];
+int lens[3];
+int pat[MAXM];
+
+int getVal(int id, int idx) {
+    if (id == 0) return w0[idx];
+    if (id == 1) return w1[idx];
+    return w2[idx];
+}
+
+void setVal(int id, int idx, int val) {
+    if (id == 0) w0[idx] = val;
+    else {
+        if (id == 1) w1[idx] = val;
+        else w2[idx] = val;
+    }
+}
+
+int main() {
+    int t;
+    t = 1;
+    for (;;) {
+        int N;
+        int m;
+        int i;
+        int j;
+        int k;
+        int ok;
+        int a;
+        int b;
+        int c;
+        int tmp;
+        int finalId;
+        int len;
+        int ans;
+
+        N = getint();
+        if (N < 0) break;
+
+        m = getint();
+        for (i = 0; i < m; i = i + 1) {
+            pat[i] = getint();
+        }
+
+        w0[0] = 0;
+        w1[0] = 1;
+        lens[0] = 1;
+        lens[1] = 1;
+        lens[2] = 0;
+
+        if (N == 0) finalId = 0;
+        else {
+            if (N == 1) finalId = 1;
+            else {
+                a = 0;
+                b = 1;
+                c = 2;
+                for (i = 2; i <= N; i = i + 1) {
+                    for (k = 0; k < lens[b]; k = k + 1) {
+                        setVal(c, k, getVal(b, k));
+                    }
+                    for (k = 0; k < lens[a]; k = k + 1) {
+                        setVal(c, lens[b] + k, getVal(a, k));
+                    }
+                    lens[c] = lens[b] + lens[a];
+                    tmp = a;
+                    a = b;
+                    b = c;
+                    c = tmp;
+                }
+                finalId = b;
+            }
+        }
+
+        len = lens[finalId];
+        ans = 0;
+        if (m <= len) {
+            for (i = 0; i <= len - m; i = i + 1) {
+                ok = 1;
+                for (j = 0; j < m; j = j + 1) {
+                    if (ok == 1) {
+                        if (getVal(finalId, i + j) != pat[j]) ok = 0;
+                    }
+                }
+                if (ok == 1) ans = ans + 1;
+            }
+        }
+
+        printf("Case %d: %d\n", t, ans);
+        t = t + 1;
+    }
+    return 0;
+}

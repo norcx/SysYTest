@@ -1,0 +1,2 @@
+1 pile remaining: 52
+12 piles remaining: 15 2 2 3 5 4 1 2 1 7 4 6

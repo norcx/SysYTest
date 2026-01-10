@@ -1,0 +1,98 @@
+/* Description:
+ *   SysY testcase converted from a probability DP program (LA5721 Activation).
+ *   Refactored to Strict SysY: int-only, 1D arrays, for-loops only, getint input.
+ */
+
+const int MAXN = 64;
+
+int D[MAXN * MAXN];
+int C[MAXN];
+
+int main() {
+    int N;
+    int M;
+    int K;
+    int p1;
+    int p2;
+    int p3;
+    int p4;
+    int q2;
+    int q3;
+    int q4;
+    int i;
+    int j;
+
+    for (;;) {
+        N = getint();
+        if (N == 0) {
+            break;
+        }
+        M = getint();
+        K = getint();
+        p1 = getint();
+        p2 = getint();
+        p3 = getint();
+        p4 = getint();
+
+        if (p4 == 0) {
+            printf("%d\n", 0);
+            continue;
+        }
+
+        if (1 - p1 == 0) {
+            printf("%d\n", 0);
+            continue;
+        }
+
+        q2 = p2 / (1 - p1);
+        q3 = p3 / (1 - p1);
+        q4 = p4 / (1 - p1);
+
+        if (1 - p1 - p2 == 0) {
+            printf("%d\n", 0);
+            continue;
+        }
+
+        D[1 * MAXN + 1] = p4 / (1 - p1 - p2);
+
+        for (i = 2; i <= N; i = i + 1) {
+            int limit;
+            int q2Pow;
+            int cs;
+
+            limit = K;
+            if (i < limit) {
+                limit = i;
+            }
+
+            for (j = 2; j <= limit; j = j + 1) {
+                C[j] = D[(i - 1) * MAXN + (j - 1)] * q3 + q4;
+            }
+            for (j = K + 1; j <= i; j = j + 1) {
+                C[j] = D[(i - 1) * MAXN + (j - 1)] * q3;
+            }
+
+            q2Pow = 1;
+            cs = 0;
+            for (j = i; j > 1; j = j - 1) {
+                cs = cs + q2Pow * C[j];
+                q2Pow = q2Pow * q2;
+            }
+
+            if (1 - q2Pow * q2 == 0) {
+                D[i * MAXN + i] = 0;
+            } else {
+                D[i * MAXN + i] = (cs + q2Pow * q4) / (1 - q2Pow * q2);
+            }
+
+            D[i * MAXN + 1] = q2 * D[i * MAXN + i] + q4;
+            for (j = 2; j < i; j = j + 1) {
+                D[i * MAXN + j] = q2 * D[i * MAXN + (j - 1)] + C[j];
+            }
+        }
+
+        printf("%d\n", D[N * MAXN + M]);
+    }
+
+    return 0;
+}
